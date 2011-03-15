@@ -1,0 +1,119 @@
+\documentclass[10pt,letterpaper]{article}
+
+\usepackage{iccv}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Include other packages here, before hyperref.
+
+% If you comment hyperref and then uncomment it, you should delete
+% egpaper.aux before re-running latex.  (Or just hit 'q' on the first latex
+% run, let it finish, and you should be clear).
+\usepackage[pagebackref=true,breaklinks=true,letterpaper=true,colorlinks,bookmarks=false]{hyperref}
+
+
+% \iccvfinalcopy % *** Uncomment this line for the final submission
+
+\def\iccvPaperID{70} % *** Enter the ICCV Paper ID here
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+\ificcvfinal\pagestyle{empty}\fi
+\begin{document}
+
+%%%%%%%%% TITLE
+\title{Discriminative Exemplar-based Object Detection and Association: Supplemental Materials}
+
+\author{First Author\\
+Institution1\\
+Institution1 address\\
+{\tt\small firstauthor@i1.org}
+% For a paper whose authors are all at the same institution,
+% omit the following lines up until the closing ``}''.
+% Additional authors and addresses can be added with ``\and'',
+% just like the second author.
+% To save space, use either the email address or home page, not both
+\and
+Second Author\\
+Institution2\\
+First line of institution2 address\\
+{\small\url{http://www.author.org/~second}}
+}
+
+\maketitle
+\tableofcontents
+% \thispagestyle{empty} % *** Uncomment this line for the final submission
+
+\newpage
+\section{Bus Qualitative Geometry Transfer Examples}
+For qualitative geometry transfer on buses, we show some of the top
+detections and transfers(See Figures
+\ref{fig:stuff-bus} and \ref{fig:stuff-bus-1}). Results are shown as an
+exemplar inpainting (solid green box) and qualitative geometry
+transfer (yellow = Left, red = Front, green = right).
+
+\include{edited_bus}
+
+
+\section{Object Priming Examples}
+For the object priming task, we show detections for bicycles (Figure
+\ref{fig:stuff-bicycle}), horses (Figure
+\ref{fig:stuff-horse}), and motorbikes (Figures
+\ref{fig:stuff-motorbike} and \ref{fig:stuff-motorbike-1}) as solid
+boxes in yellow and the predicted object (person in each case) as a
+dotted orange box.
+
+\include{edited_bicycle}
+\include{edited_horse}
+\include{edited_motorbike}
+
+\section{PASCAL VOC 2007 Object Detection PR Curves}
+We include the full set of Precision-Recall curves for our method on the
+PASCAL VOC \verb+comp3+ object detection task(see Table~\ref{fig:stuff-newall}).  The baseline method is
+the DalalTriggs monolithic classifier.
+\newpage
+
+\begin{figure*}[h!!]
+\begin{centering}
+\includegraphics[width=.9\linewidth]{newallbig} \\
+\label{fig:stuff-newall}
+\caption{The Precision-Recall curve for our method versus the
+  DalalTriggs baseline.  Our method outperforms the baseline on all
+  categories.}
+\end{centering}
+\end{figure*}
+
+\clearpage
+\newpage
+
+\section{More Detection results}
+We show the top $6$ associations automatically generated for each of
+the PASCAL VOC categories.  We show an exemplar inpainting and the
+category detection window (or a segmentation if available).
+
+\include{stuff_aeroplane}
+\include{stuff_bird}
+\include{stuff_boat}
+\include{stuff_bottle}
+\include{stuff_car}
+\include{stuff_cat}
+\include{stuff_chair}
+\include{stuff_cow}
+\include{stuff_diningtable}
+\include{stuff_dog}
+\include{stuff_pottedplant}
+\include{stuff_sheep}
+\include{stuff_sofa}
+\include{stuff_train}
+\include{stuff_tvmonitor}
+
+\section{Transfer Failures}
+For bus geometry transfer failures, see
+Figure~\ref{fig:stuff-bus-failures}.  For person prediction failures,
+see Figure ~\ref{fig:stuff-prediction-failures}.
+\include{failures}
+
+\end{document}
