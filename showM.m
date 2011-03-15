@@ -1,5 +1,6 @@
 function showM(models,M)
-%Show the M matrix which is a type of Visual Memex MAtrix
+%Show the M matrix which, as the co-activation matrix, is a type of
+%visual memex matrix
 
 for i = 1:length(models)
   
