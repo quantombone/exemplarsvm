@@ -2,6 +2,7 @@ function w = x2w(x, A)
 %% Map a HOG template x to a classifier-space template W by applying
 %% the per-cell regressor.
 %% A: optional ridge matrix (loads from file if not provided)
+%% New comment
 
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
