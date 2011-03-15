@@ -1,5 +1,5 @@
 function showM(models,M)
-%Show the M matrix
+%Show the M matrix which is a type of Visual Memex MAtrix
 
 for i = 1:length(models)
   
