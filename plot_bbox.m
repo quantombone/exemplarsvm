@@ -20,6 +20,17 @@ if ~exist('titler','var')
   titler = '';
 end
 
+if ~exist('linewidths','var')
+  linewidth1 = 3;
+  linewidth2 = 1;
+  linewidths = [3 1];
+else
+  linewidth1 = linewidths(1);
+  linewidth2 = linewidths(2);
+
+end
+
+
 if size(bb,1) > 1
   for i = 1:size(bb,1)
     plot_bbox(bb(i,:),titler,col1,col2,do_spacing,linewidths);
@@ -28,13 +39,6 @@ if size(bb,1) > 1
   return;
 end
 
-if ~exist('linewidths','var')
-  linewidth1 = 3;
-  linewidth2 = 1;
-else
-  linewidth1 = linewidths(1);
-  linewidth2 = linewidths(2);
-end
 
 if do_spacing == 1
   

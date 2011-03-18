@@ -34,7 +34,7 @@ if ~exist('cls','var')
   cls = 'diningtable';
   cls = 'sheep';
   cls = 'train';
-  cls = 'cow';
+  %cls = 'cow';
 end
 
 if ismember(cls,{'all'})
