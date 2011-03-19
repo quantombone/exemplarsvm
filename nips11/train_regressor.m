@@ -3,21 +3,30 @@ VOCinit;
 m.models_name = 'nips11';
 
 fg = get_pascal_bg('trainval',m.cls);
-%fg = fg(1:40);
+
+fg = fg(1:40);
+[a,b,c] = fileparts(fg{end});
+fg(2:end+1) = fg;
+fg{1} = [a '/'  m.curid c];
+
+bg = get_pascal_bg('trainval',['-' m.cls]);
+bg = bg(1:5);
+
+fg = [fg; bg];
 
 localizeparams.thresh = -1;
-localizeparams.TOPK = 10;
+localizeparams.TOPK = 50;
 localizeparams.lpo = 10;
 localizeparams.SAVE_SVS = 1;
-    
-
+   
 %figure(1)
 %clf
 
-for qqq = 1:20
 c = 1;
+for qqq = 1:20
+
 clear results
-for i = 1:length(fg)
+for i = 1:5%length(fg)
   if c > length(fg)
     return;
   end
@@ -46,7 +55,9 @@ for i = 1:length(fg)
    % axis off
   
   goods = find(ismember({recs.objects.class},m.cls));
+  %goods = 1:length({recs.objects.class});
   goodbbs = cat(1,recs.objects(goods).bbox);
+  
   osmat = getosmatrix_bb(boxes,goodbbs);
   
   maxos = max(osmat,[],2);
@@ -66,32 +77,13 @@ x = cellfun2(@(x)x.x,results);
 x = cat(2,x{:});
 X = x;
 
-
-
 ids = cellfun2(@(x)x.id_grid,results);
 ids = cat(2,ids{:});
 
 imageid = cellfun2(@(x)x.id(:),results);
 imageid = cat(1,imageid{:});
-res = m.model.w(:)'*X-m.model.b;
-
-[aa,bb] = sort(res,'descend');
-
-figure(34)
-clf
-for q = 1:36
-  if q <= length(bb)
-    subplot(6,6,q)
-    I = convert_to_I(fg{imageid(bb(q))});
-    imagesc(I)
-    plot_bbox(ids{bb(q)}.bb)
-    axis off
-    axis image
-  end
-end
 
 %X(end+1,:) = 0;
-
 %goods = find(os>.2);
 %X = X(:,goods);
 %os = os(goods);
@@ -115,7 +107,8 @@ if 0
   m.model.w = reshape(wex,m.model.hg_size);
 end
 
-%X = [X m.model.x];
+X = [X m.model.x(:,1)];
+os(end+1) = 1;
 %os(end+1:end+size(m.model.x,2))=1;
 
 X(end+1,:) = 1;
@@ -132,11 +125,12 @@ X(end+1,:) = 1;
 ranks = (beta);
 
 rankscores = ranks.^-.1;
-bads = find(os<.1);
+bads = find(os<.2);
 os = os .* rankscores';
+%os = rankscores';
 %os = os';
 os = reshape(os,1,[]);
-os(bads) = -1;
+os(bads) = 0;
 
 %w = (os*inv(X'*X+lambda*eye(size(X,2),size(X,2)))*X')';
 %w2 = inv(X*X'+lambda*eye(size(X,1),size(X,1)))*X*os';
@@ -167,9 +161,6 @@ clf
 imagesc(HOGpicture(reshape(m.model.w,m.model.hg_size)))
 drawnow
 
-figure(444)
-plot(w'*X,os,'r.')
-drawnow
 % if exist('oldos','var')
 %   figure(3)
 %   plot(oldos,os,'r.')
@@ -177,7 +168,30 @@ drawnow
 % end
 %oldos = os;
 
-save m.mat m
+res = w'*X(:,1:end-1);
+
+[aa,bb] = sort(res,'descend');
+
+figure(34)
+clf
+for q = 1:36
+  if q <= length(bb)
+    subplot(6,6,q)
+    I = convert_to_I(fg{imageid(bb(q))});
+    imagesc(I)
+    plot_bbox(ids{bb(q)}.bb)
+    title(num2str(aa(q)))
+    axis off
+    axis image
+  end
+end
+
+figure(444)
+plot(w'*X,os,'r.')
+drawnow
+
+keyboard
+%save m.mat m
 end
 
 function [fval,gval] = objective(w,X,os)
