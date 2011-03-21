@@ -15,10 +15,10 @@ try
   VOCinit;
   Iex = im2double(imread(sprintf(VOCopts.imgpath, ...
                                  models{index}.curid)));
-  fprintf(1,'warning using coarse box\n');
+  %fprintf(1,'warning using coarse box\n');
   cb = models{index}.gt_box;
 
-  cb = models{index}.model.coarse_box;
+  %cb = models{index}.model.coarse_box;
 
   PADDER = 100;
 

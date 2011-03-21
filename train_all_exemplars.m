@@ -21,7 +21,8 @@ if ~exist(final_directory,'dir')
   mkdir(final_directory);
 end
 
-files = dir([initial_directory '*cow.mat']);
+fprintf(1,'WARNING hardcoded trains\n');
+files = dir([initial_directory '*train.mat']);
 
 EX_PER_CHUNK = 5;
 
@@ -151,4 +152,5 @@ oldsvids = m.model.svids;
 oldx = m.model.x;
 m.model.nsv = oldnsv(:,goods);
 m.model.svids = oldsvids(goods);
-m.model.x = [];
+%don't prune the x's
+%m.model.x = [];
