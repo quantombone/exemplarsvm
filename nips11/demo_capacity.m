@@ -7,7 +7,7 @@ SVMC = 1;
 rand('seed',1234);
 t = linspace(0,2*pi,300);
 xpos = [10*cos(t); 10*sin(t)]
-xneg = [4*cos(t); 4*sin(t)];
+xneg = [9*cos(t); 2*sin(t)];
 
 xpos = xpos + randn(size(xpos));
 xneg = xneg + randn(size(xneg));
@@ -54,8 +54,9 @@ plot(x(1,index),x(2,index),'kp','MarkerSize',12,'LineWidth',3)
 
 ds = distSqr_fast(xpos(:,index),xpos);
 [aa,bb] = sort(ds);
-curx = [xpos(:,bb(1:1)) xneg];
-cury = [ypos(bb(1:1)) yneg]';
+topk = 1;
+curx = [xpos(:,bb(1:topk)) xneg];
+cury = [ypos(bb(1:topk)) yneg]';
 
 [w,b] = learn_local_no_capacity(curx,cury,index,SVMC);
 res = w'*x-b;

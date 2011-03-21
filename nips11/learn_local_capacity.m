@@ -43,8 +43,9 @@ for k = 1:20
   if exist('m','var')
     %take all positives now from the exemplar
     diffx = m.model.x;
+  else
+    diffx = x(:,[]);
   end
-  %diffx = x(:,[]);
   %diffx = -bsxfun(@minus,x,x(:,index));
 
   diffy = ones(size(diffx,2),1);
