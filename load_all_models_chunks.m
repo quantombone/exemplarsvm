@@ -24,7 +24,7 @@ end
 
 %if enabled, we cache result on disk to facilitate loading at a
 %later stage (NOTE: these files might have to be removed manually)
-CACHE_FILE = 1;
+CACHE_FILE = 0;
 
 VOCinit;
 
@@ -51,7 +51,7 @@ results_directory = ...
 
 files = dir([results_directory FINAL_PREFIX '.*' cls '*.mat']);
 fprintf(1,'Length of files to load: %d\n',length(files));
-
+[results_directory FINAL_PREFIX '.*' cls '*.mat']
 m = cell(1,length(files));
 for i = 1:length(files)
   fprintf(1,'.');
@@ -70,13 +70,13 @@ for i = 1:length(models)
     models{i}.model.b = 1000;
   end
   
-  models{i}.model.x = [];
+  %models{i}.model.x = [];
   models{i}.model.allx = [];
   models{i}.model.wtrace = [];
   models{i}.model.btrace = [];
 
   %disable negative support vectors to save space
-  models{i}.model.nsv = [];
+  %models{i}.model.nsv = [];
 end
 
 if length(files) == 0
