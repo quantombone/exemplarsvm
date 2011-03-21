@@ -74,7 +74,7 @@ fprintf(1,'Loading default set of images\n');
 %bg = get_pascal_bg('test','train');
 %bg = get_pascal_bg('test','bicycle');
 if display == 1
-  curset = 'test';
+  curset = 'trainval';
   curcls = models{1}.cls;
   bg = get_pascal_bg(curset,sprintf('%s',curcls));
 else
