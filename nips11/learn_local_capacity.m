@@ -1,15 +1,17 @@
 function [w,b,alphas,pos_inds] = learn_local_capacity(x,y,index,SVMC,gamma,g,m)
 %maximum-capacity learning (alpha,beta) updates
 
+
 pos_inds = find(y==y(index));
 
 if ~exist('g','var')
-  fprintf(1,'Creating G from euclidean distance\n');
-  ds = distSqr_fast(x(:,index),x(:,y==y(index)));
-  ds = ds / mean(ds(:));
-  g = exp(-1.0*ds)';
+  % fprintf(1,'Creating G from euclidean distance\n');
+  % ds = distSqr_fast(x(:,index),x(:,y==y(index)));
+  % ds = ds / mean(ds(:));
+  % g = exp(-1.0*ds)';
+  g = ones(size(pos_inds));
 end
-%g = ones(size(pos_inds));
+
 
 %turn all negatives on, they always stay on
 %turn all positives off at start
@@ -19,46 +21,54 @@ alphas(pos_inds)=0;
 self_alpha = 1.0;
 %turn self on (its a positive)
 alphas(index) = self_alpha;
+%turn on first 5 neighbors
+%ds = distSqr_fast(x(:,index),x(:,pos_inds));
+%[aa,bb] = sort(ds);
+%alphas(bb(1:20))=1;%ceil(length(pos_inds)*.05)))=1;
+
+%if isfield(m.model,'alphas')
+%  alphas = m.model.alphas;
+%end
 
 oldgoods = [];
 for k = 1:20
   fprintf(1,'#');
+  if 0 %(k<10)
+    fprintf(1,'perturbing alphas\n');
+    r = find(rand(size(alphas))>.1);
+    alphas(r) = 1-alphas(r);
+  end
   goods = find(alphas>0);
   if length(oldgoods) > 0
     diffinds = setdiff(goods,oldgoods);
     if length(diffinds) == 0
-      fprintf(1,'returning prematurely\n');
-
+      fprintf(1,'returning prematurely #alphas=%d/%d\n',sum(alphas(pos_inds)),length(pos_inds));
       alphas = alphas(pos_inds);
       return;
     end
   end
-
 
   oldgoods = goods;
   frac=(sum(alphas)-sum(y==-1)) / length(pos_inds);
   %diffx = x(:,index)/100;
   %fprintf(1,'adding fatty\n');
   
-  if exist('m','var')
+  if 1 %exist('m','var')
     %take all positives now from the exemplar
-    diffx = m.model.x;
+    diffx = m.model.x;%(:,2:11);
+    %diffx = x;
   else
     diffx = x(:,[]);
   end
-  %diffx = -bsxfun(@minus,x,x(:,index));
 
   diffy = ones(size(diffx,2),1);
   
-
-  %newy = [y(goods); diffy];
-  %newx =  [x(:,goods) diffx];
-
-  newy = y(goods);
-  newx = x(:,goods);
+  newy = [y(goods); diffy];
+  newx =  cat(2,x(:,goods),diffx);
   
-  sum(newy==1)
-  sum(newy==-1)
+  %newx = cat(2,newx,newx);
+  %newy = cat(1,newy,newy);
+  %fprintf(1,'sumpos is %d\n',sum(newy==1));
   svm_model = svmtrain(newy,newx',sprintf(['-s 0 -t 0 -c' ...
                     ' %f -q'],SVMC));
   
@@ -78,23 +88,36 @@ for k = 1:20
     if 0
       %gamma term
       hinge = @(x)max(1-x,0.0);
-      loss_term = hinge((w'*x(:,pos_inds)) .* y(pos_inds)');
+      loss_term = hinge((w'*x(:,pos_inds)-b) .* y(pos_inds)');
       
       newalphas = double(loss_term < gamma*g' );
-      % [aaa,bbb]=min(loss_term(2:end));
-      % target=aaa/g(bbb+1);
-      % fprintf(1,'target gamma is %.5f\n',target);
+      
+      % if exist('oldalphas','var')
+      %   keyboard
+      % end
+      
+      % if ~exist('oldalphas','var')
+      %   oldalphas = newalphas;
+      % end
+      
+      [aaa,bbb]=min(loss_term(2:end));
+       target=aaa/g(bbb+1);
+       fprintf(1,'target gamma is %.5f\n',target);
       
       alphas(pos_inds) = newalphas;
       
     else
       %%TOPK
+      
+      hinge = @(x)max(1-x,0.0);
+      loss_term = hinge((w'*x(:,pos_inds)-b) .* y(pos_inds)');
+      [alpha,beta] = sort(loss_term - gamma*g');
 
-      loss_term = (1-(w'*x(:,pos_inds)) .* y(pos_inds)')-10*g';
-      [alpha,beta] = sort(loss_term);
-      savealphas = alphas;
+      %loss_term = (1-(w'*x(:,pos_inds)-b) .* y(pos_inds)')-10*g';
+      %[alpha,beta] = sort(loss_term);
+      %savealphas = alphas;
       alphas(pos_inds) = 1;
-      K = 10;
+      K = 70;
       
       alphas(pos_inds(beta(K+1:end)))=0;
       %randkills = (rand(K,1)>.7);

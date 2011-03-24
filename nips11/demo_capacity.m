@@ -6,11 +6,11 @@ SVMC = 1;
 %xs2 = sin(xs);
 rand('seed',1234);
 t = linspace(0,2*pi,300);
-xpos = [10*cos(t); 10*sin(t)]
-xneg = [9*cos(t); 2*sin(t)];
+xpos = [12*cos(t); 12*sin(t)]
+xneg = [2*cos(t); 9*sin(t)];
 
-xpos = xpos + randn(size(xpos));
-xneg = xneg + randn(size(xneg));
+xpos = xpos + 1.0*randn(size(xpos));
+xneg = xneg + randn(size(xneg))*3;
 
 %PAD = 1;
 %xpos = [xs; xs2 + PAD + randn(size(xs))];
@@ -34,9 +34,10 @@ curscores = [];
 y = y';
 
 gammas = linspace(.00001,100,size(x,2));
-for iii = 1:1:size(xpos,2)
-  index = iii;
-  gamma = 1.0;
+
+for iii = 1:10000
+  index = 1+mod(iii,length(t));
+  gamma = 1;
   %gamma = gammas(iii); %.001;
   %gammaK = iii;
   %gammaK = 0;
@@ -54,9 +55,10 @@ plot(x(1,index),x(2,index),'kp','MarkerSize',12,'LineWidth',3)
 
 ds = distSqr_fast(xpos(:,index),xpos);
 [aa,bb] = sort(ds);
-topk = 1;
-curx = [xpos(:,bb(1:topk)) xneg];
-cury = [ypos(bb(1:topk)) yneg]';
+
+K = 1;
+curx = [xpos(:,bb(1:K)) xneg];
+cury = [ypos(bb(1:K)) yneg]';
 
 [w,b] = learn_local_no_capacity(curx,cury,index,SVMC);
 res = w'*x-b;
@@ -90,7 +92,7 @@ hold on;
 plot([xmin xmax],[yminneg ymaxneg],'b--','LineWidth',2)
 hold on;
 plot([xmin xmax],[yminpos ymaxpos],'r--','LineWidth',2)
-title('Max-Margin Solution')
+title(sprintf('%dNN Max-Margin Solution',K))
 axis(bbox_range)
 subplot(1,2,2)
 plot(x(1,y==-1),x(2,y==-1),'r.')
@@ -139,11 +141,13 @@ axis(bbox_range);
 
 index
 drawnow
+pause
+
 end
 
-figure(2)
-imagesc(curscores)
-keyboard
+% figure(2)
+% imagesc(curscores)
+% keyboard
 
 
 function [w,b] = learn_local_no_capacity(x,y,index,SVMC)
