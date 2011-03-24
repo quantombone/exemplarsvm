@@ -4,6 +4,7 @@ function m = train_regressor(m)
 VOCinit;
 m.models_name = 'nips11';
 
+
 savem = m;
 fg_train = get_pascal_bg('train',m.cls);
 fg_val = get_pascal_bg('val',m.cls);
@@ -20,6 +21,13 @@ fgraw = fg;
 fg2 = get_pascal_bg('train',['-' m.cls]);
 
 VOCopts.localdir = [VOCopts.localdir '/myfiles'];
+
+finalI=sprintf('%s/Afinal_%s.%05d.png',VOCopts.localdir,m.curid, ...
+               m.objectid);
+if fileexists(finalI)
+  return;
+end
+
 %(bg) is already inside of m
 for qqq = 1:1
 
@@ -150,17 +158,64 @@ g = cat(1,g,gN);
   % targetids = ids2;
   % targetg = g2;
   
+  
   targetX = X;
   targetids = ids;
   targetset = 'train';
   targetfg = fg;
 
+  % [os3,xcat3,targetX,targetids,imageid3,targetg] = collect_top_dets(m,os,xcat,X,ids, ...
+  %                                                 imageid,g);
+  
+
+
+  %[aa,bb] = sort(targetg,'descend');
+  
+  
+  %figure(2)
+  %plot(res,targetg,'r.')
+  %xlabel('resulting score')
+  %ylabel('g')
+  %drawnow
+  Isv = cell(0,1);
+  %% output of current algorithm  
+  targetw = m.model.w(:);
+  targetb = m.model.b;
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'maxcapacity',targetset);
+  
+
+  %% output of original algorithm (exemplarsvm)
+  targetw = savem.model.w(:);
+  targetb = savem.model.b;
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'exemplarsvm',targetset);
+  
+  %% output of w-centering trick classifier
+  targetw = mean(m.model.x,2);
+  targetb = 0;
+  targetw = targetw - mean(targetw(:));
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
+                'zeromean',targetset);
+  
+  targetw = mean(m.model.x,2);
+  targetb = 0;
+  targetfun = @(x,y)distSqr_fast(x,y);
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
+                'nndist',targetset,targetfun);
+
+  
+  targetw = mean(m.model.x,2);
+  targetb = 0;
+  targetfun = @(x,y)sum((x-y).^2./(x+y+eps));
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
+                'chisq',targetset,targetfun);
+
+  
+  
   targetX = XT;
   targetids = idsT;
   targetset = 'val';
   targetfg = fg_val;
-  
-
+ 
   % [os3,xcat3,targetX,targetids,imageid3,targetg] = collect_top_dets(m,os,xcat,X,ids, ...
   %                                                 imageid,g);
   
@@ -178,133 +233,96 @@ g = cat(1,g,gN);
   %% output of current algorithm  
   targetw = m.model.w(:);
   targetb = m.model.b;
-  show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'maxcapacity',targetset);
+
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'maxcapacity',targetset);
   
 
   %% output of original algorithm (exemplarsvm)
   targetw = savem.model.w(:);
   targetb = savem.model.b;
-  show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'exemplarsvm',targetset);
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'exemplarsvm',targetset);
   
   %% output of w-centering trick classifier
   targetw = mean(m.model.x,2);
   targetb = 0;
   targetw = targetw - mean(targetw(:));
-  show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
                 'zeromean',targetset);
   
-  %% custom for euclidean nn-dist
-  mx = mean(m.model.x,2);
-  d = distSqr_fast(mx,targetX);
-  res = -d;
-  [aa,bb] = sort(res,'descend');
-  Nstack = 9;
-  for i = 1:length(targetids)
-    targetids{i}.FLIP_LR = 0; 
-  end
-  targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
-  Isv = get_sv_stack([targetids{bb(1:min(length(bb),Nstack^2))}],targetfg);
-  figure(34)
-  clf
-  imagesc(Isv)
-  imwrite(Isv,sprintf('%s/dets_nndist-%s_%s.%05d.png',VOCopts.localdir,targetset,m.curid,m.objectid));
-
-  %% custom for chisq nn-dist
-  mx = mean(m.model.x,2);
-  for qqq = 1:size(targetX,2)
-    chisq = (targetX(:,qqq)-mx);
-    chisq = sum((chisq).^2 ./(targetX(:,qqq)+mx));
-    d(qqq) = chisq;
-  end
-  %d = distSqr_fast(mx,targetX);
-  
-  res = -d;
-  [aa,bb] = sort(res,'descend');
-
-  for i = 1:length(targetids)
-    targetids{i}.FLIP_LR = 0; 
-  end
-  targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
-  Isv = get_sv_stack([targetids{bb(1:min(length(bb),Nstack^2))}],targetfg);
-  figure(34)
-  clf
-  imagesc(Isv)
-  imwrite(Isv,sprintf('%s/dets_chisq-%s_%s.%05d.png',VOCopts.localdir,targetset,m.curid,m.objectid));
-
-  targetX = X;
-  targetids = ids;
-  targetset = 'train';
-  targetfg = fg;
-
-  % [os3,xcat3,targetX,targetids,imageid3,targetg] = collect_top_dets(m,os,xcat,X,ids, ...
-  %                                                 imageid,g);
-  
-
-
-  %[aa,bb] = sort(targetg,'descend');
-  
-  
-  %figure(2)
-  %plot(res,targetg,'r.')
-  %xlabel('resulting score')
-  %ylabel('g')
-  %drawnow
-
-  %% output of current algorithm  
-  targetw = m.model.w(:);
-  targetb = m.model.b;
-  show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'maxcapacity',targetset);
-  
-
-  %% output of original algorithm (exemplarsvm)
-  targetw = savem.model.w(:);
-  targetb = savem.model.b;
-  show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'exemplarsvm',targetset);
-  
-  %% output of w-centering trick classifier
   targetw = mean(m.model.x,2);
   targetb = 0;
-  targetw = targetw - mean(targetw(:));
-  show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
-                'zeromean',targetset);
+  targetfun = @(x,y)distSqr_fast(x,y);
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
+                'nndist',targetset,targetfun);
+
   
-  %% custom for euclidean nn-dist
-  mx = mean(m.model.x,2);
-  d = distSqr_fast(mx,targetX);
-  res = -d;
-  [aa,bb] = sort(res,'descend');
+  targetw = mean(m.model.x,2);
+  targetb = 0;
+  targetfun = @(x,y)sum((x-y).^2./(x+y+eps));
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
+                'chisq',targetset,targetfun);
 
-  for i = 1:length(targetids)
-    targetids{i}.FLIP_LR = 0; 
-  end
-  targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
-  Isv = get_sv_stack([targetids{bb(1:min(length(bb),Nstack^2))}],targetfg);
-  figure(34)
-  clf
-  imagesc(Isv)
-  imwrite(Isv,sprintf('%s/dets_nndist-%s_%s.%05d.png',VOCopts.localdir,targetset,m.curid,m.objectid));
-
-  %% custom for chisq nn-dist
-  mx = mean(m.model.x,2);
-  for qqq = 1:size(targetX,2)
-    chisq = (targetX(:,qqq)-mx);
-    chisq = sum((chisq).^2 ./(targetX(:,qqq)+mx));
-    d(qqq) = chisq;
-  end
-  %d = distSqr_fast(mx,targetX);
   
-  res = -d;
-  [aa,bb] = sort(res,'descend');
 
-  for i = 1:length(targetids)
-    targetids{i}.FLIP_LR = 0; 
-  end
-  targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
-  Isv = get_sv_stack([targetids{bb(1:min(length(bb),Nstack^2))}],targetfg);
-  figure(34)
-  clf
-  imagesc(Isv)
-  imwrite(Isv,sprintf('%s/dets_chisq-%s_%s.%05d.png',VOCopts.localdir,targetset,m.curid,m.objectid));
+  % %% custom for chisq nn-dist
+  % mx = mean(m.model.x,2);
+  % for qqq = 1:size(targetX,2)
+  %   chisq = (targetX(:,qqq)-mx);
+  %   chisq = sum((chisq).^2 ./(targetX(:,qqq)+mx));
+  %   d(qqq) = chisq;
+  % end
+  % %d = distSqr_fast(mx,targetX);
+  
+  % res = -d;
+  % [aa,bb] = sort(res,'descend');
+
+  % for i = 1:length(targetids)
+  %   targetids{i}.FLIP_LR = 0; 
+  % end
+  % targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
+  % Isv = get_sv_stack([targetids{bb(1:min(length(bb),Nstack^2))}],targetfg);
+  % figure(34)
+  % clf
+  % imagesc(Isv)
+  % imwrite(Isv,sprintf('%s/dets_chisq-%s_%s.%05d.png',VOCopts.localdir,targetset,m.curid,m.objectid));
+
+  % %% custom for euclidean nn-dist
+  % mx = mean(m.model.x,2);
+  % d = distSqr_fast(mx,targetX);
+  % res = -d;
+  % [aa,bb] = sort(res,'descend');
+
+  % for i = 1:length(targetids)
+  %   targetids{i}.FLIP_LR = 0; 
+  % end
+  % targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
+  % Isv = get_sv_stack([targetids{bb(1:min(length(bb),Nstack^2))}],targetfg);
+  % figure(34)
+  % clf
+  % imagesc(Isv)
+  % imwrite(Isv,sprintf('%s/dets_nndist-%s_%s.%05d.png',VOCopts.localdir,targetset,m.curid,m.objectid));
+
+  % %% custom for chisq nn-dist
+  % mx = mean(m.model.x,2);
+  % for qqq = 1:size(targetX,2)
+  %   chisq = (targetX(:,qqq)-mx);
+  %   chisq = sum((chisq).^2 ./(targetX(:,qqq)+mx));
+  %   d(qqq) = chisq;
+  % end
+  % %d = distSqr_fast(mx,targetX);
+  
+  % res = -d;
+  % [aa,bb] = sort(res,'descend');
+
+  % for i = 1:length(targetids)
+  %   targetids{i}.FLIP_LR = 0; 
+  % end
+  % targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
+  % Isv = get_sv_stack([targetids{bb(1:min(length(bb),Nstack^2))}],targetfg);
+  % figure(34)
+  % clf
+  % imagesc(Isv)
+  % imwrite(Isv,sprintf('%s/dets_chisq-%s_%s.%05d.png',VOCopts.localdir,targetset,m.curid,m.objectid));
 
 
   
@@ -312,8 +330,14 @@ g = cat(1,g,gN);
   % plot(res,os,'r.')
   drawnow
   
+  III=cat(1,Isv{:});
 
-  save(resfile,'m');
+  fprintf(1,'writing %s\n',finalI);
+  imwrite(III,finalI);
+
+
+
+  %save(resfile,'m');
   %rmdir(filerlock);
   
 
@@ -625,22 +649,49 @@ end
 targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
 
 
-function show_and_save(m,targetw,targetb,targetX,targetids,fg, ...
-                       titler,targetset);
+function Isv = show_and_save(m,targetw,targetb,targetX,targetids,fg, ...
+                       titler,targetset,targetfun);
 
 VOCinit;
 VOCopts.localdir = [VOCopts.localdir '/myfiles'];
 
-res = targetw'*targetX-targetb;
+if exist('targetfun','var')
+  d = zeros(size(targetX,2),1);
+  for i = 1:size(d,1)
+    d(i) = targetfun(targetw,targetX(:,i));
+  end
+  res = -d;
+else
+  res = targetw'*targetX-targetb;
+end
+
 [aa,bb] = sort(res,'descend');
-Nstack = 9;
+
+%% bb is now the ordering, but nms it
+
+newids = cellfun(@(x)x.curid,targetids(bb));
+uq = unique(newids);
+for i = 1:length(uq)
+  curhit = find(newids==uq(i));
+  saver = bb(curhit(1));
+  bb(curhit) = 0;
+  bb(curhit(1))=saver;
+end
+
+bb = bb(bb>0);
+
+Nstack = 4;
 for i = 1:length(targetids)
   targetids{i}.FLIP_LR = 0; 
 end
 targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
-Isv = get_sv_stack([targetids{bb(1:min(length(bb),Nstack^2))}],fg);
+curm = m;
+curm.model.w = reshape(targetw,size(curm.model.w));
+Isv = get_sv_stack([targetids{bb(1:min(length(bb),12))}],fg,curm);
 figure(34)
 clf
 imagesc(Isv)
+axis image
+title([titler ' ' targetset])
 imwrite(Isv,sprintf('%s/dets_%s-%s_%s.%05d.png',VOCopts.localdir,titler,targetset,m.curid, ...
                     m.objectid));
