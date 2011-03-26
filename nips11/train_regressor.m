@@ -22,7 +22,7 @@ fg2 = get_pascal_bg('train',['-' m.cls]);
 
 VOCopts.localdir = [VOCopts.localdir '/myfiles'];
 
-finalI=sprintf('%s/Afinal_%s.%05d.png',VOCopts.localdir,m.curid, ...
+finalI=sprintf('%s/Zfinal_%s.%05d.png',VOCopts.localdir,m.curid, ...
                m.objectid);
 if fileexists(finalI)
   return;
@@ -72,10 +72,10 @@ X2 = X;
 ids2 = ids;
 imageid2 = imageid;
 
-g2 = compute_gain_vector(m,os2,xcat2,X2,ids2);
+g2 = compute_gain_vector(m,os2,xcat2,X2,ids2,fgraw);
 
-[osN,xcatN,XN,idsN,imageidN] = get_dets_neg(m);  
-gN = compute_gain_vector(m,osN,xcatN,XN,idsN);
+[osN,xcatN,XN,idsN,imageidN,bg] = get_dets_neg(m);  
+gN = compute_gain_vector(m,osN,xcatN,XN,idsN,bg);
 
 os = os2;
 xcat = xcat2;
@@ -183,7 +183,7 @@ g = cat(1,g,gN);
   targetb = m.model.b;
   Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'maxcapacity',targetset);
   
-
+  return;
   %% output of original algorithm (exemplarsvm)
   targetw = savem.model.w(:);
   targetb = savem.model.b;
@@ -328,11 +328,13 @@ g = cat(1,g,gN);
   
   % figure(444)
   % plot(res,os,'r.')
-  drawnow
+
   
   III=cat(1,Isv{:});
 
   fprintf(1,'writing %s\n',finalI);
+  imagesc(III)
+drawnow
   imwrite(III,finalI);
 
 
@@ -358,91 +360,103 @@ end
 % y=exp(x)./(1+exp(x)).^2;
 
 function [os,xcat,X,ids,imageid] = get_dets(m,fg)
+%Given a set of images inside fg and an exemplar inside m, get the
+%detections by applying exemplar to within-class images
+
+%os is the returned similarity score metric
+
 VOCinit;
+
+%get self annotation
+r = PASreadrecord(sprintf(VOCopts.annopath,m.curid));
+bbs = cat(1,r.objects.bbox);
+os = getosmatrix_bb(m.gt_box,bbs)
+[alpha,ind] = max(os);
+
+fself = get_feature_vector(r,ind);
+
 localizeparams.thresh = -1;
 localizeparams.TOPK = 10;
 localizeparams.lpo = 10;
 localizeparams.SAVE_SVS = 1;
 
 c = 1;
-  for i = 1:length(fg)
-    if c > length(fg)
-      return;
-    end
-    
-    I = convert_to_I(fg{c});
-    
-    [a,curid,other] = fileparts(fg{c});
-    
-    recs = PASreadrecord(sprintf(VOCopts.annopath,curid));  
-    [rs] = localizemeHOG(I,{m},localizeparams);
-    
-    %extract detection box vectors from the localization results
-    [coarse_boxes] = extract_bbs_from_rs(rs, {m});
-    
-    boxes = coarse_boxes;
-    %map GT boxes from training images onto test image
-    boxes = adjust_boxes(coarse_boxes,{m});
-    
-    
-    % figure(1)
-    % % clf
-    % subplot(3,3,i)
-    % imagesc(I)
-    % plot_bbox(boxes)
-    % drawnow
-    % axis image
-    % axis off
-    
-    %goods = find(ismember({recs.objects.class},m.cls));
-    gt_classes = {recs.objects.class};
-    goods = 1:length(gt_classes);
-    goodbbs = cat(1,recs.objects(goods).bbox);
-    %goodbbs(end+1,:) = [1 1 1 1];
-    %gt_classes(end+1) = '';
-    
-    osmat = getosmatrix_bb(boxes,goodbbs);
-    
-    [maxos,maxind] = max(osmat,[],2);
-    maxcat = gt_classes(maxind)';
-    if length(rs.support_grid{1})>0
-      maxval = max(m.model.w(:)'*cat(2,rs.support_grid{1}{:})- ...
-                   m.model.b);
-    else
-      maxval = -1;
-    end
-    fprintf(1,'maxos %d = %.3f, maxval=%.3f\n',c,max(maxos),maxval);
-    results{c}.maxos = maxos;
-    results{c}.maxcat = maxcat;
-    results{c}.id = maxos*0+c;
-    results{c}.id_grid = [rs.id_grid{1}];
-    results{c}.x = [];
-    if length(rs.support_grid{1})>0
-      results{c}.x = cat(2,rs.support_grid{1}{:});  
-    end
-    
-    c = c + 1;
+for i = 1:length(fg)
+  if c > length(fg)
+    return;
   end
+  
+  I = convert_to_I(fg{c});
+  
+  [a,curid,other] = fileparts(fg{c});
+  
+  recs = PASreadrecord(sprintf(VOCopts.annopath,curid));  
+  [rs] = localizemeHOG(I,{m},localizeparams);
+  
+  %extract detection box vectors from the localization results
+  [coarse_boxes] = extract_bbs_from_rs(rs, {m});
+  
+  boxes = coarse_boxes;
+  %map GT boxes from training images onto test image
+  boxes = adjust_boxes(coarse_boxes,{m});
+  
+  
+  % figure(1)
+  % % clf
+  % subplot(3,3,i)
+  % imagesc(I)
+  % plot_bbox(boxes)
+  % drawnow
+  % axis image
+  % axis off
+  
+  %use all objects in the annotation
+  gt_classes = {recs.objects.class};
+  goods = 1:length(gt_classes);
+  goodbbs = cat(1,recs.objects(goods).bbox);
+    
+  osmat = getosmatrix_bb(boxes,goodbbs);
+  
+  [maxos,maxind] = max(osmat,[],2);
+  maxcat = gt_classes(maxind)';
+  
+  if length(rs.support_grid{1})>0
+    maxval = max(m.model.w(:)'*cat(2,rs.support_grid{1}{:})- ...
+                 m.model.b);
+  else
+    maxval = -1;
+  end
+  fprintf(1,'maxos %d = %.3f, maxval=%.3f\n',c,max(maxos),maxval);
+  results{c}.maxos = maxos;
+  results{c}.maxcat = maxcat;
+  results{c}.id = maxos*0+c;
+  results{c}.id_grid = [rs.id_grid{1}];
+  results{c}.x = [];
+  if length(rs.support_grid{1})>0
+    results{c}.x = cat(2,rs.support_grid{1}{:});  
+  end
+  
+  c = c + 1;
+end
 
-  
-  os = cellfun2(@(x)x.maxos,results);
-  os = cat(1,os{:});
-  
-  xcat = cellfun2(@(x)reshape(x.maxcat,[],1),results);
-  xcat = cat(1,xcat{:});
-  
-  x = cellfun2(@(x)x.x,results);
-  x = cat(2,x{:});
-  X = x;
-  
-  ids = cellfun2(@(x)x.id_grid,results);
-  ids = cat(2,ids{:});
-  
-  imageid = cellfun2(@(x)x.id(:),results);
-  imageid = cat(1,imageid{:});
 
+os = cellfun2(@(x)x.maxos,results);
+os = cat(1,os{:});
+
+xcat = cellfun2(@(x)reshape(x.maxcat,[],1),results);
+xcat = cat(1,xcat{:});
+
+x = cellfun2(@(x)x.x,results);
+x = cat(2,x{:});
+X = x;
+
+ids = cellfun2(@(x)x.id_grid,results);
+ids = cat(2,ids{:});
+
+imageid = cellfun2(@(x)x.id(:),results);
+imageid = cat(1,imageid{:});
   
-function [os,xcat,X,ids,imageid] = get_dets_neg(m)
+function [os,xcat,X,ids,imageid,bg] = get_dets_neg(m)
 
 VOCinit;
 bg = get_pascal_bg('train',['-' m.cls]);
@@ -603,12 +617,12 @@ w = m.model.w(:);
 b = m.model.b;
 r = [];
 
-[w,b,alphas,pos_inds] = learn_local_capacity(X,y,index,SVMC, ...
-                                             gamma,g(y==y(index)),m);
+%[w,b,alphas,pos_inds] = learn_local_capacity(X,y,index,SVMC, ...
+%                                             gamma,g(y==y(index)),m);
 
 
-%[w,b,r,pos_inds] = learn_local_rank_capacity(X,y,index,SVMC, ...
-%                                             gamma,g,m);
+[w,b,r,pos_inds] = learn_local_rank_capacity(X,y,index,SVMC, ...
+                                             gamma,g,m);
 
 %res=w'*X-b;
 %plot(res,os,'r.')
@@ -637,10 +651,37 @@ m.model.r = r;%alphas = alphas;
 %   m.model.w = reshape(wex,m.model.hg_size);
 % end
 
-function g = compute_gain_vector(m,os,xcat,X,ids)
-g = os*100;% + 20*double(ismember(xcat,m.cls));
-%g(~ismember(xcat,m.cls)) = -10;
+function g = compute_gain_vector(m,os_big,xcat,X,ids,fg)
+%Here we compute the gain vector between an exemplar (inside of m)
+%and the detection window.  it is a measure of annotation
+%similarity which generalizes overlap score and category equality
+
+VOCinit;
+
+%get self annotation
+r = PASreadrecord(sprintf(VOCopts.annopath,m.curid));
+bbs = cat(1,r.objects.bbox);
+os = getosmatrix_bb(m.gt_box,bbs)
+[alpha,ind] = max(os);
+fself = get_feature_vector(r,ind);
+
+% f = zeros(length(fself),length(os));
+% for i = 1:length(os_big)
+%   curfile = fg{ids{i}.curid};
+%   [tmp,curid,tmp] = fileparts(curfile);
+%   r = PASreadrecord(sprintf(VOCopts.annopath,m.curid));
+%   bbs = cat(1,r.objects.bbox);
+%   os = getosmatrix_bb(ids{i}.bb,bbs);
+%   [alpha,ind] = max(os);
+%   f(:,i) = get_feature_vector(r,ind);
+% end
+
+%d = distSqr_fast(fself,f)';
+g = os_big*100;% + 20*double(ismember(xcat,m.cls));
+%g = g - d*20;
 g(os<.2) = -100;
+
+
 
 function targetids = cleanse_ids(targetids)
 for i = 1:length(targetids)
@@ -695,3 +736,42 @@ axis image
 title([titler ' ' targetset])
 imwrite(Isv,sprintf('%s/dets_%s-%s_%s.%05d.png',VOCopts.localdir,titler,targetset,m.curid, ...
                     m.objectid));
+
+function f = get_feature_vector(r, ind)
+
+VOCinit;
+
+bbs = cat(1,r.objects.bbox);
+maxos = getosmatrix_bb(bbs,bbs(ind,:));
+maxos(ind) = 0;
+
+classes = {r.objects.class};
+
+[aa,bb]=ismember(classes(setdiff(1:length(classes),ind)),VOCopts.classes);
+relative_counts = hist(bb,1:20);
+
+insiders = find(maxos>.5);
+[aa,bb]=ismember(classes(insiders),VOCopts.classes);
+friend_counts = hist(bb,1:20);
+
+self_counts = double(ismember(VOCopts.classes,classes(ind)));
+
+sub = r.objects(ind);
+views = {'Frontal','Rear','Left','Right','Other'};
+vvector = double(ismember(views,sub.view));
+vvector = [vvector sub.truncated sub.occluded];
+cvec = double(ismember(VOCopts.classes,sub.class));
+
+f=cat(1,vvector(:),cvec(:),friend_counts(:),relative_counts(:));
+
+if 0
+W = bbs(ind,3)-bbs(ind,1)+1;
+H = bbs(ind,4)-bbs(ind,2)+1;
+scale = 100/W;
+W = W*scale;
+H = H*scale;
+
+hs = linspace(10,5,250);
+hs = (exp(-.01*(hs-H).^2));
+hs = hs/sum(hs);
+end

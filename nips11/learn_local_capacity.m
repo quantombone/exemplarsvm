@@ -53,7 +53,7 @@ for k = 1:20
   %diffx = x(:,index)/100;
   %fprintf(1,'adding fatty\n');
   
-  if 1 %exist('m','var')
+  if exist('m','var')
     %take all positives now from the exemplar
     diffx = m.model.x;%(:,2:11);
     %diffx = x;
@@ -85,7 +85,7 @@ for k = 1:20
 
   if 1
     %%optimize alphas 
-    if 0
+    if 1
       %gamma term
       hinge = @(x)max(1-x,0.0);
       loss_term = hinge((w'*x(:,pos_inds)-b) .* y(pos_inds)');
@@ -117,7 +117,7 @@ for k = 1:20
       %[alpha,beta] = sort(loss_term);
       %savealphas = alphas;
       alphas(pos_inds) = 1;
-      K = 70;
+      K = 10;
       
       alphas(pos_inds(beta(K+1:end)))=0;
       %randkills = (rand(K,1)>.7);

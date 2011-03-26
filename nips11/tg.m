@@ -4,6 +4,7 @@ if ~exist('models','var')
 end
 
 r = randperm(length(models));
+r = 9;
 for q = 1:length(r)
   train_regressor(models{r(q)});
 end

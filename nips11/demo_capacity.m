@@ -61,6 +61,7 @@ curx = [xpos(:,bb(1:K)) xneg];
 cury = [ypos(bb(1:K)) yneg]';
 
 [w,b] = learn_local_no_capacity(curx,cury,index,SVMC);
+
 res = w'*x-b;
 
 xmin = min(x(1,:));
@@ -102,7 +103,22 @@ plot(x(1,y==1),x(2,y==1),'g.')
 hold on;
 plot(x(1,index),x(2,index),'kp','MarkerSize',12,'LineWidth',3)
 
-[w,b,alphas,pos_inds] = learn_local_capacity(x,y,index,SVMC,gamma);
+%[w,b,alphas,pos_inds] = learn_local_capacity(x,y,index,SVMC,gamma);
+[w,b,alphas,pos_inds] = learn_local_rank_capacity(x,y,index,SVMC, ...
+                                                  gamma);
+
+%r = w'*x(:,pos_inds)-b;
+%[aa,bb] = sort(r,'descend');
+%alphas = bb(1:10);
+
+alphas2 = zeros(size(pos_inds));
+alphas2(alphas) = 1;
+alphas = alphas2;
+sum(alphas(pos_inds))
+length(pos_inds)
+
+
+
 
 curscores(end+1,:) = w'*x-b;
 
@@ -134,14 +150,22 @@ hold on;
 plot([xmin xmax],[yminpos ymaxpos],'r--','LineWidth',2)
 hold on;
 
-goods = pos_inds(alphas>0);
+if length(alphas)>0
+  try
+  goods = pos_inds(alphas>0);
+  catch
+    keyboard
+  end
+else
+  goods = [];
+end
 plot(x(1,goods),x(2,goods),'ko');
 title(sprintf('Max-Capacity \\gamma=%.3f',gamma))
 axis(bbox_range);
 
 index
 drawnow
-pause
+%pause
 
 end
 
