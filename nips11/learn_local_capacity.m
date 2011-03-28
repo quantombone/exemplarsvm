@@ -12,7 +12,6 @@ if ~exist('g','var')
   g = ones(size(pos_inds));
 end
 
-
 %turn all negatives on, they always stay on
 %turn all positives off at start
 alphas = y*0+1;
@@ -55,8 +54,10 @@ for k = 1:20
   
   if exist('m','var')
     %take all positives now from the exemplar
-    diffx = m.model.x;%(:,2:11);
+    diffx = m.model.x;
     %diffx = x;
+    %diff3 = bsxfun(@minus, mean(diffx,2), x(:,goods));
+    %diffx = cat(2,diffx,diff3);
   else
     diffx = x(:,[]);
   end

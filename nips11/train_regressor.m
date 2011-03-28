@@ -1,9 +1,12 @@
 function m = train_regressor(m)
 %Train a linear function which regress well onto other objects and
 %has max-margin separation between negatives
+%This is the template for max-margin max capacity learning
+
+%Tomasz Malisiewicz
+
 VOCinit;
 m.models_name = 'nips11';
-
 
 savem = m;
 fg_train = get_pascal_bg('train',m.cls);
@@ -11,7 +14,6 @@ fg_val = get_pascal_bg('val',m.cls);
 
 %fg_train = fg_train(1:min(length(fg_train),300));
 %fg_val = fg_val(1:min(length(fg_val,300)));
-
 
 %remove self
 [a,b,c] = fileparts(fg_train{end});
@@ -41,12 +43,9 @@ for qqq = 1:1
   filerlock = [resfile '.lock'];
     %fprintf(1,'hack not checking\n');
 
-
-  if fileexists(resfile) | (mymkdir_dist(filerlock) == 0) %|| 
+  if 0 %(fileexists(resfile) | mymkdir_dist(filerlock)) == 0
     continue
   end
-
-
   
   file1 = sprintf('%s/myfiles_fgraw.%s.%05d.mat',VOCopts.localdir,...
                   m.curid,m.objectid);
@@ -67,6 +66,10 @@ for qqq = 1:1
     %save(sprintf('myfiles_%05d.mat',qqq),'os','xcat','X','ids','imageid');
   end
 
+  
+  %get g on validation set
+  g_val = compute_gain_vector(m,osT,xcatT,XT,idsT,fg_val);
+  
   for q = 1:length(ids)
     ids{q}.curid = imageid(q);
   end
@@ -105,118 +108,47 @@ for qqq = 1:1
   
   g = cat(1,g,gN);
   
-  %g = compute_gain_vector(m,os,xcat,X,ids);
-  
-
   [m] = learn_model(m,os,xcat,X,ids,g);
-  %os(end+1:end+size(m.model.x,2))=1;
-  
-  %X(end+1,:) = 1;
-  
-  % [aa,bb] = sort(os+exp(m.model.w(:)'*X(1:end-1,:)-m.model.b)', ...
-  %                'descend');
-  %os = os+exp(m.model.w(:)'*X(1:end-1,:)-m.model.b)';
-  
-  %[aa,bb] = sort(m.model.w(:)'*X(1:end-1,:),'descend');
-  %X = X(:,bb(1:length(bb)/10));
-  %os = os(bb(1:length(bb)/10));
-  
-  % [aa,bb] = sort(m.model.w(:)'*X(1:end-1,:),'descend');
-  % [alpha,beta] = sort(bb);
-  % ranks = (beta);
-  
-  % rankscores = ranks.^-.1;
-  % bads = find(os<.2);
-  % os = os .* rankscores';
-  % os = reshape(os,1,[]);
-  % os(bads) = 0;
-  
-  % %w = (os*inv(X'*X+lambda*eye(size(X,2),size(X,2)))*X')';
-  % %w2 = inv(X*X'+lambda*eye(size(X,1),size(X,1)))*X*os';
-  
-  % %alpha = pinv(X)*w;
-  % %alpha2 = pinv(X)*w2;
-  
-  % K = X'*X;
-  
-  % sigmoid = @(x)1./(1+exp(-x));
-  % lambda = 1;
-  % %a = fminunc(@(a)norm(sigmoid(K*a)-os').^2+lambda*norm(X*a)^2,...
-  % %            zeros(size(X,2),1),...
-  % %            optimset('MaxIter',100));
-  
-  % %This is the real dual problem
-  % a = inv(K*K+lambda*K)*K*os';
-  
-  % %get primal detector
-  % w = X*a;
-  
-  % %w = fminunc(@(w)objective(w,X,os),w,optimset('MaxIter',10));
-  
-  % m.model.b = w(end);
-  % m.model.w = reshape(w(1:end-1),m.model.hg_size);
-  
-  % figure(2)
-  % clf
-  % imagesc(HOGpicture(reshape(m.model.w,m.model.hg_size)))
-  % drawnow
-  
 
-  
-  % targetX = X2;
-  % targetids = ids2;
-  % targetg = g2;
   
   
   targetX = X;
   targetids = ids;
   targetset = 'train';
   targetfg = fg;
+  targetg = g;
 
-  % [os3,xcat3,targetX,targetids,imageid3,targetg] = collect_top_dets(m,os,xcat,X,ids, ...
-  %                                                 imageid,g);
-  
-
-
-  %[aa,bb] = sort(targetg,'descend');
-  
-  
-  %figure(2)
-  %plot(res,targetg,'r.')
-  %xlabel('resulting score')
-  %ylabel('g')
-  %drawnow
   Isv = cell(0,1);
   %% output of current algorithm  
   targetw = m.model.w(:);
   targetb = m.model.b;
-  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'maxcapacity',targetset);
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'maxcapacity',targetset,[],targetg);
   
 
   %% output of original algorithm (exemplarsvm)
   targetw = savem.model.w(:);
   targetb = savem.model.b;
-  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'exemplarsvm',targetset);
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'exemplarsvm',targetset,[],targetg);
   
   %% output of w-centering trick classifier
   targetw = mean(m.model.x,2);
   targetb = 0;
   targetw = targetw - mean(targetw(:));
   Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
-                'zeromean',targetset);
+                'zeromean',targetset,[],targetg);
   
   targetw = mean(m.model.x,2);
   targetb = 0;
   targetfun = @(x,y)distSqr_fast(x,y);
   Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
-                'nndist',targetset,targetfun);
+                'nndist',targetset,targetfun,targetg);
 
   
   targetw = mean(m.model.x,2);
   targetb = 0;
   targetfun = @(x,y)sum((x-y).^2./(x+y+eps));
   Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
-                'chisq',targetset,targetfun);
+                'chisq',targetset,targetfun,targetg);
 
   
   
@@ -224,6 +156,7 @@ for qqq = 1:1
   targetids = idsT;
   targetset = 'val';
   targetfg = fg_val;
+  targetg = g_val;
  
   % [os3,xcat3,targetX,targetids,imageid3,targetg] = collect_top_dets(m,os,xcat,X,ids, ...
   %                                                 imageid,g);
@@ -243,101 +176,33 @@ for qqq = 1:1
   targetw = m.model.w(:);
   targetb = m.model.b;
 
-  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'maxcapacity',targetset);
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'maxcapacity',targetset,[],targetg);
   
 
   %% output of original algorithm (exemplarsvm)
   targetw = savem.model.w(:);
   targetb = savem.model.b;
-  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'exemplarsvm',targetset);
+  Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'exemplarsvm',targetset,[],targetg);
   
   %% output of w-centering trick classifier
   targetw = mean(m.model.x,2);
   targetb = 0;
   targetw = targetw - mean(targetw(:));
   Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
-                'zeromean',targetset);
+                'zeromean',targetset,[],targetg);
   
   targetw = mean(m.model.x,2);
   targetb = 0;
   targetfun = @(x,y)distSqr_fast(x,y);
   Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
-                'nndist',targetset,targetfun);
+                'nndist',targetset,targetfun,targetg);
 
   
   targetw = mean(m.model.x,2);
   targetb = 0;
   targetfun = @(x,y)sum((x-y).^2./(x+y+eps));
   Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg, ...
-                'chisq',targetset,targetfun);
-
-  
-
-  % %% custom for chisq nn-dist
-  % mx = mean(m.model.x,2);
-  % for qqq = 1:size(targetX,2)
-  %   chisq = (targetX(:,qqq)-mx);
-  %   chisq = sum((chisq).^2 ./(targetX(:,qqq)+mx));
-  %   d(qqq) = chisq;
-  % end
-  % %d = distSqr_fast(mx,targetX);
-  
-  % res = -d;
-  % [aa,bb] = sort(res,'descend');
-
-  % for i = 1:length(targetids)
-  %   targetids{i}.FLIP_LR = 0; 
-  % end
-  % targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
-  % Isv = get_sv_stack([targetids{bb(1:min(length(bb),Nstack^2))}],targetfg);
-  % figure(34)
-  % clf
-  % imagesc(Isv)
-  % imwrite(Isv,sprintf('%s/dets_chisq-%s_%s.%05d.png',VOCopts.localdir,targetset,m.curid,m.objectid));
-
-  % %% custom for euclidean nn-dist
-  % mx = mean(m.model.x,2);
-  % d = distSqr_fast(mx,targetX);
-  % res = -d;
-  % [aa,bb] = sort(res,'descend');
-
-  % for i = 1:length(targetids)
-  %   targetids{i}.FLIP_LR = 0; 
-  % end
-  % targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
-  % Isv = get_sv_stack([targetids{bb(1:min(length(bb),Nstack^2))}],targetfg);
-  % figure(34)
-  % clf
-  % imagesc(Isv)
-  % imwrite(Isv,sprintf('%s/dets_nndist-%s_%s.%05d.png',VOCopts.localdir,targetset,m.curid,m.objectid));
-
-  % %% custom for chisq nn-dist
-  % mx = mean(m.model.x,2);
-  % for qqq = 1:size(targetX,2)
-  %   chisq = (targetX(:,qqq)-mx);
-  %   chisq = sum((chisq).^2 ./(targetX(:,qqq)+mx));
-  %   d(qqq) = chisq;
-  % end
-  % %d = distSqr_fast(mx,targetX);
-  
-  % res = -d;
-  % [aa,bb] = sort(res,'descend');
-
-  % for i = 1:length(targetids)
-  %   targetids{i}.FLIP_LR = 0; 
-  % end
-  % targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
-  % Isv = get_sv_stack([targetids{bb(1:min(length(bb),Nstack^2))}],targetfg);
-  % figure(34)
-  % clf
-  % imagesc(Isv)
-  % imwrite(Isv,sprintf('%s/dets_chisq-%s_%s.%05d.png',VOCopts.localdir,targetset,m.curid,m.objectid));
-
-
-  
-  % figure(444)
-  % plot(res,os,'r.')
-
+                'chisq',targetset,targetfun,targetg);
   
   III=cat(1,Isv{:});
 
@@ -346,28 +211,12 @@ for qqq = 1:1
   drawnow
   imwrite(III,finalI);
 
-
-  
-
   save(resfile,'m');
   rmdir(filerlock);
   
-
-
-  %save m.mat m
+  
 end
 
-% function [fval,gval] = objective(w,X,os)
-% lambda = 100;
-% keyboard
-% fval = norm(sigmoid(w'*X)-os).^2+lambda*norm(w);
-% gval = 2*(sigmoid(w'*X)-os)'*sigmoidp(w'*X)*X + 2*lambda*w';
-
-% function y = sigmoid(x)
-% y = 1./(1+exp(-x));
-
-% function y = sigmoidp(x)
-% y=exp(x)./(1+exp(x)).^2;
 
 function [os,xcat,X,ids,imageid] = get_dets(m,fg)
 %Given a set of images inside fg and an exemplar inside m, get the
@@ -583,43 +432,16 @@ ids = ids(inds);
 imageid = imageid(inds);
 g = g(inds);
 
-% %% add negatives here
-% X = cat(2,X,m.model.nsv);
-% %y = cat(1,y,-1*ones(size(m.model.nsv,2),1));
-% g = cat(1,g,zeros(size(m.model.nsv,2),1));
-
-% %% must get os, xcat, and imageid from the negatives
-
-% bg = get_pascal_bg('train',['-' m.cls]);
-% for i = 1:length(m.model.svids)
-%   cursv = m.model.svids{i};
-%   [a,curid,tmp]=fileparts(bg{cursv.curid});
-%   gts = recs = PASreadrecord(sprintf(VOCopts.annopath,curid));  
-%   keyboard
-% end
-
 function [m] = learn_model(m,os,xcat,X,ids,g)
-tau = .3;
+tau = .5;
 
 SVMC = .01;
 gamma = 1.0;
-gamma = .023;
-
-%[aa,bb] = sort(g,'descend');
-%y = os*0-1;
-%y(bb(1:10)) = 1;
+%gamma = .023;
 
 y = double(os>tau);% & ismember(xcat,m.cls));
 
 y(y==0) = -1;
-
-%g = 1./(1+exp(-10*(g-.5)));
-%oldscores = m.model.w(:)'*X(:,y>0)-m.model.b;
-%g = g.* 1./(1+exp(-1*oldscores))';
-
-%[tmp,index] = max(results{1}.maxos);
-%size(X)
-%size(m.model.nsv)
 
 index = 1;
 
@@ -631,35 +453,15 @@ r = [];
                                              gamma,g(y==y(index)),m);
 
 
+
 %[w,b,r,pos_inds] = learn_local_rank_capacity(X,y,index,SVMC, ...
 %                                             gamma,g,m);
 
-%res=w'*X-b;
 %plot(res,os,'r.')
 
 m.model.w = reshape(w,m.model.hg_size);
 m.model.b = b;
 m.model.r = r;%alphas = alphas;
-
-
-% if 0
-%   %playing with liblinear here
-%   SVMC = 100;
-
-%   y = double(os>.5);
-%   y(y==0) = -1;
-%   model = liblinear_train(y, sparse(X)', sprintf(['-s 0 -B 1 -c' ...
-%                   ' %f'],SVMC));
-%   wex = model.w(1:end-1)';
-%   b = -model.w(end);
-%   if y(1) == -1
-%     wex = wex*-1;
-%     b = b*-1;
-%   end
-
-%   m.model.b = b;
-%   m.model.w = reshape(wex,m.model.hg_size);
-% end
 
 function g = compute_gain_vector(m,os_big,xcat,X,ids,fg)
 %Here we compute the gain vector between an exemplar (inside of m)
@@ -671,8 +473,8 @@ VOCinit;
 %get self annotation
 r = PASreadrecord(sprintf(VOCopts.annopath,m.curid));
 bbs = cat(1,r.objects.bbox);
-os = getosmatrix_bb(m.gt_box,bbs)
-[alpha,ind] = max(os);
+osgt = getosmatrix_bb(m.gt_box,bbs);
+[alpha,ind] = max(osgt);
 fself = get_feature_vector(r,ind);
 
 % f = zeros(length(fself),length(os));
@@ -689,7 +491,7 @@ fself = get_feature_vector(r,ind);
 %d = distSqr_fast(fself,f)';
 g = os_big*100;% + 20*double(ismember(xcat,m.cls));
 %g = g - d*20;
-g(os<.2) = -100;
+g(os_big<.5) = -100;
 
 
 
@@ -701,12 +503,12 @@ targetids = cellfun2(@(x)rmfield(x,'FLIP_LR'),targetids);
 
 
 function Isv = show_and_save(m,targetw,targetb,targetX,targetids,fg, ...
-                       titler,targetset,targetfun);
+                       titler,targetset,targetfun,targetg)
 
 VOCinit;
 VOCopts.localdir = [VOCopts.localdir '/myfiles'];
 
-if exist('targetfun','var')
+if exist('targetfun','var') && length(targetfun) > 0
   d = zeros(size(targetX,2),1);
   for i = 1:size(d,1)
     d(i) = targetfun(targetw,targetX(:,i));
@@ -717,6 +519,11 @@ else
 end
 
 [aa,bb] = sort(res,'descend');
+if strcmp(targetset,'train')
+  figure(44)
+  hold all;
+  plot(cumsum(targetg(bb))./(1:length(bb))');
+end
 
 %% bb is now the ordering, but nms it
 
@@ -748,6 +555,7 @@ imwrite(Isv,sprintf('%s/dets_%s-%s_%s.%05d.png',VOCopts.localdir,titler,targetse
                     m.objectid));
 
 function f = get_feature_vector(r, ind)
+%Get the annotation-space feature vector
 
 VOCinit;
 

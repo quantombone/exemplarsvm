@@ -7,6 +7,11 @@ end
 r = randperm(length(models));
 %r = 9;
 %r = 3;
+% person with arms out
+%r = 18;
+
+%person with torso
+r = 104;
 for q = 1:length(r)
   train_regressor(models{r(q)});
 end
