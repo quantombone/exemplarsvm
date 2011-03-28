@@ -9,6 +9,10 @@ savem = m;
 fg_train = get_pascal_bg('train',m.cls);
 fg_val = get_pascal_bg('val',m.cls);
 
+%fg_train = fg_train(1:min(length(fg_train),300));
+%fg_val = fg_val(1:min(length(fg_val,300)));
+
+
 %remove self
 [a,b,c] = fileparts(fg_train{end});
 starter = [a '/'  m.curid c];
@@ -19,11 +23,11 @@ fg = [starter; fg_train];
 fgraw = fg;
 
 fg2 = get_pascal_bg('train',['-' m.cls]);
-
 VOCopts.localdir = [VOCopts.localdir '/myfiles'];
 
 finalI=sprintf('%s/Zfinal_%s.%05d.png',VOCopts.localdir,m.curid, ...
                m.objectid);
+
 if fileexists(finalI)
   return;
 end
@@ -37,15 +41,20 @@ for qqq = 1:1
   filerlock = [resfile '.lock'];
     %fprintf(1,'hack not checking\n');
 
-  if ~fileexists(resfile)% (mymkdir_dist(filerlock) == 0) %|| 
+
+  if fileexists(resfile) | (mymkdir_dist(filerlock) == 0) %|| 
     continue
   end
+
 
   
   file1 = sprintf('%s/myfiles_fgraw.%s.%05d.mat',VOCopts.localdir,...
                   m.curid,m.objectid);
   file2 = sprintf('%s/myfiles_fg_val.%s.%05d.mat',VOCopts.localdir,...
                   m.curid,m.objectid);
+ 
+    
+ 
   try
     load(file1);% myfiles_fgraw.mat  
     load(file2);% myfiles_fg_val.mat
@@ -58,44 +67,44 @@ for qqq = 1:1
     %save(sprintf('myfiles_%05d.mat',qqq),'os','xcat','X','ids','imageid');
   end
 
-for q = 1:length(ids)
-  ids{q}.curid = imageid(q);
-end
-
-for q = 1:length(idsT)
-  idsT{q}.curid = imageidT(q);
-end
-
-os2 = os;
-xcat2 = xcat;
-X2 = X;
-ids2 = ids;
-imageid2 = imageid;
-
-g2 = compute_gain_vector(m,os2,xcat2,X2,ids2,fgraw);
-
-[osN,xcatN,XN,idsN,imageidN,bg] = get_dets_neg(m);  
-gN = compute_gain_vector(m,osN,xcatN,XN,idsN,bg);
-
-os = os2;
-xcat = xcat2;
-X = X2;
-ids = ids2;
-imageid = imageid2;
-g = g2;
-%[os,xcat,X,ids,imageid,g] = collect_top_dets(m,os2,xcat2,X2,ids2, ...
-%                                             imageid2,g2);
-
-
-os = cat(1,os,osN);
-xcat = cat(1,xcat,xcatN);
-X = cat(2,X,XN);
-ids = cat(2,ids,idsN);
-imageid = cat(1,imageid,imageidN);
-fg = cat(1,fg,fg2);  
-
-g = cat(1,g,gN);
-
+  for q = 1:length(ids)
+    ids{q}.curid = imageid(q);
+  end
+  
+  for q = 1:length(idsT)
+    idsT{q}.curid = imageidT(q);
+  end
+  
+  os2 = os;
+  xcat2 = xcat;
+  X2 = X;
+  ids2 = ids;
+  imageid2 = imageid;
+  
+  g2 = compute_gain_vector(m,os2,xcat2,X2,ids2,fgraw);
+  
+  [osN,xcatN,XN,idsN,imageidN,bg] = get_dets_neg(m);  
+  gN = compute_gain_vector(m,osN,xcatN,XN,idsN,bg);
+  
+  os = os2;
+  xcat = xcat2;
+  X = X2;
+  ids = ids2;
+  imageid = imageid2;
+  g = g2;
+  %[os,xcat,X,ids,imageid,g] = collect_top_dets(m,os2,xcat2,X2,ids2, ...
+  %                                             imageid2,g2);
+  
+  
+  os = cat(1,os,osN);
+  xcat = cat(1,xcat,xcatN);
+  X = cat(2,X,XN);
+  ids = cat(2,ids,idsN);
+  imageid = cat(1,imageid,imageidN);
+  fg = cat(1,fg,fg2);  
+  
+  g = cat(1,g,gN);
+  
   %g = compute_gain_vector(m,os,xcat,X,ids);
   
 
@@ -183,7 +192,7 @@ g = cat(1,g,gN);
   targetb = m.model.b;
   Isv{end+1} = show_and_save(m,targetw,targetb,targetX,targetids,targetfg,'maxcapacity',targetset);
   
-  return;
+
   %% output of original algorithm (exemplarsvm)
   targetw = savem.model.w(:);
   targetb = savem.model.b;
@@ -334,13 +343,14 @@ g = cat(1,g,gN);
 
   fprintf(1,'writing %s\n',finalI);
   imagesc(III)
-drawnow
+  drawnow
   imwrite(III,finalI);
 
 
+  
 
-  %save(resfile,'m');
-  %rmdir(filerlock);
+  save(resfile,'m');
+  rmdir(filerlock);
   
 
 
@@ -617,12 +627,12 @@ w = m.model.w(:);
 b = m.model.b;
 r = [];
 
-%[w,b,alphas,pos_inds] = learn_local_capacity(X,y,index,SVMC, ...
-%                                             gamma,g(y==y(index)),m);
+[w,b,alphas,pos_inds] = learn_local_capacity(X,y,index,SVMC, ...
+                                             gamma,g(y==y(index)),m);
 
 
-[w,b,r,pos_inds] = learn_local_rank_capacity(X,y,index,SVMC, ...
-                                             gamma,g,m);
+%[w,b,r,pos_inds] = learn_local_rank_capacity(X,y,index,SVMC, ...
+%                                             gamma,g,m);
 
 %res=w'*X-b;
 %plot(res,os,'r.')
