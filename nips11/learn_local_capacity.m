@@ -6,10 +6,10 @@ pos_inds = find(y==y(index));
 
 if ~exist('g','var')
   % fprintf(1,'Creating G from euclidean distance\n');
-  % ds = distSqr_fast(x(:,index),x(:,y==y(index)));
-  % ds = ds / mean(ds(:));
-  % g = exp(-1.0*ds)';
-  g = ones(size(pos_inds));
+  ds = distSqr_fast(x(:,index),x(:,y==y(index)));
+  ds = ds / mean(ds(:));
+  g = exp(-1.0*ds)';
+  %g = ones(size(pos_inds));
 end
 
 
@@ -62,6 +62,7 @@ for k = 1:20
   end
 
   diffy = ones(size(diffx,2),1);
+  
   
   newy = [y(goods); diffy];
   newx =  cat(2,x(:,goods),diffx);
