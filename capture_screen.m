@@ -54,7 +54,7 @@ end
 
 figure(1)
 
-stuff = get_pascal_bg('test','bus');
+%stuff = get_pascal_bg('test','bus');
 
 for i = 1:NITER
     
@@ -62,12 +62,12 @@ for i = 1:NITER
     %keep looping/pausing until a new screenshot is obtained!
     %NOTE: this will hang for a long time if the screen doesn't change
     for aaa = 1:100
-      I = convert_to_I(stuff{i});
-      %I = ScreenCapture(subber);  
+        %I = convert_to_I(stuff{i});
+      I = ScreenCapture(subber);  
       I = im2double(I);
       sizer = size(I);
       ms = max(sizer(1:2));
-      break;
+      
       
       %I = imresize(I,sizer(1:2)*300/ms);
       %I = max(0.0,min(1.0,I));
