@@ -1,7 +1,11 @@
 # This Makefile is used under Linux
 #MATLABDIR ?= /usr/local/lib/matlab7
 #MATLABDIR ?= /opt/matlab/amd64_f7/7.10/lib/matlab7/
-MATLABDIR ?= /Applications/MATLAB74/
+#On my macbook pro
+#MATLABDIR ?= /Applications/MATLAB74/
+
+#On my macbook air
+MATLABDIR ?= /Applications/MATLAB_R2010a.app/
 
 # for Mac
 # MATLABDIR ?= /opt/local/matlab
@@ -36,8 +40,8 @@ binary: svmpredict.$(MEX_EXT) svmtrain.$(MEX_EXT) libsvmread.$(MEX_EXT) libsvmwr
 svmpredict.$(MEX_EXT):     svmpredict.c svm.h svm.o svm_model_matlab.o
 	$(MEX) $(MEX_OPTION) svmpredict.c svm.o svm_model_matlab.o
 
-svmtrain.$(MEX_EXT):       svmtrain.c svm.h svm.o svm_model_matlab.o
-	$(MEX) $(MEX_OPTION) svmtrain.c svm.o svm_model_matlab.o
+svmtrain.$(MEX_EXT):       libsvmtrain.c svm.h svm.o svm_model_matlab.o
+	$(MEX) $(MEX_OPTION) libsvmtrain.c svm.o svm_model_matlab.o
 
 libsvmread.$(MEX_EXT):	libsvmread.c
 	$(MEX) $(MEX_OPTION) libsvmread.c
