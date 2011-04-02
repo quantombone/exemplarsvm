@@ -103,7 +103,7 @@ end
     lt = w'*x-b;
     
     
-    keyboard
+
     
   end
     

@@ -6,20 +6,21 @@ SVMC = 1;
 %xs2 = sin(xs);
 rand('seed',1234);
 t = linspace(0,2*pi,100);
-xpos = [t; 10*sin(t)];
-xneg = [t; 10*sin(t)-5];
-%xpos = [12*cos(t); 12*sin(t)];
-%xneg = [5*cos(t); 2*sin(t)]; 
+%xpos = [t; 10*sin(t)];
+%xneg = [cos(t); 10*sin(t)-5];
+xpos = [12*cos(t); 12*sin(t)];
+xneg = [5*cos(t); 6*sin(t)]; 
+
 %xpos2 = [1+8*cos(t); 2*sin(t)];
 xpos2 = [];
 
 xpos = [xpos xpos2];
 
-xpos = xpos + 0.0*randn(size(xpos));
-xneg = xneg + 0.1*randn(size(xneg));
+xpos = xpos + 2.0*randn(size(xpos));
+xneg = xneg + 2.0*randn(size(xneg));
 
-%xpos = xpos*.01;
-%xneg = xneg*.01;
+xpos = xpos*10;
+xneg = xneg*10;
 %PAD = 1;
 %xpos = [xs; xs2 + PAD + randn(size(xs))];
 %xneg = [xs; xs2 - PAD + randn(size(xs))];
@@ -43,8 +44,9 @@ curscores = [];
 y = y';
 
 %%%%%%%%
-gamma = 10;
-svm_model = svmtrain(y, x',sprintf(['-s 0 -t 2 -c' ...
+gamma = .001;
+halfers = randn(size(y))>0;
+svm_model = svmtrain(y(halfers), x(:,halfers)',sprintf(['-s 0 -t 2 -c' ...
                     ' %f -gamma %f -q'],SVMC,gamma));
 %toc
 
@@ -80,6 +82,7 @@ myscores = mysvmpredict(boost(newvals),svm_model);
 predicted_label = sign(myscores);
 myscores = reshape(myscores,size(xxx));
 
+myscores_raw = mysvmpredict(x,svm_model);
 
 
 
@@ -88,6 +91,8 @@ myscores = reshape(myscores,size(xxx));
 
 scoremat = [];
 scoremat2 = [];
+ws = cell(0,1);
+bs = cell(0,1);
 for iii = 1:length(t)%1:10000
   index = 1+mod(iii,length(t));
   gamma = 1;
@@ -169,9 +174,13 @@ wold = w;
 bold = b;
 [w,b,alphas,pos_inds] = learn_local_capacity(x,y,index,SVMC,gamma);
 
+ws{end+1} = w;
+bs{end+1} = b;
+
 alphas = logical(alphas);
 %[w,b,alphas,pos_inds] = learn_local_rank_capacity(x,y,index,SVMC, ...
 %                                                  gamma);
+
 
 %r = w'*x(:,pos_inds)-b;
 %[aa,bb] = sort(r,'descend');
@@ -265,13 +274,29 @@ end
  imagesc(-reshape( max(scoremat2,[],2),size(xxx)))
  title('M^2MC Boundary')
  
+ %% show pr curve now
+ figure(3)
+ clf
+ 
+ rvec = cellfun2(@(f)f'*x(:,~halfers),ws);
+ rv=cat(1,rvec{:});
+ [aa,bb] = sort(max(rv,[],1),'descend');
+ cury = y(~halfers);
+ corr = cury(bb);
+ plot(cumsum(corr)./(1:length(corr))')
+ 
+ myscores_raw = mysvmpredict(boost(x(:,~halfers)),svm_model);
+ 
+ [aa,bb] = sort(myscores_raw,'descend');
+ corr = cury(bb);
+ hold all;
+ plot(cumsum(corr)./(1:length(corr))')
+ legend('Max Capacity','Kernel SVM')
  
 
+ 
 
- keyboard
-
-
-
+ 
 function [w,b] = learn_local_no_capacity(x,y,index,SVMC)
 
 pos_inds = find(y==1);
