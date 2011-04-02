@@ -1,7 +1,7 @@
 # This Makefile is used under Linux
 #MATLABDIR ?= /usr/local/lib/matlab7
-MATLABDIR ?= /opt/matlab/amd64_f7/7.10/lib/matlab7/
-
+#MATLABDIR ?= /opt/matlab/amd64_f7/7.10/lib/matlab7/
+MATLABDIR ?= /Applications/MATLAB74/
 
 # for Mac
 # MATLABDIR ?= /opt/local/matlab
@@ -13,7 +13,7 @@ CFLAGS = -Wall -Wconversion -O3 -fPIC -I$(MATLABDIR)/extern/include
 MEX = $(MATLABDIR)/bin/mex
 MEX_OPTION = CC\#$(CXX) CXX\#$(CXX) CFLAGS\#"$(CFLAGS)" CXXFLAGS\#"$(CFLAGS)"
 # comment the following line if you use MATLAB on 32-bit computer
-MEX_OPTION += -largeArrayDims
+#MEX_OPTION += -largeArrayDims
 MEX_EXT = $(shell $(MATLABDIR)/bin/mexext)
 
 OCTAVEDIR ?= /usr/include/octave
