@@ -1,7 +1,9 @@
-function demo_capacity
+function demo_capacity(r)
 %% try a nonlinear decision boundary
 
 SVMC = 1;
+
+%SVMC = 10;
 %xs = linspace(0,4*pi,1000);
 %xs2 = sin(xs);
 rand('seed',1234);
@@ -9,18 +11,26 @@ t = linspace(0,2*pi,100);
 %xpos = [t; 10*sin(t)];
 %xneg = [cos(t); 10*sin(t)-5];
 xpos = [12*cos(t); 12*sin(t)];
-xneg = [5*cos(t); 6*sin(t)]; 
+xneg = [3*cos(t); 13*sin(t)]; 
+
+if exist('r','var')
+  [u,v] = find(r==1);
+  xneg = [u(:)'; v(:)'];
+  
+  [u,v] = find(r==0);
+  xpos = [u(:)'; v(:)'];
+end
 
 %xpos2 = [1+8*cos(t); 2*sin(t)];
 xpos2 = [];
 
 xpos = [xpos xpos2];
 
-xpos = xpos + 2.0*randn(size(xpos));
-xneg = xneg + 2.0*randn(size(xneg));
+xpos = xpos + 0.5*randn(size(xpos));
+xneg = xneg + 0.5*randn(size(xneg));
 
-xpos = xpos*10;
-xneg = xneg*10;
+%xpos = xpos*10;
+%xneg = xneg*10;
 %PAD = 1;
 %xpos = [xs; xs2 + PAD + randn(size(xs))];
 %xneg = [xs; xs2 - PAD + randn(size(xs))];
@@ -44,14 +54,14 @@ curscores = [];
 y = y';
 
 %%%%%%%%
-gamma = .001;
+gamma = .1;
 halfers = randn(size(y))>0;
-svm_model = svmtrain(y(halfers), x(:,halfers)',sprintf(['-s 0 -t 2 -c' ...
+svm_model = libsvmtrain(y(halfers), x(:,halfers)',sprintf(['-s 0 -t 2 -c' ...
                     ' %f -gamma %f -q'],SVMC,gamma));
 %toc
 
 %tic
-[predicted_label, accuracy] = svmpredict(y, x', svm_model);
+%[predicted_label, accuracy] = svmpredict(y, x', svm_model);
 %toc
 
 
@@ -65,7 +75,9 @@ NCUTS = 100;
 [xxx,yyy] = meshgrid(linspace(min1(1),max1(1),NCUTS),...
                      linspace(min1(2),max1(2),NCUTS));
 
-newvals = [xxx(:)'; yyy(:)'];
+%newvals = [xxx(:)'; yyy(:)'];
+newvals = [yyy(:)'; xxx(:)'];
+newvals(1,:) = newvals(1,end:-1:1);
 newvals = boost(newvals);
 
 %tic
@@ -93,8 +105,8 @@ scoremat = [];
 scoremat2 = [];
 ws = cell(0,1);
 bs = cell(0,1);
-for iii = 1:length(t)%1:10000
-  index = 1+mod(iii,length(t));
+for iii = 1:size(xpos,2)%1:10000
+  index = iii; %s1+mod(iii,length(t));
   gamma = 1;
   %gamma = gammas(iii); %.001;
   %gammaK = iii;
@@ -105,7 +117,7 @@ for iii = 1:length(t)%1:10000
 xpos = x(:,y==1);
 xneg = x(:,y==-1);
 
-  figure(1)
+figure(1)
 clf
 subplot(1,3,1)
 imagesc(-myscores)
@@ -302,7 +314,7 @@ function [w,b] = learn_local_no_capacity(x,y,index,SVMC)
 pos_inds = find(y==1);
 alphas = y*0+1;
 
-svm_model = svmtrain(y, x',sprintf(['-s 0 -t 0 -c' ...
+svm_model = libsvmtrain(y, x',sprintf(['-s 0 -t 0 -c' ...
                     ' %f -q'],SVMC));
 
 svm_weights = full(sum(svm_model.SVs .* ...

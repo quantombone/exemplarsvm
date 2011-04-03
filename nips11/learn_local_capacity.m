@@ -31,7 +31,7 @@ alphas(index) = self_alpha;
 %end
 
 oldgoods = [];
-for k = 1:20
+for k = 1:1 %20
   fprintf(1,'#');
   if 0 %(k<10)
     fprintf(1,'perturbing alphas\n');
@@ -70,7 +70,7 @@ for k = 1:20
   %newx = cat(2,newx,newx);
   %newy = cat(1,newy,newy);
   %fprintf(1,'sumpos is %d\n',sum(newy==1));
-  svm_model = svmtrain(newy,newx',sprintf(['-s 0 -t 0 -c' ...
+  svm_model = libsvmtrain(newy,newx',sprintf(['-s 0 -t 0 -c' ...
                     ' %f -q'],SVMC));
   
   
