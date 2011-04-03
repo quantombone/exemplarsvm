@@ -1,14 +1,14 @@
 # This Makefile is used under Linux
 #MATLABDIR ?= /usr/local/lib/matlab7
-#MATLABDIR ?= /opt/matlab/amd64_f7/7.10/lib/matlab7/
-#On my macbook pro
-MATLABDIR ?= /Applications/MATLAB74/
 
-#On my macbook air
+#Edits by TJM (compiles on 3 different machines I use)
+#On [onega]
+MATLABDIR ?= /afs/cs.cmu.edu/local/matlab/amd64_f7/7.11/lib/matlab7
+#On [my macbook pro]
+#MATLABDIR ?= /Applications/MATLAB74/
+
+#On [my macbook air]
 #MATLABDIR ?= /Applications/MATLAB_R2010a.app/
-
-# for Mac
-# MATLABDIR ?= /opt/local/matlab
 
 CXX ?= g++
 #CXX = g++-4.1
