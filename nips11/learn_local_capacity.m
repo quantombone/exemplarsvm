@@ -30,8 +30,8 @@ alphas(index) = self_alpha;
 %end
 
 oldgoods = [];
-for k = 1:1 %20
-  fprintf(1,'#');
+for k = 1:5 %20early
+  %fprintf(1,'#');
   if 0 %(k<10)
     fprintf(1,'perturbing alphas\n');
     r = find(rand(size(alphas))>.1);
@@ -41,7 +41,7 @@ for k = 1:1 %20
   if length(oldgoods) > 0
     diffinds = setdiff(goods,oldgoods);
     if length(diffinds) == 0
-      fprintf(1,'returning prematurely #alphas=%d/%d\n',sum(alphas(pos_inds)),length(pos_inds));
+      %fprintf(1,'returning prematurely #alphas=%d/%d\n',sum(alphas(pos_inds)),length(pos_inds));
       alphas = alphas(pos_inds);
       return;
     end
@@ -103,8 +103,8 @@ for k = 1:1 %20
       % end
       
       [aaa,bbb]=min(loss_term(2:end));
-       target=aaa/g(bbb+1);
-       fprintf(1,'target gamma is %.5f\n',target);
+      %target=aaa/g(bbb+1);
+      %fprintf(1,'target gamma is %.5f\n',target);
       
       alphas(pos_inds) = newalphas;
       
@@ -133,6 +133,6 @@ for k = 1:1 %20
   end  
 end
 
-fprintf(1,' --frac +: %.3f, raw=%d\n',frac,sum(alphas)-sum(y==-1));
+%fprintf(1,' --frac +: %.3f, raw=%d\n',frac,sum(alphas)-sum(y==-1));
 
 alphas = alphas(pos_inds);
