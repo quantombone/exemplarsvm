@@ -2,10 +2,10 @@
 #MATLABDIR ?= /usr/local/lib/matlab7
 #MATLABDIR ?= /opt/matlab/amd64_f7/7.10/lib/matlab7/
 #On my macbook pro
-#MATLABDIR ?= /Applications/MATLAB74/
+MATLABDIR ?= /Applications/MATLAB74/
 
 #On my macbook air
-MATLABDIR ?= /Applications/MATLAB_R2010a.app/
+#MATLABDIR ?= /Applications/MATLAB_R2010a.app/
 
 # for Mac
 # MATLABDIR ?= /opt/local/matlab
