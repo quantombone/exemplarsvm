@@ -8,8 +8,8 @@ if ~exist('g','var')
   % fprintf(1,'Creating G from euclidean distance\n');
   ds = distSqr_fast(x(:,index),x(:,y==y(index)));
   ds = ds / mean(ds(:));
-  g = exp(-1.0*ds)';
-  %g = ones(size(pos_inds));
+  %g = exp(-1.0*ds)';
+  g = ones(size(pos_inds));
 end
 
 %turn all negatives on, they always stay on
@@ -63,8 +63,6 @@ for k = 1:5 %20early
   end
 
   diffy = ones(size(diffx,2),1);
-  
-  
   newy = [y(goods); diffy];
   newx =  cat(2,x(:,goods),diffx);
   
@@ -102,7 +100,7 @@ for k = 1:5 %20early
       %   oldalphas = newalphas;
       % end
       
-      [aaa,bbb]=min(loss_term(2:end));
+      %[aaa,bbb]=min(loss_term(2:end));
       %target=aaa/g(bbb+1);
       %fprintf(1,'target gamma is %.5f\n',target);
       
