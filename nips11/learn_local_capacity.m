@@ -85,7 +85,7 @@ for k = 1:5 %20early
 
   if 1
     %%optimize alphas 
-    if 1
+    if 0
       %gamma term
       hinge = @(x)max(1-x,0.0);
       loss_term = hinge((w'*x(:,pos_inds)-b) .* y(pos_inds)');
@@ -107,21 +107,28 @@ for k = 1:5 %20early
       alphas(pos_inds) = newalphas;
       
     else
-      %%TOPK
       
+      if 0
+      %%TOPK 
+      K = 5;
       hinge = @(x)max(1-x,0.0);
       loss_term = hinge((w'*x(:,pos_inds)-b) .* y(pos_inds)');
       [alpha,beta] = sort(loss_term - gamma*g');
-
-      %loss_term = (1-(w'*x(:,pos_inds)-b) .* y(pos_inds)')-10*g';
-      %[alpha,beta] = sort(loss_term);
-      %savealphas = alphas;
       alphas(pos_inds) = 1;
-      K = 10;
-      
       alphas(pos_inds(beta(K+1:end)))=0;
-      %randkills = (rand(K,1)>.7);
-      %alphas(pos_inds(randkills)) = 0;
+      else
+        
+        %% take top such that p=.8;
+
+        [r,bb] = sort(w'*x-b','descend');
+        p = cumsum(y(bb)==1)./(1:length(bb))';
+        ender = find(p>=.99);
+        ender = ender(end);
+        possibles = bb(1:ender);
+        possibles = intersect(possibles,pos_inds);
+        alphas(possibles) = 1;
+        fprintf(1,'length possibles is %d\n',length(possibles));      
+      end
     end
     
     %fprintf(1,'hack non-enable sellf\n');

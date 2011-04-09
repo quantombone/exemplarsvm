@@ -6,10 +6,15 @@ if ~exist('NNN','var')
 end
 
 stacker1 = cell(NNN,NNN);
+
 for j = 1:NNN*NNN
-  Icur = max(0.0,min(1.0,...
-                     imresize(convert_to_I(ids{j}),...
-                              [100 100])));
+  try
+    Icur = max(0.0,min(1.0,...
+                       imresize(convert_to_I(ids{j}),...
+                                [100 100])));
+  catch
+    Icur = ones(100,100,3);
+  end
 
   stacker1{j} = Icur;
 end

@@ -17,6 +17,8 @@ myRandomize;
 rrr = randperm(length(catnames));
 
 rrr = 111;
+rrr = 275;
+rrr = 38;
 if nargout > 0
   rrr = 1:length(rrr);
   ws = zeros(1984,length(rrr));
@@ -25,6 +27,7 @@ end
 
 for ri = 1:length(rrr)
   targety = rrr(ri);
+  targety
   for index = 1:50
   filer = sprintf('/nfs/baikal/tmalisie/sun/%s/%05d.%d.mat', ...
                       mode,targety,index);  
@@ -50,7 +53,7 @@ for ri = 1:length(rrr)
   %res2 = mysvmpredict(X2,svm_model);
   %[cap2,p2] = compute_capacity(res2,y2,targety);
   %fprintf(1,'gamma=%.3f, sv = %d, cap = %.3f\n',gamma,svm_model.totalSV,cap2);
-  [svm_model] = train_mc(X,y,targety,index);
+  [svm_model] = train_mc(X,y,targety,index,ids);
 
   res = mysvmpredict(X,svm_model);
   res2 = mysvmpredict(X2,svm_model);
@@ -106,6 +109,10 @@ for ri = 1:length(rrr)
   
   stacker1 = cat(2,pad_image(stacker1,20,1),pad_image(stacker2,20,1));
   imwrite(stacker1,finalI);
+  figure(2)
+  clf
+  imagesc(max(0.0,min(1.0,stacker1)))
+  drawnow
   
   rmdir(filerlock);
   end
@@ -175,11 +182,12 @@ fprintf(1,'done\n');
 
 
 
-function svm_model = train_mc(X,y,targety,index)
+function svm_model = train_mc(X,y,targety,index,ids)
 %train a max capacity classifier
 goods = (y==targety);
 X = X(:,[find(goods); find(~goods)]);
 y = y([find(goods); find(~goods)]);
+ids = ids([find(goods); find(~goods)]);
 
 newx = X;
 newy = double(y==targety);
@@ -189,28 +197,52 @@ w = mean(X(:,newy==1),2);
 w = w - mean(w(:));
 b = 0;
 SVMC = .01;
-gamma = 1.0;
+gamma = 3.0;
 
 wlist = [];
 goods = find(y==targety);
 bads = find(y~=targety);
-for qqq = 1:4
-  [aa,bb] = sort(w'*X(:,bads),'descend');
-  newx = X(:,[goods; bads(bb(1:1000))]);
-  newy = double(y([goods; bads(bb(1:1000))])==targety); %bb(1:1000))==targety);
+NEGBUFFER = 10000;
+for qqq = 1:2
+  [aa,bb] = sort(w'*X(:,bads)-b,'descend');
+  numviols = sum(aa>=-1);
+  %NEGBUFFER = min(5000,numviols);
+
+  newx = X(:,[goods; bads(bb(1:NEGBUFFER))]);
+ 
+  newids = ids([goods; bads(bb(1:NEGBUFFER))]);
+  newy = double(y([goods; bads(bb(1:NEGBUFFER))])==targety);
   newy(newy==0) = -1;
-    
-
-  [w,b] = learn_local_capacity(newx,newy,index,SVMC,gamma);
-
+  [w,b,alphas,pos_inds] = learn_local_capacity(newx,newy,index,SVMC,gamma);
   wlist(:,end+1) = w;
+  
+  [aa,bb] = sort(w'*X-b,'descend');
+  stacker = create_grid_res(ids(bb),5);
+  
+  stacker_friends = create_grid_res(newids(pos_inds(alphas>0)),5);
+
+  figure(3)
+  subplot(1,3,1)
+  imagesc(stacker)
+  title(sprintf('iteration %d sumalphas=%d',qqq,sum(alphas)))
+  
+  subplot(1,3,2)
+  plot(aa(1:100),'r.')
+  title(sprintf('index=%d',index))
+  
+  subplot(1,3,3)
+  imagesc(stacker_friends)
+  title(sprintf('iteration %d sumalphas=%d',qqq,sum(alphas)))
+
+
+  drawnow
+
 end
 
+fprintf(1,'final num alphas is %d\n',sum(alphas));
 res = w'*X-b;
 svm_model.w = w;
 svm_model.b = b;
-
-
 
 function [cap,p] = compute_capacity(res,y,targety)
 %capacity is average precision across top 100 hits
