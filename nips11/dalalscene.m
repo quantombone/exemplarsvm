@@ -16,9 +16,12 @@ end
 myRandomize;
 rrr = randperm(length(catnames));
 
+%rrr = 111;
+%rrr = 392;
+%rrr = 195;
+%rrr = 275;
+%rrr = 38;
 rrr = 111;
-rrr = 275;
-rrr = 38;
 if nargout > 0
   rrr = 1:length(rrr);
   ws = zeros(1984,length(rrr));
@@ -48,11 +51,14 @@ for ri = 1:length(rrr)
   %[svm_model] = train_dalal(X,y,targety);
   gamma = .01;
   SVMC = .01;
+  
+  %[svm_model] = train_all(X,y,targety,ids);
 
   %[svm_model] = train_nonlinear(X,y,targety,svm_model,gamma,SVMC);
   %res2 = mysvmpredict(X2,svm_model);
   %[cap2,p2] = compute_capacity(res2,y2,targety);
-  %fprintf(1,'gamma=%.3f, sv = %d, cap = %.3f\n',gamma,svm_model.totalSV,cap2);
+  %fprintf(1,'gamma=%.3f, sv = %d, cap =
+  %%.3f\n',gamma,svm_model.totalSV,cap2);
   [svm_model] = train_mc(X,y,targety,index,ids);
 
   res = mysvmpredict(X,svm_model);
@@ -262,3 +268,4 @@ return;
 p = (cumsum(corr)./(1:length(corr))').*cumsum(corr) / sum(y==targety);
 p = p(1:200);
 cap = max(p);
+
