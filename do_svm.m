@@ -92,9 +92,10 @@ starttime = tic;
 
 while 1
   maskinds = find(mask);
-  svm_model = svmtrain(supery, newx(mask,:)',sprintf(['-s 0 -t 0 -c' ...
+
+  svm_model = libsvmtrain(supery, newx(mask,:)',sprintf(['-s 0 -t 0 -c' ...
                     ' %f -w1 %.9f -q'],mining_params.SVMC, wpos));
-  
+
   %convert support vectors to decision boundary
   svm_weights = full(sum(svm_model.SVs .* ...
                          repmat(svm_model.sv_coef,1,size(svm_model.SVs,2)),1));

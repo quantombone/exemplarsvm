@@ -19,9 +19,10 @@ rrr = randperm(length(catnames));
 %rrr = 111;
 %rrr = 392;
 %rrr = 195;
-%rrr = 275;
+rrr = 275;
 %rrr = 38;
-rrr = 111;
+%rrr = 111;
+%rrr = 275;
 if nargout > 0
   rrr = 1:length(rrr);
   ws = zeros(1984,length(rrr));
@@ -31,7 +32,7 @@ end
 for ri = 1:length(rrr)
   targety = rrr(ri);
   targety
-  for index = 1:50
+  for index = 1:1
   filer = sprintf('/nfs/baikal/tmalisie/sun/%s/%05d.%d.mat', ...
                       mode,targety,index);  
   if nargout > 0
@@ -47,19 +48,22 @@ for ri = 1:length(rrr)
     continue
   end
 
-  fprintf(1,'training svm\n');  
+  %fprintf(1,'training svm\n');  
   %[svm_model] = train_dalal(X,y,targety);
   gamma = .01;
   SVMC = .01;
+
+  [svm_model] = train_all(X,y,targety,ids,X2,y2,ids2);
   
-  %[svm_model] = train_all(X,y,targety,ids);
+  %keyboard
+  %return;
 
   %[svm_model] = train_nonlinear(X,y,targety,svm_model,gamma,SVMC);
   %res2 = mysvmpredict(X2,svm_model);
   %[cap2,p2] = compute_capacity(res2,y2,targety);
   %fprintf(1,'gamma=%.3f, sv = %d, cap =
   %%.3f\n',gamma,svm_model.totalSV,cap2);
-  [svm_model] = train_mc(X,y,targety,index,ids);
+  %[svm_model] = train_mc(X,y,targety,index,ids);
 
   res = mysvmpredict(X,svm_model);
   res2 = mysvmpredict(X2,svm_model);
@@ -120,7 +124,9 @@ for ri = 1:length(rrr)
   imagesc(max(0.0,min(1.0,stacker1)))
   drawnow
   
-  rmdir(filerlock);
+  if fileexists(filerlock)
+    rmdir(filerlock);
+  end
   end
 end
   

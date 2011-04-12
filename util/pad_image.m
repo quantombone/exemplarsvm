@@ -3,7 +3,14 @@ if ~exist('val','var')
   val = 0;
 end
 %pad an image by this amount
-I2 = ones(size(I,1)+p*2,size(I,2)+p*2,size(I,3))*val;
+if length(val)==3
+  I2 = ones(size(I,1)+p*2,size(I,2)+p*2,size(I,3));
+  for q = 1:3
+    I2(:,:,q) = val(q);
+  end
+elseif length(val)==1
+  I2 = ones(size(I,1)+p*2,size(I,2)+p*2,size(I,3))*val;
+end
 if (p>0)
   I2(p+(1:size(I,1)),p+(1:size(I,2)),:) = I;
 else

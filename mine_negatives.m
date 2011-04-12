@@ -160,8 +160,8 @@ fprintf(1,'got %d/%d from MINING, max=%.3f\n',...
         NUM_ADDONS,length(r),max(r));
 
 goodx = [m.model.x];
-
 superx = [goodx badx];
+
 supery = cat(1,...
              +1*ones(size(goodx,2),1),...
              -1*ones(size(badx,2),1));
