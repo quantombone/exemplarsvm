@@ -4,12 +4,22 @@ function svm_model = train_all(X,y,targety,ids,X2,y2,ids2)
 saveids = ids;
 savey = y;
 addpath(genpath('/nfs/hn22/tmalisie/ddip/exemplarsvm/liblinear-1.7/'));
-%add bias here
-X(end+1,:) = 1;
 
+addpath(genpath('/nfs/hn22/tmalisie/ddip/nips2010/'))
+if 1
+%do pca projection here
+[v,d,mu] = mypca(X,20);
+X = v'*bsxfun(@minus,mu,X);
+if exist('X2','var')
+  X2 = v'*bsxfun(@minus,mu,X2);
+end
+end
+
+X(end+1,:) = 1;
 if exist('X2','var')
   X2(end+1,:) = 1;
 end
+
 
 allgoods = find(y==targety);
 saveallbads = find(y~=targety);
@@ -21,7 +31,7 @@ for i = 1:N
   W(:,i) = W(:,i) - mean(W(:,i));
   W(:,i) = 0;
   W(end,i) = 0;
-  %W(end,i) = -100;
+  W(end,i) = -100;
 end
 
 A = eye(N);
@@ -40,31 +50,40 @@ y(y==0) = -1;
 meanW = mean(W,2);
 allbads = saveallbads(rand(size(saveallbads))>.5);
 [aa,bb] = sort(meanW'*X(:,allbads),'descend');
-bads = allbads(bb(1:1000));
+bads = allbads(bb(1:min(length(bb),1000)));
 
 for i = 1:N
   badlen(i) = 500;
 end
 
-for i = 1:N
-  %I = convert_to_I(ids{allgoods(i)});
-  %[xs{i},bs{i}] = get_global_wiggles(I);
-  %xs{i}(end+1,:) = 1;
-end
+% Is = cell(N,1);
+% for i = 1:N
+%   [a,b] = fileparts(ids{allgoods(i)});
+%   iconfile = sprintf('/nfs/baikal/tmalisie/sun/icons/%s.png',b);
+%   if fileexists(iconfile);
+%     I = imread(iconfile);
+%   else
+%     I = convert_to_I(ids{allgoods(i)});
+%     I = max(0.0,min(1.0,imresize(I,[200 200])));
+%     imwrite(I,iconfile);
+%   end
+%   Is{i} = I;
+% end
+
 
 
 indlist = [randperm(N) randperm(N) randperm(N) randperm(N) ...
            randperm(N)];
-indlist = [1:N 1:N 1:N];
+%indlist = [1:N 1:N 1:N];
 
-curi = 1;
+%curi = 1;
 for iiii = 1:1:length(indlist)
   if mod(iiii,10) == 0
   end
     
   i = indlist(iiii);
   %i = indlist(1);  
-  i = curi;
+  %i = curi;
 
   % mining_params = get_default_mining_params;
   % models{1}.model.x = reshape(X(1:(end-1),i),[8 8 31]);
@@ -91,18 +110,19 @@ for iiii = 1:1:length(indlist)
 
 
 
-  [xs,bs,Is] = get_global_wiggles(convert_to_I(ids{allgoods(i)}));
-  xs(end+1,:) = 1;
+  %[xs,bs,Is] = get_global_wiggles(convert_to_I(ids{allgoods(i)}));
+  %xs(end+1,:) = 1;
   
   oldW = X(:,allgoods(i));
   fprintf(1,'.');
-  for repeat = 1:1
+  for repeat = 1:10
     %meanW = W(:,i);
     %[aa,bb] = sort(meanW'*X(:,allbads));
     %bads = allbads(bb(1:1000));
     
     meanW = W(:,i);
-    allbads = saveallbads(rand(size(saveallbads))>.5);
+    %allbads = saveallbads(rand(size(saveallbads))>.8);
+    allbads = saveallbads;
     [aa,bb] = sort(meanW'*X(:,allbads),'descend');
     %numviol = sum(aa>-1);
     if (repeat == 1)
@@ -110,7 +130,7 @@ for iiii = 1:1:length(indlist)
     else
       l = 1000;
     end
-    bads = allbads(bb(1:l));
+    bads = allbads(bb(1:min(length(allbads),l)));
 
     goods = allgoods(find(A((i),:)));
     %notgoods = allgoods(find(~A((i),:)));
@@ -127,10 +147,15 @@ for iiii = 1:1:length(indlist)
     
     diffx = 100*bsxfun(@minus,X(:,allgoods(i)),X(:,goods));
     diffy = ones(1,size(diffx,2))';
-    newx = cat(2,newx,repmat(diffx,1,10));
-    newy = cat(1,newy,repmat(diffy,10,1));
+    Krep = length(allgoods)*2;
+    newx = cat(2,newx,repmat(diffx,1,Krep));
+    newy = cat(1,newy,repmat(diffy,Krep,1));
     
-    wpos = sum(diffy==-1) / sum(diffy==1);
+    wpos = 1*sum(newy==-1) / sum(newy==1);
+    
+    %wpos = 0, means non-linear SVM!
+    
+    
     %from liblinear readme
     % 0 -- L2-regularized logistic regression (primal)
     % 1 -- L2-regularized L2-loss support vector classification (dual)
@@ -146,9 +171,11 @@ for iiii = 1:1:length(indlist)
     % booler = booler(:);
     % booler1 = booler;
     % booler1(end+1) = 1;
+
     model = liblinear_train(newy, sparse(newx)', ...
                             sprintf(['-s 3 -B -1 -c 1' ...
-                    ' -w1 %.3f -q'],1.0));
+                    ' -w1 %.3f -q'],wpos));
+
     
     %resultw = zeros(8,8,31);
     %resultw(booler) = model.w(1:end-1);
@@ -169,39 +196,69 @@ for iiii = 1:1:length(indlist)
   end
 
   if 1
-  r = W(:,i)'*X;
-  %r = W'*X;
-  %r = sum(r,1);
-  [aa,bb] = sort(r,'descend');
-  superind = find(bb==allgoods(i));
-  relatedinds = find(y(bb)==1);
-  
-  stacker1 = create_grid_res(ids(bb),5,[100 100],superind, ...
-                             relatedinds);
-  subplot(2,2,3)
-  imagesc(stacker1)
-  title(sprintf('trainingset: %.3f %.3f %.3f %.3f',aa(1),aa(2),aa(3),aa(4)))
-  
-  %r = W(:,i)'*X2;
-  r = W'*X;
-  r = sum(sigmoid(r),1);
-  [aa,bb] = sort(r,'descend');
-  superind = -1;
-  relatedinds = -1;
- 
-  stacker2 = create_grid_res(ids(bb),5,[100 100],superind, ...
-                             relatedinds);
-  subplot(2,2,4)
-  imagesc(stacker2)
-  title('summed on trainset')
-  drawnow
-  
-  [aa,bb] = sort(W(:,i)'*X(:,allgoods),'descend');
-  rrr = randperm(2);
-  curi = bb(rrr(1)+1);
-end
-  
+    r = W(:,i)'*X;
+    %r = W'*X;
+    %sigmoid = @(x)(1./(1+exp(-x)));
+    %r = sum(sigmoid(r),1);
+    [aa,bb] = sort(r,'descend');
+    superind = find(bb==allgoods(i));
+    relatedinds = find(y(bb)==1);
+    
+    subplot(2,2,3)    
+    if i ~= 1
+    stacker1 = zeros(300,300,3);
+    else
+    stacker1 = create_grid_res(ids(bb),5,[100 100],superind, ...
+                               relatedinds);
+    imagesc(stacker1)
+    axis off
+    title(sprintf('trainingset: %.3f %.3f %.3f %.3f',aa(1),aa(2),aa(3),aa(4)))
+    
+    end
 
+    
+    %r = W(:,i)'*X2;
+    if exist('X2','var')
+      curX = X2;
+      cury = y2;
+      curids = ids2;
+      curtitle = 'testset';
+      
+    else
+      curX = X;
+      cury = y;
+      curids = ids;
+      curtitle = 'trainset';
+    end
+    r = W'*curX;
+    r = sigmoid(r);
+    
+    resser = zeros(1,size(r,2));
+    for jjj = 1:size(r,2)
+      resser(jjj) = r(:,jjj)'*A*r(:,jjj);
+    end
+    r = resser;
+    %r = max(r,[],1);
+    
+    [aa,bb] = sort(r,'descend');
+    superind = -1;
+    relatedinds = find(cury(bb)==targety);
+    
+    %stacker2 = create_grid_res(curids(bb),5,[100 100],superind, ...
+    %                           relatedinds);
+    stacker2 = zeros(300,300,3);
+    subplot(2,2,4)
+    plot(y(bb),'r.');
+    %imagesc(stacker2)
+    axis off
+    title(sprintf('%s: %.3f %.3f %.3f %.3f',curtitle,aa(1),aa(2),aa(3),aa(4)))
+    drawnow
+    
+    %[aa,bb] = sort(W(:,i)'*X(:,allgoods),'descend');
+    %rrr = randperm(2);
+    %curi = bb(rrr(1)+1);
+  end
+  
   %r=W(:,i)'*xs;
   %figure(44)
   %plot(r)
@@ -209,12 +266,35 @@ end
 
   %[A,h] = get_A(W,X,y,allgoods);
   
-  
-  
   [aa,bb] = sort(W(:,i)'*X,'descend');
-  p = cumsum(y(bb(1:50))==1)./(1:length(bb(1:50)))';
-  mv = max(find(p>.5));
-
+  %p = cumsum(y(bb(1:50))==1)./(1:length(bb(1:50)))';
+  %mv = max(find(p>.5));
+  
+  %firstbad = find(y(bb(1:50))~=1);
+  %firstbad = firstbad(1);
+  %beta = firstbad;
+  
+  yyy = y;
+  yyy(yyy<0) = yyy(yyy<0)*10;
+  [alpha,beta] = max(cumsum(yyy(bb(1:50))));
+  if beta==1
+    beta = 2;
+  end
+  mv = beta;
+  
+  %rescale such that sigmoid(w'*x)=.95 on self a,d 
+  %sigmoid(w'*x)=.5 on max capacity threshold
+  wmat = [aa(1) 1; aa(beta) 1];
+  sigmoidinv = @(x)(-log(1./x-1));
+  bmat = sigmoidinv([.95 .5]');
+  if det(wmat) == 0
+    W(:,i) = 0;
+  else
+    betas = inv(wmat)*bmat;
+    W(1:end-1, i) = betas(1)*W(1:end-1,i);
+    W(end, i) = betas(1)*W(end,i) + betas(2);
+  end
+ 
   A(i,:) = 0;
   if length(mv)==0
 
@@ -234,15 +314,30 @@ end
     hinge = @(x)max(1-x,0);
     %find self-losses function
     r=W'*X(:,allgoods);
-    h=(hinge(r));
-    figure(2)
+    h=r;%(hinge(r));
+    figure(1)
     subplot(2,2,1)
     imagesc(h)
+    title('W''X matrix')
+    
     subplot(2,2,2)
     imagesc(A)
+    
+    %I=show_memex(A,ids(allgoods));
+    I = zeros(300,300,3);
+    
+    %imagesc(I)
+    axis off
+    axis image
+
     drawnow
   end
+    
+  %set(gcf,'PaperPosition',[0 0 20 20]);
+  %print(gcf,'-dpng',sprintf(['/nfs/baikal/tmalisie/sun/dalals/memex/%d.' ...
+  %                                                                  '%05d.png'],targety,iiii));
   
+  %imwrite(I,sprintf('/nfs/baikal/tmalisie/sun/dalals/memex/g.%d.%05d.png',targety,iiii));
   if 0
   relatedinds = allgoods(find(A(i,:)));
     for j = 1:length(relatedinds)
@@ -358,7 +453,7 @@ hinge = @(x)max(1-x,0);
 %find self-losses function
 r=W'*X(:,allgoods);
 h=(hinge(r));
-gamma = 1.0;
+gamma = 1;
 A = double(h+h'<2*gamma);
 
 %diag always turned on
@@ -366,4 +461,4 @@ A(find(eye(size(A))))=1;
 
 
 function y = sigmoid(x)
-y = 1./(1+exp(-10*x));
+y = 1./(1+exp(-1*x));
