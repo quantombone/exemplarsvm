@@ -25,13 +25,15 @@ targety = 1;
 
 %choose phone booths and control towers
 targety = [259 255 388 307 1:10];
-targety = [259 255 307 112 32 44 56];
+%targety = [259 255 307 112 32 44 56];
+targety = [111 123 34 88 38 223 43 98];
+%targety = [123 98];
 %targety = 1:10;
-%targety = [259 388];
+%targety = [259 388 43];
+
 [aa,bb] = ismember(y,targety);
 goods = find(aa==1);
 others = find(y<=0);
-finaly = y([goods; others]);
 
 ids = ids([goods; others]);
 X2 = X(:,others);
@@ -39,20 +41,31 @@ X = X(:,goods);
 X = cat(2,X,X2);
 y = y([goods; others]);
 
-params.learning_rate = .01;
-params.gamma = 1;
-params.lambda = 4;
-params.sigma = 1.0;
-params.theta = 10.0;
+params.learning_rate = .0001;
+
+%capacity gain coefficient
+params.gamma = 0;
+
+%how much to separate positives and negatives
+params.lambda = 10;
+
+%how much to regularize the norms of w 
+params.lambda2 = .001;
+
+%how much to force nearby w to be close on L2 sense
+params.sigma = 0; %.01;
+
+%how much to force max-self constraint
+params.theta = 10;
 params.topfactor = 1;
-
-
 
 W = X;
 mx = mean(X,2);
 for i = 1:size(W,2)
-  W(:,i) =(W(:,i) - mx);
+  W(:,i) =X(:,i);
+  W(:,i) = W(:,i) - mean(W(:,i));
 end
+W = W*0;
 
 
 N = size(X,2);
@@ -63,14 +76,11 @@ A = eye(N,N);
 %A(find(speye(size(A))))=1;
 
 
-if 0
-  cx = repmat(finaly(:),1,length(finaly));
+  cx = repmat(y(:),1,length(y));
   cy = cx';
-  A = A*0;
-  A(cx==cy) = 1;
-end
-
-
+  Asave = A*0;
+  Asave(cx==cy) = 1;
+  A = Asave;
 
 shower = zeros(100,100,3);
 X(end+1,:) = 1;
@@ -83,56 +93,67 @@ for q = 1:2000
     fprintf(1,',');
   end
   
+  for chunks = 1:10
+  
   %obj = evaluate_objective(W,A,params,X);
   %grad = evaluate_gradient(W,A,X,1);
   
   
-  r = [randperm(size(W,2)) randperm(size(W,2));];
+  r = [randperm(size(W,2))];% randperm(size(W,2));];
+
+  %r = repmat(r,100,1);
   
   %r = r(1:min(length(r),2000));
     
+  %r = 1;
   %r = r(1);
+  %r = ones(100,1)*2;
+
   for z = 1:length(r)
     grad = evaluate_gradient(W,A,params,X,r(z));
     W(:,r(z)) = W(:,r(z)) - params.learning_rate*grad;
   end
   
-  
-  
-  
-% [aa,bb] = sort(A(1,:),'descend');
 
-% F = size(X,1);
-% lambda = 10;
-% tic
-% W = pinv((X*X'+lambda*eye(F))')*X*A';
-% %K = X'*X;
-% %E = inv((K'*K+lambda*K')')*A*K';
-% %W = X*E;
-% toc
-
-% A = W'*X;
-
-
-% for i = 1:size(A,1)
-%   [aa1,bb1] = sort(A(i,:),'descend');
-%   %A(i,:) = 0;
-%   [aaa,bbb]= sort(bb1);
-%   %A(i,:) = 1./(bbb);
-% end
-
-%never change A
-if q > 10
+if 0
+  %use gamma soft parameter
   hmat = h(W'*X);
-  A = double(hmat+hmat'<2*params.gamma);
+  hnmat = h(-W'*X);
+  wmat = distSqr_fast(W,W);
+  
+  A = double(2*params.sigma*wmat + params.lambda*hmat +params.lambda*hmat'- params.lambda*hnmat -params.lambda*hnmat'<2*params.gamma);
+  
+ % A = double(hmat+hmat'<2*params.gamma);
   A(find(speye(size(A))))=1;
   
-  r = find(randn<.01);
-  A(r) = 1-A(r);
-  A = (A+A')/2;
+  A = (A+A')/2;  
+else
   
+  A = A*0;
+  for q = 1:size(W,2)
+    cur = W(:,q)'*X;
+    gains = double(y==y(q));
+    gains(gains==0) = -1;
+    [aa,bb] = sort(cur,'descend');
+    
+    cs = cumsum(gains(bb));
+    [alpha,beta] = max(cs);
+    
+    %beta = [beta];
+    %purity = mean(y(bb(1:beta)) == y(q));
+    %fprintf(1,'beta is %d purity is %.3f\n',beta,purity);
+    
+    A(q,bb(1:beta)) = 1;
+    A(q,q) = 1;
+    
+  end
+  A = double(A&A');
   
 end
+end
+
+%use saved class-based A
+A = Asave;
 
 figure(1)
 clf
@@ -142,32 +163,36 @@ if mod(q,100)==0
 end
 
 clf
-subplot(1,3,1)
-
-%imagesc(shower)
-
-
-%keyboard
-%imagesc(d)
+subplot(2,2,1)
 imagesc(W'*X)
+title(sprintf('W''X Matrix iter %d',q))
 
-subplot(1,3,2)
-%plot(W(:,2)'*X)
-
+subplot(2,2,2)
 r = W'*X;
-plot(diag(r))
-subplot(1,3,3)
+sigmoid = @(x)(1./(1+exp(-x)));
+imagesc(sigmoid(.2*r))
 
-fprintf(1,'showing memex graph\n');
-if q < 1000
-  imagesc(A .*( W'*X))
+title('matrix after sigmoids')
+
+subplot(2,2,3)
+
+%fprintf(1,'showing memex graph\n');
+if 1 %q < 1000
+  imagesc(A)% .*( W'*X))
 else
   tic
   I = show_memex(A,ids,y);
   toc
   imagesc(I)
 end
-  drawnow
+[uu,vv] = find(A);
+goods = find(uu~=vv);
+corr = mean(y(uu(goods))==y(vv(goods)));
+title(num2str(corr*100))
+subplot(2,2,4)
+plot(r(2,:));
+
+drawnow
 
 
 end
@@ -193,6 +218,7 @@ for i = 1:N
     
     obj = obj + params.lambda*h(-W(:,i)'*X(:,j)) + params.theta*h(params.topfactor*W(:,i)'*(X(:,i)-X(:,j)));
   end
+  obj = obj + params.lambda2*norm(W(:,i)).^2;
 end
 
 function obj = evaluate_gradient(W,A,params,X,k)
@@ -204,14 +230,17 @@ G = ones(size(A));
 N = size(X,2);
 obj = zeros(size(X,1),1);
 
-for j = ceil(rand*N) %1:N
+r = randperm(N);
+for j = r(1:3) %ceil(rand*N) %1:N
   if A(k,j) ~= 0
     obj = obj + params.sigma*2*(W(:,k)-W(:,j));
     
     obj = obj + params.lambda*(hprime(W(:,k)'*X(:,j))*X(:,j)-hprime(-W(:,k)'*X(:,j))*-X(:,j));
   end
   
-  obj = obj + params.lambda*hprime(-W(:,k)'*X(:,j))*-X(:,j) + params.theta*hprime(W(:,k)'*(X(:,k)-X(:,j)))*params.topfactor*(X(:,k)-X(:,j));
+  obj = obj + params.lambda*hprime(-W(:,k)'*X(:,j))*-X(:,j) + ...
+        params.theta*hprime(W(:,k)'*(X(:,k)-X(:,j)))*params.topfactor*(X(:,k)-X(:,j));
+  obj = obj + 2*params.lambda2*W(:,k);
 end
 
 
