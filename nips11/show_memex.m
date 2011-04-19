@@ -11,10 +11,17 @@ for i = 1:length(ids)
 end
 end
 
-colors = jet(397);
-other.colors = colors(y,:);
+uy = unique(y);
+[aa,newy] = ismember(y,uy);
+colors = jet(20);
+r = randperm(20);
+colors = colors(r(1:length(uy)),:);
+other.colors = colors(newy,:);
 
 A = A - diag(diag(A));
 hits = find((sum(A,1) + sum(A,2)')>0);
 %other.icon_string = @(x)sprintf('image="%s"',iconfile{hits(x)});
+
+make_memex_graph(A(hits,hits),other);
 I = make_memex_graph(A(hits,hits),other);
+
