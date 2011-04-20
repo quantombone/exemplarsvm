@@ -4,6 +4,9 @@ function I = get_movie_frame(movie, time)
 % move:  input move location
 % time:  a time in 00:00:00 format
 
+% TODO(tmalisie) this function is not safe across a cluster, since
+% files will be clobbered.
+
 istring=sprintf(['/nfs/baikal/tmalisie/ffmpeg/ffmpeg-0.6/ffmpeg -ss %s -vframes 1  -i %s ' ...
                     ' /tmp/I-%%08d' '.png'],time,movie);
 
