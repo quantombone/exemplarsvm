@@ -1,6 +1,15 @@
-function super_X(X,y,ids)
-%% Here we try to take a bunch of X's (a subset of categories from
-%% SUN397 and apply the super objective to it
+function super_X(X,ids,y,X2,ids2,y2,catnames)
+%% Here we learn a discriminative manifold for a set of X's
+
+if ~exist('ids','var')
+  [X,ids,y,catnames] = sun_initialize('Training_01');
+end
+
+if ~exist('ids2','var')
+  %Load the testset
+  [X2,ids2,y2,catnames] = sun_initialize('Testing_01');
+end
+
 %fprintf(1,'getting global pca ');
 %[v,d,mu] = mypca(X,20);
 %fprintf(1,'done\n');
@@ -20,10 +29,11 @@ function super_X(X,y,ids)
 %   X(:,i) = f(:);
 %   y(i) = 1;
 % end
-allX = X;
-allX(end+1,:) = 1;
-ally = y;
-allids = ids;
+
+%allX = X;
+%allX(end+1,:) = 1;
+%ally = y;
+%allids = ids;
 
 targety = 1;
 
@@ -32,7 +42,7 @@ targety = [259 255 388 307 1:10];
 %targety = [259 255 307 112 32 44 56];
 targety = [111 123 148 213 217 220 230 240 250];
 targety = [275 278];
-targety = [275];
+targety = [111];
 %targety = [111 145 198];
 %targety = [111 134];
 
@@ -41,54 +51,55 @@ targety = [275];
 %targety = 1:10;
 %targety = [259 388 43];
 
-[aa,bb] = ismember(y,targety);
-goods = find(aa==1);
-others = find(y<=0);
+goods = find(ismember(y,targety));
+others = find(~ismember(y,targety));
+r = randperm(length(others));
+others = others(1:2000);
 
 ids = ids([goods; others]);
-%X2 = X(:,others);
 X = X(:,[goods; others]);
-%X = cat(2,X,X2);
 y = y([goods; others]);
 
-for k = 1:length(y)
-  fprintf(1,'.');
-  [xs{k},bbs,Is{k}] = get_global_wiggles(convert_to_I(ids{k}));
-  ys{k} = ones(size(xs{k},2),1)*y(k);
+if 0
+  for k = 1:length(y)
+    fprintf(1,'.');
+    [xs{k},bbs,Is{k}] = get_global_wiggles(convert_to_I(ids{k}));
+    ys{k} = ones(size(xs{k},2),1)*y(k);
+  end
+  y = cat(1,ys{:});
+  X = cat(2,xs{:});
+  ids=cat(1,Is{:});
 end
-y = cat(1,ys{:});
-X = cat(2,xs{:});
-ids=cat(1,Is{:});
 
 params.learning_rate = .01;
 
 %capacity gain coefficient
-params.gamma = 1;
+params.gamma = 0;
 
 %how much to separate positives and negatives
-params.lambda = 10;
+params.lambda = 100;
 
 %how much to regularize the norms of w 
-params.lambda2 = 1;
+params.lambda2 = .1;
 
 %how much to force nearby w to be close on L2 sense
 params.sigma = 0; %1;%.01; %.01;
 
 %how much to force max-self constraint
-params.theta = 10;
+params.theta = 0;
 params.topfactor = .1;
 
-W = X;
+W = X(:,1:length(goods));
 mx = mean(X,2);
 for i = 1:size(W,2)
-  W(:,i) =X(:,i);
+  W(:,i) = X(:,i);
   W(:,i) = W(:,i) - mean(W(:,i));
-  %W(:,i) = W(:,i) / norm(W(:,i));
 end
 %W = W*0;
 
 N = size(X,2);
 A = eye(N,N);
+
 
 %d = distSqr_fast(X,X);
 %A = (d<.5*median(d(:)));
@@ -96,24 +107,25 @@ A = eye(N,N);
 
 cx = repmat(y(:),1,length(y));
 cy = cx';
+
 Asave = A*0;
 Asave(cx==cy) = 1;
 A = Asave;
 
 shower = zeros(100,100,3);
 X(end+1,:) = 1;
+X2(end+1,:) = 1;
 W(end+1,:) = 0;
 
+iter = 1;
 for q = 1:2000
   if mod(q,100) == 0
     fprintf(1,',');
   end
   
-  [W,A] = update_stuff(W,A,params,X,y);
-  %if q < 10
-  %  A = eye(size(A));
-  %end
-  
+  [W,A,iter] = update_stuff(W,A,params,X,y,iter);
+  %A = eye(size(A));
+  %A = Asave;
   
   figure(1)
   if mod(q,100)==0
@@ -127,14 +139,15 @@ for q = 1:2000
   subplot(2,2,2)
   r = W'*X;
   sigmoid = @(x)(1./(1+exp(-x)));
-  imagesc(sigmoid(.2*r))
+  imagesc(sigmoid(.2*r(:,1:200)))
   title('matrix after sigmoids')
   
   subplot(2,2,3)
   
 
   if 1 %q < 1000
-    imagesc(A)% .*( W'*X))
+    kkk = size(W,2);
+    imagesc(A(1:kkk,1:kkk))
   else
     tic
     I = show_memex(A,ids,y);
@@ -147,36 +160,49 @@ for q = 1:2000
   title(num2str(corr*100))
   subplot(2,2,4)
   
-  plot(W(:,16)'*X);
+  hhh = W'*X;
+  plot(hhh(16,:),'r.');
+  
+  %kkk = min(size(hhh));
+  %ddd = diag(hhh(1:kkk,1:kkk));
+  %[aaa,bbb] = max(hhh(1:kkk,1:kkk),[],1);
+  %plot(ddd-aaa');
+  %drawnow
   drawnow
 
-  if 1 %mod(q,2)==0
-    %r = W(:,1:50)'*allX;
-    %r = max(r,[],1);
-    %r = sum(sigmoid(r),1);
+  if mod(q,20)==0
+    %r = W(:,1:50)'*X2;
+    %r = m(r,[],1);
+    %r = sum(sigmoid(.2*r),1);
     
     figure(2)
     %target = sum(A,1);
     %[aa,target] = max(target);
     
-    [aa,targets] = sort(diag(W'*X),'descend');
+    %[aa,targets] = sort(diag(W'*X),'descend');
     target = 16;
-    c = 1;
-    for t = 1:14 %length(targets) %bb(1:4)%[16 160 510 800]
-      target = targets(t);
-      subplot(4,4,c)
-      r = W(:,target)'*X;
-      [aa,bb] = sort(r,'descend');
-      images = create_grid_res(ids([target bb(1:80)]),9);
-      imagesc(images)
-      drawnow
-      c = c + 1;
-    end
-  end
-  %fprintf(1,'capping to asave\n');
-  A = A.*Asave;
+    r = W(:,target)'*X2;
+    [aa,bb] = sort(r,'descend');
+    hw = zeros(10,10,31);
+    hw(2:9,2:9,:) = reshape(W(1:end-1,target),[8 8 31]);
+    
+    hogger = HOGpicture(hw);
+    newids{1} = ids{target};
+    newids{2} = hogger;
+    newids(3:16) = ids2(bb(1:14));
 
-  keyboard
+    images = create_grid_res(newids,4);
+    
+    %images(3:end+1) = images(2:end);
+    %images{2} = hogger;
+    imagesc(images)
+    drawnow
+    
+  end
+  
+  %fprintf(1,'capping to asave\n');
+  %A = A.*Asave;
+
 end
 
 
@@ -206,12 +232,11 @@ end
 function obj = evaluate_gradient(W,A,params,X,k,G)
 %evaluate the objective function, slow but handy
 
-
 N = size(X,2);
-obj = zeros(size(X,1),1);
+obj = zeros(size(W,1),1);
 
 %r = randperm(N);
-for j = ceil(rand*N) %1:N
+for j = [ceil(rand*N)] %1:N
   if A(k,j) ~= 0
     obj = obj + params.sigma*2*(W(:,k)-W(:,j));
     
@@ -232,7 +257,7 @@ y = (x*0-1);
 y(x>=1) = 0;
 
 
-function [W,A] = update_stuff(W,A,params,X,y)
+function [W,A,iter] = update_stuff(W,A,params,X,y,iter)
 
 %gain matrix is identity
 G = ones(size(A));
@@ -257,10 +282,11 @@ for chunks = 1:5
   
   for z = 1:length(r)
     grad = evaluate_gradient(W,A,params,X,r(z),G);
-    W(:,r(z)) = W(:,r(z)) - params.learning_rate*grad;
+    W(:,r(z)) = W(:,r(z)) - params.learning_rate/sqrt(iter+1)*grad;
+    iter = iter + 1;
   end  
 end
-
+return;
 if 0
   %use gamma soft parameter
   hmat = h(W'*X);
