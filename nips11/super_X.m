@@ -43,6 +43,9 @@ targety = [259 255 388 307 1:10];
 targety = [111 123 148 213 217 220 230 240 250];
 targety = [275 278];
 targety = [111];
+targety = 111;
+targety = 275;
+%targety = 245;
 %targety = [111 145 198];
 %targety = [111 134];
 
@@ -52,42 +55,50 @@ targety = [111];
 %targety = [259 388 43];
 
 goods = find(ismember(y,targety));
+%goods = [];
 others = find(~ismember(y,targety));
 r = randperm(length(others));
 others = others(1:2000);
 
+%idssave = ids(goods2);
 ids = ids([goods; others]);
 X = X(:,[goods; others]);
 y = y([goods; others]);
 
 if 0
-  for k = 1:length(y)
+  for k = 1:length(goods2)
     fprintf(1,'.');
-    [xs{k},bbs,Is{k}] = get_global_wiggles(convert_to_I(ids{k}));
+    [xs{k},bbs,Is{k}] = get_global_wiggles(convert_to_I(idssave{k}));
     ys{k} = ones(size(xs{k},2),1)*y(k);
   end
-  y = cat(1,ys{:});
-  X = cat(2,xs{:});
-  ids=cat(1,Is{:});
+  yA = cat(1,ys{:});
+  XA = cat(2,xs{:});
+  idsA=cat(1,Is{:});
+
+  X = cat(2,XA,X);
+  y = cat(1,yA,y);
+  ids = cat(1,idsA,ids);
+  goods = 1:length(goods2);
+  
 end
 
-params.learning_rate = .01;
+params.learning_rate = 1;
 
 %capacity gain coefficient
 params.gamma = 0;
 
 %how much to separate positives and negatives
-params.lambda = 100;
+%params.lambda = 10;
 
 %how much to regularize the norms of w 
-params.lambda2 = .1;
+params.lambda = .01;%.01;
 
 %how much to force nearby w to be close on L2 sense
-params.sigma = 0; %1;%.01; %.01;
+params.sigma = .00; %1;%.01; %.01;
 
 %how much to force max-self constraint
 params.theta = 0;
-params.topfactor = .1;
+%params.topfactor = 1;
 
 W = X(:,1:length(goods));
 mx = mean(X,2);
@@ -95,7 +106,8 @@ for i = 1:size(W,2)
   W(:,i) = X(:,i);
   W(:,i) = W(:,i) - mean(W(:,i));
 end
-%W = W*0;
+W = W*0;
+
 
 N = size(X,2);
 A = eye(N,N);
@@ -109,13 +121,16 @@ cx = repmat(y(:),1,length(y));
 cy = cx';
 
 Asave = A*0;
-Asave(cx==cy) = 1;
-A = Asave;
+A(cx~=cy) = -1;
+A(cx==cy) = 1;
+%A = Asave;
 
 shower = zeros(100,100,3);
+
+W(end+1,:) = 0;
+
 X(end+1,:) = 1;
 X2(end+1,:) = 1;
-W(end+1,:) = 0;
 
 iter = 1;
 for q = 1:2000
@@ -123,7 +138,9 @@ for q = 1:2000
     fprintf(1,',');
   end
   
+
   [W,A,iter] = update_stuff(W,A,params,X,y,iter);
+  
   %A = eye(size(A));
   %A = Asave;
   
@@ -144,7 +161,6 @@ for q = 1:2000
   
   subplot(2,2,3)
   
-
   if 1 %q < 1000
     kkk = size(W,2);
     imagesc(A(1:kkk,1:kkk))
@@ -170,7 +186,7 @@ for q = 1:2000
   %drawnow
   drawnow
 
-  if mod(q,20)==0
+  if mod(q,10)==0
     %r = W(:,1:50)'*X2;
     %r = m(r,[],1);
     %r = sum(sigmoid(.2*r),1);
@@ -197,12 +213,10 @@ for q = 1:2000
     %images{2} = hogger;
     imagesc(images)
     drawnow
-    
   end
   
   %fprintf(1,'capping to asave\n');
   %A = A.*Asave;
-
 end
 
 
@@ -211,8 +225,6 @@ function obj = evaluate_objective(W,A,params,X)
 
 %gain matrix is identity
 G = ones(size(A));
-
-
 N = size(X,2);
 obj = 0;
 for i = 1:N
@@ -230,22 +242,48 @@ for i = 1:N
 end
 
 function obj = evaluate_gradient(W,A,params,X,k,G)
-%evaluate the objective function, slow but handy
+%evaluate the stochastic gradient for weight vector k with respect
+%to a random sample j
 
 N = size(X,2);
 obj = zeros(size(W,1),1);
 
-%r = randperm(N);
-for j = [ceil(rand*N)] %1:N
-  if A(k,j) ~= 0
-    obj = obj + params.sigma*2*(W(:,k)-W(:,j));
+% for j = [ceil(rand*N)
+%   if A(k,j) ~= 0
+%     obj = obj + params.sigma*2*(W(:,k)-W(:,j));
     
-    obj = obj + params.lambda*(hprime(W(:,k)'*X(:,j))*X(:,j)-hprime(-W(:,k)'*X(:,j))*-X(:,j));
-  end
+%     obj = obj + params.lambda*(hprime(W(:,k)'*X(:,j))*X(:,j)-hprime(-W(:,k)'*X(:,j))*-X(:,j));
+%   end
   
-  obj = obj + params.lambda*hprime(-W(:,k)'*X(:,j))*-X(:,j) + ...
-        params.theta*hprime(W(:,k)'*(X(:,k)-X(:,j)))*params.topfactor*(X(:,k)-X(:,j));
-  obj = obj + 2*params.lambda2*W(:,k);
+%   obj = obj + params.lambda*hprime(-W(:,k)'*X(:,j))*-X(:,j) + ...
+%         params.theta*hprime(W(:,k)'*(X(:,k)-X(:,j)))*params.topfactor*(X(:,k)-X(:,j));
+%   obj = obj + 2*params.lambda2*W(:,k);
+% end
+
+%j = [ceil(rand*N)];
+[aa,j] = max(h(A(k,:).*(W(:,k)'*X)));
+
+
+obj = 2*params.lambda*W(:,k);
+
+if k ~= j
+  obj = obj + params.theta * hprime(W(:,k)'*(X(:,k)-X(:,j)))*(X(:,k)-X(:,j));
+end
+
+if A(k,j) ~= 0
+  obj = obj + hprime(A(k,j)*W(:,k)'*X(:,j))*A(k,j)*X(:,j);
+  if 0
+  masker = reshape(1:64,[8 8]);
+  masker = repmat(masker,[1 1 31]);
+  for q = 1:max(masker(:))
+    subby = [find(masker(:)==q); size(X,1)];
+    obj(subby) = obj(subby) + .1*hprime(A(k,j)*W(subby,k)'*X(subby,j))*A(k,j)*X(subby,j);
+  end
+  end
+end
+
+if A(k,j) == 1 && j <= size(W,2)
+  obj = obj + params.sigma*2*(W(:,k)-W(:,j));
 end
 
 
@@ -266,27 +304,32 @@ for chunks = 1:5
   
   %obj = evaluate_objective(W,A,params,X);
   %grad = evaluate_gradient(W,A,X,1);    
-  r = [randperm(size(W,2))];% randperm(size(W,2));];
+  r = [randperm(size(W,2))];
   %r = r(1:100);
   %[aa,bb] = sort(W(:,16)'*X,'descend');
   %r = [16 bb(1:50)];
   %r = ones(100,1)*16;
   %r = 1:50;
-  %r = repmat(r,100,1);
+  
+  %r = repmat(r,1,10);
+
   
   %r = r(1:min(length(r),2000));
-  
   %r = 1;
   %r = r(1);
-  %r = ones(100,1)*2;
-  
+  %r = ones(100,1)*16;
+
+  %r = 16;
   for z = 1:length(r)
     grad = evaluate_gradient(W,A,params,X,r(z),G);
     W(:,r(z)) = W(:,r(z)) - params.learning_rate/sqrt(iter+1)*grad;
     iter = iter + 1;
   end  
 end
-return;
+
+%no A update
+
+
 if 0
   %use gamma soft parameter
   hmat = h(W'*X);

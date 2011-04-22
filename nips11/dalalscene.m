@@ -20,6 +20,8 @@ rrr = 111;
 rrr = 62;
 rrr = 202;
 rrr = 275;
+rrr = 111;
+rrr = targety;
 %rrr = 392;
 %rrr = 195;
 %rrr = 275;
@@ -68,6 +70,7 @@ for ri = 1:length(rrr)
   %%.3f\n',gamma,svm_model.totalSV,cap2);
   %[svm_model] = train_mc(X,y,targety,index,ids);
 
+  return;
   res = mysvmpredict(X,svm_model);
   res2 = mysvmpredict(X2,svm_model);
     

@@ -6,13 +6,16 @@ savey = y;
 addpath(genpath('/nfs/hn22/tmalisie/ddip/exemplarsvm/liblinear-1.7/'));
 
 addpath(genpath('/nfs/hn22/tmalisie/ddip/nips2010/'))
-if 1
-%do pca projection here
-[v,d,mu] = mypca(X,20);
-X = v'*bsxfun(@minus,mu,X);
-if exist('X2','var')
-  X2 = v'*bsxfun(@minus,mu,X2);
-end
+if 0
+  %do pca projection here
+  [v,d,mu] = mypca(X,100);
+  X = v'*bsxfun(@minus,mu,X);
+  if exist('X2','var')
+    X2 = v'*bsxfun(@minus,mu,X2);
+  end
+else
+  v = eye(size(X,1));
+  mu = zeros(size(X,1),1);
 end
 
 X(end+1,:) = 1;
@@ -26,11 +29,11 @@ saveallbads = find(y~=targety);
 %allbads = saveallbads(rand(size(saveallbads))>.5);
 N = length(allgoods);
 
-W = X(:,allgoods);
+W = X(:,allgoods); 
 for i = 1:N
   W(:,i) = W(:,i) - mean(W(:,i));
-  W(:,i) = 0;
-  W(end,i) = 0;
+  %W(:,i) = 0;
+  %W(end,i) = 0;
   W(end,i) = -100;
 end
 
@@ -74,12 +77,14 @@ end
 
 indlist = [randperm(N) randperm(N) randperm(N) randperm(N) ...
            randperm(N)];
-%indlist = [1:N 1:N 1:N];
+indlist = [1:N 1:N 1:N];
 
+indlist = ones(10,1)*1;
 %curi = 1;
 for iiii = 1:1:length(indlist)
   if mod(iiii,10) == 0
   end
+  figure(1)
     
   i = indlist(iiii);
   %i = indlist(1);  
@@ -115,7 +120,7 @@ for iiii = 1:1:length(indlist)
   
   oldW = X(:,allgoods(i));
   fprintf(1,'.');
-  for repeat = 1:10
+  for repeat = 1:3
     %meanW = W(:,i);
     %[aa,bb] = sort(meanW'*X(:,allbads));
     %bads = allbads(bb(1:1000));
@@ -126,10 +131,12 @@ for iiii = 1:1:length(indlist)
     [aa,bb] = sort(meanW'*X(:,allbads),'descend');
     %numviol = sum(aa>-1);
     if (repeat == 1)
-      l = 4000;
+      l = 200;
     else
-      l = 1000;
+      l = 200;
     end
+    %r = randperm(length(allbads));
+    %bads = allbads(r(1:min(length(bads),l)));
     bads = allbads(bb(1:min(length(allbads),l)));
 
     goods = allgoods(find(A((i),:)));
@@ -139,21 +146,41 @@ for iiii = 1:1:length(indlist)
     %rrr = randperm(length(notgoods));
     %goods = [goods; notgoods(rrr(1))];
     %goods = unique([goods; allgoods(i)]);
+    newg = X(:,[goods; bads]);
+    newy = double(y([goods; bads]));
+    masker = repmat(reshape(1:64,[8 8]),[1 1 31]);
+    clear superx;
+    clear supery;
+    for z = 1:64
+      curM = zeros(8*8*31,1);
+      curM(masker==z)=1;
+      curM(end+1) = 1;
+      superx{z} = repmat(curM,1,size(newg,2)).*newg;
+      supery{z} = newy;
+    end
+    superx = cat(2,superx{:});
+    supery = cat(1,supery{:});
+    %supery = ones(1,size(superx,2))';
+
 
     newx = X(:,[goods; bads]);%(bb(1:NEGBUFFER))]);
     newids = ids([goods; bads]);%(bb(1:NEGBUFFER))]);
     newy = double(y([goods; bads]));%(bb(1:NEGBUFFER))])==targety);
     newy(newy==0) = -1;
     
-    diffx = 100*bsxfun(@minus,X(:,allgoods(i)),X(:,goods));
+    diffx = 1*bsxfun(@minus,X(:,allgoods(i)),X(:,goods));
     diffy = ones(1,size(diffx,2))';
     Krep = length(allgoods)*2;
-    newx = cat(2,newx,repmat(diffx,1,Krep));
-    newy = cat(1,newy,repmat(diffy,Krep,1));
+    Krep = 1;
+    newx = cat(2,newx,repmat(diffx,1,Krep),superx);
+    newy = cat(1,newy,repmat(diffy,Krep,1),supery);
     
-    wpos = 1*sum(newy==-1) / sum(newy==1);
-    
-    %wpos = 0, means non-linear SVM!
+    %wpos = 1*sum(newy==-1) / sum(newy==1);
+    wpos = 1.0;
+    %if repeat == 1
+    %  wpos = 0;
+    %end
+    %wpos = 0, means one-clas SVM!
     
     
     %from liblinear readme
@@ -172,10 +199,25 @@ for iiii = 1:1:length(indlist)
     % booler1 = booler;
     % booler1(end+1) = 1;
 
+    %modes = {'0','1','2','3','5','6','7'}
+    modes = '2';
+    
+    fprintf(1,'starting liblinear:');
     model = liblinear_train(newy, sparse(newx)', ...
-                            sprintf(['-s 3 -B -1 -c 1' ...
-                    ' -w1 %.3f -q'],wpos));
-
+                            sprintf(['-s %s -B -1 -c 1' ...
+                    ' -w1 %.3f -q'],modes,wpos));
+    fprintf(1,'Done \n');
+    curw = model.w(1:end-1)';
+    curw = v*curw + mu;
+    hogpic=(HOGpicture(reshape(curw,[8 8 31])));
+    
+    
+    
+    %figure(333+q)
+    %imagesc(hogpic)
+    %title(modes{q})
+    %drawnow
+    %end
     
     %resultw = zeros(8,8,31);
     %resultw(booler) = model.w(1:end-1);
@@ -183,8 +225,6 @@ for iiii = 1:1:length(indlist)
     %W(:,i) = resultw(:);
     %apply model to all of data
     W(:,i) = model.w';
-
-
 
     %r = W(:,i)'*X;
     %fprintf(1,'from svm: num considered %d\n',sum(r>-1));
@@ -196,6 +236,7 @@ for iiii = 1:1:length(indlist)
   end
 
   if 1
+
     r = W(:,i)'*X;
     %r = W'*X;
     %sigmoid = @(x)(1./(1+exp(-x)));
@@ -205,25 +246,33 @@ for iiii = 1:1:length(indlist)
     relatedinds = find(y(bb)==1);
     
     subplot(2,2,3)    
-    if i ~= 1
-    stacker1 = zeros(300,300,3);
-    else
     stacker1 = create_grid_res(ids(bb),5,[100 100],superind, ...
                                relatedinds);
     imagesc(stacker1)
     axis off
     title(sprintf('trainingset: %.3f %.3f %.3f %.3f',aa(1),aa(2),aa(3),aa(4)))
     
-    end
+    %end
 
+    clear stacker
+    for qqq = 1:25
+      myX = reshape(X(1:end-1,bb(qqq)),[8 8 31]);
+      myw = reshape(curw,[8 8 31]);
+      mys = sum(myX.*myw,3);
+      stacker{qqq} = padarray(mys,[1 1 0]);
+    end
+    
+    stacker = create_grid_res(stacker,5,[10 10]);
+    stacker = stacker(:,:,1);
+
+    %figure(1)
     
     %r = W(:,i)'*X2;
     if exist('X2','var')
       curX = X2;
       cury = y2;
       curids = ids2;
-      curtitle = 'testset';
-      
+      curtitle = 'testset';      
     else
       curX = X;
       cury = y;
@@ -244,15 +293,16 @@ for iiii = 1:1:length(indlist)
     superind = -1;
     relatedinds = find(cury(bb)==targety);
     
-    %stacker2 = create_grid_res(curids(bb),5,[100 100],superind, ...
-    %                           relatedinds);
-    stacker2 = zeros(300,300,3);
+    stacker2 = create_grid_res(curids(bb),5,[100 100],superind, ...
+                               relatedinds);
+    %stacker2 = zeros(300,300,3);
     subplot(2,2,4)
-    plot(y(bb),'r.');
-    %imagesc(stacker2)
+    %plot(y(bb),'r.');
+    imagesc(stacker2)
     axis off
     title(sprintf('%s: %.3f %.3f %.3f %.3f',curtitle,aa(1),aa(2),aa(3),aa(4)))
     drawnow
+    
     
     %[aa,bb] = sort(W(:,i)'*X(:,allgoods),'descend');
     %rrr = randperm(2);
@@ -294,7 +344,9 @@ for iiii = 1:1:length(indlist)
     W(1:end-1, i) = betas(1)*W(1:end-1,i);
     W(end, i) = betas(1)*W(end,i) + betas(2);
   end
- 
+
+  if 1
+  %dont update A for now
   A(i,:) = 0;
   if length(mv)==0
 
@@ -309,28 +361,41 @@ for iiii = 1:1:length(indlist)
     %A(bb(1:3),i) = 1;
   end
   A(i,i) = 1;
+  end
   
-  if 1%rand<.01
+  if 1
     hinge = @(x)max(1-x,0);
     %find self-losses function
     r=W'*X(:,allgoods);
-    h=r;%(hinge(r));
+    h=r;
     figure(1)
     subplot(2,2,1)
-    imagesc(h)
-    title('W''X matrix')
+    %imagesc(h)
+    imagesc(hogpic)
+    %title('W''X matrix')
+    title('hogpic')
     
     subplot(2,2,2)
-    imagesc(A)
-    
+    %imagesc(A)
+    myX = reshape(X(1:end-1,allgoods(i)),[8 8 31]);
+    myw = reshape(curw,[8 8 31]);
+    mys = sum(myX.*myw,3);
+    imagesc(mys)
+    title('scoremap')
     %I=show_memex(A,ids(allgoods));
-    I = zeros(300,300,3);
+    %I = zeros(300,300,3);
     
     %imagesc(I)
     axis off
     axis image
 
     drawnow
+    
+    figure(333)
+    clf
+    imagesc(stacker)
+    drawnow
+
   end
     
   %set(gcf,'PaperPosition',[0 0 20 20]);
@@ -406,7 +471,7 @@ for i = 1:100000 %size(X,2)
     bestA = A2;
     figure(1)
     imagesc(A2)
-    figure(2)
+    
     W = X*bestA;
     inds = [1 5 10];
     c = 1;
