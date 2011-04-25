@@ -15,13 +15,16 @@ end
 
 myRandomize;
 rrr = randperm(length(catnames));
+rrr = rrr(1);
 
-rrr = 111;
-rrr = 62;
-rrr = 202;
-rrr = 275;
-rrr = 111;
-rrr = targety;
+% rrr = 111;
+% rrr = 62;
+% rrr = 202;
+% rrr = 275;
+% rrr = 111;
+if exist('targety','var')
+  rrr = targety;
+end
 %rrr = 392;
 %rrr = 195;
 %rrr = 275;
