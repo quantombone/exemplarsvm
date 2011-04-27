@@ -15,7 +15,7 @@ end
 
 myRandomize;
 rrr = randperm(length(catnames));
-rrr = rrr(1);
+%rrr = rrr(1);
 
 % rrr = 111;
 % rrr = 62;
@@ -62,6 +62,7 @@ for ri = 1:length(rrr)
   SVMC = .01;
 
   [svm_model] = train_all(X,y,targety,ids,X2,y2,ids2);
+
   
   %keyboard
   %return;
@@ -72,8 +73,8 @@ for ri = 1:length(rrr)
   %fprintf(1,'gamma=%.3f, sv = %d, cap =
   %%.3f\n',gamma,svm_model.totalSV,cap2);
   %[svm_model] = train_mc(X,y,targety,index,ids);
+continue;
 
-  return;
   res = mysvmpredict(X,svm_model);
   res2 = mysvmpredict(X2,svm_model);
     

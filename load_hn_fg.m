@@ -171,14 +171,11 @@ for i = 1:length(mining_queue)
 end
 
 if ~exist('xs','var')
-  hn.xs = zeros(prod(size(m.model.w)),0);
+  %If no detections from from anymodels, return an empty matrix
+  hn.xs = zeros(prod(size(models{1}.model.w)),0);
   hn.objids = [];
   mining_stats.num_violating = 0;
   mining_stats.num_empty = 0;
-  rs = [];
-  I = [];
-  bboxes = [];
-
   return;
 end
 

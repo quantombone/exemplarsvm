@@ -1,5 +1,10 @@
 function A = get_dominant_basis(meanx, K)
 %Get the dominant localized gradient basis for learning
+%meanx: [N x M x F] HOG feature
+%K: choose top K gradients
+%returns:
+%A: [NMF x NMF] projection matrix such that A*meanx(:) gets
+%projected onto top K gradients per cell
 
 A = zeros(prod(size(meanx)),0);
 for aaa = 1:size(meanx,1)

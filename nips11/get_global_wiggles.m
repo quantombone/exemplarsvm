@@ -4,8 +4,8 @@ function [xs,bbs,Is] = get_global_wiggles(I)
 scaler = 300/max(size(I,1),size(I,2));
 I = imresize(I,scaler);
 
-cut1 = round(linspace(1,round(size(I,1)/5),2));
-cut2 = round(linspace(1,round(size(I,2)/5),2));
+cut1 = round(linspace(1,round(size(I,1)/10),4));
+cut2 = round(linspace(1,round(size(I,2)/10),4));
 
 %cut1 = round(linspace(1,round(size(I,1)/5),3));
 %cut2 = round(linspace(1,round(size(I,2)/5),3));
