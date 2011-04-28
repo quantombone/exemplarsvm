@@ -1,3 +1,3 @@
 function f = flip_faces(f,sizeI)
-%f(:,2) = sizeI(2)-f(:,2);
+%Flip faces given size of the image
 f(:,1) = sizeI(2)-f(:,1);

@@ -1,4 +1,5 @@
 function seg2 = faces2colors(seg)
+%used for buslabeling to show facades as colors
 sizer = size(seg);
 colors = jet(5);
 colors(end+1,:) = 0;
