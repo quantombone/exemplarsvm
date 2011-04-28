@@ -16,8 +16,11 @@ X = saveX;
 y = savey;
 ids = saveids;
 
-addpath(genpath('/nfs/hn22/tmalisie/ddip/exemplarsvm/liblinear-1.7/'));
-addpath(genpath('/nfs/hn22/tmalisie/ddip/nips2010/'))
+%Liblinear is now included
+%addpath(genpath('/nfs/hn22/tmalisie/ddip/exemplarsvm/liblinear-1.7/'));
+
+%Whatever is missing should be included in the draw_graph subfolder!
+%addpath(genpath('/nfs/hn22/tmalisie/ddip/nips2010/'))
 
 if 0
 filer = sprintf('/nfs/baikal/tmalisie/sunpcacrops/%05d.mat',targety);
