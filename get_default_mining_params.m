@@ -1,6 +1,8 @@
 function mining_params = get_default_mining_params
 %Return the default mining parameters
 
+mining_params.FLIP_LR = 1;
+
 %maximum number of mining iterations
 mining_params.MAXITER = 100;
 

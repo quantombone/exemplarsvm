@@ -46,6 +46,7 @@ for i = 1:length(mining_queue)
   localizeparams.TOPK = TOPK_FINAL;
   localizeparams.lpo = mining_params.lpo;
   localizeparams.SAVE_SVS = KEEPSV;
+  localizeparams.FLIP_LR = mining_params.FLIP_LR;
   
   [rs,t] = localizemeHOG(I, models, localizeparams);
   
