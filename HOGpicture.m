@@ -1,4 +1,9 @@
 function im = HOGpicture(w, bs)
+%NOTE(TJM): I fixed a visualization bug which would sometimes show
+%funky artifacts because pedro's version shows only the orientations
+%facing one way.  On synthetic images of squares this could be
+%seen.  The simple is to scan over 18 orientations not 9 when
+%creating the histogram pics.
 
 if ~exist('bs','var')
   bs = 20;
