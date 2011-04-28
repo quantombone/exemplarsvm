@@ -1,6 +1,10 @@
-function Isv = get_sv_stack(svids, bg, m)
+function Isv = get_sv_stack(svids, bg, m, K1, K2)
 %Create an image which visualizes the negative support vectors
 %Tomasz Malisiewicz (tomasz@cmu.edu)
+
+if iscell(svids)
+  svids = [svids{:}];
+end
 
 if exist('m','var')
   hogpic = (HOGpicture(m.model.w));
@@ -65,8 +69,8 @@ newsize = round(newsize);
 svims = cellfun2(@(x)max(0.0,min(1.0,imresize(x,newsize))),svims);
 
 %K = ceil(sqrt(N));
-K2 = 1;
-K1 = 12;
+%K2 = 1;
+%K1 = 12;
 
 %K1 = K;
 %K2 = K;
@@ -85,10 +89,10 @@ svims(4:end) = svims(1:end-3);
 svims{2} = ms;
 svims{3} = max(0.0,min(1.0,imresize(hogpic,[size(ms,1),size(ms, ...
                                                   2)])));
-VOCinit;
+%VOCinit;
 
 svims{1} = max(0.0,min(1.0,imresize(Ibase,[size(ms,1),size(ms,2)])));
-  
+ 
 svims = reshape(svims,K1,K2)';
 for j = 1:K2
   svrows{j} = cat(2,svims{j,:});

@@ -3,6 +3,8 @@ function train_all_exemplars
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
+EX_PER_CHUNK = 2;
+
 VOCinit;
 
 %Get the default mining parameters
@@ -11,7 +13,7 @@ mining_params.SKIP_GTS_ABOVE_THIS_OS = 1.0;
 mining_params.dump_last_image = 1;
 
 initial_directory = ...
-    sprintf('%s/exemplars2/',VOCopts.localdir);
+    sprintf('%s/exemplars/',VOCopts.localdir);
 
 final_directory = ...
     sprintf('%s/mined/',initial_directory);
@@ -21,10 +23,10 @@ if ~exist(final_directory,'dir')
   mkdir(final_directory);
 end
 
-fprintf(1,'WARNING hardcoded trains\n');
-files = dir([initial_directory '*train.mat']);
+%fprintf(1,'WARNING hardcoded trains\n');
+files = dir([initial_directory '*.mat']);
 
-EX_PER_CHUNK = 5;
+
 
 %% Chunk the data into EX_PER_CHUNK exemplars per chunk so that we
 %process several images, then write results for entire chunk

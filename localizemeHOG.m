@@ -1,8 +1,8 @@
-function [resstruct,t] = localizemeHOG(t, models, localizeparams)
+function [resstruct,t] = localizemeHOG(I, models, localizeparams)
 % Localize object in pyramid via sliding windows and (dot product +
 % bias recognition score)
 % (w,b) are cell matrices which contain learned SVM parameters
-% t: input image
+% I: input image
 % models: a cell array of models
 % models{.}.model.w: cell array of learned templates
 % models{.}.model.b: cell array of corresponding offsets
@@ -12,14 +12,27 @@ function [resstruct,t] = localizemeHOG(t, models, localizeparams)
 % resstruct: sliding window output struct
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
-if isfield(localizeparams,'FLIP_LR')
-  localizeparams = rmfield(localizeparams,'FLIP_LR');
+%if isfield(localizeparams,'FLIP_LR')
+%  localizeparams = rmfield(localizeparams,'FLIP_LR');
+%end
+doflip = 0;
+if localizeparams.FLIP_LR == 1
+  doflip = 1;
 end
-[rs1,t1] = localizemeHOGdriver(t,models,localizeparams);
-localizeparams.FLIP_LR = 1;
-[rs2,t2] = localizemeHOGdriver(t,models,localizeparams);
 
+localizeparams.FLIP_LR = 0;
+[rs1,t1] = localizemeHOGdriver(I,models,localizeparams);
 
+if doflip == 1
+  localizeparams.FLIP_LR = 1;
+  [rs2,t2] = localizemeHOGdriver(I,models,localizeparams);
+else
+  resstruct = rs1;
+  t = t1;
+  return;
+end
+
+%If we got here, then the flip was turned on
 for q = 1:length(rs1.score_grid)
   rs1.score_grid{q} = cat(2,rs1.score_grid{q},rs2.score_grid{q});
   if numel(rs2.support_grid)>0
@@ -28,16 +41,15 @@ for q = 1:length(rs1.score_grid)
   end
   rs1.id_grid{q} = cat(2,rs1.id_grid{q},rs2.id_grid{q});
 end
-% rs1.score_grid = [rs1.score_grid; rs2.score_grid];
-% rs1.id_grid = [rs1.id_grid; rs2.id_grid];
-% rs1.support_grid = [rs1.support_grid; rs2.support_grid];
 
 resstruct = rs1;
 t = [t1  t2];
 
+function [resstruct,t] = localizemeHOGdriver(I, models, ...
+                                             localizeparams)
 
-
-function [resstruct,t] = localizemeHOGdriver(t, models, localizeparams)
+%NOTE: this function takes as input "t" which is interpreted as an
+%image, but then later returns it as an output parameter
 N = length(models);
 ws = cellfun2(@(x)x.model.w,models);
 bs = cellfun2(@(x)x.model.b,models);
@@ -50,7 +62,7 @@ sbin = models{1}.model.params.sbin;
 %end
 
 fprintf(1,'Localizing %d in I=[%dx%d@%d]',N,...
-          size(t,1),size(t,2),localizeparams.lpo);
+          size(I,1),size(I,2),localizeparams.lpo);
 
 %if enabled, do NN computation using integral images on cell norms
 %instead of just sliding with fconv
@@ -67,24 +79,23 @@ if nargin == 1 && nargout == 1
   bs{1} = 0;
 end
 
-if ~isstruct(t)  
+if ~isstruct(I)  
   starter=tic;
   
   if isfield(localizeparams,'FLIP_LR') && ...
         (localizeparams.FLIP_LR == 1)
     fprintf(1,'Flip LR\n');
     %flip image lr here...
-    I = t;
+
     for i = 1:3
       I(:,:,i) = fliplr(I(:,:,i));
     end
 
   else    
     %take unadulterated image
-    I = t;
+
   end
-  
-  
+   
   clear t
   t.I = I;
 
@@ -260,14 +271,14 @@ end
   
 sizeI = size(I);
 
-%let everybody know we are flipped
-if isfield(localizeparams,'FLIP_LR') && ...
-      (localizeparams.FLIP_LR == 1)
-  for i = 1:length(resstruct.id_grid)
-    for j = 1:length(resstruct.id_grid{i})
-      resstruct.id_grid{i}{j}.FLIP_LR = 1;
-    end
-  end
-end
+% %let everybody know we are flipped
+% if isfield(localizeparams,'FLIP_LR') && ...
+%       (localizeparams.FLIP_LR == 1)
+%   for i = 1:length(resstruct.id_grid)
+%     for j = 1:length(resstruct.id_grid{i})
+%       resstruct.id_grid{i}{j}.FLIP_LR = 1;
+%     end
+%   end
+% end
 
 

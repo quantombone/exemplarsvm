@@ -10,8 +10,6 @@ clear VOCopts
 %VOCopts.dataset='VOC2010';
 VOCopts.dataset='VOC2007';
 
-%models = load_all_models_both('diningtable','exemplars','10');
-
 %for iccv2011
 %VOCopts.dataset='VOC2009';
 
@@ -44,7 +42,8 @@ end
 VOCopts.dumpdir = '/nfs/baikal/tmalisie/labelme400/www/siggraph/';
 
 %fprintf(1,'HACK using nfs shares\n');
-devkitroot='/nfs/baikal/tmalisie/';
+%devkitroot is where we write all the result files
+devkitroot='/nfs/baikal/tmalisie/nips11/';
 VOCopts.datadir ='/nfs/hn38/users/sdivvala/Datasets/Pascal_VOC/';
 
 %fprintf(1,'Devkitroot is %s\n',devkitroot);
