@@ -20,6 +20,8 @@ screenshot capture tool
 
 %%%% Compilation instructions
 
+%liblinear needs to be compiled, go inside its matlab directory and compile away by editing the Makefile
+
 Quick Start Guide:
 
 % 1a. Start by setting the workspace path inside file VOCcode/VOCinit.m
