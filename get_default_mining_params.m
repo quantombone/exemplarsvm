@@ -6,14 +6,15 @@ mining_params.FLIP_LR = 1;
 %maximum number of mining iterations
 mining_params.MAXITER = 100;
 
-%CVPR11 constant
+%ICCV11 constant
 mining_params.SVMC = .01;
+mining_params.SVMC = .0001;
 
 %maximum number of image-scans during training
 mining_params.MAX_TOTAL_MINED_IMAGES = 1000;
 
 %if enabled, we dump learning images into results directory
-mining_params.dump_images = 0;
+mining_params.dump_images = 1;
 
 %if enabled, we dump the last image
 mining_params.dump_last_image = 0;
@@ -26,11 +27,13 @@ mining_params.lpo = 10;
 
 %Maximum number of negatives to mine before SVM kicks in (this
 %defines one iteration)
-mining_params.MAX_WINDOWS_BEFORE_SVM = 2000;
+mining_params.MAX_WINDOWS_BEFORE_SVM = 500;
 
 %Maximum number of violating images before SVM kicks in (another
 %way to define one iteration)
-mining_params.MAX_IMAGES_BEFORE_SVM = 500;
+%NOTE: this variable breaks how I consider iterations, so make it
+%really large so it never fires
+mining_params.MAX_IMAGES_BEFORE_SVM = 500000;
 
 %At this cutoff, we switch thresholds from basically everything to
 %a reduced threshold
