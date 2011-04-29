@@ -139,6 +139,7 @@ for i = 1:length(ordering)
     localizeparams.TOPK = TOPK;
     localizeparams.lpo = lpo;
     localizeparams.SAVE_SVS = 0;
+    localizeparams.FLIP_LR = 1;
     
     starter = tic;
     [rs,t] = localizemeHOG(I,models,localizeparams);
