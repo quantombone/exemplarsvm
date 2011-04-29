@@ -3,7 +3,7 @@ function train_all_exemplars
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-EX_PER_CHUNK = 2;
+EX_PER_CHUNK = 5;
 
 VOCinit;
 
@@ -26,7 +26,7 @@ end
 %fprintf(1,'WARNING hardcoded trains\n');
 files = dir([initial_directory '*.mat']);
 
-
+mining_params.final_directory = final_directory;
 
 %% Chunk the data into EX_PER_CHUNK exemplars per chunk so that we
 %process several images, then write results for entire chunk
@@ -45,22 +45,27 @@ for i = 1:length(ordering)
     filer = sprintf('%s/%s',initial_directory,files(curfiles(z)).name);
     m = load(filer);
     m = m.m;
-  
+    m.model.wtrace{1} = m.model.w;
+    m.model.btrace{1} = m.model.b;
     %Set the name of this exemplar type
     m.models_name = 'nips11';
+    m.iteration = 0;
     models{z} = m;  
   end
 
+  % Create a naming scheme for saving files
   filer2fill = sprintf('%s/%%s.%s.%05d.mat',final_directory, ...
                         models{1}.cls,ordering(i));
 
-  % %this is the final file which we can write to a file
-  filer2final = sprintf(filer2fill,num2str(mining_params.MAXITER));
+  %% this is the final file which we can write to a file
+  %filer2final = sprintf(filer2fill,num2str(mining_params.MAXITER));
+  % 
+  filer2final = sprintf('%s/%s.%05d.mat',final_directory, ...
+                        models{1}.cls,ordering(i));
   
-  % %check if we are ready for an update
+  %% check if we are ready for an update
   filerlock = [filer2final '.mining.lock'];
   
-  %fprintf(1,'hack not checking\n');
   if fileexists(filer2final) || (mymkdir_dist(filerlock) == 0)
     continue
   end
@@ -71,7 +76,7 @@ for i = 1:length(ordering)
   bg = get_pascal_bg('train',['-' models{1}.cls]);
   
   %remove self image
-  %bg = setdiff(bg,sprintf(VOCopts.imgpath,m.curid));
+  bg = setdiff(bg,sprintf(VOCopts.imgpath,m.curid));
   
   % if length(m.model.x) == 0
   %   fprintf(1,'Problem with this exemplar\n');
@@ -87,50 +92,61 @@ for i = 1:length(ordering)
 
   mining_queue = initialize_mining_queue(bg);
   
-  %Save a trace of learned w's (one per iteration)
-  for q = 1:length(models)
-    models{q}.model.wtrace{1} = models{q}.model.w;
-    models{q}.model.btrace{1} = models{q}.model.b;
-  end
   % The mining queue is the ordering in which we process new images  
   keep_going = 1;
+
+  %% This is the id of the chunk file we are about to write, it is
+  %% not the same as the exemplar iteration, since each mine step
+  %% won't necessarily update an iteration for every single exemplar
+  FILEID = 0;
   
-  for iteration = 1:mining_params.MAXITER       
-    [models, mining_queue] = ...
-        mine_negatives(models, mining_queue, bg, mining_params, iteration);
+  while keep_going == 1
+    FILEID = FILEID + 1;
+
+    %Get the name of the next chunk file to write
+    filer2 = sprintf(filer2fill,num2str(FILEID));
+    
+    %select exemplars which haven't finished training
+    goods = find(cellfun(@(x)x.iteration <= mining_params.MAXITER,models));
+    
+    [models(goods), mining_queue] = ...
+        mine_negatives(models(goods), mining_queue, bg, mining_params, ...
+                       FILEID);
   
     total_mines = sum(cellfun(@(x)x.num_visited,mining_queue));
     if ((total_mines >= mining_params.MAX_TOTAL_MINED_IMAGES) || ...
           (length(mining_queue) == 0))
       fprintf(1,'Mined enough images, rest up\n');
       keep_going = 0;
-      iteration = mining_params.MAXITER;
+      %bump up filename to final file
+      filer2 = filer2final;
     end
 
     %m.iteration = iteration;
-    if (mining_params.dump_images == 1) || ...
-          (mining_params.dump_last_image == 1 && iteration == mining_params.MAXITER)
-      figure(1)
-      set(gcf,'PaperPosition',[0 0 15 15]);
-      print(gcf,sprintf('%s/%s_%03d.png',final_directory,files(i).name,iteration),'-dpng');
-    end
+    % if (mining_params.dump_images == 1) || ...
+    %       (mining_params.dump_last_image == 1 && iteration == mining_params.MAXITER)
+    %   for z = 1:EX_PER_CHUNK
+    %     figure(z)
+    %     set(gcf,'PaperPosition',[0 0 20 10]);
+    %     print(gcf,sprintf('%s/%s_z=%03d_iter=%05d.png', ...
+    %                       final_directory,files(i).name,z,iteration),'-dpng');
+    %   end
+    % end
     
-    if 1
-      filer2 = sprintf(filer2fill,num2str(iteration));
-      models_save = models; 
-      for q = 1:length(models)
-        models{q} = prune_svs(models{q});
-      end
-      save(filer2,'models','mining_queue');
-      models = models_save;
-      
-      %delete old files
-      if iteration > 1
-        for q = 1:iteration-1
-          filer2old = sprintf(filer2fill,num2str(q));
-          if fileexists(filer2old)
-            delete(filer2old);
-          end
+    
+    models_save = models; 
+    for q = 1:length(models)
+      models{q} = prune_svs(models{q});
+    end
+    save(filer2,'models','mining_queue');
+    models = models_save;
+    
+    %delete old files
+    if FILEID > 1
+      for q = 1:FILEID-1
+        filer2old = sprintf(filer2fill,num2str(q));
+        if fileexists(filer2old)
+          delete(filer2old);
         end
       end
     end
@@ -139,7 +155,7 @@ for i = 1:length(ordering)
       fprintf(1,' ##Breaking because we reached end\n');
       break;
     end
-  end %iteration
+  end %iteratiion
     
   rmdir(filerlock);
 end
