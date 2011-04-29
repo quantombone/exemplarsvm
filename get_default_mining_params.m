@@ -1,5 +1,7 @@
 function mining_params = get_default_mining_params
-%Return the default mining parameters
+%Return the default mining and SVM training parameters for the
+%exemplar svm and the visual memex network
+% Tomasz Malisiewicz (tomasz@cmu.edu)
 
 mining_params.FLIP_LR = 1;
 
@@ -11,7 +13,7 @@ mining_params.SVMC = .01;
 mining_params.SVMC = .0001;
 
 %maximum number of image-scans during training
-mining_params.MAX_TOTAL_MINED_IMAGES = 1000;
+mining_params.MAX_TOTAL_MINED_IMAGES = 2000;
 
 %if enabled, we dump learning images into results directory
 mining_params.dump_images = 1;
@@ -20,14 +22,14 @@ mining_params.dump_images = 1;
 mining_params.dump_last_image = 0;
 
 %maximum #windows per image (per exemplar) to mine
-mining_params.MAX_WINDOWS_PER_IMAGE = 400;
+mining_params.MAX_WINDOWS_PER_IMAGE = 100;
 
 %Levels-per-octave defines how many levels between 2x sizes in pyramid
 mining_params.lpo = 10;
 
 %Maximum number of negatives to mine before SVM kicks in (this
 %defines one iteration)
-mining_params.MAX_WINDOWS_BEFORE_SVM = 500;
+mining_params.MAX_WINDOWS_BEFORE_SVM = 1000;
 
 %Maximum number of violating images before SVM kicks in (another
 %way to define one iteration)

@@ -3,7 +3,7 @@ function train_all_exemplars
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-EX_PER_CHUNK = 5;
+EX_PER_CHUNK = 1;
 
 VOCinit;
 
@@ -50,7 +50,7 @@ for i = 1:length(ordering)
     %Set the name of this exemplar type
     m.models_name = 'nips11';
     m.iteration = 0;
-    models{z} = m;  
+    models{z} = m;
   end
 
   % Create a naming scheme for saving files
