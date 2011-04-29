@@ -1,4 +1,4 @@
-function [models] = load_all_models_chunks(cls, DET_TYPE, FINAL_PREFIX)
+function [models] = load_all_models_chunks(cls, DET_TYPE)
 %Load all trained models of a specified class 'cls' and specified
 %type 'DET_TYPE' from a models directory.
 
@@ -9,22 +9,23 @@ end
 
 %Define the type of classifiers we want to load (exemplars, dalals)
 if ~exist('DET_TYPE','var')
-  DET_TYPE = 'dalals';
+  DET_TYPE = 'exemplars';
 else
   if sum(ismember(DET_TYPE,{'dalals','exemplars'})) == 0
     fprintf(1,'Warning DET_TYPE=%s unrecognized\n',DET_TYPE);
   end
 end
+fprintf(1,'Loading Class=%s det_type=%s\n',cls,DET_TYPE);
 
 %This is the prefix we look for when loading files (which usually
 %denotes the maximum number of mining iterations)
-if ~exist('FINAL_PREFIX','var')
-  FINAL_PREFIX = '100';
-end
+%if ~exist('FINAL_PREFIX','var')
+%  FINAL_PREFIX = '100';
+%end
 
 %if enabled, we cache result on disk to facilitate loading at a
 %later stage (NOTE: these files might have to be removed manually)
-CACHE_FILE = 0;
+CACHE_FILE = 1;
 
 VOCinit;
 
@@ -37,7 +38,7 @@ if CACHE_FILE == 1
   end
   
   cache_file = ...
-      sprintf('%s/%s_%s_%s.mat',cache_dir,cls,DET_TYPE,FINAL_PREFIX);
+      sprintf('%s/%s_%s.mat',cache_dir,cls,DET_TYPE);
   
   if fileexists(cache_file)
     fprintf(1,'Loading CACHED file: %s\n', cache_file);
@@ -49,9 +50,9 @@ end
 results_directory = ...
     sprintf('%s/%s/mined/',VOCopts.localdir,DET_TYPE);
 
-files = dir([results_directory FINAL_PREFIX '.*' cls '*.mat']);
+files = dir([results_directory cls '*.mat']);
 fprintf(1,'Length of files to load: %d\n',length(files));
-[results_directory FINAL_PREFIX '.*' cls '*.mat']
+[results_directory '*' cls '*.mat']
 m = cell(1,length(files));
 for i = 1:length(files)
   fprintf(1,'.');
