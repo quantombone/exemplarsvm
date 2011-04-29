@@ -8,15 +8,7 @@ end
 
 if exist('m','var')
   hogpic = (HOGpicture(m.model.w));
-  
-  NC = 200;
-  colorsheet = jet(NC);
-  dists = hogpic(:);    
-  dists = dists - min(dists);
-  dists = dists / (max(dists)+eps);
-  dists = round(dists*(NC-1)+1);
-  colors = colorsheet(dists,:);
-  hogpic = reshape(colors,[size(hogpic,1) size(hogpic,2) 3]);
+  hogpic = jettify(hogpic);
 end
 
 
@@ -65,7 +57,6 @@ newsize = [size(Ibase,1) size(Ibase,2)];
 newsize = 100/newsize(1) * newsize;
 newsize = round(newsize);
 
-
 svims = cellfun2(@(x)max(0.0,min(1.0,imresize(x,newsize))),svims);
 
 %K = ceil(sqrt(N));
@@ -83,16 +74,37 @@ for j = (N+1):(K1*K2)
 end
 sstack = cat(4,svims{:});
 
+mx = mean(m.model.x,2);
+raw_picture = HOGpicture(reshape(mx-mean(mx(:)),m.model.hg_size));
+pos_picture = HOGpicture(m.model.w);
+neg_picture = HOGpicture(-m.model.w);
+spatial_picture = sum(m.model.w.*reshape(mean(m.model.x,2), ...
+                                         size(m.model.w)),3);
+spatial_picture = imresize(spatial_picture,[size(pos_picture,1) ...
+                    size(pos_picture,2)],'nearest');
+
+raw_picture = jettify(imresize(raw_picture,newsize,'nearest'));
+pos_picture = jettify(imresize(pos_picture,newsize,'nearest'));
+neg_picture = jettify(imresize(neg_picture,newsize,'nearest'));
+spatial_picture = jettify(imresize(spatial_picture,newsize,'nearest'));
+
+
 %% compute the mean image
 ms = mean(sstack,4);
-svims(4:end) = svims(1:end-3);
-svims{2} = ms;
-svims{3} = max(0.0,min(1.0,imresize(hogpic,[size(ms,1),size(ms, ...
+
+svims(6:end) = svims(1:end-5);
+
+%ex goes in slot 1
+svims{1} = max(0.0,min(1.0,imresize(Ibase,[size(ms,1),size(ms, ...
                                                   2)])));
+svims{2} = pos_picture;
+svims{3} = neg_picture;
+svims{4} = spatial_picture;
+svims{5} = ms;
+%svims{3} = max(0.0,min(1.0,imresize(hogpic,[size(ms,1),size(ms, ...
+%                                                  2)])));
 %VOCinit;
 
-svims{1} = max(0.0,min(1.0,imresize(Ibase,[size(ms,1),size(ms,2)])));
- 
 svims = reshape(svims,K1,K2)';
 for j = 1:K2
   svrows{j} = cat(2,svims{j,:});
