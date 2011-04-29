@@ -5,6 +5,7 @@ initialize_voc_exemplars('cow');
 
 
 %2. train all exemplars (all exemplars in exemplar directory)
+mining_params.dump_images = 1;
 train_all_exemplars;
 
 return
