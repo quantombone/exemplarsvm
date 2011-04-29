@@ -25,7 +25,6 @@ for q = 1:length(models)
     (iteration == mining_params.MAXITER)
     [models{q}] = update_the_model(models,hn,q,mining_params, lastw, ...
                                    iteration, mining_stats, bg);
-    %draw_stuff(models,lastw,q,supery, r, old_scores, rstart)
   end
 end
 
@@ -35,7 +34,7 @@ function [m] = update_the_model(models,hn,index,mining_params, lastw, ...
 %% UPDATE the current SVM and show the results
 
 m = models{index};
-
+m.iteration = m.iteration + 1;
 xs = hn.xs{index};
 objids = hn.objids{index};
 %TODO: Remove redundant SVs here
@@ -93,12 +92,6 @@ if strmatch(m.models_name,'dalal')
   fprintf(1,'dalal:WE NOW HAVE %d exemplars in category\n',LEN);
 end
 
-% rold = lastw(:)'*badx - lastb;
-
-% if mean(r) > mean(rold)
-%   fprintf(1,'something funky is going on\n');
-%   %keyboard
-% end
 svs = find(r >= -1.0000);
 
 %KEEP 3#SV vectors (or at least 1000 of them)
@@ -120,84 +113,64 @@ m.model.btrace{end+1} = m.model.b;
 %  return;
 %end
 
-%function draw_stuff(models,lastw,zzz,supery, r, old_scores, rstart)
-%m = models{zzz};
-figure(index)
+
+%% HERE WE DRAW THE FIGURES
+figure(1)
 clf
 
 subplot(2,2,1)
-I = get_exemplar_icon(models,index);
-imagesc(I)
-axis image
-axis off
-cls = '';
-objid = 0;
-if isfield(m,'cls');
-  cls = m.cls;
-end
-if isfield(m,'objectid')
-  objid = m.objectid;
-end
-title(sprintf('Exemplar %s %s.%d',cls,m.curid,objid),...
-      'interpreter','none')
-
-mx = mean(m.model.x,2);
-raw_picture = HOGpicture(reshape(mx-mean(mx(:)),m.model.hg_size));
-pos_picture = HOGpicture(m.model.w);
-neg_picture = HOGpicture(-m.model.w);
-spatial_picture = sum(m.model.w.*reshape(mean(m.model.x,2), ...
-                                         size(m.model.w)),3);
-spatial_picture = imresize(spatial_picture,[size(pos_picture,1) ...
-                    size(pos_picture,2)],'nearest');
-raw_picture = raw_picture - min(raw_picture(:));
-raw_picture = raw_picture / max(raw_picture(:));
-
-pos_picture = pos_picture - min(pos_picture(:));
-pos_picture = pos_picture / max(pos_picture(:));
-
-neg_picture = neg_picture - min(neg_picture(:));
-neg_picture = neg_picture / max(neg_picture(:));
-
-spatial_picture = spatial_picture - min(spatial_picture(:));
-spatial_picture = spatial_picture / max(spatial_picture(:));
-
-pos_picture = pad_image(pos_picture,10);
-neg_picture = pad_image(neg_picture,10);
-raw_picture = pad_image(raw_picture,10);
-spatial_picture = pad_image(spatial_picture,10);
-
-
-res_picture = cat(1,cat(2,pos_picture,neg_picture),...
-                  cat(2,raw_picture,spatial_picture));
-
-subplot(2,2,2)
-imagesc(res_picture);
-axis image
-axis off
-template_diff = norm(m.model.w(:)-lastw{index}(:));
-title(sprintf('(+w,-w,raw,spatial)\ndiff from last: %.5f',template_diff))
-
-% subplot(4,4,2)
-% imagesc(HOGpicture(m.model.w))
-% colormap jet
+% I = get_exemplar_icon(models,index);
+% imagesc(I)
 % axis image
 % axis off
+% cls = '';
+% objid = 0;
+% if isfield(m,'cls');
+%   cls = m.cls;
+% end
+% if isfield(m,'objectid')
+%   objid = m.objectid;
+% end
+% title(sprintf('Exemplar %s %s.%d',cls,m.curid,objid),...
+%       'interpreter','none')
 
-% title(sprintf('Learned Template\nL_2 norm from last: %.5f',template_diff))
+% mx = mean(m.model.x,2);
+% raw_picture = HOGpicture(reshape(mx-mean(mx(:)),m.model.hg_size));
+% pos_picture = HOGpicture(m.model.w);
+% neg_picture = HOGpicture(-m.model.w);
+% spatial_picture = sum(m.model.w.*reshape(mean(m.model.x,2), ...
+%                                          size(m.model.w)),3);
+% spatial_picture = imresize(spatial_picture,[size(pos_picture,1) ...
+%                     size(pos_picture,2)],'nearest');
 
-% subplot(4,4,5)
-% imagesc(HOGpicture(-m.model.w))
+% raw_picture = raw_picture - min(raw_picture(:));
+% raw_picture = raw_picture / max(raw_picture(:));
+
+% pos_picture = pos_picture - min(pos_picture(:));
+% pos_picture = pos_picture / max(pos_picture(:));
+
+% neg_picture = neg_picture - min(neg_picture(:));
+% neg_picture = neg_picture / max(neg_picture(:));
+
+% spatial_picture = spatial_picture - min(spatial_picture(:));
+% spatial_picture = spatial_picture / max(spatial_picture(:));
+
+% pos_picture = pad_image(pos_picture,10);
+% neg_picture = pad_image(neg_picture,10);
+% raw_picture = pad_image(raw_picture,10);
+% spatial_picture = pad_image(spatial_picture,10);
+
+% res_picture = cat(1,cat(2,pos_picture,neg_picture),...
+%                   cat(2,raw_picture,spatial_picture));
+
+% subplot(2,2,2)
+% imagesc(res_picture);
 % axis image
 % axis off
-% title('Negative Weights')
+% template_diff = norm(m.model.w(:)-lastw{index}(:));
+% title(sprintf('(+w,-w,+nhog,spatial)\ndiff from last: %.5f',template_diff))
 
-% subplot(4,4,6)
-% sw = sum(m.model.w.*reshape(m.model.x(:,1),size(m.model.w)),3);
-% imagesc(sw)
-% axis image
-% axis off
-% title('Spatial Weights')
-subplot(2,2,3)
+subplot(1,2,1)
 LENX = sum(supery==-1);
 plot([1 LENX],[-1 -1],'g--','LineWidth',2)
 hold on;
@@ -213,16 +186,27 @@ plot(1:LENX,r(supery==-1),'b.');
 axis([1 LENX min(r) max(1.05,max(r))]);
 mr = max(rstart);
 title(sprintf(['Iter %d\n MaxMine = %.3f, #ViolI=%d #EmptyI=%d'],...
-              iteration,mr,mining_stats.num_violating,...
+              m.iteration,mr,mining_stats.num_violating,...
               mining_stats.num_empty));
 
 xlabel('id index')
 ylabel('SVM score');
 
-subplot(2,2,4)
+subplot(1,2,2)
 Isv = get_sv_stack(m.model.svids(1:min(length(m.model.svids),25)),bg,m,5,5);
 imagesc(Isv)
 axis image
 axis off
 title('Top 25 -SVs');
 drawnow
+
+if (mining_params.dump_images == 1) || ...
+      (mining_params.dump_last_image == 1 && ...
+       m.iteration == mining_params.MAXITER)
+  set(gcf,'PaperPosition',[0 0 20 10]);
+  print(gcf,sprintf('%s/%s.%d_iter=%05d.png', ...
+                    mining_params.final_directory,m.curid,...
+                    m.objectid,m.iteration),'-dpng');
+ 
+end
+ 
