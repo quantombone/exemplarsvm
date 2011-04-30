@@ -1,11 +1,11 @@
 function start_pooler
 %Spawn a worker which handles some images in RAM and waits for jobs
-%in an infinite loop
+%in an infinite loop  MUCH FASTER THAN LOCAL IO intensive mining
 
 VOCinit;
 
 %do learning with data from the trainset
-fg = get_pascal_bg('train');
+fg = get_pascal_bg('trainval');
 IMS_PER_CHUNK = round(length(fg)/400);
 IMS_PER_CHUNK
 inds = do_partition(1:length(fg),IMS_PER_CHUNK);
@@ -50,6 +50,8 @@ nomodels{1}.model.params.sbin = 8;
 
 [a,me] = unix('hostname');
 
+LT = length(targets);
+
 for i = 1:length(targets)
   current_target = targets(i);
   filer = sprintf('%s/%05d.process',BASEDIR,targets(i))
@@ -88,7 +90,7 @@ for i = 1:length(targets)
   
   while 1
       status = ...
-          wait_for_chunk(current_target,localizeparams,ts,recs,subg);
+          wait_for_chunk(current_target,LT,localizeparams,ts,recs,subg);
     
     if status == 0
       fprintf(1,'Nothing to do, sleeping\n');
@@ -100,11 +102,11 @@ for i = 1:length(targets)
   
 end
 
-function status = wait_for_chunk(current_target,localizeparams,ts,recs,subg)
+function status = wait_for_chunk(current_target,LT,localizeparams,ts,recs,subg)
 %Given a set of precomputed hog pyramids, wait for a classifier
 %file, then fire it on everything to produce results
 
-prefix = sprintf('%05d',current_target);
+prefix = sprintf('%05d-%05d',current_target,LT);
 
 QUEUEDIR = '/nfs/baikal/tmalisie/pool/';
 DONEDIR = ['/nfs/baikal/tmalisie/' ...
@@ -161,6 +163,7 @@ chunkstart = tic;
                   ts, mining_params);
 timing = toc(chunkstart);
 
+keyboard
 %% fill in the overlaps from the data
 VOCinit;
 for i = 1:length(hn.objids)
@@ -173,21 +176,22 @@ for i = 1:length(hn.objids)
     [maxos,maxind] = max(os);
     maxclass = ...
         find(ismember(VOCopts.classes,{recs{recid}.objects(maxind).class}));
-    hn.objids{i}{j}.det = [maxos maxclass ...
-                    maxind];
+    hn.objids{i}{j}.maxos = maxos;
+    hn.objids{i}{j}.maxclass = maxclass;
+    hn.objids{i}{j}.maxind = maxind;
     
   end
 end
 
-
-for i = 1:length(models)
-  Isv = get_sv_stack(hn.objids{i}, subg, ...
-                                   models{i}, 5, 5);
-  figure(i)
-  clf
-  imagesc(Isv);
-  drawnow
-end
+%
+%for i = 1:length(models)
+%  Isv = get_sv_stack(hn.objids{i}, subg, ...
+%                                   models{i}, 5, 5);
+%  figure(i)
+%  clf
+%  imagesc(Isv);
+%  drawnow
+%end
 
 save(donefile,'hn','timing');
 status = 1;
