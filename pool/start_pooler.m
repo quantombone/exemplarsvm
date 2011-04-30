@@ -6,7 +6,7 @@ VOCinit;
 
 %do learning with data from the trainset
 fg = get_pascal_bg('trainval');
-IMS_PER_CHUNK = round(length(fg)/400);
+IMS_PER_CHUNK = round(length(fg)/300);
 IMS_PER_CHUNK
 inds = do_partition(1:length(fg),IMS_PER_CHUNK);
 length(inds)
@@ -154,6 +154,8 @@ mining_params.TOPK = localizeparams.TOPK;
 mining_params.lpo = localizeparams.lpo;
 mining_params.SAVE_SVS = 1;
 mining_params.FLIP_LR = localizeparams.FLIP_LR;
+%%NOTE: this should be carefully set to not blow things up too heavily
+mining_params.MAX_WINDOWS_BEFORE_SVM = 100;
 
 mining_queue = ...
     initialize_mining_queue(ts,1:length(ts));
