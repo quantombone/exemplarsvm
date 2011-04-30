@@ -1,10 +1,13 @@
 
-%%% VOC README
+%%% training a cow detector
+
 %1. dump out model files for a VOC category
 initialize_voc_exemplars('cow');
 
 
 %2. train all exemplars (all exemplars in exemplar directory)
+% make sure mining_params has dump_images enabled if you want to
+% look at the exemplars
 mining_params.dump_images = 1;
 train_all_exemplars;
 

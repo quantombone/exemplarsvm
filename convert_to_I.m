@@ -3,6 +3,12 @@ function I = convert_to_I(I)
 %be one of: real image, string, function.
 %Output will be a [M x N x 3] image matrix
 
+if iscell(I)
+  %if we are given a cell array
+  
+  return;
+end
+
 %if we have a string, then it is a path
 if isstr(I) 
   if I(end)~=')'

@@ -11,11 +11,15 @@ if exist('m','var')
   hogpic = jettify(hogpic);
 end
 
-
 N = length(svids);
+N = min(N,K1*K2);
 
 svids = svids(1:N);
-ucurids = unique([svids.curid]);
+if N > 0
+  ucurids = unique([svids.curid]);
+else
+  ucurids = [];
+end
 svims = cell(N,1);
 
 PADDER = 100;
@@ -42,12 +46,7 @@ for i = 1:length(ucurids)
   end
 end
 
-%resize to average size
-% newsize = ([mean(cellfun(@(x)size(x,1),svims)) mean(cellfun(@ ...
-%                                                   (x)size(x,2), ...
-%                                                   svims))]);
-% newsize = 100/newsize(1) * newsize;
-% newsize = round(newsize);
+
 VOCinit;
 Ibase = imread(sprintf(VOCopts.imgpath,m.curid));
 Ibase = im2double(Ibase);
@@ -59,12 +58,7 @@ newsize = round(newsize);
 
 svims = cellfun2(@(x)max(0.0,min(1.0,imresize(x,newsize))),svims);
 
-%K = ceil(sqrt(N));
-%K2 = 1;
-%K1 = 12;
 
-%K1 = K;
-%K2 = K;
 if length(svims)<K1*K2
   svims{K1*K2} = zeros(newsize(1),newsize(2),3);
 end

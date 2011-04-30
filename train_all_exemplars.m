@@ -50,6 +50,15 @@ for i = 1:length(ordering)
     %Set the name of this exemplar type
     m.models_name = 'nips11';
     m.iteration = 0;
+    
+    %Validation support vectors
+    m.model.vsv = zeros(prod(m.model.hg_size),0);
+    m.model.vsvids = [];
+    
+    %Friend support vectors
+    m.model.fsv = zeros(prod(m.model.hg_size),0);
+    m.model.fsvids = [];
+
     models{z} = m;
   end
 
@@ -73,10 +82,11 @@ for i = 1:length(ordering)
   %Set up the negative set for this exemplars
   %CVPR2011 paper used all train images excluding category images
   %m.bg = sprintf('get_pascal_bg(''trainval'',''%s'')',m.cls);
-  bg = get_pascal_bg('train',['-' models{1}.cls]);
+  bg = get_pascal_bg('trainval',['-' models{1}.cls]);
+  mining_params.alternate_validation = 1;
   
-  %remove self image
-  bg = setdiff(bg,sprintf(VOCopts.imgpath,m.curid));
+  %remove self image (not needed)
+  %bg = setdiff(bg,sprintf(VOCopts.imgpath,m.curid));
   
   % if length(m.model.x) == 0
   %   fprintf(1,'Problem with this exemplar\n');

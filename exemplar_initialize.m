@@ -6,6 +6,9 @@ function exemplar_initialize(cls)
 
 VOCinit;
 
+%GOAL_NCELLS = 25;
+%SBIN = 20;
+
 GOAL_NCELLS = 100;
 SBIN = 8;
 NWIGGLES = 100;
@@ -126,9 +129,19 @@ for i = 1:length(ids)
     
     model = populate_wiggles(I, model, NWIGGLES);
     
-    
+    %Negative support vectors
     model.nsv = zeros(prod(model.hg_size),0);
     model.svids = [];
+    
+    %Validation support vectors
+    model.vsv = zeros(prod(model.hg_size),0);
+    model.vsvids = [];
+    
+    %Friend support vectors
+    model.fsv = zeros(prod(model.hg_size),0);
+    model.fsvids = [];
+    
+    
   
     clear m
     m.curid = curid;

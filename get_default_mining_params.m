@@ -10,7 +10,14 @@ mining_params.MAXITER = 100;
 
 %ICCV11 constant
 mining_params.SVMC = .01;
-mining_params.SVMC = .0001;
+
+%regularize more here
+%mining_params.SVMC = .0001;
+
+%if enabled, during mining we use every other image as validation
+%where we keep as many top detection from the validation set as are
+%considered in the SVM training cache
+mining_params.alternate_validation = 0;
 
 %maximum number of image-scans during training
 mining_params.MAX_TOTAL_MINED_IMAGES = 2000;
@@ -22,14 +29,14 @@ mining_params.dump_images = 1;
 mining_params.dump_last_image = 0;
 
 %maximum #windows per image (per exemplar) to mine
-mining_params.MAX_WINDOWS_PER_IMAGE = 100;
+mining_params.MAX_WINDOWS_PER_IMAGE = 200;
 
 %Levels-per-octave defines how many levels between 2x sizes in pyramid
 mining_params.lpo = 10;
 
 %Maximum number of negatives to mine before SVM kicks in (this
 %defines one iteration)
-mining_params.MAX_WINDOWS_BEFORE_SVM = 1000;
+mining_params.MAX_WINDOWS_BEFORE_SVM = 2000;
 
 %Maximum number of violating images before SVM kicks in (another
 %way to define one iteration)
@@ -42,6 +49,7 @@ mining_params.MAX_IMAGES_BEFORE_SVM = 500000;
 mining_params.early_late_cutoff = 3;
 mining_params.early_detection_threshold = -10000;
 mining_params.late_detection_threshold = -1.05;
+mining_params.detection_threshold = mining_params.late_detection_threshold;
 
 %when mining, we keep the N negative support vectors as well as
 %some more beyond the -1 threshold (alpha*N), but no more than 1000
@@ -50,7 +58,7 @@ mining_params.max_negatives = 1000;
 
 %%if less than 1.0, then we apply nms to detections so that we don't have
 %%too many redundant windows
-mining_params.NMS_MINES_OS = 1;
+mining_params.NMS_MINES_OS = 0.8;
 
 %if non-zero, then skip detection at any objects
 mining_params.SKIP_GTS_ABOVE_THIS_OS = 10.0;

@@ -43,7 +43,9 @@ for q = 1:length(rs1.score_grid)
 end
 
 resstruct = rs1;
-t = [t1  t2];
+t = cell(2,1);
+t{1} = t1;
+t{2} = t2;
 
 function [resstruct,t] = localizemeHOGdriver(I, models, ...
                                              localizeparams)
@@ -61,8 +63,6 @@ sbin = models{1}.model.params.sbin;
 %  SAVE_SVS = 0;
 %end
 
-fprintf(1,'Localizing %d in I=[%dx%d@%d]',N,...
-          size(I,1),size(I,2),localizeparams.lpo);
 
 %if enabled, do NN computation using integral images on cell norms
 %instead of just sliding with fconv
@@ -79,12 +79,12 @@ if nargin == 1 && nargout == 1
   bs{1} = 0;
 end
 
-if ~isstruct(I)  
+if isnumeric(I)
   starter=tic;
   
   if isfield(localizeparams,'FLIP_LR') && ...
         (localizeparams.FLIP_LR == 1)
-    fprintf(1,'Flip LR\n');
+    fprintf(1,'Flip\n');
     %flip image lr here...
 
     for i = 1:3
@@ -93,15 +93,18 @@ if ~isstruct(I)
 
   else    
     %take unadulterated image
-
   end
-   
+  
   clear t
-  t.I = I;
+  t.size = size(I);
+  %t.I = I;
+  
+  fprintf(1,'Localizing %d in I=[%dx%d@%d]',N,...
+          t.size(1),t.size(2),localizeparams.lpo);
 
   %Compute pyramid
-  [t.hog,t.scales] = featpyramid2(t.I, sbin, localizeparams.lpo);
-  
+  [t.hog,t.scales] = featpyramid2(I, sbin, localizeparams.lpo);
+
   %maxscale = 50/min(size(t.I,1),size(t.I,2));
   %maxscale = .5;
   %t.hog = t.hog(t.scales<=maxscale);
@@ -127,9 +130,28 @@ if ~isstruct(I)
     resstruct = t;
     return;
   end
+  
 else
-  I = t.I;
+  fprintf(1,'Already found features\n');
+  
+  if iscell(I)
+    if localizeparams.FLIP_LR==1
+      t = I{2};
+    else
+      t = I{1};
+    end
+  else
+    t = I;
+  end
+  
+
+  resstruct.scales = t.scales;
+  fprintf(1,'Localizing %d in I=[%dx%d@%d]',N,...
+        t.size(1),t.size(2),localizeparams.lpo);
 end
+
+
+
 
 %score grid stores the TOPK scores from each exemplar's firing in
 %the image
@@ -269,8 +291,7 @@ else
   resstruct.support_grid = cell(0,1);
 end
   
-sizeI = size(I);
-
+%sizeI = size(I);
 % %let everybody know we are flipped
 % if isfield(localizeparams,'FLIP_LR') && ...
 %       (localizeparams.FLIP_LR == 1)

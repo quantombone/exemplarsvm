@@ -1,7 +1,6 @@
 function [hn, models, mining_queue, mining_stats] = ...
     load_hn_fg(models, mining_queue, bg, mining_params)
-
-%Load hard negatives from the set of images (ids)
+%Load hard negatives(detections) from the set of images (ids)
 %according to current classifier (w,b)
 %choose windows above threshold (thresh)
 %take at most (TOPK) windows from a single image
@@ -27,6 +26,7 @@ empty_images = zeros(0,1);
 for i = 1:length(mining_queue)
   index = mining_queue{i}.index;
   I = convert_to_I(bg{index});
+  
   %HACK ROTATE UPSIDE DOWN
   %fprintf(1,'HACK: rotate upside down negatives\n');
   %I = imrotate(I,180);
@@ -64,7 +64,7 @@ for i = 1:length(mining_queue)
   %  newx=cat(2,newpositives.support_grid{:});
   %  m.model.x = cat(2,m.model.x,newx);
   %end
-  %rs = prune_nms(rs, mining_params);
+  rs = prune_nms(rs, mining_params);
 
   %% Make sure we only keep 3 times the number of violating windows
   clear scores
@@ -84,7 +84,7 @@ for i = 1:length(mining_queue)
   %   scores = [];
   % end
 
-  
+
   addon ='';
   supersize = sum(cellfun(@(x)length(x),scores));
   if supersize > 0 %length(scores)>0
@@ -159,24 +159,27 @@ for i = 1:length(mining_queue)
     xs{a}{i} = x{a};
     objids{a}{i} = objid{a};
   end
-
-   
-  
+     
   if (max(number_of_windows) >= mining_params.MAX_WINDOWS_BEFORE_SVM) || ...
         (number_of_violating_images >= mining_params.MAX_IMAGES_BEFORE_SVM)
     fprintf(1,['Stopping mining because we have %d windows from' ...
                                                 ' %d new violators\n'],...
             max(number_of_windows), number_of_violating_images);
+
     break;
   end
 end
 
 if ~exist('xs','var')
   %If no detections from from anymodels, return an empty matrix
-  hn.xs = zeros(prod(size(models{1}.model.w)),0);
-  hn.objids = [];
+  for i = 1:length(models)
+    hn.xs{i} = zeros(prod(size(models{1}.model.w)),0);
+    hn.objids{i} = [];
+  end
   mining_stats.num_violating = 0;
   mining_stats.num_empty = 0;
+  
+  %TODO: fix bug since we should be returning results for a set of exemplars
   return;
 end
 

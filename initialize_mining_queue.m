@@ -1,9 +1,12 @@
-function mining_queue = initialize_mining_queue(bg)
-%Initialize the mining queue with 1:N ordering
+function mining_queue = initialize_mining_queue(bg,rrr)
+%Initialize the mining queue with random ordering, if ordering is
+%not specified
 
-fprintf(1,'Randomizing mining queue\n');
-rrr = randperm(length(bg));
-%rrr = 1:length(bg);
+if ~exist('rrr','var')
+  fprintf(1,'Randomizing mining queue\n');
+  rrr = randperm(length(bg));
+  %rrr = 1:length(bg);
+end
 
 for zzz = 1:length(bg)
   mining_queue{zzz}.index = rrr(zzz);

@@ -1,10 +1,9 @@
-train_all_exemplars: save a trace of learned weights (DONE!)
-localizemehog: make sbin=8 a variable (DONE!) (see get_sbin.m now!)
-perform_calibration.m: make the hog visualization in jet color and make sure it actually works (DONE!)
 
 -----
 
 1.) PROBLEM when no more images to mine.. iterations should stop
 2.) PROBLEM when last iteration goes through images but retrieves no negative supports
 
+
+3.) in load_hn_fg if there are no detections, it might fail now
 
