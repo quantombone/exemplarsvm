@@ -1,17 +1,21 @@
-function [hn, models, mining_queue, mining_stats] = ...
+function [hn, mining_queue, mining_stats] = ...
     load_hn_fg(models, mining_queue, bg, mining_params)
-%Load hard negatives(detections) from the set of images (ids)
-%according to current classifier (w,b)
-%choose windows above threshold (thresh)
-%take at most (TOPK) windows from a single image
-%operate at (lpo) levels per octave
-%process the image at resolution (image_multiplier)
+%% Compute detections "aka Hard-Negatives" for N images (bg) given K
+%% classifeirs (models) 
+%% 
+%% Input Data:
+%% models: Kx1 cell array of models
+%% mining_queue: the mining queue create from
+%%    initialize_mining_queue(bg)
+%% bg: the source of images (potentially already in pyramid feature
+%%   format)
+%% mining_params: the parameters of the mining/localization
+%% procedure
+%% 
+%% Returned Data: 
+%% hn: Kx1 cell array where hn{i} contains hard negatives for models{i} 
 
-%Returned Data:
-%(hn) is the struct containing hard negatives for (w,b)
-%(I,rs) is for the last image to get hard negatives from
-%(bboxes) optinally returns the actual boxes
-%VOCinit;
+%% Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if ~exist('mining_params','var')
   mining_params = get_default_mining_params;
@@ -23,6 +27,20 @@ number_of_windows = zeros(length(models),1);
 violating_images = zeros(0,1);
 empty_images = zeros(0,1);
 
+KEEPSV = 1;
+%IF NMS is enabled, get more windows (5 times as many) since
+%nms will prune many away
+TOPK_FINAL = mining_params.MAX_WINDOWS_PER_IMAGE;
+if mining_params.NMS_MINES_OS < 1
+  TOPK_FINAL = TOPK_FINAL * 5;
+end
+
+localizeparams.thresh = mining_params.detection_threshold;
+localizeparams.TOPK = TOPK_FINAL;
+localizeparams.lpo = mining_params.lpo;
+localizeparams.SAVE_SVS = KEEPSV;
+localizeparams.FLIP_LR = mining_params.FLIP_LR;
+
 for i = 1:length(mining_queue)
   index = mining_queue{i}.index;
   I = convert_to_I(bg{index});
@@ -31,26 +49,9 @@ for i = 1:length(mining_queue)
   %fprintf(1,'HACK: rotate upside down negatives\n');
   %I = imrotate(I,180);
 
-  starter = tic;
-  
-  KEEPSV = 1;
-    
-  %IF NMS is enabled, get more windows (5 times as many) since
-  %nms will prune many away
-  TOPK_FINAL = mining_params.MAX_WINDOWS_PER_IMAGE;
-  %if mining_params.NMS_MINES_OS < 1
-  %  TOPK_FINAL = TOPK_FINAL * 5;
-  %end
-  
-  localizeparams.thresh = mining_params.detection_threshold;
-  localizeparams.TOPK = TOPK_FINAL;
-  localizeparams.lpo = mining_params.lpo;
-  localizeparams.SAVE_SVS = KEEPSV;
-  localizeparams.FLIP_LR = mining_params.FLIP_LR;
-  
+  %starter = tic;   
   [rs,t] = localizemeHOG(I, models, localizeparams);
   
-
   for aaa = 1:length(rs.id_grid)
     for bbb = 1:length(rs.id_grid{aaa})
       rs.id_grid{aaa}{bbb}.curid = index;
@@ -78,13 +79,6 @@ for i = 1:length(mining_queue)
     scores{q} = cat(2,rs.score_grid{q});
   end
   
-  
-  % %% if all scores are below -1, remove all scores
-  % if max(scores)<-1
-  %   scores = [];
-  % end
-
-
   addon ='';
   supersize = sum(cellfun(@(x)length(x),scores));
   if supersize > 0 %length(scores)>0
@@ -108,14 +102,12 @@ for i = 1:length(mining_queue)
       continue
     end
     goods = cellfun(@(x)prod(size(x)),rs.support_grid{q})>0;
-    %for z = 1:length(rs.support_grid{q})
     x{q} = cat(2,x{q},rs.support_grid{q}{goods});
     objid{q} = cat(2,objid{q},rs.id_grid{q}(goods));
-    %end
+    
   end
   
-  %concatenate all features
-  %x = cat(2,rs.support_grid{:});
+
   Ndets = cellfun(@(x)size(x,2),x);
   %if no detections, just skip image because there is nothing to store
   if sum(Ndets) == 0
@@ -134,26 +126,6 @@ for i = 1:length(mining_queue)
   else
     empty_images(end+1) = index;
   end
-
-  %keyboard
-  %x = cat(2,x{:});
-
-  %objid = cat(2,rs.id_grid{:});
-  %objid = cat(2,objid{:});
-
-  % if exist('w','var')  
-  %   newscores = w(:)'*x - b;
-  %   goods = find(newscores >= thresh);
-  %   x = x(:,goods);
-  %   objid = objid(goods);
-  %   scores = newscores;  
-  % end
-
-  %xs2 = cellfun2(@(x)x',x);
-  %xs2=[xs2{:}];
-  
-  %ob2 = cellfun2(@(x)x',objid);
-  %ob2=[ob2{:}];
   
   for a = 1:length(models)
     xs{a}{i} = x{a};
@@ -179,12 +151,9 @@ if ~exist('xs','var')
   mining_stats.num_violating = 0;
   mining_stats.num_empty = 0;
   
-  %TODO: fix bug since we should be returning results for a set of exemplars
   return;
 end
 
-%xs = cat(2,xs{:});
-%objids = cat(2,objids{:});
 hn.xs = cellfun2(@(x)cat(2,x{:}),xs);
 hn.objids = cellfun2(@(x)cat(2,x{:}),objids);
 
@@ -306,7 +275,7 @@ mover_ids = find(cellfun(@(x)ismember(x.index,empty_images), ...
 
 enders = mining_queue(mover_ids);
 mining_queue(mover_ids) = [];
-%mining_queue = cat(2,mining_queue,enders);
+
 
 function [rs,newpositives] = prune_gts(rs, bg, index, m, mining_params, ...
                                        I)

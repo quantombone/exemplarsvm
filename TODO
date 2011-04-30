@@ -5,5 +5,4 @@
 2.) PROBLEM when last iteration goes through images but retrieves no negative supports
 
 
-3.) in load_hn_fg if there are no detections, it might fail now
 

@@ -18,7 +18,7 @@ else
   mining_params.detection_threshold = mining_params.late_detection_threshold;
 end
 
-[hn, models, mining_queue, mining_stats] = ...
+[hn, mining_queue, mining_stats] = ...
     load_hn_fg(models, mining_queue, bg, mining_params);
 
 for i = 1:length(hn.objids)
