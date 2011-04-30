@@ -31,9 +31,9 @@ KEEPSV = 1;
 %IF NMS is enabled, get more windows (5 times as many) since
 %nms will prune many away
 TOPK_FINAL = mining_params.MAX_WINDOWS_PER_IMAGE;
-if mining_params.NMS_MINES_OS < 1
-  TOPK_FINAL = TOPK_FINAL * 5;
-end
+%if mining_params.NMS_MINES_OS < 1
+%  TOPK_FINAL = TOPK_FINAL * 5;
+%end
 
 localizeparams.thresh = mining_params.detection_threshold;
 localizeparams.TOPK = TOPK_FINAL;
