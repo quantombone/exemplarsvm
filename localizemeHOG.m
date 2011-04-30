@@ -1,20 +1,15 @@
 function [resstruct,t] = localizemeHOG(I, models, localizeparams)
 % Localize object in pyramid via sliding windows and (dot product +
 % bias recognition score)
-% (w,b) are cell matrices which contain learned SVM parameters
-% I: input image
-% models: a cell array of models
+% I: input image (or already precomputed pyramid)
+% models: a cell array of models to localize inside this image
 % models{.}.model.w: cell array of learned templates
 % models{.}.model.b: cell array of corresponding offsets
-% thresh: keep all detections above this threshold
-% TOPK: keep at most TOPK detections per exemplars
-% lpo: Levels-Per-Octave during search
+% localizeparams: localization parameters
 % resstruct: sliding window output struct
-%
+% t: the feature pyramid output
 % Tomasz Malisiewicz (tomasz@cmu.edu)
-%if isfield(localizeparams,'FLIP_LR')
-%  localizeparams = rmfield(localizeparams,'FLIP_LR');
-%end
+
 doflip = 0;
 if localizeparams.FLIP_LR == 1
   doflip = 1;
@@ -63,7 +58,6 @@ sbin = models{1}.model.params.sbin;
 %  SAVE_SVS = 0;
 %end
 
-
 %if enabled, do NN computation using integral images on cell norms
 %instead of just sliding with fconv
 %if ~exist('NN_MODE','var')
@@ -81,10 +75,11 @@ end
 
 if isnumeric(I)
   starter=tic;
-  
+
+  flipstring = '';
   if isfield(localizeparams,'FLIP_LR') && ...
         (localizeparams.FLIP_LR == 1)
-    fprintf(1,'Flip\n');
+    flipstring = '@F';
     %flip image lr here...
 
     for i = 1:3
@@ -99,8 +94,8 @@ if isnumeric(I)
   t.size = size(I);
   %t.I = I;
   
-  fprintf(1,'Localizing %d in I=[%dx%d@%d]',N,...
-          t.size(1),t.size(2),localizeparams.lpo);
+  fprintf(1,'Localizing %d in I=[%dx%d@%d%s]',N,...
+          t.size(1),t.size(2),localizeparams.lpo,flipstring);
 
   %Compute pyramid
   [t.hog,t.scales] = featpyramid2(I, sbin, localizeparams.lpo);
@@ -144,14 +139,10 @@ else
     t = I;
   end
   
-
   resstruct.scales = t.scales;
   fprintf(1,'Localizing %d in I=[%dx%d@%d]',N,...
         t.size(1),t.size(2),localizeparams.lpo);
 end
-
-
-
 
 %score grid stores the TOPK scores from each exemplar's firing in
 %the image
@@ -165,26 +156,6 @@ resstruct.padder = t.padder;
 
 normx2 = cellfun(@(x)norm(x(:)).^2, ws);
 
-% K = ceil(sqrt(length(t.hog)));
-% bighog = zeros(size(t.hog{1},1)*K,size(t.hog{1},2)*K,size(t.hog{1}, ...
-%                                                   3));
-
-% c = 1;
-% for q1 = 1:K
-%   for q2 = 1:K
-
-%     bighog((q1-1)*size(t.hog{1},1) + (1:size(t.hog{c},1)),...
-%            (q2-1)*size(t.hog{1},2) + (1:size(t.hog{c},2)),:) = ...
-%         t.hog{c};
-
-%     c = c + 1;
-%     if c >= length(t.hog)
-%       break;
-%     end
-%   end
-% end
-
-%t.hog = {bighog};
 %start with smallest level first
 for level = length(t.hog):-1:1
   featr = t.hog{level};
@@ -193,7 +164,7 @@ for level = length(t.hog):-1:1
   cellnorms2 = sum(featr.^2,3);
   cellnorms2_ii = cumsum(cumsum(cellnorms2,2),1);
 
-
+  %Use blas-based fast convolution code
   rootmatch = fconvblas(featr, ws, 1, N);
   %rootmatch = fconv(featr, ws, 1, N);
 
@@ -290,7 +261,7 @@ if localizeparams.SAVE_SVS == 1
 else
   resstruct.support_grid = cell(0,1);
 end
-  
+fprintf(1,'\n');  
 %sizeI = size(I);
 % %let everybody know we are flipped
 % if isfield(localizeparams,'FLIP_LR') && ...
@@ -301,5 +272,3 @@ end
 %     end
 %   end
 % end
-
-
