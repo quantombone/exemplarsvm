@@ -276,9 +276,10 @@ mover_ids = find(cellfun(@(x)ismember(x.index,empty_images), ...
 enders = mining_queue(mover_ids);
 mining_queue(mover_ids) = [];
 
-
 function [rs,newpositives] = prune_gts(rs, bg, index, m, mining_params, ...
                                        I)
+error(['this function is broken, and needs to be modified to work' ...
+       ' on an array of models']);
 %% Here we skip all objects that overlap ANY gt polygons by the
 %threshold SKI_GTS_OS
 newpositives.id_grid = cell(0,1);
@@ -328,19 +329,20 @@ rs.support_grid{1}(killids) = [];
 function rs = prune_nms(rs, mining_params)
 %Prune via nms to eliminate redundant detections
 
-if (mining_params.NMS_MINES_OS >= 1) || ...
-      (length(rs.id_grid{1}) == 0)
+if (mining_params.NMS_MINES_OS >= 1)
   return;
 end
 
-bbs=cellfun2(@(x)x.bb,rs.id_grid{1});
-bbs = cat(1,bbs{:});
-bbs(:,5) = 1:size(bbs,1);
-bbs(:,6) = 1;
-bbs(:,7) = rs.score_grid{1}';
-bbs = nms(bbs, mining_params.NMS_MINES_OS);
-bbs = bbs(1:min(size(bbs,1),mining_params.MAX_WINDOWS_PER_IMAGE),:);
-ids = bbs(:,5);
-rs.score_grid{1} = rs.score_grid{1}(ids);
-rs.id_grid{1} = rs.id_grid{1}(ids);
-rs.support_grid{1} = rs.support_grid{1}(ids);
+for i = 1:length(rs.id_grid)
+  bbs=cellfun2(@(x)x.bb,rs.id_grid{i});
+  bbs = cat(1,bbs{:});
+  bbs(:,5) = 1:size(bbs,1);
+  bbs(:,6) = 1;
+  bbs(:,7) = rs.score_grid{i}';
+  bbs = nms(bbs, mining_params.NMS_MINES_OS);
+  bbs = bbs(1:min(size(bbs,1),mining_params.MAX_WINDOWS_PER_IMAGE),:);
+  ids = bbs(:,5);
+  rs.score_grid{i} = rs.score_grid{i}(ids);
+  rs.id_grid{i} = rs.id_grid{i}(ids);
+  rs.support_grid{i} = rs.support_grid{i}(ids);
+end
