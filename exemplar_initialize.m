@@ -17,15 +17,27 @@ fprintf(1,'GOAL_NCELLS=%d sbin=%d\n',GOAL_NCELLS,SBIN);
 
 %Store exemplars for this class
 if ~exist('cls','var')
-  cls = 'cow';
+  
+  filer = '/nfs/baikal/tmalisie/default_class.txt';
+  if fileexists(filer)
+    fid = fopen(filer,'r');
+    cls = fscanf(fid,'%s');
+    fclose(fid);
+    fprintf(1,'Loading default class from file %s\n',filer);    
+  else
+    fprintf(1,'No default file %s, using hardcoded class\n',filer);    
+    cls = 'train';
+  end
 end
+
+fprintf(1,'Class = %s\n',cls);
 
 if ismember(cls,{'all'})
   classes = VOCopts.classes;
   
   r = randperm(length(classes));
   for i = 1:length(classes)
-    initialize_voc_exemplars(classes{r(i)});
+    exemplar_initialize(classes{r(i)});
   end
   return;
 end
