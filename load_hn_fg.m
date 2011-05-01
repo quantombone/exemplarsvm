@@ -334,6 +334,10 @@ if (mining_params.NMS_MINES_OS >= 1)
 end
 
 for i = 1:length(rs.id_grid)
+  if length(rs.id_grid{i})==0
+    continue
+  end
+
   bbs=cellfun2(@(x)x.bb,rs.id_grid{i});
   bbs = cat(1,bbs{:});
   bbs(:,5) = 1:size(bbs,1);
