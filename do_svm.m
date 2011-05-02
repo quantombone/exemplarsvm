@@ -1,4 +1,4 @@
-function [wex,b,svm_model] = do_svm(supery,superx,mining_params,mask,hg_size,old_scores)
+function [m,svm_model] = do_svm(supery,superx,mining_params,m)
 %Perform the SVM learning with some pre-processing such as PCA or
 %dominant gradient projection
 
@@ -24,17 +24,22 @@ if 0
   % superx2 = superx;
   % superx2(:,bb(1:100)) = [];
   
-  % model = liblinear_train(supery2, sparse(superx2)', sprintf(['-s 3 -B 1 -c' ...
+  % lmodel = liblinear_train(supery2, sparse(superx2)', sprintf(['-s 3 -B 1 -c' ...
   % ' %f'],mining_params.SVMC));
   % wex = model.w(1:end-1)';
   % b = -model.w(end);
   
-  svm_model = model;
+  svm_model = lmodel;
   return;
 end
 
-if ~exist('mask','var') | length(mask)==0
-  mask = logical(ones(size(superx,1),1));
+if ~isfield(m.model,'mask') | length(m.model.mask)==0
+  m.model.mask = logical(ones(size(superx,1),1));
+end
+
+if length(m.model.mask(:)) ~= size(superx,1)
+  m.model.mask = repmat(m.model.mask,[1 1 features]);
+  m.model.mask = logical(m.model.mask(:));
 end
 spos = sum(supery==1);
 sneg = sum(supery==-1);
@@ -54,7 +59,7 @@ mu = zeros(size(superx,1),1);
 
 if mining_params.DOMINANT_GRADIENT_PROJECTION == 1
   A = get_dominant_basis(reshape(mean(superx(:,supery==1),2), ...
-                                 hg_size),...
+                                 m.model.hg_size),...
                          mining_params ...
                          .DOMINANT_GRADIENT_PROJECTION_K);
   %A2 = get_dominant_basis(reshape(mean(superx(:,supery==-1 & old_scores'>=-1),2), ...
@@ -95,9 +100,9 @@ fprintf(1,' -----\nStarting SVM dim=%d... s+=%d, s-=%d ',size(newx,1),spos,sneg)
 starttime = tic;
 
 %while 1
-  maskinds = find(mask);
+  %maskinds = find(m.model.mask);
 
-  svm_model = libsvmtrain(supery, newx(mask,:)',sprintf(['-s 0 -t 0 -c' ...
+  svm_model = libsvmtrain(supery, newx(m.model.mask,:)',sprintf(['-s 0 -t 0 -c' ...
                     ' %f -w1 %.9f -q'],mining_params.SVMC, wpos));
 
   %convert support vectors to decision boundary
@@ -123,12 +128,12 @@ starttime = tic;
 
 
 %% project back to original space
-b = b + wex'*A(mask,mask)'*mu(mask);
-wex = A(mask,mask)*wex;
+b = b + wex'*A(m.model.mask,m.model.mask)'*mu(m.model.mask);
+wex = A(m.model.mask,m.model.mask)*wex;
 
 
 wex = zeros(size(superx,1),1);
-wex(mask) = svm_weights;
+wex(m.model.mask) = svm_weights;
 
 %% issue a warning if the norm is very small
 if norm(wex) < .00001
@@ -136,3 +141,5 @@ if norm(wex) < .00001
 end
 
 fprintf(1,'took %.3f sec\n',toc(starttime));
+m.model.w = reshape(wex,size(m.model.w));
+m.model.b = b;
