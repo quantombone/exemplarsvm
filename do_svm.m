@@ -5,28 +5,32 @@ function [wex,b,svm_model] = do_svm(supery,superx,mining_params,mask,hg_size,old
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if 0
-%playing with liblinear here
-%SVMC = .01;
-model = liblinear_train(supery, sparse(superx)', sprintf(['-s 3 -B 1 -c' ...
-' %f'],SVMC));
-wex = model.w(1:end-1)';
-b = -model.w(end);
+  fprintf(1,'using liblinear\n');
+  %playing with liblinear here
+  %SVMC = .01;
+  %mining_params.SVMC = 1;
+  addpath(genpath('/nfs/hn22/tmalisie/ddip/exemplarsvm/liblinear-1.7/'));
+  model = liblinear_train(supery, sparse(superx)', sprintf(['-s 3 -B 1 -c' ...
+                    ' %f'],mining_params.SVMC));
+  wex = model.w(1:end-1)';
+  b = -model.w(end);
+  
 
-r = wex(:)'*superx;
-r(supery==-1) = 10000;
-[aa,bb] = sort(r,'ascend');
-supery2 = supery;
-supery2(bb(1:100)) = [];
-superx2 = superx;
-superx2(:,bb(1:100)) = [];
-
-model = liblinear_train(supery2, sparse(superx2)', sprintf(['-s 3 -B 1 -c' ...
-' %f'],SVMC));
-wex = model.w(1:end-1)';
-b = -model.w(end);
-
-svm_model = [];
-return;
+  % r = wex(:)'*superx;
+  % r(supery==-1) = 10000;
+  % [aa,bb] = sort(r,'ascend');
+  % supery2 = supery;
+  % supery2(bb(1:100)) = [];
+  % superx2 = superx;
+  % superx2(:,bb(1:100)) = [];
+  
+  % model = liblinear_train(supery2, sparse(superx2)', sprintf(['-s 3 -B 1 -c' ...
+  % ' %f'],mining_params.SVMC));
+  % wex = model.w(1:end-1)';
+  % b = -model.w(end);
+  
+  svm_model = model;
+  return;
 end
 
 if ~exist('mask','var') | length(mask)==0
@@ -90,7 +94,7 @@ newx = A'*bsxfun(@minus,superx,mu);
 fprintf(1,' -----\nStarting SVM dim=%d... s+=%d, s-=%d ',size(newx,1),spos,sneg);
 starttime = tic;
 
-while 1
+%while 1
   maskinds = find(mask);
 
   svm_model = libsvmtrain(supery, newx(mask,:)',sprintf(['-s 0 -t 0 -c' ...
@@ -101,15 +105,21 @@ while 1
                          repmat(svm_model.sv_coef,1,size(svm_model.SVs,2)),1));
   wex = svm_weights';
   b = svm_model.rho;
-  break;
   
-  nbads = sum(wex(:)<0);
-  nbads
-  if nbads == 0
-    break;
+  if supery(1) == -1
+    wex = wex*-1;
+    b = b*-1;
   end
-  mask(maskinds(wex<0))=0;
-end
+  
+%   break;
+  
+%   nbads = sum(wex(:)<0);
+%   nbads
+%   if nbads == 0
+%     break;
+%   end
+%   mask(maskinds(wex<0))=0;
+% end
 
 
 %% project back to original space
