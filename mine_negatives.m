@@ -80,25 +80,28 @@ supery = cat(1,...
              +1*ones(size(goodx,2),1),...
              -1*ones(size(badx,2),1));
 
-m3 = [];
+% m3 = [];
 
-%% if exemplar comes with a mask, then we restring learning to weights within
-%% allowable region, if no mask then create a full one which
-%% doesn't eliminate anything
-if isfield(m.model,'mask')
-  fdim = features;
-  m3 = logical(repmat(m.model.mask,[1 1 fdim]));
-  m3 = m3(:);
-end
+% %% if exemplar comes with a mask, then we restring learning to weights within
+% %% allowable region, if no mask then create a full one which
+% %% doesn't eliminate anything
+% if isfield(m.model,'mask')
+%   fdim = features;
+%   m3 = logical(repmat(m.model.mask,[1 1 fdim]));
+%   m3 = m3(:);
+% end
 
-old_scores = m.model.w(:)'*superx - m.model.b;
-[wex,b,svm_model] = do_svm(supery, superx, mining_params, m3, ...
-                           m.model.hg_size, old_scores);
+% old_scores = m.model.w(:)'*superx - m.model.b;
+[m, svm_model] = do_svm(supery, superx, mining_params, m);
+% m3, ...
+%                            m.model.hg_size, old_scores);
 
-m.model.w = reshape(wex,m.model.hg_size);
-m.model.b = b;
+%m.model.w = reshape(wex,m.model.hg_size);
+%m.model.b = b;
+wex = m.model.w(:);
+b = m.model.b;
 
-r = wex'*badx - b;
+r = m.model.w(:)'*badx - m.model.b;
 
 if strmatch(m.models_name,'dalal')
   %% here we take the best exemplars
