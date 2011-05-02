@@ -26,8 +26,6 @@ PADDER = 100;
 
 for i = 1:length(ucurids)
   I = convert_to_I(bg{ucurids(i)});
-  
-
   I = pad_image(I, PADDER);
   hits = find([svids.curid]==ucurids(i));
   for j = 1:length(hits)
@@ -36,7 +34,6 @@ for i = 1:length(ucurids)
     try
       svims{hits(j)} = I(bb(2):bb(4),bb(1):bb(3),:);
     catch
-      
       svims{hits(j)} = rand(bb(4)-bb(2)+1,bb(3)-bb(1)+1,3);
     end
    
