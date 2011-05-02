@@ -12,6 +12,8 @@ NWIGGLES = 0;
 
 fprintf(1,'GOAL_NCELLS=%d sbin=%d\n',GOAL_NCELLS,SBIN);
 
+fg = get_pascal_bg('trainval',cls);
+
 %Store exemplars for this class
 if ~exist('cls','var')
   
@@ -34,7 +36,7 @@ if ismember(cls,{'all'})
   
   r = randperm(length(classes));
   for i = 1:length(classes)
-    exemplar_initialize(classes{r(i)});
+    bold_initialize(classes{r(i)});
   end
   return;
 end
@@ -78,7 +80,8 @@ for i = 1:length(ids)
   curid = ids{i};
 
   recs = PASreadrecord(sprintf(VOCopts.annopath,curid));  
-  Ibase = imread(sprintf(VOCopts.imgpath,curid));
+  Iname = sprintf(VOCopts.imgpath,curid);
+  Ibase = imread(Iname);
   Ibase = im2double(Ibase);
   
   for objectid = 1:length(recs.objects)
@@ -133,6 +136,7 @@ for i = 1:length(ids)
     model.b = 0;
     
     [model.target_id] = get_target_id(model,I);
+    model.target_id.curid = find(ismember(fg,Iname));
     model.coarse_box = model.target_id.bb;
     
     fprintf(1,'Extracting random %d wiggles\n',NWIGGLES);

@@ -1,11 +1,13 @@
-function [m,svm_model] = do_svm(supery,superx,mining_params,m)
-%Perform the SVM learning with some pre-processing such as PCA or
+function [m] = do_svm(m,mining_params)
+%Perform SVM learning for a single exemplar model, we assume that
+%the exemplar has a set of detections loaded in m.nsv and m.svids 
+%Durning Learning, we can apply some pre-processing such as PCA or
 %dominant gradient projection
 
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if 0
-  fprintf(1,'using liblinear\n');
+  fprintf(1,'using liblinear, might break\n');
   %playing with liblinear here
   %SVMC = .01;
   %mining_params.SVMC = 1;
@@ -34,13 +36,47 @@ if 0
 end
 
 if ~isfield(m.model,'mask') | length(m.model.mask)==0
-  m.model.mask = logical(ones(size(superx,1),1));
+  m.model.mask = logical(ones(numel(m.model.w),1));
 end
 
-if length(m.model.mask(:)) ~= size(superx,1)
+if length(m.model.mask(:)) ~= numel(m.model.w)
   m.model.mask = repmat(m.model.mask,[1 1 features]);
   m.model.mask = logical(m.model.mask(:));
 end
+
+%xsall = m.model.nsv;
+%objidsall = m.model.svids;
+
+%% look into the object inds to figure out which subset of the data
+%% is actually hard negatives for mining
+
+[negatives,vals,pos] = find_set_membership(m);
+
+xs = m.model.nsv(:,negatives);
+objids = m.model.svids(negatives);
+
+%maxos = cellfun(@(x)x.maxos,objids);
+%maxclass = cellfun(@(x)x.maxclass,objids);
+%xs = xs(:,maxos<.5);
+%objids = objids(maxos<.5);
+
+if size(xs,2) >= 5000
+  %NOTE: random is better than top 5000
+  r = m.model.w(:)'*xs;
+  [tmp,r] = sort(r,'descend');
+  r1 = r(1:3000);
+  
+  r = 3000+randperm(length(r(3001:end)));
+  r = r(1:2000);
+  r = [r1 r];
+  xs = xs(:,r);
+
+  objids = objids(r);
+end
+
+superx = cat(2,m.model.x,xs);
+supery = cat(1,ones(size(m.model.x,2),1),-1*ones(size(xs,2),1));
+
 spos = sum(supery==1);
 sneg = sum(supery==-1);
 
@@ -126,11 +162,9 @@ starttime = tic;
 %   mask(maskinds(wex<0))=0;
 % end
 
-
 %% project back to original space
 b = b + wex'*A(m.model.mask,m.model.mask)'*mu(m.model.mask);
 wex = A(m.model.mask,m.model.mask)*wex;
-
 
 wex = zeros(size(superx,1),1);
 wex(m.model.mask) = svm_weights;
@@ -143,3 +177,16 @@ end
 fprintf(1,'took %.3f sec\n',toc(starttime));
 m.model.w = reshape(wex,size(m.model.w));
 m.model.b = b;
+
+r = m.model.w(:)'*m.model.nsv - m.model.b;
+svs = find(r >= -1.0000);
+
+%KEEP 3#SV vectors (but at most max_negatives of them)
+total_length = ceil(mining_params.beyond_nsv_multiplier*length(svs));
+total_length = min(total_length,mining_params.max_negatives);
+
+[alpha,beta] = sort(r,'descend');
+svs = beta(1:min(length(beta),total_length));
+m.model.nsv = m.model.nsv(:,svs);
+m.model.svids = m.model.svids(svs);
+

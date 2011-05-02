@@ -1,10 +1,17 @@
-function Isv = get_sv_stack(svids, bg, m, K1, K2)
+function Isv = get_sv_stack(m, bg, K1, K2)
 %Create an image which visualizes the negative support vectors
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
-if iscell(svids)
-  svids = [svids{:}];
+if ~exist('K2','var')
+  K2 = K1;
 end
+
+r = m.model.w(:)'*m.model.nsv - m.model.b;
+[aa,bb] = sort(r,'descend');
+m.model.svids = m.model.svids(bb);
+m.model.nsv = m.model.nsv(:,bb);
+
+svids = m.model.svids;
 
 if exist('m','var')
   hogpic = (HOGpicture(m.model.w));
@@ -15,6 +22,9 @@ N = length(svids);
 N = min(N,K1*K2);
 
 svids = svids(1:N);
+svids = [svids{:}];
+
+
 if N > 0
   ucurids = unique([svids.curid]);
 else
@@ -23,6 +33,8 @@ end
 svims = cell(N,1);
 
 PADDER = 100;
+
+
 
 for i = 1:length(ucurids)
   I = convert_to_I(bg{ucurids(i)});
@@ -40,21 +52,43 @@ for i = 1:length(ucurids)
     if svids(hits(j)).flip == 1
       svims{hits(j)} = flip_image(svims{hits(j)});
     end
+        
   end
 end
 
-
 VOCinit;
+try
 Ibase = imread(sprintf(VOCopts.imgpath,m.curid));
 Ibase = im2double(Ibase);
-Ibase = Ibase(m.gt_box(2):m.gt_box(4),m.gt_box(1):m.gt_box(3),:);
-newsize = [size(Ibase,1) size(Ibase,2)];
 
+PADDER = 100;
+Ibase = pad_image(Ibase,PADDER);
+cb = m.model.coarse_box+PADDER;
+
+Ibase = Ibase(cb(2):cb(4), cb(1):cb(3),:);
+catch
+  Ibase = zeros(m.model.hg_size(1)*10,m.model.hg_size(2)*10,3);
+end
+
+newsize = [size(Ibase,1) size(Ibase,2)];
 newsize = 100/newsize(1) * newsize;
 newsize = round(newsize);
 
 svims = cellfun2(@(x)max(0.0,min(1.0,imresize(x,newsize))),svims);
 
+[negatives,vals,pos] = find_set_membership(m);
+
+
+for i = 1:length(svims)
+  %% find membership here
+  if sum(i == negatives)
+    svims{i} = pad_image(svims{i},-5);
+    svims{i} = pad_image(svims{i},5,[0 0 1]);
+  elseif sum(i == pos)
+    svims{i} = pad_image(svims{i},-5);
+    svims{i} = pad_image(svims{i},5,[1 0 0]);
+  end
+end
 
 if length(svims)<K1*K2
   svims{K1*K2} = zeros(newsize(1),newsize(2),3);

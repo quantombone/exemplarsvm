@@ -132,7 +132,6 @@ vsvs = beta(1:min(length(beta),total_length));
 m.model.vsv = m.model.vsv(:,vsvs);
 m.model.vsvids = m.model.vsvids(vsvs);
 
-
 % Append new w to trace
 m.model.wtrace{end+1} = m.model.w;
 m.model.btrace{end+1} = m.model.b;
