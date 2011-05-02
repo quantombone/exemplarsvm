@@ -179,6 +179,7 @@ for i = 1:length(ids)
     plot_bbox(m.model.coarse_box,'',[1 0 0])
     plot_bbox(m.gt_box,'',[0 0 1])
     axis image
+    title(sprintf('%s.%d',m.curid,m.objectid))
     drawnow
   end  
 end
