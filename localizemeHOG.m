@@ -37,10 +37,20 @@ for q = 1:length(rs1.score_grid)
   rs1.id_grid{q} = cat(2,rs1.id_grid{q},rs2.id_grid{q});
 end
 
+
 resstruct = rs1;
 t = cell(2,1);
 t{1} = t1;
 t{2} = t2;
+
+% bb=cellfun2(@(x)x.bb,resstruct.id_grid{1});
+% bbs=cat(1,bb{:});
+
+% if sum(bbs(:,3)<0)>0
+%   fprintf(1,'bad stuff with bb\n');
+%   keyboard
+% end
+
 
 function [resstruct,t] = localizemeHOGdriver(I, models, ...
                                              localizeparams)
@@ -80,11 +90,9 @@ if isnumeric(I)
   if isfield(localizeparams,'FLIP_LR') && ...
         (localizeparams.FLIP_LR == 1)
     flipstring = '@F';
-    %flip image lr here...
-
-    for i = 1:3
-      I(:,:,i) = fliplr(I(:,:,i));
-    end
+    
+    %flip image lr here..
+    I = flip_image(I);
 
   else    
     %take unadulterated image
@@ -226,7 +234,25 @@ for level = length(t.hog):-1:1
       ip.flip = 0;
       if isfield(localizeparams,'FLIP_LR') && ...
             (localizeparams.FLIP_LR == 1)
-        ip.bb = flip_box(ip.bb,size(I));
+        %saver = ip.bb;
+        
+        %%% NOTE: this is broken because of size(I)
+        ip.bb = flip_box(ip.bb,t.size);
+        if 0 &&(ip.bb(3) <= 0 || ip.bb(4) <= 0) && size(ws{1},1)*size(ws{1},2)>1
+          fprintf(1,'why first one less than 0?\n');
+        
+          figure(1)
+          clf
+          imagesc(I)
+          plot_bbox(saver,'',[0 1 0])
+          plot_bbox(ip.bb,'',[1 0 0])
+          axis image
+          axis off
+          drawnow
+
+          keyboard
+        end
+         
         ip.flip = 1;
       end
       id_grid{exid}{end+1} = ip; 
