@@ -139,23 +139,25 @@ m.model.btrace{end+1} = m.model.b;
 %end
 
 %% update friends here
-VOCinit;
-fg = get_pascal_bg('trainval',m.cls);
-fg = setdiff(fg,sprintf(VOCopts.imgpath,m.curid));
-
-fgq = initialize_mining_queue(fg);
-fgq = fgq(1:20);
-mp = get_default_mining_params;
-mp.MAX_WINDOWS_PER_IMAGE = 10;
-mp.MAX_WINDOWS_BEFORE_SVM = 100000;
-[hn2] = load_hn_fg({m}, fgq, fg, mp);
-
-m.model.fsv = cat(2,m.model.fsv,hn2.xs{1});
-m.model.fsvids = cat(2,m.model.fsvids,hn2.objids{1});
-[alpha,beta] = sort(m.model.w(:)'*m.model.fsv,'descend');
-beta = beta(1:min(length(beta),1000));
-m.model.fsv = m.model.fsv(:,beta);
-m.model.fsvids = m.model.fsvids(beta);
+if 0
+  VOCinit;
+  fg = get_pascal_bg('trainval',m.cls);
+  fg = setdiff(fg,sprintf(VOCopts.imgpath,m.curid));
+  
+  fgq = initialize_mining_queue(fg);
+  fgq = fgq(1:20);
+  mp = get_default_mining_params;
+  mp.MAX_WINDOWS_PER_IMAGE = 10;
+  mp.MAX_WINDOWS_BEFORE_SVM = 100000;
+  [hn2] = load_hn_fg({m}, fgq, fg, mp);
+  
+  m.model.fsv = cat(2,m.model.fsv,hn2.xs{1});
+  m.model.fsvids = cat(2,m.model.fsvids,hn2.objids{1});
+  [alpha,beta] = sort(m.model.w(:)'*m.model.fsv,'descend');
+  beta = beta(1:min(length(beta),1000));
+  m.model.fsv = m.model.fsv(:,beta);
+  m.model.fsvids = m.model.fsvids(beta);
+end
 
 %TODO: make sure overlapping windows get capped since now we can
 %get duplicates added here...
@@ -182,9 +184,12 @@ plot(linspace(1,LENX,length(rsv)),rsv,'y*');
 hold on;
 r = wex'*superx - b;
 plot(1:LENX,r(supery==-1),'b.');
-hold on;
-rfsv = wex'*m.model.fsv - m.model.b;
-plot(linspace(1,LENX,length(rfsv)),rfsv,'ko');
+
+if length(m.model.fsv) > 0
+  hold on;
+  rfsv = wex'*m.model.fsv - m.model.b;
+  plot(linspace(1,LENX,length(rfsv)),rfsv,'ko');
+end
 axis([1 LENX min(r) max(1.05,max(r))]);
 mr = max(rstart);
 title(sprintf(['Iter %d\n MaxMine = %.3f, #ViolI=%d #EmptyI=%d'],...
@@ -194,44 +199,30 @@ title(sprintf(['Iter %d\n MaxMine = %.3f, #ViolI=%d #EmptyI=%d'],...
 xlabel('Detection Window index')
 ylabel('w*x score');
 
-%subplot(3,2,2)
 Isv1 = get_sv_stack(m.model.svids(1:min(length(m.model.svids),25)),bg,m,5,5);
-%imagesc(Isv)
-%axis image
-%axis off
-%title('Top 25 NSVs');
-%drawnow
+Isv2 = get_sv_stack(m.model.vsvids(1:min(length(m.model.vsvids), ...
+                                         25)),bg,m,5,5);
 
-%subplot(3,2,3)
-Isv2 = get_sv_stack(m.model.vsvids(1:min(length(m.model.vsvids),25)),bg,m,5,5);
-%imagesc(Isv)
-%axis image
-%axis off
-%title('Top 25 VSVs');
-%drawnow
+if length(m.model.fsvids) > 0
+  Isv3 = get_sv_stack(m.model.fsvids(1:min(length(m.model.fsvids),25)),fg,m,5,5);
 
-%subplot(3,2,4)
-Isv3 = get_sv_stack(m.model.fsvids(1:min(length(m.model.fsvids),25)),fg,m,5,5);
-%imagesc(Isv)
-%axis image
-%axis off
-%title('Top 25 friends');
-%drawnow
-
-
-fsv = m.model.fsvids;
-for aaa = 1:length(fsv)
-  fsv{aaa}.curid = fsv{aaa}.curid + length(bg);
-end
+  fsv = m.model.fsvids;
+  for aaa = 1:length(fsv)
+    fsv{aaa}.curid = fsv{aaa}.curid + length(bg);
+  end
   
-combinedids = cat(2,m.model.svids,m.model.vsvids,fsv);
-allx = cat(2,m.model.nsv,m.model.vsv,m.model.fsv);
-r = m.model.w(:)'*allx - m.model.b;
-[aa,bb] = sort(r,'descend');
-combinedids = combinedids(bb);
-combinedfg = cat(1,bg,fg);
-%subplot(3,2,5)
-Isv4 = get_sv_stack(combinedids(1:min(length(combinedids),25)),combinedfg,m,5,5);
+  combinedids = cat(2,m.model.svids,m.model.vsvids,fsv);
+  allx = cat(2,m.model.nsv,m.model.vsv,m.model.fsv);
+  r = m.model.w(:)'*allx - m.model.b;
+  [aa,bb] = sort(r,'descend');
+  combinedids = combinedids(bb);
+  combinedfg = cat(1,bg,fg);
+  Isv4 = get_sv_stack(combinedids(1:min(length(combinedids),25)), ...
+                      combinedfg,m,5,5);
+else
+  Isv3 = Isv2*0;
+  Isv4 = Isv2*0;
+end
 %imagesc(Isv)
 %axis image
 %axis off
