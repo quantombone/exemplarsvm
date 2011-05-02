@@ -58,7 +58,7 @@ mining_params.max_negatives = 1000;
 
 %%if less than 1.0, then we apply nms to detections so that we don't have
 %%too many redundant windows
-mining_params.NMS_MINES_OS = 0.8;
+mining_params.NMS_MINES_OS = 1.0;
 
 %if non-zero, then skip detection at any objects
 mining_params.SKIP_GTS_ABOVE_THIS_OS = 10.0;
