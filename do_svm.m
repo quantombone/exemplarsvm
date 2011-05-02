@@ -60,17 +60,16 @@ objids = m.model.svids(negatives);
 %xs = xs(:,maxos<.5);
 %objids = objids(maxos<.5);
 
-if size(xs,2) >= 5000
+if size(xs,2) >= 10000
   %NOTE: random is better than top 5000
   r = m.model.w(:)'*xs;
   [tmp,r] = sort(r,'descend');
-  r1 = r(1:3000);
+  r1 = r(1:5000);
   
-  r = 3000+randperm(length(r(3001:end)));
-  r = r(1:2000);
+  r = 5000+randperm(length(r(5001:end)));
+  r = r(1:5000);
   r = [r1 r];
   xs = xs(:,r);
-
   objids = objids(r);
 end
 
