@@ -96,7 +96,8 @@ svims{5} = ms;
 %                                                  2)])));
 %VOCinit;
 
-svims = cellfun2(@(x)pad_image(x,2),svims);
+%looks bad with padding
+%svims = cellfun2(@(x)pad_image(x,2),svims);
 svims = reshape(svims,K1,K2)';
 for j = 1:K2
   svrows{j} = cat(2,svims{j,:});
