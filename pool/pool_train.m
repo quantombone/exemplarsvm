@@ -64,29 +64,30 @@ Isv = get_sv_stack(objidsall(bb(1:NNN*NNN)), bg, m, NNN,NNN);
 
 if size(xs,2) >= 5000
   %NOTE: random is better than top 5000
-  r = randperm(size(xs,2));
-  %r = m.model.w(:)'*xs;
-  %[tmp,r] = sort(r,'descend');
-  r = r(1:5000);
+  r = m.model.w(:)'*xs;
+  [tmp,r] = sort(r,'descend');
+  r1 = r(1:3000);
+  
+  r = 3000+randperm(length(r(3001:end)));
+  r = r(1:2000);
+  r = [r1 r];
   xs = xs(:,r);
+
   objids = objids(r);
 end
 
 superx = cat(2,m.model.x,xs);
-old_scores = m.model.w(:)'*superx - m.model.b;
 supery = cat(1,ones(size(m.model.x,2),1),-1*ones(size(xs,2),1));
 mining_params = get_default_mining_params;
 mining_params.BALANCE_POSITIVES = 0;
-
-m3 = [];
 mining_params.SVMC = .01;
 
+[m,svm_model] = do_svm(supery, superx, mining_params, m);
 
-[wex,b,svm_model] = do_svm(supery, superx, mining_params, m3, ...
-                           m.model.hg_size, old_scores);
-
-m.model.w = reshape(wex,size(m.model.w));
-m.model.b = b;
+%m.model.w = reshape(wex,size(m.model.w));
+%m.model.b = b;
+wex = m.model.w(:);
+b = m.model.b;
 r = m.model.w(:)'*xsall - m.model.b;
 [aa,bb] = sort(r,'descend');
 bg = get_pascal_bg('trainval');

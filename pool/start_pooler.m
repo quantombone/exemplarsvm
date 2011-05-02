@@ -221,11 +221,6 @@ chunkstart = tic;
                   data.ts, mining_params);
 timing = toc(chunkstart);
 
-
-
-
-
-
 %% fill in the overlaps from the data
 VOCinit;
 
