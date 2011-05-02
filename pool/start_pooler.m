@@ -1,20 +1,42 @@
-function start_pooler
+function start_pooler(setname,NPROC)
 %Spawn a worker which handles some images in RAM and waits for jobs
 %in an infinite loop  MUCH FASTER THAN LOCAL IO intensive mining
 
+if ~exist('setname','var')
+  setname = 'trainval';
+end
+
+if ~exist('NPROC','var')
+  NPROC = 200;
+end
 VOCinit;
 
 %do learning with data from the trainset
-fg = get_pascal_bg('trainval');
-IMS_PER_CHUNK = round(length(fg)/300);
-IMS_PER_CHUNK
-inds = do_partition(1:length(fg),IMS_PER_CHUNK);
-length(inds)
+fg = get_pascal_bg(setname);
+
+IMS_PER_CHUNK = floor(length(fg)/NPROC);
+iii = 1:length(fg);
+
+cuts = round(linspace(1,length(fg)+1,NPROC+1));
+inds = cell(NPROC,1);
+for i = 1:length(cuts)-1
+  inds{i} = iii(cuts(i):cuts(i+1)-1);
+end
+
+lens = cellfun(@(x)length(x),inds);
+fprintf(1,'NPROC = %d\n',NPROC);
+fprintf(1,'length(inds)= %d\n',length(inds));
+fprintf(1,'target IMS_PER_CHUNK = %d\n',IMS_PER_CHUNK);
+fprintf(1,'real IMS_PER_CHUNK = %.3f, min=%.3f, max=%.3f\n',mean(lens),min(lens),max(lens));
+
 targets = 1:length(inds);
 myRandomize;
 rrr = randperm(length(targets));
 targets = targets(rrr);
+
+%A directory where the workers register themselves
 BASEDIR = '/nfs/baikal/tmalisie/pool/';
+
 
 localizeparams.thresh = -1;;
 localizeparams.TOPK = 10;
@@ -27,32 +49,21 @@ nomodels{1}.model.w = randn([1 1 features]);
 nomodels{1}.model.b = 0;
 nomodels{1}.model.params.sbin = 8;
 
-% time1 = [];
-% time2 = [];
-
-% I = convert_to_I(fg{1});
-% %I = imresize(I,scales(i));
-% %tic
-% [resstruct,t] = localizemeHOG(I, nomodels, localizeparams);
-% time1=[time1 toc];
-% time1=[time1 1];
-  
-% tic
-% [resstruct2,t2] = localizemeHOG(t, nomodels, localizeparams);
-% time2=[time2 toc];
-% figure(1)
-% clf
-% plot(scales(1:i),time1,'r')
-% hold on;
-% plot(scales(1:i),time2,'b')
-% drawnow
-% end
-
 [a,me] = unix('hostname');
 
-LT = length(targets);
 
-for i = 1:length(targets)
+N = length(targets);
+
+%A data chunks, tells us the following shared info
+
+%Number of processes in pool, to makes files like 0001-00100
+data.N = N;
+
+%the parameters are shared
+data.localizeparams = localizeparams;
+
+
+for i = 1:N
   current_target = targets(i);
   filer = sprintf('%s/%05d.process',BASEDIR,targets(i))
   lockfile = [filer '.lock'];
@@ -87,14 +98,32 @@ for i = 1:length(targets)
   fclose(fid);
   
   rmdir(lockfile);
+
+  %the subset of the datset bg for the current set of inds
+  data.current_target = current_target;
+  %the actual pyramids
+  data.ts = ts;
   
+  %the gt-recs from loading Ground Truth bounding box files
+  data.recs = recs;
+
+  data.subg = subg;
+  data.inds = curi;
+
+ 
   while 1
       status = ...
-          wait_for_chunk(current_target,LT,localizeparams,ts,recs,subg);
+          wait_for_chunk(data);
     
     if status == 0
       fprintf(1,'Nothing to do, sleeping\n');
       pause(5);
+      
+      %write the process file to let world know we are still breathing
+      fid = fopen(filer,'w');
+      fprintf(fid,me);
+      fclose(fid);
+
     end
   end
   fprintf(1,['broken loop, why did' ...
@@ -102,15 +131,40 @@ for i = 1:length(targets)
   
 end
 
-function status = wait_for_chunk(current_target,LT,localizeparams,ts,recs,subg)
+function status = wait_for_chunk(data)
 %Given a set of precomputed hog pyramids, wait for a classifier
 %file, then fire it on everything to produce results
 
-prefix = sprintf('%05d-%05d',current_target,LT);
+prefix = sprintf('%05d-%05d',data.current_target,data.N);
 
-QUEUEDIR = '/nfs/baikal/tmalisie/pool/';
-DONEDIR = ['/nfs/baikal/tmalisie/' ...
-           'pool/done/'];
+filer = '/nfs/baikal/tmalisie/default_poolstart.txt';
+if fileexists(filer)
+  fid = fopen(filer,'r');
+  QUEUEDIR = fscanf(fid,'%s');
+  fclose(fid);
+  fprintf(1,'Loading default queue dir from file %s\n',filer);    
+else
+  fprintf(1,'No default file %s, using hardcoded QUEUEDIR\n',filer);
+  QUEUEDIR = '/nfs/baikal/tmalisie/pool/';
+  cls = 'train';
+end
+fprintf(1,'queuedir is %s\n',QUEUEDIR);
+
+% filer = '/nfs/baikal/tmalisie/default_poolend.txt';
+% if fileexists(filer)
+%   fid = fopen(filer,'r');
+%   QUEUEDIR = fscanf(fid,'%s');
+%   fclose(fid);
+%   fprintf(1,'Loading default queue dir from file %s\n',filer);    
+% else
+%   fprintf(1,'No default file %s, using hardcoded DONEDIR\n',filer);
+%   DONEDIR = ['/nfs/baikal/tmalisie/' ...
+%              'pool/done/'];
+% end
+
+DONEDIR = [QUEUEDIR '/pool/'];
+fprintf(1,'donedir is %s\n',DONEDIR);
+
 if ~exist(DONEDIR,'dir')
   mkdir(DONEDIR);
 end
@@ -125,12 +179,12 @@ for i = 1:length(files)
     continue
   else
     %%if we are here, then we have a startfile but no endfile
-    status = process_file(startfile,donefile,localizeparams,ts,recs,subg);
+    status = process_file(startfile,donefile,data)
     return;
   end
 end
 
-function status = process_file(startfile,donefile,localizeparams,ts,recs,subg)
+function status = process_file(startfile,donefile,data)
 %process the detections now
 
 lockfile = [donefile '.lock'];
@@ -149,40 +203,59 @@ else
 end
 
 mining_params = get_default_mining_params;
-mining_params.thresh = localizeparams.thresh;
-mining_params.TOPK = localizeparams.TOPK;
-mining_params.lpo = localizeparams.lpo;
+mining_params.thresh = data.localizeparams.thresh;
+mining_params.TOPK = data.localizeparams.TOPK;
+mining_params.lpo = data.localizeparams.lpo;
 mining_params.SAVE_SVS = 1;
-mining_params.FLIP_LR = localizeparams.FLIP_LR;
+mining_params.FLIP_LR = data.localizeparams.FLIP_LR;
+
 %%NOTE: this should be carefully set to not blow things up too heavily
-mining_params.MAX_WINDOWS_BEFORE_SVM = 100;
+mining_params.MAX_WINDOWS_BEFORE_SVM = 2000;
+mining_params.NMS_MINES_OS = 0.8;
 
 mining_queue = ...
-    initialize_mining_queue(ts,1:length(ts));
+    initialize_mining_queue(data.ts,1:length(data.ts));
 
 chunkstart = tic;
-[hn] = load_hn_fg(models, mining_queue, ...
-                  ts, mining_params);
+[hn,mining_queue] = load_hn_fg(models, mining_queue, ...
+                  data.ts, mining_params);
 timing = toc(chunkstart);
 
-keyboard
+
+
+
+
+
 %% fill in the overlaps from the data
 VOCinit;
+
+MAXDETS = 100;
+
 for i = 1:length(hn.objids)
   for j = 1:length(hn.objids{i})
+    
+    %% take values from data.inds
+
     recid = hn.objids{i}{j}.curid;
     r = cat(1, ...
-            recs{recid}.objects.bbox);
+            data.recs{recid}.objects.bbox);
     os = ...
         getosmatrix_bb(hn.objids{i}{j}.bb,r);
     [maxos,maxind] = max(os);
     maxclass = ...
-        find(ismember(VOCopts.classes,{recs{recid}.objects(maxind).class}));
+        find(ismember(VOCopts.classes,...
+                      {data.recs{recid}.objects(maxind).class}));
     hn.objids{i}{j}.maxos = maxos;
     hn.objids{i}{j}.maxclass = maxclass;
     hn.objids{i}{j}.maxind = maxind;
-    
+    hn.objids{i}{j}.curid = data.inds(hn.objids{i}{j}.curid);
   end
+  
+  scores = models{i}.model.w(:)'*hn.xs{i} - models{i}.model.b;
+  [aa,bb] = sort(scores,'descend');
+  hits = bb(1:min(length(bb),MAXDETS));
+  hn.xs{i} = hn.xs{i}(:,hits);
+  hn.objids{i} = hn.objids{i}(hits);
 end
 
 %
@@ -195,6 +268,9 @@ end
 %  drawnow
 %end
 
-save(donefile,'hn','timing');
+%keep only the top 100 dets from this chunk
+
+
+save(donefile,'hn','timing','mining_queue');
 status = 1;
 rmdir(lockfile);
