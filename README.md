@@ -1,4 +1,6 @@
-Here is the readme for the ICCV2011 exemplar code 
+Here is the readme for the ICCV2011 exemplar code
+![](https://github.com/quantombone/exemplarsvm/raw/master/images/mono.png)
+---- 
 Author: Tomasz Malisiewicz (tomasz@cmu.edu)
 ----
 This object recognition library is a combination of:
