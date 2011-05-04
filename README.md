@@ -17,7 +17,6 @@ video processing
 
 ---
 Installation of PASCAL VOC Object Recognition Dataset
-
 Go to http://pascallin.ecs.soton.ac.uk/challenges/VOC/ for more information
 ---
 
