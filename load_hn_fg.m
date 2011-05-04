@@ -40,6 +40,7 @@ localizeparams.TOPK = TOPK_FINAL;
 localizeparams.lpo = mining_params.lpo;
 localizeparams.SAVE_SVS = KEEPSV;
 localizeparams.FLIP_LR = mining_params.FLIP_LR;
+localizeparams.NMS_MINES_OS = mining_params.NMS_MINES_OS;
 
 for i = 1:length(mining_queue)
   index = mining_queue{i}.index;
@@ -65,7 +66,9 @@ for i = 1:length(mining_queue)
   %  newx=cat(2,newpositives.support_grid{:});
   %  m.model.x = cat(2,m.model.x,newx);
   %end
-  rs = prune_nms(rs, mining_params);
+  
+  %keyboard
+  %rs = prune_nms(rs, mining_params);
 
   %% Make sure we only keep 3 times the number of violating windows
   clear scores

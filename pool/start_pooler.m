@@ -211,7 +211,7 @@ mining_params.FLIP_LR = data.localizeparams.FLIP_LR;
 
 %%NOTE: this should be carefully set to not blow things up too heavily
 mining_params.MAX_WINDOWS_BEFORE_SVM = 2000;
-mining_params.NMS_MINES_OS = 0.8;
+mining_params.NMS_MINES_OS = 0.5;
 
 mining_queue = ...
     initialize_mining_queue(data.ts,1:length(data.ts));
@@ -243,6 +243,7 @@ for i = 1:length(hn.objids)
     hn.objids{i}{j}.maxos = maxos;
     hn.objids{i}{j}.maxclass = maxclass;
     hn.objids{i}{j}.maxind = maxind;
+    hn.objids{i}{j}.maxbb = r(maxind,:);
     hn.objids{i}{j}.curid = data.inds(hn.objids{i}{j}.curid);
   end
   

@@ -29,7 +29,7 @@ mining_params.dump_images = 1;
 mining_params.dump_last_image = 0;
 
 %maximum #windows per image (per exemplar) to mine
-mining_params.MAX_WINDOWS_PER_IMAGE = 200;
+mining_params.MAX_WINDOWS_PER_IMAGE = 1000;
 
 %Levels-per-octave defines how many levels between 2x sizes in pyramid
 mining_params.lpo = 10;

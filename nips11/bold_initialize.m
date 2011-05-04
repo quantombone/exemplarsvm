@@ -12,7 +12,7 @@ NWIGGLES = 0;
 
 fprintf(1,'GOAL_NCELLS=%d sbin=%d\n',GOAL_NCELLS,SBIN);
 
-fg = get_pascal_bg('trainval',cls);
+
 
 %Store exemplars for this class
 if ~exist('cls','var')
@@ -29,7 +29,12 @@ if ~exist('cls','var')
   end
 end
 
+
+
+
 fprintf(1,'Class = %s\n',cls);
+
+fg = get_pascal_bg('trainval',cls);
 
 if ismember(cls,{'all'})
   classes = VOCopts.classes;
@@ -181,6 +186,7 @@ for i = 1:length(ids)
     axis image
     title(sprintf('%s.%d',m.curid,m.objectid))
     drawnow
+    pause
   end  
 end
 

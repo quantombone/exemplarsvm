@@ -62,7 +62,9 @@ Ibase = imread(sprintf(VOCopts.imgpath,m.curid));
 Ibase = im2double(Ibase);
 
 PADDER = 100;
+
 Ibase = pad_image(Ibase,PADDER);
+
 cb = m.model.coarse_box+PADDER;
 
 Ibase = Ibase(cb(2):cb(4), cb(1):cb(3),:);

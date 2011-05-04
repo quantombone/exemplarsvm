@@ -133,33 +133,20 @@ newx = A'*bsxfun(@minus,superx,mu);
 
 fprintf(1,' -----\nStarting SVM dim=%d... s+=%d, s-=%d ',size(newx,1),spos,sneg);
 starttime = tic;
-
-%while 1
-  %maskinds = find(m.model.mask);
-
-  svm_model = libsvmtrain(supery, newx(m.model.mask,:)',sprintf(['-s 0 -t 0 -c' ...
+  
+svm_model = libsvmtrain(supery, newx(m.model.mask,:)',sprintf(['-s 0 -t 0 -c' ...
                     ' %f -w1 %.9f -q'],mining_params.SVMC, wpos));
 
-  %convert support vectors to decision boundary
-  svm_weights = full(sum(svm_model.SVs .* ...
-                         repmat(svm_model.sv_coef,1,size(svm_model.SVs,2)),1));
-  wex = svm_weights';
-  b = svm_model.rho;
-  
-  if supery(1) == -1
-    wex = wex*-1;
-    b = b*-1;
-  end
-  
-%   break;
-  
-%   nbads = sum(wex(:)<0);
-%   nbads
-%   if nbads == 0
-%     break;
-%   end
-%   mask(maskinds(wex<0))=0;
-% end
+%convert support vectors to decision boundary
+svm_weights = full(sum(svm_model.SVs .* ...
+                       repmat(svm_model.sv_coef,1,size(svm_model.SVs,2)),1));
+wex = svm_weights';
+b = svm_model.rho;
+
+if supery(1) == -1
+  wex = wex*-1;
+  b = b*-1;
+end
 
 %% project back to original space
 b = b + wex'*A(m.model.mask,m.model.mask)'*mu(m.model.mask);
