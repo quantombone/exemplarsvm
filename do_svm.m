@@ -175,4 +175,3 @@ total_length = min(total_length,mining_params.max_negatives);
 svs = beta(1:min(length(beta),total_length));
 m.model.nsv = m.model.nsv(:,svs);
 m.model.svids = m.model.svids(svs);
-
