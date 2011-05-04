@@ -1,9 +1,13 @@
-function create_dalal_file;
-%Initialize script which writes out initial model files storing the
-%positive examples (dalal-triggs style)
-% Here we use anisotropic to a single canonical window...
-%
-%Tomasz Malisiewicz (tomasz@cmu.edu)
+function create_dalal_file(classes)
+%% Initialize script which writes out initial model files storing the
+%% positive examples (dalal-triggs style)
+%%
+%% We first pass over all training instances and compute the mean
+%% aspect ratio, then we use anisotropic scaling to warp each
+%% positive into the canonical aspect ratio feature, such that
+%% learning can be performed in the same feature space
+%%
+%% Tomasz Malisiewicz (tomasz@cmu.edu)
 
 VOCinit;
 results_directory = ...
@@ -14,18 +18,20 @@ if ~exist(results_directory,'dir')
   mkdir(results_directory);
 end
 
-classes = VOCopts.classes;
+%classes = VOCopts.classes;
 % classes = {'bird','cat','cow','dog','horse','sheep','aeroplane','bicycle',...
 %            'boat','bus','car','motorbike','train',...
 %            'bottle','chair','diningtable','pottedplant','sofa', ...
 %            'tvmonitor','person'};             
 
-%classes = {'bottle'};
-classes = {'train'};
 %Store exemplars for this class
-%if ~exist('cls','var')
-%  cls = 'train';
-%end
+if ~exist('classes','var')
+  classes = 'train';
+end
+
+if ~iscell(classes)
+  classes = {classes};
+end
 
 myRandomize;
 rrr = randperm(numel(classes));

@@ -11,6 +11,11 @@ if ~exist('NPROC','var')
 end
 VOCinit;
 
+%A directory where the workers register themselves
+%BASEDIR = '/nfs/baikal/tmalisie/pool/';
+
+BASEDIR = get_pool_directory;
+
 %do learning with data from the trainset
 fg = get_pascal_bg(setname);
 
@@ -34,11 +39,9 @@ myRandomize;
 rrr = randperm(length(targets));
 targets = targets(rrr);
 
-%A directory where the workers register themselves
-BASEDIR = '/nfs/baikal/tmalisie/pool/';
 
 
-localizeparams.thresh = -1;;
+localizeparams.thresh = -1;
 localizeparams.TOPK = 10;
 localizeparams.lpo = 10;
 localizeparams.SAVE_SVS = 1;
@@ -49,8 +52,7 @@ nomodels{1}.model.w = randn([1 1 features]);
 nomodels{1}.model.b = 0;
 nomodels{1}.model.params.sbin = 8;
 
-[a,me] = unix('hostname');
-
+[tmp, me] = unix('hostname');
 
 N = length(targets);
 
@@ -58,6 +60,7 @@ N = length(targets);
 
 %Number of processes in pool, to makes files like 0001-00100
 data.N = N;
+data.BASEDIR = BASEDIR;
 
 %the parameters are shared
 data.localizeparams = localizeparams;
@@ -65,7 +68,7 @@ data.localizeparams = localizeparams;
 
 for i = 1:N
   current_target = targets(i);
-  filer = sprintf('%s/%05d.process',BASEDIR,targets(i))
+  filer = sprintf('%s/%05d.process',BASEDIR,targets(i));
   lockfile = [filer '.lock'];
   if fileexists(filer) || mymkdir_dist(lockfile) == 0
     continue
@@ -79,7 +82,7 @@ for i = 1:N
   for j = 1:length(curi)
     fname = fg{curi(j)};
     I = convert_to_I(fname);
-    [resstruct,t] = localizemeHOG(I, nomodels, localizeparams);
+    [tmp,t] = localizemeHOG(I, nomodels, localizeparams);
     ts{j} = t;
     [tmp,curid,ext] = ...
         fileparts(fname);
@@ -125,10 +128,7 @@ for i = 1:N
       fclose(fid);
 
     end
-  end
-  fprintf(1,['broken loop, why did' ...
-             ' I get here?\n']);
-  
+  end  
 end
 
 function status = wait_for_chunk(data)
@@ -137,49 +137,37 @@ function status = wait_for_chunk(data)
 
 prefix = sprintf('%05d-%05d',data.current_target,data.N);
 
-filer = '/nfs/baikal/tmalisie/default_poolstart.txt';
-if fileexists(filer)
-  fid = fopen(filer,'r');
-  QUEUEDIR = fscanf(fid,'%s');
-  fclose(fid);
-  fprintf(1,'Loading default queue dir from file %s\n',filer);    
-else
-  fprintf(1,'No default file %s, using hardcoded QUEUEDIR\n',filer);
-  QUEUEDIR = '/nfs/baikal/tmalisie/pool/';
-  cls = 'train';
-end
-fprintf(1,'queuedir is %s\n',QUEUEDIR);
-
-% filer = '/nfs/baikal/tmalisie/default_poolend.txt';
+% filer = '/nfs/baikal/tmalisie/default_poolstart.txt';
 % if fileexists(filer)
 %   fid = fopen(filer,'r');
 %   QUEUEDIR = fscanf(fid,'%s');
 %   fclose(fid);
 %   fprintf(1,'Loading default queue dir from file %s\n',filer);    
 % else
-%   fprintf(1,'No default file %s, using hardcoded DONEDIR\n',filer);
-%   DONEDIR = ['/nfs/baikal/tmalisie/' ...
-%              'pool/done/'];
+%   fprintf(1,'No default file %s, using hardcoded QUEUEDIR\n',filer);
+%   QUEUEDIR = '/nfs/baikal/tmalisie/pool/';
+%   cls = 'train';
 % end
+fprintf(1,'queuedir is %s\n',data.BASEDIR);
 
-DONEDIR = [QUEUEDIR '/pool/'];
+DONEDIR = [data.BASEDIR '/pool/'];
 fprintf(1,'donedir is %s\n',DONEDIR);
 
 if ~exist(DONEDIR,'dir')
   mkdir(DONEDIR);
 end
-files = dir([QUEUEDIR '*mat']);
+files = dir([data.BASEDIR '*mat']);
 
 status = 0;
 for i = 1:length(files)
   donefile = [DONEDIR prefix '.' files(i).name];
-  startfile = [QUEUEDIR files(i).name];
+  startfile = [data.BASEDIR files(i).name];
   
   if fileexists(donefile)
     continue
   else
     %%if we are here, then we have a startfile but no endfile
-    status = process_file(startfile,donefile,data)
+    status = process_file(startfile,donefile,data);
     return;
   end
 end
@@ -219,6 +207,7 @@ mining_queue = ...
 chunkstart = tic;
 [hn,mining_queue] = load_hn_fg(models, mining_queue, ...
                   data.ts, mining_params);
+%Save the time it took for the mining operation
 timing = toc(chunkstart);
 
 %% fill in the overlaps from the data
@@ -248,7 +237,7 @@ for i = 1:length(hn.objids)
   end
   
   scores = models{i}.model.w(:)'*hn.xs{i} - models{i}.model.b;
-  [aa,bb] = sort(scores,'descend');
+  [tmp,bb] = sort(scores,'descend');
   hits = bb(1:min(length(bb),MAXDETS));
   hn.xs{i} = hn.xs{i}(:,hits);
   hn.objids{i} = hn.objids{i}(hits);
