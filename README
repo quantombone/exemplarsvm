@@ -67,3 +67,9 @@ devkitroot='~/esvm-local/';
 if you are having problems with things not working, make sure everything is compiled in each directory
 
 if you have an svm function problem, type which svm.m and make sure you aren't using the bioinformatics (built-in) matlab svm function
+
+```ruby
+require 'redcarpet'
+markdown = Redcarpet.new("Hello World!")
+puts markdown.to_html
+```
