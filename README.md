@@ -15,6 +15,12 @@ non-maximum suppression to clean up detections,
 visualization of detection boxes,
 video processing
 
+---
+Installation of PASCAL VOC Object Recognition Dataset
+
+Go to http://pascallin.ecs.soton.ac.uk/challenges/VOC/ for more information
+---
+
     % compiling stuff
     % mex -O -lblas fconvblas.cc
 
