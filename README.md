@@ -1,7 +1,11 @@
-Here is the readme for the ICCV2011 exemplar code
+---
+ExemplarSVM readme
 ![](https://github.com/quantombone/exemplarsvm/raw/master/images/mono.png)
 ---- 
 Author: Tomasz Malisiewicz (tomasz@cmu.edu)
+
+Cite the following work if you use this library:
+Tomasz Malisiewicz and Alexei A. Efros and Abhinav Gupta. Discriminative Exemplar-based Object Detection and Association. In ICCV 2011.
 ----
 This object recognition library is a combination of:
 libsvm-3.0-1,
