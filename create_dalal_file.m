@@ -21,7 +21,7 @@ classes = VOCopts.classes;
 %            'tvmonitor','person'};             
 
 %classes = {'bottle'};
-%classes = {'train'};
+classes = {'train'};
 %Store exemplars for this class
 %if ~exist('cls','var')
 %  cls = 'train';

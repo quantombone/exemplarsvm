@@ -1,4 +1,4 @@
-function exemplar_initialize(cls)
+function bold_initialize(cls)
 %% Initialize script which writes out initial model files for all
 %% exemplars of a single category from PASCAL VOC trainval set
 %% Script is parallelizable
@@ -6,14 +6,13 @@ function exemplar_initialize(cls)
 
 VOCinit;
 
-%GOAL_NCELLS = 25;
-%SBIN = 20;
-
 GOAL_NCELLS = 100;
 SBIN = 8;
-NWIGGLES = 100;
+NWIGGLES = 0;
 
 fprintf(1,'GOAL_NCELLS=%d sbin=%d\n',GOAL_NCELLS,SBIN);
+
+
 
 %Store exemplars for this class
 if ~exist('cls','var')
@@ -30,14 +29,19 @@ if ~exist('cls','var')
   end
 end
 
+
+
+
 fprintf(1,'Class = %s\n',cls);
+
+fg = get_pascal_bg('trainval',cls);
 
 if ismember(cls,{'all'})
   classes = VOCopts.classes;
   
   r = randperm(length(classes));
   for i = 1:length(classes)
-    exemplar_initialize(classes{r(i)});
+    bold_initialize(classes{r(i)});
   end
   return;
 end
@@ -81,7 +85,8 @@ for i = 1:length(ids)
   curid = ids{i};
 
   recs = PASreadrecord(sprintf(VOCopts.annopath,curid));  
-  Ibase = imread(sprintf(VOCopts.imgpath,curid));
+  Iname = sprintf(VOCopts.imgpath,curid);
+  Ibase = imread(Iname);
   Ibase = im2double(Ibase);
   
   for objectid = 1:length(recs.objects)
@@ -131,10 +136,12 @@ for i = 1:length(ids)
     curfeats = f_real{targetlvl}(min(uu):max(uu),min(vv):max(vv),: ...
                              );
     model.hg_size = size(curfeats);    
+    model.x = curfeats(:);
     model.w = curfeats - mean(curfeats(:));
     model.b = 0;
     
     [model.target_id] = get_target_id(model,I);
+    model.target_id.curid = find(ismember(fg,Iname));
     model.coarse_box = model.target_id.bb;
     
     fprintf(1,'Extracting random %d wiggles\n',NWIGGLES);
@@ -145,15 +152,13 @@ for i = 1:length(ids)
     model.nsv = zeros(prod(model.hg_size),0);
     model.svids = [];
     
-    %Validation support vectors
-    model.vsv = zeros(prod(model.hg_size),0);
-    model.vsvids = [];
+    % %Validation support vectors
+    % model.vsv = zeros(prod(model.hg_size),0);
+    % model.vsvids = [];
     
-    %Friend support vectors
-    model.fsv = zeros(prod(model.hg_size),0);
-    model.fsvids = [];
-    
-    
+    % %Friend support vectors
+    % model.fsv = zeros(prod(model.hg_size),0);
+    % model.fsvids = [];
   
     clear m
     m.curid = curid;
@@ -181,6 +186,7 @@ for i = 1:length(ids)
     axis image
     title(sprintf('%s.%d',m.curid,m.objectid))
     drawnow
+    pause
   end  
 end
 
@@ -238,10 +244,8 @@ function [targetlvl,mask] = get_ncell_mask(GOAL_NCELLS, masker, ...
 %as possible
 ncells = prod(sizer,2);
 [aa,targetlvl] = min(abs(ncells-GOAL_NCELLS));
-
 mask = masker{targetlvl};
     
-
 function target_id = get_target_id(model,I)
 %Get the id of the top detection
 mmm{1}.model = model;
@@ -255,6 +259,10 @@ localizeparams.FLIP_LR = 0;
 target_id = rs.id_grid{1}{1};
 
 function model = populate_wiggles(I, model, NWIGGLES)
+%Create perturbations of the input image
+if NWIGGLES == 0
+  return
+end
 %Get wiggles
 xxx = replica_hits(I, model.params.sbin, model.target_id, ...
                    model.hg_size, NWIGGLES);

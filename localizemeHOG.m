@@ -37,10 +37,20 @@ for q = 1:length(rs1.score_grid)
   rs1.id_grid{q} = cat(2,rs1.id_grid{q},rs2.id_grid{q});
 end
 
+
 resstruct = rs1;
 t = cell(2,1);
 t{1} = t1;
 t{2} = t2;
+
+% bb=cellfun2(@(x)x.bb,resstruct.id_grid{1});
+% bbs=cat(1,bb{:});
+
+% if sum(bbs(:,3)<0)>0
+%   fprintf(1,'bad stuff with bb\n');
+%   keyboard
+% end
+
 
 function [resstruct,t] = localizemeHOGdriver(I, models, ...
                                              localizeparams)
@@ -80,11 +90,9 @@ if isnumeric(I)
   if isfield(localizeparams,'FLIP_LR') && ...
         (localizeparams.FLIP_LR == 1)
     flipstring = '@F';
-    %flip image lr here...
-
-    for i = 1:3
-      I(:,:,i) = fliplr(I(:,:,i));
-    end
+    
+    %flip image lr here..
+    I = flip_image(I);
 
   else    
     %take unadulterated image
@@ -226,7 +234,25 @@ for level = length(t.hog):-1:1
       ip.flip = 0;
       if isfield(localizeparams,'FLIP_LR') && ...
             (localizeparams.FLIP_LR == 1)
-        ip.bb = flip_box(ip.bb,size(I));
+        %saver = ip.bb;
+        
+        %%% NOTE: this is broken because of size(I)
+        ip.bb = flip_box(ip.bb,t.size);
+        if 0 &&(ip.bb(3) <= 0 || ip.bb(4) <= 0) && size(ws{1},1)*size(ws{1},2)>1
+          fprintf(1,'why first one less than 0?\n');
+        
+          figure(1)
+          clf
+          imagesc(I)
+          plot_bbox(saver,'',[0 1 0])
+          plot_bbox(ip.bb,'',[1 0 0])
+          axis image
+          axis off
+          drawnow
+
+          keyboard
+        end
+         
         ip.flip = 1;
       end
       id_grid{exid}{end+1} = ip; 
@@ -261,7 +287,12 @@ if localizeparams.SAVE_SVS == 1
 else
   resstruct.support_grid = cell(0,1);
 end
-fprintf(1,'\n');  
+fprintf(1,'\n');
+
+%% do nms here if it is enabled
+
+resstruct = prune_nms(resstruct,localizeparams);
+
 %sizeI = size(I);
 % %let everybody know we are flipped
 % if isfield(localizeparams,'FLIP_LR') && ...
@@ -272,3 +303,27 @@ fprintf(1,'\n');
 %     end
 %   end
 % end
+
+function rs = prune_nms(rs, mining_params)
+%Prune via nms to eliminate redundant detections
+
+if ~isfield(mining_params,'NMS_MINES_OS') || (mining_params.NMS_MINES_OS >= 1)
+  return;
+end
+
+for i = 1:length(rs.id_grid)
+  if length(rs.id_grid{i})==0
+    continue
+  end
+
+  bbs=cellfun2(@(x)x.bb,rs.id_grid{i});
+  bbs = cat(1,bbs{:});
+  bbs(:,5) = 1:size(bbs,1);
+  bbs(:,6) = 1;
+  bbs(:,7) = rs.score_grid{i}';
+  bbs = nms(bbs, mining_params.NMS_MINES_OS);
+  ids = bbs(:,5);
+  rs.score_grid{i} = rs.score_grid{i}(ids);
+  rs.id_grid{i} = rs.id_grid{i}(ids);
+  rs.support_grid{i} = rs.support_grid{i}(ids);
+end

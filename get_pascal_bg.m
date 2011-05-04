@@ -23,7 +23,6 @@ elseif class(1) == '-'
   [neg_set,gt] = textread(sprintf(VOCopts.clsimgsetpath,class,target_directory),...
                           '%s %d');
   neg_set = neg_set(gt==-1);
-  
 else
   [neg_set,gt] = textread(sprintf(VOCopts.clsimgsetpath,class,target_directory),...
                           '%s %d');
