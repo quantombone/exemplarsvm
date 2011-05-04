@@ -1,22 +1,20 @@
 Here is the readme for the ICCV2011 exemplar code 
 Author: Tomasz Malisiewicz (tomasz@cmu.edu)
-Abhinav was here!`
-NOTE: do not distribute, the camera-ready version will be ready
-sometime in March, since this might change a lot
 
-It is a combination of:
-libsvm-3.0,
+This object recognition library is a combination of:
+libsvm-3.0-1,
 fast blas convolution code (from voc-release-4.0), 
 hog code (from voc-release-3.1), 
 localization within a pyramid code (my variant of pedro's code from voc-release-3.1),
+
 initialize region from user-provided bb,
 mining hard-negatives with several mining queues (using linear SVM),
 non-maximum suppression to clean up detections,
 visualization of detection boxes,
-screenshot capture tool
+video processing
 
-% compiling stuff
-% mex -O -lblas fconvblas.cc
+    % compiling stuff
+    % mex -O -lblas fconvblas.cc
 
 %%%% Compilation instructions
 
