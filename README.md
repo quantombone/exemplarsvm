@@ -22,7 +22,8 @@ video processing
 ---
 Installation of PASCAL VOC Object Recognition Dataset
 Go to http://pascallin.ecs.soton.ac.uk/challenges/VOC/ for more information
----
+
+Compiling blas convolution
 
     % compiling stuff
     % mex -O -lblas fconvblas.cc
