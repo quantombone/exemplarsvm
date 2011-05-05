@@ -5,7 +5,7 @@
 
 %Set default class, by writing into the default file, which our
 %mapreduces will be reading.
-save_default_class('bus');
+save_default_class('motorbike');
 
 %Run an "exemplar_initialize" mapreduce
 timing.initialize = spawn_job('ei',50,2);
@@ -18,8 +18,9 @@ timing.apply = spawn_job('ave',80,2);
 
 models = load_all_models;
 grid = load_result_grid(models);
-betas = perform_calibration(grid,models);
-results = evaluate_pascal_voc_grid(models, grid, 'test');
+clear M
+M.betas = perform_calibration(models,grid);
+results = evaluate_pascal_voc_grid(models, grid, 'test', M);
 
 %2. train all exemplars (all exemplars in exemplar directory)
 % make sure mining_params has dump_images enabled if you want to
@@ -32,10 +33,11 @@ return
 %3. perform calibration
 models = load_all_exemplars;
 grid = load_result_grid(models);
-betas = perform_calibration(grid,models);
+clear M
+M.betas = perform_calibration(grid,models);
 
 %4. evaluate results on PASCAL VOC comp3 task
-results = evaluate_pascal_voc_grid(models, grid, 'test', betas);
+results = evaluate_pascal_voc_grid(models, grid, 'test', M);
 
 %5. show top detections on testset
 show_top_dets(models,grid,'test',betas);

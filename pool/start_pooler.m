@@ -14,6 +14,7 @@ VOCinit;
 %A directory where the workers register themselves
 %BASEDIR = '/nfs/baikal/tmalisie/pool/';
 
+%Get the directory used for worker pools
 BASEDIR = get_pool_directory;
 
 %do learning with data from the trainset
@@ -39,13 +40,12 @@ myRandomize;
 rrr = randperm(length(targets));
 targets = targets(rrr);
 
-
-
 localizeparams.thresh = -1;
 localizeparams.TOPK = 10;
 localizeparams.lpo = 10;
 localizeparams.SAVE_SVS = 1;
 localizeparams.FLIP_LR = 1;
+localizeparams.NMS_MINES_OS = 0.5;
 
 nomodels{1}.model.w = zeros(1,1,features);
 nomodels{1}.model.w = randn([1 1 features]);
@@ -53,7 +53,6 @@ nomodels{1}.model.b = 0;
 nomodels{1}.model.params.sbin = 8;
 
 [tmp, me] = unix('hostname');
-
 N = length(targets);
 
 %A data chunks, tells us the following shared info
@@ -199,7 +198,7 @@ mining_params.FLIP_LR = data.localizeparams.FLIP_LR;
 
 %%NOTE: this should be carefully set to not blow things up too heavily
 mining_params.MAX_WINDOWS_BEFORE_SVM = 2000;
-mining_params.NMS_MINES_OS = 0.5;
+
 
 mining_queue = ...
     initialize_mining_queue(data.ts,1:length(data.ts));

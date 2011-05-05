@@ -13,6 +13,20 @@ if ~exist(final_dir,'dir')
   mkdir(final_dir);
 end
 
+if ~exist('models','var')  
+  filer = '/nfs/baikal/tmalisie/default_class.txt';
+  if fileexists(filer)
+    fid = fopen(filer,'r');
+    cls = fscanf(fid,'%s');
+    fclose(fid);
+    fprintf(1,'Loading default class from file %s\n',filer);    
+  else
+    fprintf(1,'No default file %s, using hardcoded class\n',filer);    
+    cls = 'train';
+  end  
+  models = load_all_models(cls,'exemplars');
+end
+
 final_file = ...
     sprintf('%s/grids/%s_%s_grid.mat',VOCopts.localdir,'both',models{1}.cls);
 
@@ -22,15 +36,16 @@ if fileexists(final_file)
   return;
 end
 
-if ~exist('models','var')
-  error('Need to specify models');
 
-  models = load_all_models_chunks('train','exemplars2','100');  
-  %fprintf(1,['Need some models, cannot continue without one' ...
-  %           ' argument\n']);
-  %grid = [];
-  %return;
-end
+% if ~exist('models','var')
+%   error('Need to specify models');
+
+%   models = load_all_models_chunks('train','exemplars2','100');  
+%   %fprintf(1,['Need some models, cannot continue without one' ...
+%   %           ' argument\n']);
+%   %grid = [];
+%   %return;
+% end
 
 %if ~exist('bg','var')
   fprintf(1,'Loading default set of images\n');
@@ -55,7 +70,7 @@ end
 %   models_name = 'dalal';
 % end
 
-baser = sprintf('%s/applied2/%s-%s/',VOCopts.localdir,setname, ...
+baser = sprintf('%s/applied/%s-%s/',VOCopts.localdir,setname, ...
                 models{1}.models_name);
 fprintf(1,'base directory: %s\n',baser);
 

@@ -1,26 +1,26 @@
-function [models] = load_all_models(cls, DET_TYPE, FINAL_PREFIX)
+function [models] = load_all_models(cls, DET_TYPE)
 %Load all trained models of a specified class 'cls' and specified
 %type 'DET_TYPE' from a models directory.
 
 %Tomasz Malisiewicz (tomasz@cmu.edu)
-if ~exist('cls','var')
-  cls = 'bottle';
+if ~exist('cls','var') || length(cls) == 0
+  cls = load_default_class;
 end
 
 %Define the type of classifiers we want to load (exemplars, dalals)
 if ~exist('DET_TYPE','var')
-  DET_TYPE = 'dalals';
+  DET_TYPE = 'exemplars';
 else
-  if sum(ismember(DET_TYPE,{'dalals','exemplars'})) == 0
+  if sum(ismember(DET_TYPE,{'dalals','exemplars','exemplars/mined'})) == 0
     fprintf(1,'Warning DET_TYPE=%s unrecognized\n',DET_TYPE);
   end
 end
 
 %This is the prefix we look for when loading files (which usually
 %denotes the maximum number of mining iterations)
-if ~exist('FINAL_PREFIX','var')
-  FINAL_PREFIX = '100';
-end
+% if ~exist('FINAL_PREFIX','var')
+%   FINAL_PREFIX = '100';
+% end
 
 %if enabled, we cache result on disk to facilitate loading at a
 %later stage (NOTE: these files might have to be removed manually)
@@ -47,9 +47,11 @@ if CACHE_FILE == 1
 end
 
 results_directory = ...
-    sprintf('%s/%s/mined/',VOCopts.localdir,DET_TYPE);
+    sprintf('%s/%s/',VOCopts.localdir,DET_TYPE);
 
-files = dir([results_directory FINAL_PREFIX '.*' cls '*.mat']);
+dirstring = [results_directory '*' cls '*.mat'];
+files = dir(dirstring);
+fprintf(1,'Pattern of files to load: %s\n',dirstring);
 fprintf(1,'Length of files to load: %d\n',length(files));
 
 models = cell(1,length(files));
@@ -72,6 +74,10 @@ for i = 1:length(files)
 
   %disable negative support vectors to save space
   models{i}.model.nsv = [];
+  
+  if ~isfield(models{i},'models_name')
+    models{i}.models_name=strrep(DET_TYPE,'/','_');
+  end
 end
 
 if length(files) == 0

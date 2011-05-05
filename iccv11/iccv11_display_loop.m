@@ -9,21 +9,18 @@ classes = setdiff(classes,'horse');
 classes = setdiff(classes,'bus');
 classes = setdiff(classes,'motorbike');
 classes = setdiff(classes,'bicycle');
-%classes = setdiff(classes,'car');
-%classes = setdiff(classes,'chair');
 rrr = randperm(length(classes));
 classes = classes(rrr);
 
 %classes = {'bird'};
-
 %classes = {'person'};;
 %classes = {'cow','diningtable','motorbike','sofa','train'}
 %classes = {'cow'};
 %classes = {'motorbike'};
 %classes = {'bus'};
+
 basedir = sprintf('/nfs/baikal/tmalisie/labelme400/www/voc/iccv11/%s/',...
                   VOCopts.dataset);
-
 
 for i = 1:length(classes)
   
