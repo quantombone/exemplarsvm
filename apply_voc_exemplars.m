@@ -1,5 +1,5 @@
 function apply_voc_exemplars(models)%, curset)
-%% Apply a set of models (exemplars, dalals, etc) to a set of images.  Script can be ran in
+%% Apply a set of models (raw exemplars, trained exemplars, dalals, etc) to a set of images.  Script can be ran in
 %% parallel with no arguments.  
 %% After running script, use grid=load_result_grid(models) to
 %% load results
@@ -16,18 +16,17 @@ function apply_voc_exemplars(models)%, curset)
 %images (this imitates doubling the exemplars)
 
 VOCinit;
-if ~exist('curset','var')
-  %curset = 'trainval';
-  curset = 'both';
-end
+curset = 'both';
 
-if ~exist('models','var')
-  fprintf(1,'Loading default models\n');
-  %   %models = load_all_models('tvmonitor','dalals','100');
-  %   %models = load_all_models('diningtable','exemplars','10');
-  models = load_all_models_chunks('train','exemplars2','100');  
-end
+%if ~exist('curset','var')
+%curset = 'trainval';
+%end
 
+%Store exemplars for this class
+if ~exist('models','var')  
+  cls = load_default_class;
+  models = load_all_models(cls,'exemplars');
+end
 
 %Only allow display to be enabled on a machine with X
 [v,r] = unix('hostname');
@@ -42,38 +41,25 @@ if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
 end
 
+%we save results every NIMS_PER_CHUNK images
 NIMS_PER_CHUNK = 10;
 
-%Save at most TOPK top hits from each exemplar
-TOPK = 10;
-
-%Levels-Per-Octave in image search
-lpo = 10;
-
-%Keep detections above this threshold
-thresher = -1.0;
-%thresher = -10000;
-
-% if is_dalal == 1
-%   TOPK = 100;
-%   thresher = -1.1;
-% end
-
+localizeparams.thresh = -1.0;
+localizeparams.TOPK = 10;
+localizeparams.lpo = 10;
+localizeparams.SAVE_SVS = 0;
+localizeparams.FLIP_LR = 1;
+localizeparams.NMS_MINES_OS = 0.5;
 
 if strcmp(models{1}.models_name,'dalal')
-  TOPK = 100;
-  thresher = -2.5;
+  localizeparams.TOPK = 100;
+  localizeparams.thresher = -2.5;
 end
 
 fprintf(1,'Loading default set of images\n');
-%[bg,setname] = default_testset;
-%fprintf(1,'HACK USING RAND BG\n');
-%bg = get_james_bg(100000,round(linspace(1,6400000,100000)));
-
-%bg = eval(models{1}.fg);
-%bg = get_pascal_bg('test','train');
-%bg = get_pascal_bg('test','bicycle');
 if display == 1
+  %If display is enabled, we must be on a machine running X, thus
+  %we apply results on in-class images from trainval
   curset = 'trainval';
   curcls = models{1}.cls;
   bg = get_pascal_bg(curset,sprintf('%s',curcls));
@@ -83,12 +69,9 @@ else
 end
 
 setname = [curset '.' models{1}.cls];
-
-
 lrstring = '';
 
-
-baser = sprintf('%s/applied2/%s-%s/',VOCopts.localdir,setname, ...
+baser = sprintf('%s/applied/%s-%s/',VOCopts.localdir,setname, ...
                 models{1}.models_name);
 
 if ~exist(baser,'dir') && (display == 0)
@@ -135,11 +118,6 @@ for i = 1:length(ordering)
     Iname = bg{inds{ordering(i)}(j)};
     I = Is{j};
    
-    localizeparams.thresh = thresher;
-    localizeparams.TOPK = TOPK;
-    localizeparams.lpo = lpo;
-    localizeparams.SAVE_SVS = 0;
-    localizeparams.FLIP_LR = 1;
     
     starter = tic;
     [rs,t] = localizemeHOG(I,models,localizeparams);
