@@ -289,8 +289,7 @@ else
 end
 fprintf(1,'\n');
 
-%% do nms here if it is enabled
-
+%% Do NMS (nothing happens if the field is turned off, or absent)
 resstruct = prune_nms(resstruct,localizeparams);
 
 %sizeI = size(I);
@@ -304,13 +303,16 @@ resstruct = prune_nms(resstruct,localizeparams);
 %   end
 % end
 
-function rs = prune_nms(rs, mining_params)
+function rs = prune_nms(rs, params)
 %Prune via nms to eliminate redundant detections
 
-if ~isfield(mining_params,'NMS_MINES_OS') || (mining_params.NMS_MINES_OS >= 1)
+%If the field is missing, or it is set to 1, then we don't need to
+%process anything
+if ~isfield(params,'NMS_MINES_OS') || (params.NMS_MINES_OS >= 1)
   return;
 end
 
+%Do NMS independently for each W, not for the combination!
 for i = 1:length(rs.id_grid)
   if length(rs.id_grid{i})==0
     continue
@@ -321,9 +323,14 @@ for i = 1:length(rs.id_grid)
   bbs(:,5) = 1:size(bbs,1);
   bbs(:,6) = 1;
   bbs(:,7) = rs.score_grid{i}';
-  bbs = nms(bbs, mining_params.NMS_MINES_OS);
+  bbs = nms(bbs, params.NMS_MINES_OS);
   ids = bbs(:,5);
   rs.score_grid{i} = rs.score_grid{i}(ids);
   rs.id_grid{i} = rs.id_grid{i}(ids);
-  rs.support_grid{i} = rs.support_grid{i}(ids);
+  
+  %only access features if they are present
+  if length(rs.support_grid) > 0
+    rs.support_grid{i} = rs.support_grid{i}(ids);
+  end
 end
+
