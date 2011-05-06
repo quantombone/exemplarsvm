@@ -89,7 +89,7 @@ end
 
 raw_boxes = bboxes;
 
-if 1
+if 0 %turned off for nn baseline, since it is done already
   fprintf(1,'applying exemplar nms\n');
   for i = 1:length(bboxes)
     if size(bboxes{i},1) > 0
@@ -102,7 +102,7 @@ if 1
   end
 end
 
-if exist('M','var') && length(M)>0
+if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
   fprintf(1,'Applying M\n');
   tic
   nbrlist = cell(1,length(bboxes));
@@ -114,18 +114,20 @@ if exist('M','var') && length(M)>0
   toc
 end
 
-if 0
-  fprint(1,'Propagating scores onto raw detections\n');
+if exist('M','var') && length(M)>0 && isfield(M,'betas')
+  fprintf(1,'Propagating scores onto raw detections\n');
   %% propagate scores onto raw boxes
   for i = 1:length(bboxes)
-    calib_boxes = calibrate_boxes(unclipped_boxes{i},M.betas);
+    calib_boxes = calibrate_boxes(bboxes{i},M.betas);
     raw_scores = calib_boxes(:,end);
     
     new_scores = raw_scores;
-    for j = 1:length(nbrlist{i})
-      new_scores(nbrlist{i}{j}) = max(new_scores(nbrlist{i}{j}),...
-                                      raw_scores(nbrlist{i}{j}).*...
-                                      bboxes{i}(nbrlist{i}{j},end));
+    if exist('nbrlist','var')
+      for j = 1:length(nbrlist{i})
+        new_scores(nbrlist{i}{j}) = max(new_scores(nbrlist{i}{j}),...
+                                        raw_scores(nbrlist{i}{j}).*...
+                                        bboxes{i}(nbrlist{i}{j},end));
+      end
     end
     bboxes{i}(:,end) = new_scores;
   end
@@ -141,7 +143,9 @@ for i = 1:length(bboxes)
     if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'os')
       maxos{i} = maxos{i}(bboxes{i}(:,5));
     end
-    nbrlist{i} = nbrlist{i}(bboxes{i}(:,5));
+    if exist('nbrlist','var')
+      nbrlist{i} = nbrlist{i}(bboxes{i}(:,5));
+    end
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
   end
 end
@@ -162,7 +166,6 @@ end
 
 final_boxes = bboxes;
 final_maxos = maxos;
-  
 
 %% return unclipped boxes for transfers
 final.final_boxes = final_boxes;
@@ -170,11 +173,18 @@ final.final_maxos = final_maxos;
 final.unclipped_boxes = unclipped_boxes;
 final.pre_nms_boxes = pre_nms_boxes;
 final.raw_boxes = raw_boxes;
-final.nbrlist = nbrlist;
-final.M = M;
+if exist('M','var') && exist('nbrlist','var')
+  final.nbrlist = nbrlist;
+  final.M = M;
+end
 
-%%TODO: create the directory programatically instead of doing it manually
 filer=sprintf(VOCopts.detrespath,'comp3',cls);
+%Create directory if it is not present
+[aaa,bbb,ccc] = fileparts(filer);
+if ~exist(aaa,'dir')
+  mkdir(aaa);
+end
+
 fprintf(1,'Writing File %s\n',filer);
 fid = fopen(filer,'w');
 for i = 1:length(bboxes)
@@ -218,4 +228,7 @@ results.cls = models{1}.cls;
 
 
 fprintf(1,'Saving results to %s\n',resfile);
+if ~exist('M','var')
+  M = [];
+end
 save(resfile,'results','final','M');

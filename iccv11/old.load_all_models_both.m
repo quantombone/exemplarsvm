@@ -1,4 +1,6 @@
-function [models] = load_all_models_both(cls, DET_TYPE, FINAL_PREFIX)
+function [models] = load_all_models_both(cls, DET_TYPE, ...
+                                         FINAL_PREFIX)
+error('old function, because it duplicates models with lr\n');
 %Load all trained models of a specified class 'cls' and specified
 %type 'DET_TYPE' from a models directory.
 

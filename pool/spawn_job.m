@@ -1,6 +1,13 @@
-function timing = spawn_job(process, NPROC, PPN)
-%% A Generic Mapreduce driver
-%% know when it is finished when all processes are done
+function timing = spawn_job(process, NPROC, PPN, PAUSE_TIME)
+%% A Generic MapReduce driver for spawning jobs on WARP and waiting
+%% until they are finished -- there is no reduce!
+%% It is finished when all processes are done
+%% Input:
+%% process: short name of process such as "ei" for
+%% exemplar_initialize or "ave" for "apply_voc_exemplars"
+%% NPROC: # of processes to start
+%% PPN: # of cores per process
+%% PAUSEITME: # of seconds to wait between checking if MapReduce is done
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 if ~exist('NPROC','var')
   NPROC = 20;
@@ -10,6 +17,10 @@ if ~exist('PPN','var')
   PPN = 2;
 end
 
+if ~exist('PAUSE_TIME','var')
+  PAUSE_TIME = 5;
+end
+
 starter = tic;
 %% start the CLUSTER processes
 [a,b]=unix(sprintf(['ssh warp.hpc1 "cd /nfs/hn22/tmalisie/ddip/segment_scripts/ &&' ...
@@ -17,7 +28,7 @@ starter = tic;
                    PPN));
 
 %customary pause
-pause(3)
+pause(PAUSE_TIME)
 
 iter = 1;
 while 1
@@ -35,7 +46,7 @@ while 1
     break;
   end
   fprintf(1,'[%03d] Njobs [%s] = %d\n',iter,process,length(res));
-  pause(3)
+  pause(PAUSE_TIME)
   iter = iter + 1;
 end
 
