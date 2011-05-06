@@ -16,7 +16,8 @@ function top = adjust_boxes(boxes, models)
 
 top = boxes;
 
-if strcmp(models{1}.models_name,'dalal')
+if strcmp(models{1}.models_name,'dalal') || ...
+      ~isfield(models{1},'got_box')
   return;
 end
 
