@@ -1,3 +1,6 @@
+#Here is some wxPython code which draws a rectangle on the screen and
+#moves it around, the goals is to highlight an object detection on the
+#desktop.. more work needs to still be done
 import wx
 print wx.version()
 
