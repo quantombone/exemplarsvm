@@ -34,6 +34,8 @@ Compiling blas convolution
 
 Quick Start Guide:
 
+%%% Initialize paths by editing VOCinit.m, and making sure the three main directories are set
+
 %%% VOC README
     %1. dump out model files for a VOC category
     >> initialize_voc_exemplars('motorcycle');

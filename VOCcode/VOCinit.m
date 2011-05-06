@@ -1,61 +1,35 @@
 clear VOCopts
 
+% Note: The following three directories must be set for your setup
+
+%This is the directory where we dump visualizations into
+VOCopts.dumpdir = '/nfs/baikal/tmalisie/labelme400/www/siggraph/';
+
+%devkitroot is where we write all the result files
+VOCopts.devkitroot = '/nfs/baikal/tmalisie/nips11/';
+
+%datadir is where the PASCAL VOC datasets are installed (this
+%directory can be a read-only shared resource)
+VOCopts.datadir ='/nfs/hn38/users/sdivvala/Datasets/Pascal_VOC/';
+
+if length(VOCopts.devkitroot) == 0
+  error('Error, paths not initialized in VOCinit.m\n');
+end
+
 % dataset
 %
 % Note for experienced users: the VOC2008/9 test sets are subsets
 % of the VOC2010 test set. You don't need to do anything special
 % to submit results for VOC2008/9.
 
-%for iccv
 %VOCopts.dataset='VOC2010';
 VOCopts.dataset='VOC2007';
 
-%for iccv2011
-%VOCopts.dataset='VOC2009';
-
-%for james stuff
-%VOCopts.dataset='siggraph2011';
-
-%for sketches
-%VOCopts.dataset='VOC2007';
-
-%VOCopts.dataset='sketches';
-
-
-% get devkit directory with forward slashes
-%devkitroot=strrep(fileparts(fileparts(mfilename('fullpath'))),'\','/');
-
-if 0
-[v,host_string]=unix('hostname');
-if length(strfind(host_string,'onega'))>0
-  devkitroot='/nfs/baikal/tmalisie/voc2/';
-  VOCopts.datadir ='/nfs/hn38/users/sdivvala/Datasets/Pascal_VOC/';
-else
-  %we are on warp
-  %devkitroot='/nfs/baikal/tmalisie/voc/';
-  devkitroot='/lustre/tmalisie/voc/';
-  VOCopts.datadir = '/lustre/tmalisie/VOC2007/VOCdevkit/';
-end
-end
-
-%this is the directory where we dump resulting images into
-VOCopts.dumpdir = '/nfs/baikal/tmalisie/labelme400/www/siggraph/';
-
-%fprintf(1,'HACK using nfs shares\n');
-%devkitroot is where we write all the result files
-devkitroot='/nfs/baikal/tmalisie/nips11/';
-VOCopts.datadir ='/nfs/hn38/users/sdivvala/Datasets/Pascal_VOC/';
-
-%fprintf(1,'Devkitroot is %s\n',devkitroot);
-
-% change this path to point to your copy of the PASCAL VOC data
-%VOCopts.datadir=[devkitroot '/'];
-
 % change this path to a writable directory for your results
-VOCopts.resdir=[devkitroot '/results/' VOCopts.dataset '/'];
+VOCopts.resdir=[VOCopts.devkitroot '/results/' VOCopts.dataset '/'];
 
 % change this path to a writable local directory for the example code
-VOCopts.localdir=[devkitroot '/local/' VOCopts.dataset '/'];
+VOCopts.localdir=[VOCopts.devkitroot '/local/' VOCopts.dataset '/'];
 
 % initialize the training set
 
