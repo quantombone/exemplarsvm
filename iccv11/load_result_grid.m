@@ -14,17 +14,8 @@ if ~exist(final_dir,'dir')
 end
 
 if ~exist('models','var')  
-  filer = '/nfs/baikal/tmalisie/default_class.txt';
-  if fileexists(filer)
-    fid = fopen(filer,'r');
-    cls = fscanf(fid,'%s');
-    fclose(fid);
-    fprintf(1,'Loading default class from file %s\n',filer);    
-  else
-    fprintf(1,'No default file %s, using hardcoded class\n',filer);    
-    cls = 'train';
-  end  
-  models = load_all_models(cls,'exemplars');
+  [cls,mode] = load_default_class;
+  models = load_all_models(cls,mode);
 end
 
 final_file = ...

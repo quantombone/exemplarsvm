@@ -24,8 +24,9 @@ curset = 'both';
 
 %Store exemplars for this class
 if ~exist('models','var')  
-  cls = load_default_class;
-  models = load_all_models(cls,'exemplars');
+  [cls,mode] = load_default_class;
+  %models = load_all_models(cls,'exemplars');
+  models = load_all_models(cls,mode);
 end
 
 %Only allow display to be enabled on a machine with X
@@ -51,10 +52,10 @@ localizeparams.SAVE_SVS = 0;
 localizeparams.FLIP_LR = 1;
 localizeparams.NMS_MINES_OS = 0.5;
 
-if strcmp(models{1}.models_name,'dalal')
-  localizeparams.TOPK = 100;
-  localizeparams.thresher = -2.5;
-end
+%if strcmp(models{1}.models_name,'dalal')
+%  localizeparams.TOPK = 100;
+%  localizeparams.thresher = -2.5;
+%end
 
 fprintf(1,'Loading default set of images\n');
 if display == 1

@@ -57,8 +57,8 @@ fprintf(1,'Length of files to load: %d\n',length(files));
 models = cell(1,length(files));
 for i = 1:length(files)
   fprintf(1,'.');
-  models{i} = load([results_directory files(i).name]);
-  models{i} = models{i}.m;
+  m = load([results_directory files(i).name]);
+  models{i} = m.m;
 
   if max(models{i}.model.hg_size(1:2)) >= 25 %| length(models{i}.model.x)==0
     fprintf(1,'Truncating very large exemplar id=%d\n', i);
@@ -87,6 +87,20 @@ if length(files) == 0
 end
 
 fprintf(1,'\n');
+
+if length(files) == 1
+  %% if here then we have a dalal file, so we create a nn file
+  NM = size(m.m.model.x, 2);
+  for i = 1:NM
+    curm = models{1};
+    curm.model.w = reshape(m.m.model.x(:,i),size(curm.model.w));
+    curm.model.w = curm.model.w - mean(curm.model.w(:));
+    curm.model.b = -100;
+    models{i} = curm;
+    models{i}.models_name = 'nn';
+  end
+  fprintf(1,'finished making nn file\n');
+end
 
 if CACHE_FILE==1
   fprintf(1,'Loaded models, saving to %s\n',cache_file);
