@@ -1,4 +1,4 @@
-function grid = load_result_grid(models)%,curset)%, bg, setname)
+function grid = load_result_grid(models)
 %Given a set of models, return a grid of results from those models' firings
 %on the subset of images (target_directory is 'trainval' or 'test')
 %if only_images_of_class is specified, then only the subset of
