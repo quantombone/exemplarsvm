@@ -5,7 +5,7 @@
 
 %Set default class, by writing into the default file, which our
 %mapreduces will be reading.
-save_default_class('motorbike');
+save_default_class('car');
 
 %Run an "exemplar_initialize" mapreduce
 timing.initialize = spawn_job('ei',50,2);
