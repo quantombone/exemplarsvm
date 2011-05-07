@@ -4,17 +4,17 @@ function [models] = load_all_models(cls, DET_TYPE)
 
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 if ~exist('cls','var') || length(cls) == 0
-  cls = load_default_class;
+  [cls,DET_TYPE] = load_default_class;
 end
 
 %Define the type of classifiers we want to load (exemplars, dalals)
-if ~exist('DET_TYPE','var')
-  DET_TYPE = 'exemplars';
-else
-  if sum(ismember(DET_TYPE,{'dalals','exemplars','exemplars/mined'})) == 0
-    fprintf(1,'Warning DET_TYPE=%s unrecognized\n',DET_TYPE);
-  end
-end
+% if ~exist('DET_TYPE','var')
+%   DET_TYPE = 'exemplars';
+% else
+%   if sum(ismember(DET_TYPE,{'dalals','exemplars','exemplars/mined'})) == 0
+%     fprintf(1,'Warning DET_TYPE=%s unrecognized\n',DET_TYPE);
+%   end
+% end
 
 %This is the prefix we look for when loading files (which usually
 %denotes the maximum number of mining iterations)
@@ -30,14 +30,14 @@ VOCinit;
 
 if CACHE_FILE == 1
   cache_dir =  ...
-      sprintf('%s/%s/models',VOCopts.localdir,DET_TYPE);
+      sprintf('%s/models/',VOCopts.localdir);
   
   if ~exist(cache_dir,'dir')
     mkdir(cache_dir);
   end
   
   cache_file = ...
-      sprintf('%s/%s.mat',cache_dir,cls);
+      sprintf('%s/%s-%s.mat',cache_dir,cls,DET_TYPE);
   
   if fileexists(cache_file)
     fprintf(1,'Loading CACHED file: %s\n', cache_file);
@@ -88,19 +88,21 @@ end
 
 fprintf(1,'\n');
 
-if length(files) == 1
-  %% if here then we have a dalal file, so we create a nn file
-  NM = size(m.m.model.x, 2);
-  for i = 1:NM
-    curm = models{1};
-    curm.model.w = reshape(m.m.model.x(:,i),size(curm.model.w));
-    curm.model.w = curm.model.w - mean(curm.model.w(:));
-    curm.model.b = -100;
-    models{i} = curm;
-    models{i}.models_name = 'nn';
-  end
-  fprintf(1,'finished making nn file\n');
-end
+%This part is not necessary, as the notion of a dalal window is
+%generalized to a method for framing windows
+% if length(files) == 1
+%   %% if here then we have a dalal file, so we create a nn file
+%   NM = size(m.m.model.x, 2);
+%   for i = 1:NM
+%     curm = models{1};
+%     curm.model.w = reshape(m.m.model.x(:,i),size(curm.model.w));
+%     curm.model.w = curm.model.w - mean(curm.model.w(:));
+%     curm.model.b = -100;
+%     models{i} = curm;
+%     models{i}.models_name = 'nn';
+%   end
+%   fprintf(1,'finished making nn file\n');
+% end
 
 if CACHE_FILE==1
   fprintf(1,'Loaded models, saving to %s\n',cache_file);
