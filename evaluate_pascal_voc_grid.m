@@ -15,14 +15,24 @@ function [results,final] = ...
 VOCinit;
 VOCopts.testset = target_directory;
 
-resfile = sprintf('%s/%s.%s_%s_results.mat',VOCopts.resdir,...
+calib_string = '';
+if exist('M','var') && length(M)>0 && isfield(M,'betas')
+   calib_string = '-calibrated';
+end
+
+resfile = sprintf('%s/%s.%s%s_%s_results.mat',VOCopts.resdir,...
                   models{1}.models_name,...
-                  models{1}.cls,target_directory');
+                  models{1}.cls,calib_string,...
+                  target_directory');
+
 
 if fileexists(resfile)
-  %fprintf(1,'Pre loading %s\n',resfile);
-  %load(resfile);
-  %return;
+  if nargout == 0
+    return;
+  end
+  fprintf(1,'Pre loading %s\n',resfile);
+  load(resfile);
+  return;
 end
 
 
@@ -210,25 +220,25 @@ catch
   apold = -1;
 end
 axis([0 1 0 1]);
-extra = '';
-if ismember(models{1}.models_name,{'dalal'})
-  extra='-dalal';
-end
-%filer = sprintf(['/nfs/baikal/tmalisie/labelme400/www/voc/tophits/' ...
-%                 '%s%s-on-%s-ap=%.5f.png'],models{1}.cls,extra,target_directory,ap);
-%set(gcf,'PaperPosition',[0 0 5 5])
-%print(gcf,'-dpng',filer);
-%fprintf(1,'Just Wrote %s\n',filer);
+
+filer = sprintf(['%s/%s-%s%s-on-%s-ap=%.5f.png'], VOCopts.dumpdir, ...
+                models{1}.cls,models{1}.models_name,calib_string, ...
+                target_directory,ap);
+set(gcf,'PaperPosition',[0 0 5 5])
+print(gcf,'-dpng',filer);
+fprintf(1,'Just Wrote %s\n',filer);
 
 results.recall = recall;
 results.prec = prec;
 results.ap = ap;
 results.apold = apold;
 results.cls = models{1}.cls;
-
+drawnow
 
 fprintf(1,'Saving results to %s\n',resfile);
 if ~exist('M','var')
   M = [];
 end
+
+%TODO: we are saving really large files for exemplarNN
 save(resfile,'results','final','M');
