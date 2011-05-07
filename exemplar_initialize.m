@@ -1,24 +1,61 @@
-function exemplar_initialize(cls)
+function exemplar_initialize(cls,mode)
 %% Initialize script which writes out initial model files for all
 %% exemplars of a single category from PASCAL VOC trainval set
-%% Script is parallelizable
+%% Script is parallelizable (and dalalizable!)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
-
 VOCinit;
 
-%GOAL_NCELLS = 25;
-%SBIN = 20;
-
-GOAL_NCELLS = 100;
+%The sbin size 
 SBIN = 8;
-NWIGGLES = 100;
+
+%Load default class and mode if no arguments are given
+if ~exist('cls','var')
+  [cls,mode] = load_default_class;
+end
+
+cache_dir =  ...
+    sprintf('%s/models/',VOCopts.localdir);
+
+cache_file = ...
+    sprintf('%s/%s-%s.mat',cache_dir,cls,mode);
+
+if fileexists(cache_file)
+  fprintf(1,'No need to initialize, because models already stored\n');
+  return;
+end
+
+%If this is enabled, then the features will be scaled to the
+%canonical dalal-size
+if strfind(mode,'-dt')
+  dalalmode = 1;
+else
+  dalalmode = 0;
+end
+
+if dalalmode == 1
+  fprintf(1,' --##-- DALAL_MODE enabled --##--');
+end
+
+%Goal ncells gives us a constraint on how many cells we cut the
+%object up to
+GOAL_NCELLS = 100;
+
+%(only non-dalal mode) If greater than one, creates tiny exemplar
+%perturbations as additional positives
+NWIGGLES = 1;
 
 fprintf(1,'GOAL_NCELLS=%d sbin=%d\n',GOAL_NCELLS,SBIN);
 
-%Store exemplars for this class
-if ~exist('cls','var')
-  cls = load_default_class;
+%Only allow display to be enabled on a machine with X
+[v,r] = unix('hostname');
+if strfind(r, VOCopts.display_machine)==1
+  display = 1;
+else
+  display = 0;
 end
+
+display = 0;
+
 
 fprintf(1,'Class = %s\n',cls);
 
@@ -32,8 +69,17 @@ if ismember(cls,{'all'})
   return;
 end
 
+DTstring = '';
+if dalalmode == 1
+  %Find the best window size from taking statistics over all
+  %training instances of matching class
+  hg_size = get_hg_size(cls);
+  DTstring = '-dt';
+  %hg_size = [7 10];
+end
+
 results_directory = ...
-    sprintf('%s/exemplars/',VOCopts.localdir);
+    sprintf('%s/exemplars%s/',VOCopts.localdir,DTstring);
 
 fprintf(1,'Writing Exemplars of class %s to directory %s\n',cls,results_directory);
 
@@ -66,7 +112,6 @@ ids = ids(rrr);
 %pause
 %continue
 
-
 for i = 1:length(ids)
   curid = ids{i};
 
@@ -96,40 +141,20 @@ for i = 1:length(ids)
 
     %Expand the bbox to have some minimum and maximum aspect ratio
     %constraints (if it it too horizontal, expand vertically, etc)
-    bbox = expand_bbox(bbox,I);
-
     clear model;
     
-    I2 = zeros(size(I,1),size(I,2));    
-    I2(bbox(2):bbox(4),bbox(1):bbox(3)) = 1;
-    model.params.sbin = SBIN;
-
-    %% NOTE: why was I padding this at some point and now I'm not???
-    ARTPAD = 0; %120;
-    I_real_pad = pad_image(I,ARTPAD);
- 
-    %Get the hog features (+wiggles) from the ground-truth bounding box
-    [f_real,scales] = featpyramid2(I_real_pad,model.params.sbin, 10);
-    
-    %Extract the region from each level in the pyramid
-    [masker,sizer] = get_matching_masks(f_real, I2);
- 
-    %Now choose the mask which is closest to N cells
-    [targetlvl, mask] = get_ncell_mask(GOAL_NCELLS, masker, ...
-                                                              sizer);
-    [uu,vv] = find(mask);
-    curfeats = f_real{targetlvl}(min(uu):max(uu),min(vv):max(vv),: ...
-                             );
-    model.hg_size = size(curfeats);    
-    model.w = curfeats - mean(curfeats(:));
-    model.b = 0;
-    
-    [model.target_id] = get_target_id(model,I);
-    model.coarse_box = model.target_id.bb;
+    if dalalmode == 1
+      %Do the dalal-triggs anisotropic warping initialization
+      model = initialize_model_dt(I,bbox,GOAL_NCELLS,SBIN,hg_size);
+    else
+      bbox = expand_bbox(bbox,I);
+      %Do default exemplar initialization
+      model = initialize_model(I,bbox,GOAL_NCELLS,SBIN);
+      model = populate_wiggles(I, model, NWIGGLES);
+    end
     
     fprintf(1,'Extracting random %d wiggles\n',NWIGGLES);
-    
-    model = populate_wiggles(I, model, NWIGGLES);
+
     
     %Negative support vectors
     model.nsv = zeros(prod(model.hg_size),0);
@@ -142,9 +167,7 @@ for i = 1:length(ids)
     %Friend support vectors
     model.fsv = zeros(prod(model.hg_size),0);
     model.fsvids = [];
-    
-    
-  
+      
     clear m
     m.curid = curid;
     m.objectid = objectid;
@@ -155,22 +178,27 @@ for i = 1:length(ids)
     
     %Print the bounding box overlap between the initial window and
     %the final window
+    finalos = getosmatrix_bb(m.gt_box, m.model.coarse_box);
     fprintf(1,'Final OS is %.3f\n', ...
-            getosmatrix_bb(m.gt_box, m.model.coarse_box));
+            finalos);
+
 
     save(filer,'m');
     if exist(filerlock,'dir')
       rmdir(filerlock);
     end
 
-    figure(1)
-    clf
-    imagesc(Ibase)
-    plot_bbox(m.model.coarse_box,'',[1 0 0])
-    plot_bbox(m.gt_box,'',[0 0 1])
-    axis image
-    title(sprintf('%s.%d',m.curid,m.objectid))
-    drawnow
+    if display == 1
+      figure(1)
+      clf
+      imagesc(Ibase)
+      plot_bbox(m.model.coarse_box,'',[1 0 0])
+      plot_bbox(m.gt_box,'',[0 0 1])
+      axis image
+      title(sprintf('%s.%d',m.curid,m.objectid))
+      drawnow
+      pause(.5)
+    end
   end  
 end
 
@@ -249,8 +277,130 @@ function model = populate_wiggles(I, model, NWIGGLES)
 xxx = replica_hits(I, model.params.sbin, model.target_id, ...
                    model.hg_size, NWIGGLES);
 
-%% GET self feature + 100 wiggles
+%% GET self feature + NWIGGLES wiggles "perturbed images"
 model.x = xxx;
 model.w = reshape(mean(model.x,2), model.hg_size);
 model.w = model.w - mean(model.w(:));
 model.b = -100;
+
+function modelsize = get_bb_stats(h,w)
+
+xx = -2:.02:2;
+filter = exp(-[-100:100].^2/400);
+aspects = hist(log(h./w), xx);
+aspects = convn(aspects, filter, 'same');
+[peak, I] = max(aspects);
+aspect = exp(xx(I));
+
+% pick 20 percentile area
+areas = sort(h.*w);
+%TJM: make sure we index into first element if not enough are
+%present to take the 20 percentile area
+area = areas(max(1,floor(length(areas) * 0.2)));
+area = max(min(area, 5000), 3000);
+
+% pick dimensions
+w = sqrt(area/aspect);
+h = w*aspect;
+
+sbin = 8;
+modelsize = [round(h/sbin) round(w/sbin)];
+
+
+function warped = mywarppos(hg_size, I, sbin, bbox)
+
+% warped = warppos(name, model, c, pos)
+% Warp positive examples to fit model dimensions.
+% Used for training root filters from positive bounding boxes.
+
+pixels = hg_size * sbin;
+h = bbox(4) - bbox(2) + 1;
+w = bbox(3) - bbox(1) + 1;
+
+cropsize = (hg_size+2) * sbin;
+
+padx = sbin * w / pixels(2);
+pady = sbin * h / pixels(1);
+x1 = round(bbox(1)-padx);
+x2 = round(bbox(3)+padx);
+y1 = round(bbox(2)-pady);
+y2 = round(bbox(4)+pady);
+window = subarray(I, y1, y2, x1, x2, 1);
+warped = imresize(window, cropsize, 'bilinear');
+
+function [hg_size,ids] = get_hg_size(cls)
+%% Load ids of all images in trainval that contain cls
+
+VOCinit;
+[ids,gt] = textread(sprintf(VOCopts.clsimgsetpath,cls,'trainval'),...
+                  '%s %d');
+oks = find(gt==1);
+ids = ids(oks);
+%myRandomize;
+
+fprintf(1,'Computing mean size for class %s\n',cls);
+for i = 1:length(ids)
+  fprintf(1,'.');
+  curid = ids{i};  
+  recs = PASreadrecord(sprintf(VOCopts.annopath,curid));
+  objects = recs.objects;
+  
+  goods = find(ismember({objects.class},{cls}) & ([objects.difficult]==0));
+  objects = objects(goods);
+  bbs{i} = cat(1,objects.bbox);
+end
+
+bbs = cat(1,bbs{:});
+
+W = bbs(:,3)-bbs(:,1)+1;
+H = bbs(:,4)-bbs(:,2)+1;
+
+[hg_size] = get_bb_stats(H, W);
+
+function model = initialize_model(I,bbox,GOAL_NCELLS,SBIN)
+%Get an initial model by cutting out a segment of a size which
+%matches the bbox
+I2 = zeros(size(I,1),size(I,2));    
+I2(bbox(2):bbox(4),bbox(1):bbox(3)) = 1;
+model.params.sbin = SBIN;
+
+%% NOTE: why was I padding this at some point and now I'm not???
+ARTPAD = 0; %120;
+I_real_pad = pad_image(I,ARTPAD);
+
+%Get the hog features (+wiggles) from the ground-truth bounding box
+[f_real,scales] = featpyramid2(I_real_pad,model.params.sbin, 10);
+
+%Extract the region from each level in the pyramid
+[masker,sizer] = get_matching_masks(f_real, I2);
+
+%Now choose the mask which is closest to N cells
+[targetlvl, mask] = get_ncell_mask(GOAL_NCELLS, masker, ...
+                                                sizer);
+[uu,vv] = find(mask);
+curfeats = f_real{targetlvl}(min(uu):max(uu),min(vv):max(vv),:);
+model.hg_size = size(curfeats);    
+
+model.w = curfeats - mean(curfeats(:));
+model.b = 0;
+
+[model.target_id] = get_target_id(model,I);
+model.coarse_box = model.target_id.bb;
+
+function model = initialize_model_dt(I,bbox,GOAL_NCELLS,SBIN,hg_size)
+%Get an initial model by cutting out a segment of a size which
+%matches the bbox
+
+warped = mywarppos(hg_size, I, SBIN, bbox);
+curfeats = features(warped, SBIN);
+model.x = curfeats(:);    
+model.params.sbin = SBIN;
+
+model.hg_size = size(curfeats);    
+model.w = curfeats - mean(curfeats(:));
+model.b = 0;
+
+%%When doing dt, we should use bbox
+%[model.target_id] = get_target_id(model,I);
+%model.coarse_box = model.target_id.bb;
+model.coarse_box = bbox;
