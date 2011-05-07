@@ -1,4 +1,4 @@
-function create_dalal_file(classes)
+function create_nn_file(classes)
 %% Initialize script which writes out initial model files storing the
 %% positive examples (dalal-triggs style)
 %%
@@ -132,12 +132,13 @@ for i = 1:length(ids)
     A = W*H;
     
     startbb = [1 1 hg_size(2)-1 hg_size(1)-1];
-    bestos = get_bestos(startbb, bbox);
     
-    if A < minsize || bestos<.5
-      numskipped = numskipped + 1;
-      continue
-    end
+    %don't do any skipping
+    %bestos = get_bestos(startbb, bbox);   
+    %if A < minsize || bestos<.5
+    %  numskipped = numskipped + 1;
+    %  continue
+    %end
     
     % extendW = W/hg_size(2);
     % extendH = H/hg_size(1);

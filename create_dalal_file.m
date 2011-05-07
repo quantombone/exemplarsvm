@@ -45,40 +45,16 @@ for i = 1:length(classes)
     continue
   end
   
-  m = do_dalal(classes{i},results_directory);
-  save(filer,'m');
+  models = do_dalal(classes{i},results_directory);
+  save(filer,'models');
   rmdir(filerlock);
 end
 
-function m = do_dalal(cls, results_directory)
+function models = do_dalal(cls, results_directory)
 VOCinit;
 fprintf(1,'Writing dalals of class %s to directory %s\n',cls,results_directory);
 
-%% Load ids of all images in trainval that contain cls
-[ids,gt] = textread(sprintf(VOCopts.clsimgsetpath,cls,'trainval'),...
-                  '%s %d');
-oks = find(gt==1);
-ids = ids(oks);
-myRandomize;
-
-for i = 1:length(ids)
-  fprintf(1,'.');
-  curid = ids{i};  
-  recs = PASreadrecord(sprintf(VOCopts.annopath,curid));
-  objects = recs.objects;
-  
-  goods = find(ismember({objects.class},{cls}) & ([objects.difficult]==0));
-  objects = objects(goods);
-  bbs{i} = cat(1,objects.bbox);
-end
-
-bbs = cat(1,bbs{:});
-
-W = bbs(:,3)-bbs(:,1)+1;
-H = bbs(:,4)-bbs(:,2)+1;
-
-[hg_size] = get_bb_stats(H, W);
-
+[hg_size,ids] = get_hg_size(cls);
 %for iii= 1:size(W)
 %  startbb = [1 1 hg_size(2)-1 hg_size(1)-1];
 %  endbb = bbs(iii,:);
@@ -130,14 +106,14 @@ for i = 1:length(ids)
     H = bbox(4)-bbox(2)+1;
     
     A = W*H;
-    
-    startbb = [1 1 hg_size(2)-1 hg_size(1)-1];
-    bestos = get_bestos(startbb, bbox);
-    
-    if A < minsize || bestos<.5
-      numskipped = numskipped + 1;
-      continue
-    end
+
+    %dont do any skipping
+    %startbb = [1 1 hg_size(2)-1 hg_size(1)-1];
+    %bestos = get_bestos(startbb, bbox);
+    %if A < minsize || bestos<.5
+    %  numskipped = numskipped + 1;
+    %  continue
+    %end
     
     % extendW = W/hg_size(2);
     % extendH = H/hg_size(1);
@@ -169,6 +145,23 @@ for i = 1:length(ids)
     
     model.x(:,end+1) = f(:);
     
+    model.w = reshape(mean(model.x,2),model.hg_size);
+    model.w = model.w - mean(model.w(:));
+    model.b = -100;
+    model.nsv = zeros(prod(model.hg_size),0);
+    model.svids = [];
+    
+    model.coarse_box = [];
+    model.target_id = [];
+    
+    %m.curid = curid;
+    %m.objectid = objectid;
+    m.cls = cls;
+    
+    %m.gt_box = bbox;
+    m.model = model;
+    m.models_name = 'dalal';
+    
     %figure(1)
     %clf
     %imagesc(warpI)
@@ -180,23 +173,6 @@ for i = 1:length(ids)
 end
 
 fprintf(1,'num skipped is %d\n',numskipped);
-
-model.w = reshape(mean(model.x,2),model.hg_size);
-model.w = model.w - mean(model.w(:));
-model.b = -100;
-model.nsv = zeros(prod(model.hg_size),0);
-model.svids = [];
-
-model.coarse_box = [];
-model.target_id = [];
-
-%m.curid = curid;
-%m.objectid = objectid;
-m.cls = cls;
-
-%m.gt_box = bbox;
-m.model = model;
-m.models_name = 'dalal';
 
 %Set up the negative set for this exemplars
 %CVPR2011 paper used all train images excluding category images
@@ -249,3 +225,32 @@ y1 = round(bbox(2)-pady);
 y2 = round(bbox(4)+pady);
 window = subarray(I, y1, y2, x1, x2, 1);
 warped = imresize(window, cropsize, 'bilinear');
+
+function [hg_size,ids] = get_hg_size(cls)
+%% Load ids of all images in trainval that contain cls
+
+VOCinit;
+[ids,gt] = textread(sprintf(VOCopts.clsimgsetpath,cls,'trainval'),...
+                  '%s %d');
+oks = find(gt==1);
+ids = ids(oks);
+%myRandomize;
+
+fprintf(1,'Computing mean size for class %s\n',cls);
+for i = 1:length(ids)
+  fprintf(1,'.');
+  curid = ids{i};  
+  recs = PASreadrecord(sprintf(VOCopts.annopath,curid));
+  objects = recs.objects;
+  
+  goods = find(ismember({objects.class},{cls}) & ([objects.difficult]==0));
+  objects = objects(goods);
+  bbs{i} = cat(1,objects.bbox);
+end
+
+bbs = cat(1,bbs{:});
+
+W = bbs(:,3)-bbs(:,1)+1;
+H = bbs(:,4)-bbs(:,2)+1;
+
+[hg_size] = get_bb_stats(H, W);
