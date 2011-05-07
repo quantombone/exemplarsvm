@@ -47,8 +47,8 @@ if nargin < 1
   return;
 end
 
-final_dir = ...
-    sprintf('%s/betas',VOCopts.localdir);
+% final_dir = ...
+%     sprintf('%s/betas',VOCopts.localdir);
 
 % if ~exist('fg','var')
 %   fprintf(1,'Loading default set of images\n');
@@ -92,9 +92,9 @@ if strcmp(setname,'voc')
   
 end
 
-if ~exist(final_dir','dir')
-  mkdir(final_dir);
-end
+% if ~exist(final_dir','dir')
+%   mkdir(final_dir);
+% end
 
 final_file = ...
     sprintf('%s/betas/%s_betas.mat',...
