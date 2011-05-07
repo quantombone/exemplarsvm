@@ -31,6 +31,8 @@ starter = tic;
 pause(PAUSE_TIME)
 
 iter = 1;
+%%TODO: change my userid tmalisie to something more generic (so
+%%      others can use this stuff on warp!)
 while 1
   [a,b]=unix(sprintf(['ssh warp.hpc1 "qstat | grep tmalisie" | awk' ...
                       ' ''{print($2)}'' | grep %s'],process));
