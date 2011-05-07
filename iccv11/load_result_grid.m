@@ -7,19 +7,28 @@ function grid = load_result_grid(models)
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 VOCinit;
 
-final_dir = ...
-    sprintf('%s/grids',VOCopts.localdir);
-if ~exist(final_dir,'dir')
-  mkdir(final_dir);
-end
+% final_dir = ...
+%     sprintf('%s/grids',VOCopts.localdir);
+% if ~exist(final_dir,'dir')
+%   mkdir(final_dir);
+% end
 
-if ~exist('models','var')  
-  [cls,mode] = load_default_class;
-  models = load_all_models(cls,mode);
-end
+% if ~exist('models','var')  
+%   [cls,mode] = load_default_class;
+%   models = load_all_models(cls,mode);
+% end
 
-final_file = ...
-    sprintf('%s/grids/%s_%s_grid.mat',VOCopts.localdir,'both',models{1}.cls);
+% final_file = ...
+%     sprintf('%s/grids/%s_%s_grid.mat',VOCopts.localdir,'both',models{1}.cls);
+
+curset = 'both'
+curcls = models{1}.cls;
+setname = [curset '.' curcls];
+
+final_file = sprintf('%s/applied/%s-%s.mat',VOCopts.localdir,setname, ...
+                     models{1}.models_name);
+
+
 
 if fileexists(final_file)
   fprintf(1,'Loading final file %s\n',final_file);
