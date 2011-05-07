@@ -1,4 +1,4 @@
-function apply_voc_exemplars(models)%, curset)
+function apply_voc_exemplars(models)
 %% Apply a set of models (raw exemplars, trained exemplars, dalals, etc) to a set of images.  Script can be ran in
 %% parallel with no arguments.  
 %% After running script, use grid=load_result_grid(models) to
@@ -23,20 +23,18 @@ curset = 'both';
 %end
 
 %Store exemplars for this class
-if ~exist('models','var')  
+if ~exist('models','var')
   [cls,mode] = load_default_class;
-  %models = load_all_models(cls,'exemplars');
   models = load_all_models(cls,mode);
 end
-
+  
 %Only allow display to be enabled on a machine with X
 [v,r] = unix('hostname');
-if strfind(r,'onega')==1
+if strfind(r,VOCopts.display_machine)==1
   display = 1;
 else
   display = 0;
 end
-
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
@@ -63,10 +61,14 @@ if display == 1
   %we apply results on in-class images from trainval
   curset = 'trainval';
   curcls = models{1}.cls;
+  
   bg = get_pascal_bg(curset,sprintf('%s',curcls));
 else
   bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
   fprintf(1,'bg length is %d\n',length(bg));
+  
+  %fprintf(1,'hacking using a small subset\n');
+  %bg = get_pascal_bg('trainval',models{1}.cls);
 end
 
 setname = [curset '.' models{1}.cls];
