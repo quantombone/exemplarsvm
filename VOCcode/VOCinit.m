@@ -2,15 +2,18 @@ clear VOCopts
 
 % Note: The following three directories must be set for your setup
 
-%This is the directory where we dump visualizations into
-VOCopts.dumpdir = '/nfs/baikal/tmalisie/labelme400/www/siggraph/';
-
 %devkitroot is where we write all the result files
 VOCopts.devkitroot = '/nfs/baikal/tmalisie/nips11/';
+
+%This is the directory where we dump visualizations into
+VOCopts.dumpdir = [VOCopts.devkitroot '/www/'];
 
 %datadir is where the PASCAL VOC datasets are installed (this
 %directory can be a read-only shared resource)
 VOCopts.datadir ='/nfs/hn38/users/sdivvala/Datasets/Pascal_VOC/';
+
+%In some scripts, I do something different if I'm on the display
+VOCopts.display_machine = 'onega';
 
 if length(VOCopts.devkitroot) == 0
   error('Error, paths not initialized in VOCinit.m\n');
