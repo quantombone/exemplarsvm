@@ -145,7 +145,7 @@ for i = 1:length(ids)
     
     if dalalmode == 1
       %Do the dalal-triggs anisotropic warping initialization
-      model = initialize_model_dt(I,bbox,GOAL_NCELLS,SBIN,hg_size);
+      model = initialize_model_dt(I,bbox,SBIN,hg_size);
     else
       bbox = expand_bbox(bbox,I);
       %Do default exemplar initialization
@@ -307,26 +307,6 @@ sbin = 8;
 modelsize = [round(h/sbin) round(w/sbin)];
 
 
-function warped = mywarppos(hg_size, I, sbin, bbox)
-
-% warped = warppos(name, model, c, pos)
-% Warp positive examples to fit model dimensions.
-% Used for training root filters from positive bounding boxes.
-
-pixels = hg_size * sbin;
-h = bbox(4) - bbox(2) + 1;
-w = bbox(3) - bbox(1) + 1;
-
-cropsize = (hg_size+2) * sbin;
-
-padx = sbin * w / pixels(2);
-pady = sbin * h / pixels(1);
-x1 = round(bbox(1)-padx);
-x2 = round(bbox(3)+padx);
-y1 = round(bbox(2)-pady);
-y2 = round(bbox(4)+pady);
-window = subarray(I, y1, y2, x1, x2, 1);
-warped = imresize(window, cropsize, 'bilinear');
 
 function [hg_size,ids] = get_hg_size(cls)
 %% Load ids of all images in trainval that contain cls
@@ -386,21 +366,3 @@ model.b = 0;
 
 [model.target_id] = get_target_id(model,I);
 model.coarse_box = model.target_id.bb;
-
-function model = initialize_model_dt(I,bbox,GOAL_NCELLS,SBIN,hg_size)
-%Get an initial model by cutting out a segment of a size which
-%matches the bbox
-
-warped = mywarppos(hg_size, I, SBIN, bbox);
-curfeats = features(warped, SBIN);
-model.x = curfeats(:);    
-model.params.sbin = SBIN;
-
-model.hg_size = size(curfeats);    
-model.w = curfeats - mean(curfeats(:));
-model.b = 0;
-
-%%When doing dt, we should use bbox
-%[model.target_id] = get_target_id(model,I);
-%model.coarse_box = model.target_id.bb;
-model.coarse_box = bbox;
