@@ -1,9 +1,11 @@
-function [Iex,alphamask] = get_exemplar_icon(models,index)
+function [Iex,alphamask] = get_exemplar_icon(models,index,flip)
 %given a cell array of models, show model at index
 
-flip = 0;
-if isfield(models{index},'FLIP_LR') && models{index}.FLIP_LR==1
-  flip = 1;
+if ~exist('flip','var')
+  flip = 0;
+  if isfield(models{index},'FLIP_LR') && models{index}.FLIP_LR==1
+    flip = 1;
+  end
 end
 
 if isfield(models{index},'I')
