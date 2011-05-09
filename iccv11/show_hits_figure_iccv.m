@@ -102,15 +102,13 @@ N = min(1,size(topboxes,1));
 for i = 1:N
 
   mid = topboxes(i,6);
-
+  flip = topboxes(i,7);
   hogpic = HOGpicture(models{topboxes(i,6)}.model.w);
-  if isfield(models{topboxes(i,6)},'FLIP_LR')
+  if flip == 1 %isfield(models{topboxes(i,6)},'FLIP_LR')
     hogpic = flip_image(hogpic);
   end
   
-  mid
-  Iex = get_exemplar_icon(models, mid);
-
+  Iex = get_exemplar_icon(models, mid, topboxes(i,7));
 
   Iex1 = imresize(chunks{i},[size(Iex,1) size(Iex,2)]);
   Iex1 = max(0.0,min(1.0,Iex1));
@@ -145,7 +143,7 @@ for i = 1:N
     id_string = sprintf('%s@%s',models{abs(mid)}.models_name,models{abs(mid)}.cls);
   end
   lrstring='';
-  if isfield(models{abs(mid)},'FLIP_LR')
+  if flip == 1 %%isfield(models{abs(mid)},'FLIP_LR')
     lrstring = '.LR';
   end
 
@@ -230,7 +228,7 @@ if exist('extraI','var')
     title(exemplar_overlay.overlay2.title);
     axis image
     axis off
-    
+
     if isfield(exemplar_overlay.overlay2,'faces')
       faces = exemplar_overlay.overlay2.faces;
       for q = 1:length(faces)
@@ -240,7 +238,7 @@ if exist('extraI','var')
           source = topboxes(1,:);
           target = models{source(6)}.gt_box;
           
-          if isfield(models{source(6)},'FLIP_LR')
+          if topboxes(1,7) == 1 %% isfield(models{source(6)},'FLIP_LR')
             target = flip_box(target,models{source(6)}.sizeI);
             f = flip_faces(f,models{source(6)}.sizeI);
             

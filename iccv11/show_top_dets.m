@@ -1,5 +1,7 @@
 function allbbs=show_top_dets(models,grid,target_directory,finalstruct)%final_boxes,final_maxos)
 %Show the top detections on a set of images
+%NOTE his also writes out bus transfer files (which can clobber
+%good results!)
 
 
 VOCinit;
