@@ -67,7 +67,7 @@ for i = 1:length(files)
     models{i}.model.b = 1000;
   end
   
-  models{i}.model.x = [];
+ % models{i}.model.x = [];
   models{i}.model.allx = [];
   models{i}.model.wtrace = [];
   models{i}.model.btrace = [];
