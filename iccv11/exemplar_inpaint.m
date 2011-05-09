@@ -21,6 +21,7 @@ VOCinit;
 
 
 curid = model.curid;
+curid = stuff.curid;
 I = im2double(imread(sprintf(VOCopts.imgpath, curid)));
 
 if 0
@@ -118,7 +119,7 @@ xform_cd = find_xform(g, d);
 % end
 
 [exemplar_overlay] = ...
-    load_exemplar_overlay(model, Iex, alphamask);
+    load_exemplar_overlay(model, Iex, alphamask, detection_box(7));
 
 [exemplar_overlay.segI,exemplar_overlay.mask] = ...
     insert_exemplar(I,exemplar_overlay, ...
@@ -126,12 +127,14 @@ xform_cd = find_xform(g, d);
 
 if strcmp(model.cls,'bus')
   [Iex2,alphamask2,faces] = get_geometry_icon({model},1);
-  [exemplar_overlay2] = ...
-      load_exemplar_overlay(model, Iex2, alphamask2);
-  
+
+  [exemplar_overlay2,Iex2] = ...
+      load_exemplar_overlay(model, Iex2, alphamask2, detection_box(7));
+
   [exemplar_overlay2.segI,exemplar_overlay2.mask] = ...
       insert_exemplar(I,exemplar_overlay2, ...
                       xform_cd);
+  
   exemplar_overlay2.Iex = Iex2;
   exemplar_overlay2.title = 'Qualitative Geometry';
   exemplar_overlay2.faces = faces;
@@ -142,7 +145,7 @@ else
   [Iexs,alphamasks] = get_seg_icon({model},1);
   if length(Iexs) > 0
     [exemplar_overlay2] = ...
-        load_exemplar_overlay(model, Iexs, alphamasks);
+        load_exemplar_overlay(model, Iexs, alphamasks,detection_box(7));
     
     [exemplar_overlay2.segI,exemplar_overlay2.mask] = ...
         insert_exemplar(I,exemplar_overlay2, ...
@@ -174,147 +177,148 @@ end
 
 return;
 
-figure(1)
-clf
-ha = tight_subplot(1, 1, 0, .1, .1);
-axes(ha(1));
+% figure(1)
+% clf
+% ha = tight_subplot(1, 1, 0, .1, .1);
+% axes(ha(1));
 
-%% Inside first tile we show the ground truth projection
-%axes(ha(1));
-imagesc(I)
+% %% Inside first tile we show the ground truth projection
+% %axes(ha(1));
+% imagesc(I)
 
-if SHOW_TITLES
-  title(sprintf('Detection %d: Test Image %s, OS=%.3f',...
-                stuff.rank,curid,maxos));
-end
+% if SHOW_TITLES
+%   title(sprintf('Detection %d: Test Image %s, OS=%.3f',...
+%                 stuff.rank,curid,maxos));
+% end
 
-if ~STEAL_SEGMENTATION
+% if ~STEAL_SEGMENTATION
 
-  if ~STEAL_3D
-    if maxos > MAXOS_THRESH
-      plot_bbox(gt_box, '', gt_color, gt_color, 1);
-    end
+%   if ~STEAL_3D
+%     if maxos > MAXOS_THRESH
+%       plot_bbox(gt_box, '', gt_color, gt_color, 1);
+%     end
     
-    if ~is_correct
-      plot_bbox(border_box, '', border_color, border_color, 0);
-    end
+%     if ~is_correct
+%       plot_bbox(border_box, '', border_color, border_color, 0);
+%     end
     
-    %always drop white border
-    %plot_bbox(border_box2, '', [0 0 0],[0 0 0], 0);
-  end
-  dcolor1 = [0 0 1];
-  dcolor2 = [.2 1 .2];
-  current_label = model.cls;
-  if STEAL_3D
-    dcolor1 = [0 1 0];
-    dcolor2 = [0 1 0];
-    current_label = '';
-  end
+%     %always drop white border
+%     %plot_bbox(border_box2, '', [0 0 0],[0 0 0], 0);
+%   end
+%   dcolor1 = [0 0 1];
+%   dcolor2 = [.2 1 .2];
+%   current_label = model.cls;
+%   if STEAL_3D
+%     dcolor1 = [0 1 0];
+%     dcolor2 = [0 1 0];
+%     current_label = '';
+%   end
   
-  %plot_bbox(gprime, current_label, dcolor1, dcolor2);
-  plot_bbox(d, current_label, dcolor1, dcolor2);
-end
+%   %plot_bbox(gprime, current_label, dcolor1, dcolor2);
+%   plot_bbox(d, current_label, dcolor1, dcolor2);
+% end
 
-axis image
-axis off
-%pause;
-%return;
-save_me_as_pdf(stuff,1);
+% axis image
+% axis off
+% %pause;
+% %return;
+% save_me_as_pdf(stuff,1);
 
-figure(2)
-clf
-ha = tight_subplot(1, 1, 0, .1, .1);
-axes(ha(1))
+% figure(2)
+% clf
+% ha = tight_subplot(1, 1, 0, .1, .1);
+% axes(ha(1))
 
-titler = 'Exemplar Overlay';
-if has_seg == 1
-  titler = 'Exemplar/Seg Overlay';
-end
+% titler = 'Exemplar Overlay';
+% if has_seg == 1
+%   titler = 'Exemplar/Seg Overlay';
+% end
 
-if length(extra_3d) > 0
-  %% Inside the second tile we show the 3D transfer
-  imagesc(insert_exemplar(I,extra_3d,xform_cd))
-  titler = '3D overlay';
-else
-  imagesc(insert_exemplar(I,exemplar_overlay,xform_cd))
-end
+% if length(extra_3d) > 0
+%   %% Inside the second tile we show the 3D transfer
+%   imagesc(insert_exemplar(I,extra_3d,xform_cd))
+%   titler = '3D overlay';
+% else
+%   imagesc(insert_exemplar(I,exemplar_overlay,xform_cd))
+% end
 
-if length(friends) > 0
-  titler = [titler sprintf(' + ''%s'' Transfer',friendclass{1})];
-end
+% if length(friends) > 0
+%   titler = [titler sprintf(' + ''%s'' Transfer',friendclass{1})];
+% end
 
-if SHOW_TITLES
-  title(titler);
-end
+% if SHOW_TITLES
+%   title(titler);
+% end
 
-for iii = 1:size(friendbb,1)
-  plot_bbox(apply_xform(friendbb(iii,:),xform_cd),friendclass{iii});
-end
+% for iii = 1:size(friendbb,1)
+%   plot_bbox(apply_xform(friendbb(iii,:),xform_cd),friendclass{iii});
+% end
 
-if has_seg==0 && length(extra_3d)==0
-  plot_bbox(gprime,model.cls, [0 0 1], [.2 1 .2])
-end
+% if has_seg==0 && length(extra_3d)==0
+%   plot_bbox(gprime,model.cls, [0 0 1], [.2 1 .2])
+% end
 
-%always drop white border
-%plot_bbox(border_box2, '', [0 0 0],[0 0 0], 0);
-%plot_bbox(border_box2, '', [1 1 1],[1 1 1], 0);
+% %always drop white border
+% %plot_bbox(border_box2, '', [0 0 0],[0 0 0], 0);
+% %plot_bbox(border_box2, '', [1 1 1],[1 1 1], 0);
 
-axis image
-axis off
+% axis image
+% axis off
 
-drawnow
-save_me_as_pdf(stuff,2);
+% drawnow
+% save_me_as_pdf(stuff,2);
 
-figure(3)
-clf
+% figure(3)
+% clf
 
-%% Inside second tile we show the exemplar image
-ha = tight_subplot(1, 1, 0, .1, .1);
-axes(ha(1));
-imagesc(Iex)
+% %% Inside second tile we show the exemplar image
+% ha = tight_subplot(1, 1, 0, .1, .1);
+% axes(ha(1));
+% imagesc(Iex)
 
-if SHOW_TITLES
-  title(sprintf('Exemplar %s.%d', model.curid, model.objectid));
-end
+% if SHOW_TITLES
+%   title(sprintf('Exemplar %s.%d', model.curid, model.objectid));
+% end
 
-f1 = [0 0 1];
-f2 = [1 0 0];
-for iii = 1:length(friends)
-  plot_bbox(friendbb(iii,:),friendclass{iii},f1,f2,1);
-end
-plot_bbox(g, model.cls, [0 0 1], [.2 1 .2],1)
+% f1 = [0 0 1];
+% f2 = [1 0 0];
+% for iii = 1:length(friends)
+%   plot_bbox(friendbb(iii,:),friendclass{iii},f1,f2,1);
+% end
+% plot_bbox(g, model.cls, [0 0 1], [.2 1 .2],1)
 
-axis image
-axis off
-save_me_as_pdf(stuff,3);
+% axis image
+% axis off
+% save_me_as_pdf(stuff,3);
 
-%%% if 3D, then show sliced exemplar and sliced 3D model
+% %%% if 3D, then show sliced exemplar and sliced 3D model
 
-if STEAL_3D
+% if STEAL_3D
 
-  figure(1)
-  clf
-  ha = tight_subplot(2, 1, .1, .1, .1);
-  axes(ha(1));
-  imagesc(exemplar_overlay.I)
-  axis image
-  axis off
-  title('Exemplar');
-  %save_me_as_pdf(stuff,4);
+%   figure(1)
+%   clf
+%   ha = tight_subplot(2, 1, .1, .1, .1);
+%   axes(ha(1));
+
+%   imagesc(exemplar_overlay.I)
+%   axis image
+%   axis off
+%   title('Exemplar');
+%   %save_me_as_pdf(stuff,4);
   
-  %figure(1)
-  %clf
-  %ha = tight_subplot(1, 1, 0, .1, .1);
-  axes(ha(2));
-  resI = pad_image(extra_3d.I,-20);
-  resalpha = pad_image(extra_3d.alphamask,-20);
-  resI(find(repmat(resalpha==0,[1 1 3])))=1;
-  imagesc(resI)
-  axis image
-  axis off
-  title('3D Model')
-  save_me_as_pdf(stuff,5);
-end
+%   %figure(1)
+%   %clf
+%   %ha = tight_subplot(1, 1, 0, .1, .1);
+%   axes(ha(2));
+%   resI = pad_image(extra_3d.I,-20);
+%   resalpha = pad_image(extra_3d.alphamask,-20);
+%   resI(find(repmat(resalpha==0,[1 1 3])))=1;
+%   imagesc(resI)
+%   axis image
+%   axis off
+%   title('3D Model')
+%   save_me_as_pdf(stuff,5);
+% end
 
 % function snapbox = snap_to_pixel_grid(box, cb)
 % %% here we take the box in boxes which has non-integer locations
@@ -388,8 +392,8 @@ extra_3d.box = exemplar_frame;
 extra_3d.I = subI;
 extra_3d.alphamask = submask;
 
-function [exemplar_overlay] = ...
-    load_exemplar_overlay(model, Iex, alphamask)
+function [exemplar_overlay,Iex] = ...
+    load_exemplar_overlay(model, Iex, alphamask, flip)
 
 
 %has_seg = 0;
@@ -404,10 +408,18 @@ exemplar_overlay.I = subI;
 exemplar_overlay.alphamask = alphamask;
 %=v2e0h;exemplar_overlay.I = exemplar_overlay.I.*(repmat(alphamask,[1 1 3]));
 
-if isfield(model,'FLIP_LR') && model.FLIP_LR == 1
+if flip == 1 %%isfield(model,'FLIP_LR') && model.FLIP_LR == 1
   exemplar_overlay.I = flip_image(exemplar_overlay.I);
   exemplar_overlay.alphamask = ...
       flip_image(exemplar_overlay.alphamask);
+  Iex = flip_image(Iex);
+  %fprintf(1,'flipped some\n');
+  %% flip the faces
+  %if exist('faces','var')
+  %  faces = cellfun2(@(x)flip_faces(x,size(Iex)),faces);
+  %end
+
+
 end
 
 function [I2,mask] = insert_exemplar(I,overlay,xform_cd)
