@@ -79,7 +79,7 @@ if dalalmode == 1
 end
 
 results_directory = ...
-    sprintf('%s/exemplars%s/',VOCopts.localdir,DTstring);
+    sprintf('%s/%s/',VOCopts.localdir,mode);
 
 fprintf(1,'Writing Exemplars of class %s to directory %s\n',cls,results_directory);
 
