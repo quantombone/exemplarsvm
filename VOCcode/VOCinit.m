@@ -7,6 +7,7 @@ VOCopts.devkitroot = '/nfs/baikal/tmalisie/nips11/';
 
 %This is the directory where we dump visualizations into
 VOCopts.dumpdir = [VOCopts.devkitroot '/www/'];
+VOCopts.wwwdir = [VOCopts.devkitroot '/www/'];
 
 %datadir is where the PASCAL VOC datasets are installed (this
 %directory can be a read-only shared resource)
