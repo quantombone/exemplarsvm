@@ -55,6 +55,18 @@ t{2} = t2;
 function [resstruct,t] = localizemeHOGdriver(I, models, ...
                                              localizeparams)
 
+adjust = 0;
+if isfield(models{1},'models_name') ...
+      && strfind(models{1}.models_name,'-ncc')
+%if isfield(localizeparams,'ADJUST_DISTANCES') && ...
+%      localizeparams.ADJUST_DISTANCES == 1
+  adjust = 1;
+end
+
+oldsave = localizeparams.SAVE_SVS;
+localizeparams.SAVE_SVS = 1;
+
+
 %NOTE: this function takes as input "t" which is interpreted as an
 %image, but then later returns it as an output parameter
 N = length(models);
@@ -190,7 +202,7 @@ for level = length(t.hog):-1:1
 
       if size(ws{exid},1)*size(ws{exid},2) == 1
         curq = cellnorms2;
-      else  
+      else
         shiftedtop = ...
             (circshift2(cellnorms2_ii,[size(ws{exid},1) ...
                     0]));
@@ -203,7 +215,7 @@ for level = length(t.hog):-1:1
             (circshift2(cellnorms2_ii,[size(ws{exid},1) ...
                     size(ws{exid},2)]));
         
-        curq = cellnorms2_ii - shiftedtop - shiftedleft + shiftedboth;    
+        curq = cellnorms2_ii - shiftedtop - shiftedleft + shiftedboth;
         curq = circshift2(curq,-[size(ws{exid},1) size(ws{exid},2)]+1);
         
         curq = curq(1:size(rootmatch{exid},1),...
@@ -217,7 +229,7 @@ for level = length(t.hog):-1:1
     hg_size = size(ws{exid});
 
     [aa,indexes] = sort(cur_scores(:),'descend');
-    NKEEP = sum((aa>maxers{exid}) & (aa>=localizeparams.thresh));    
+    NKEEP = sum((aa>maxers{exid}) & (aa>=localizeparams.thresh));
     sss = size(ws{exid});
     
     [uus,vvs] = ind2sub(rmsizes{exid}(1:2),...
@@ -249,8 +261,6 @@ for level = length(t.hog):-1:1
           axis image
           axis off
           drawnow
-
-          keyboard
         end
          
         ip.flip = 1;
@@ -288,6 +298,34 @@ else
   resstruct.support_grid = cell(0,1);
 end
 fprintf(1,'\n');
+
+if adjust == 1
+  for j = 1:length(resstruct.id_grid)
+    if length(resstruct.id_grid{j})==0
+      continue
+    end
+    xs = cat(2, ...
+             resstruct.support_grid{j}{:});
+    norms = sqrt(sum(xs.^2,1));
+    xs = xs ./ repmat(norms,size(xs,1),1);
+    newd =  xs'* ...
+            (models{j}.model.x)/norm(models{j}.model.x);
+    [aa,bb] = sort(newd, ...
+                   'descend');
+    resstruct.score_grid{j} = aa';
+    resstruct.id_grid{j} = ...
+        resstruct.id_grid{j}(bb);
+    resstruct.support_grid{j} = ...
+        resstruct.support_grid{j}(bb);
+  end
+  %% Here we adjust things with a
+  %new distance matrix
+  if oldsave == 0
+    resstruct.support_grid = [];
+  end
+
+end
+  
 
 %% Do NMS (nothing happens if the field is turned off, or absent)
 resstruct = prune_nms(resstruct,localizeparams);
