@@ -27,7 +27,8 @@ if ~exist('models','var')
   [cls,mode] = load_default_class;
   models = load_all_models(cls,mode);
 end
-  
+
+
 %Only allow display to be enabled on a machine with X
 [v,r] = unix('hostname');
 if strfind(r,VOCopts.display_machine)==1
@@ -49,6 +50,7 @@ localizeparams.lpo = 10;
 localizeparams.SAVE_SVS = 0;
 localizeparams.FLIP_LR = 1;
 localizeparams.NMS_MINES_OS = 0.5;
+localizeparams.ADJUST_DISTANCES = 1;
 
 %if strcmp(models{1}.models_name,'dalal')
 %  localizeparams.TOPK = 100;
