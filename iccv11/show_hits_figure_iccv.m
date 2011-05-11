@@ -170,7 +170,7 @@ if exist('extraI','var')
   plot_bbox(clipped_top,'E',[0 1 0],[0 1 0],0,[2 1]);
   axis image
   axis off
-  title('Exemplar Inpainting')
+  title(sprintf('Exemplar Inpainting: %.3f',topboxes(i,end)))
   
   if add_one == 1
   %transfer objects here

@@ -3,8 +3,11 @@ function allbbs = show_top_transfers(models,grid,target_directory,finalstruct)%f
 %NOTE his also writes out bus transfer files (which can clobber
 %good results!)
 
-
 VOCinit;
+
+%finalstruct.basedir = sprintf('/nfs/baikal/tmalisie/labelme400/www/voc/iccv11/%s/',...
+%                  VOCopts.dataset);
+
 
 %finalstruct.basedir = '/nfs/baikal/tmalisie/labelme400/www/voc/iccv11/VOC2007/newones/';
 models = add_sizes_to_models(models);
@@ -57,6 +60,8 @@ bbs = cat(1,final_boxes{:});
 imids = cat(1,imids{:});
 moses = [final_maxos{:}];
 [aa,bb] = sort(bbs(:,end),'descend');
+
+
 
 
 %% only good ones now!
@@ -163,12 +168,13 @@ for k = 1:maxk
     osmat = getosmatrix_bb(allbb,bbs(bb(counter),:));
     goods = find(osmat>.5);
     allbb = allbb(goods,:);
-    allbb(:,end) = allbb(:,end)+1;
+    allbb(:,end) = allbb(:,end);
     %allbb = calibrate_boxes(allbb,finalstruct.M.betas);
     allbb = nms_within_exemplars(allbb,.5);
     [alpha,beta] = sort(allbb(:,end),'descend');
     allbb = allbb(beta,:);
-    
+
+
     %rawhits = ...
     %    finalstruct.nbrlist{target_image_id}{target_cluster_id};
     %curb = finalstruct.pre_nms_boxes{target_image_id}(rawhits,:);
@@ -216,6 +222,8 @@ for k = 1:maxk
     exemplar_overlay = exemplar_inpaint(allbb(1,:), ...
                                         models{allbb(1,6)}, ...
                                         stuff);
+    
+    allbb(1,end)
 
 
     if TARGET_BUS > -1
@@ -262,36 +270,55 @@ for k = 1:maxk
 
     drawnow
     
-%     output.I = I;
-%     output.result = exemplar_overlay.segI;
-%     output.WARNINGgt = gtim;
-    
-%     try
-%       dfile = sprintf('/nfs/onega_no_backups/users/ashrivas/buses/%s.mat',curid);
-%       dresult = load(dfile);
-%       output.dresult = dresult.rim;
-%     catch
-%       output.dresult = []; %2*ones(size(output.I,1),size(output.I,2));
-%     end
-    
-%     save(sprintf('/nfs/baikal/tmalisie/iccvres/finalbusmats/%05d.mat', ...
-%                  k),'output');
+     output.I = I;
+     output.result = exemplar_overlay.segI;
+     
+     if 0
+       %% WARNING this is for buses
+     imagesc(exemplar_overlay.overlay2.segI)
+     masky = exemplar_overlay.overlay2.mask;
+     [uu,vv] = find(masky);
+     masky(min(uu):max(uu),min(vv):max(vv)) = ...
+         imresize(exemplar_overlay.overlay2.alphamask,[range(uu)+1 range(vv)+1],'nearest');
 
-     if isfield(finalstruct,'basedir')
-      filer = sprintf('%s/%s_%05d.pdf',finalstruct.basedir,models{1}.cls,k);
-      %      set(gcf,'PaperPosition',[0 0 2 6])
-      set(gcf,'PaperPosition',[0 0 2*NR(1) 2*NR(2)],...
-        'PaperSize',[2*NR(1) 2*NR(2)]);
-      
-      print(gcf,'-dpdf',filer);
-      filer2 = filer;
-      filer2(end-2:end) = 'png';
-      print(gcf,'-dpng',filer2);
-    else
-      allbbs{end+1} = allbb;
-      allbb(1,7)
-      pause
+     %masky(find(masky)) = exemplar_overlay.overlay2.alphamask(i2);
+     output.result = (exemplar_overlay.overlay2.segI.*repmat(masky,[1 1 3]));
+     output.WARNINGgt = gtim;
     end
+     % try
+     %   dfile = sprintf('/nfs/onega_no_backups/users/ashrivas/buses/%s.mat',curid);
+     %   dresult = load(dfile);
+     %   output.dresult = dresult.rim;
+     % catch
+        output.dresult = []; %2*ones(size(output.I,1),size(output.I,2));
+     % end
+    
+     save(sprintf('/nfs/baikal/tmalisie/iccvres/finalbusmats/%05d.mat', ...
+                  k),'output');
+
+     %if isfield(finalstruct,'basedir')     
+     calib_string = '';
+     if isfield(finalstruct,'M') && length(finalstruct.M)>0 && isfield(finalstruct.M,'betas')
+       calib_string = '-calibrated';
+     end
+
+     filer = sprintf('%s/transfers/%s_%s%s_%05d.pdf',VOCopts.wwwdir,models{1}.cls,models{1}.models_name,calib_string,k);
+     set(gcf,'PaperPosition',[0 0 2*NR(1) 2*NR(2)],...
+             'PaperSize',[2*NR(1) 2*NR(2)]);
+     
+     %print(gcf,'-dpdf',filer);
+     filer2 = filer;
+     filer2(end-2:end) = 'png';
+     [bd,tmp,tmp] = fileparts(filer2);
+     if ~exist(bd,'dir')
+       mkdir(bd);
+     end
+     print(gcf,'-dpng',filer2);
+     
+     allbbs{end+1} = allbb;
+     allbb(1,7)
+     
+
   
     
     %paintfiler = ...

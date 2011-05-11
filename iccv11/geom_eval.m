@@ -1,6 +1,8 @@
 function geom_eval
 %evaluate geometry and segmentation
 
+
+
 basedir = '/nfs/baikal/tmalisie/iccvres/finalbusmats/';
 files = dir([basedir '*mat']);
 rows = cell(0,1);
@@ -65,7 +67,9 @@ for i = 1:length(files)
 
   unique(myseg(:))
   unique(gtseg(:))
+ 
   counts_me = counts_me + sparse(myseg(fg),gtseg(fg),1,10,10);
+ 
   counts_derek = counts_derek + sparse(dseg(fg),gtseg(fg),1,10,10);
   
   counts_me(3:5,3:5)
@@ -101,8 +105,7 @@ for i = 1:length(files)
   dumb_score(end+1) = sum(gtfg(:)==0);
   os_score(end+1) = getosmatrix(double(myfg(:)),double(gtfg(:)));
   total = total + length(myfg(:));
-  
-  
+ 
   myc = myc + sparse(myfg(:)+1,gtfg(:)+1,1,2,2);
   boxc = boxc + sparse(myfg2(:)+1,gtfg(:)+1,1,2,2);
   
@@ -111,4 +114,3 @@ for i = 1:length(files)
   %rows{end+1} = superI;
 end
 
-keyboard
