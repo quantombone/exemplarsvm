@@ -57,25 +57,12 @@ end
 oldsave = localizeparams.SAVE_SVS;
 localizeparams.SAVE_SVS = 1;
 
-
-%NOTE: this function takes as input "t" which is interpreted as an
-%image, but then later returns it as an output parameter
 N = length(models);
 ws = cellfun2(@(x)x.model.w,models);
 bs = cellfun2(@(x)x.model.b,models);
 
 %NOTE: all exemplars in this set must have the same sbin
 sbin = models{1}.model.params.sbin;
-
-%if ~exist('SAVE_SVS','var')
-%  SAVE_SVS = 0;
-%end
-
-%if enabled, do NN computation using integral images on cell norms
-%instead of just sliding with fconv
-%if ~exist('NN_MODE','var')
-%  NN_MODE = 0;
-%end
   
 % if only one input argument is specified, then just compute the
 % pyramid and exit
@@ -103,23 +90,13 @@ if isnumeric(I)
   
   clear t
   t.size = size(I);
-  %t.I = I;
+
   
   fprintf(1,'Localizing %d in I=[%dx%d@%d%s]',N,...
           t.size(1),t.size(2),localizeparams.lpo,flipstring);
 
   %Compute pyramid
-  [t.hog,t.scales] = featpyramid2(I, sbin, localizeparams.lpo);
-
-  %maxscale = 50/min(size(t.I,1),size(t.I,2));
-  %maxscale = .5;
-  %t.hog = t.hog(t.scales<=maxscale);
-  %t.scales = t.scales(t.scales<=maxscale);
-
-  
-  hhh = ceil(1+max(cellfun(@(x)max([size(x,1) size(x,2)]),ws))/2);
-  
-  %fprintf(1,'HACK-no-PAD');
+  [t.hog,t.scales] = featpyramid2(I, sbin, localizeparams.lpo);  
   hhh = 2;
   t.padder = hhh; 
   for level = 1:length(t.hog)
@@ -161,7 +138,7 @@ score_grid = cell(N,1);
 id_grid = cell(N,1);
 support_grid = cell(N,1);
 for q = 1:N
-  maxers{q} = -100000;
+  maxers{q} = -inf;
 end
 resstruct.padder = t.padder;
 
@@ -291,6 +268,7 @@ end
 fprintf(1,'\n');
 
 if adjust == 1
+  %% Here we run an auxilliary distance metric for detections
   for j = 1:length(resstruct.id_grid)
     if length(resstruct.id_grid{j})==0
       continue
@@ -314,23 +292,10 @@ if adjust == 1
   if oldsave == 0
     resstruct.support_grid = [];
   end
-
 end
-  
 
 %% Do NMS (nothing happens if the field is turned off, or absent)
 resstruct = prune_nms(resstruct,localizeparams);
-
-%sizeI = size(I);
-% %let everybody know we are flipped
-% if isfield(localizeparams,'FLIP_LR') && ...
-%       (localizeparams.FLIP_LR == 1)
-%   for i = 1:length(resstruct.id_grid)
-%     for j = 1:length(resstruct.id_grid{i})
-%       resstruct.id_grid{i}{j}.FLIP_LR = 1;
-%     end
-%   end
-% end
 
 function rs = prune_nms(rs, params)
 %Prune via nms to eliminate redundant detections

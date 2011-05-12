@@ -5,27 +5,19 @@ function apply_voc_exemplars(models)
 %% load results
 %
 %% models:           input cell array of models (try models=load_all_models)
-%% curset:           'trainval' or 'test'
 
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-%%If enabled, do not save work, only display results
-%display = 1;
+%we save results every NIMS_PER_CHUNK images
+NIMS_PER_CHUNK = 10;
 
-%if enabled, do the application on the LR flips of the testing
-%images (this imitates doubling the exemplars)
 
 VOCinit;
 curset = 'both';
 
-%if ~exist('curset','var')
-%curset = 'trainval';
-%end
-
 %Store exemplars for this class
 if ~exist('models','var')
-  [cls,mode] = load_default_class;
-  models = load_all_models(cls,mode);
+  models = load_all_models;
 end
 
 %Only allow display to be enabled on a machine with X
@@ -40,16 +32,10 @@ if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
 end
 
-%we save results every NIMS_PER_CHUNK images
-NIMS_PER_CHUNK = 10;
-
-localizeparams.thresh = -1.0;
-localizeparams.TOPK = 10;
-localizeparams.lpo = 10;
-localizeparams.SAVE_SVS = 0;
-localizeparams.FLIP_LR = 1;
-localizeparams.NMS_MINES_OS = 0.5;
-localizeparams.ADJUST_DISTANCES = 1;
+localizeparams = get_default_mining_params;
+if length(strfind(models{1}.models_name,'-ncc'))
+  localizeparams.ADJUST_DISTANCES = 1;
+end
 
 %if strcmp(models{1}.models_name,'dalal')
 %  localizeparams.TOPK = 100;
@@ -61,15 +47,11 @@ if display == 1
   %If display is enabled, we must be on a machine running X, thus
   %we apply results on in-class images from trainval
   curset = 'trainval';
-  curcls = models{1}.cls;
-  
+  curcls = models{1}.cls;  
   bg = get_pascal_bg(curset,sprintf('%s',curcls));
 else
   bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
   fprintf(1,'bg length is %d\n',length(bg));
-  
-  %fprintf(1,'hacking using a small subset\n');
-  %bg = get_pascal_bg('trainval',models{1}.cls);
 end
 
 setname = [curset '.' models{1}.cls];
