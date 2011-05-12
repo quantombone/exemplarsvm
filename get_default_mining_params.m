@@ -3,6 +3,7 @@ function mining_params = get_default_mining_params
 %exemplar svm and the visual memex network
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
+%Turn on detection on image flips
 mining_params.FLIP_LR = 1;
 
 %maximum number of mining iterations
@@ -34,6 +35,12 @@ mining_params.MAX_WINDOWS_PER_IMAGE = 1000;
 %Levels-per-octave defines how many levels between 2x sizes in pyramid
 mining_params.lpo = 10;
 
+%By default dont save feature fectors of detections
+mining_params.SAVE_SVS = 0;
+
+mining_params.thresh = -1;
+mining_params.TOPK = 10;
+
 %Maximum number of negatives to mine before SVM kicks in (this
 %defines one iteration)
 mining_params.MAX_WINDOWS_BEFORE_SVM = 2000;
@@ -58,7 +65,7 @@ mining_params.max_negatives = 1000;
 
 %%if less than 1.0, then we apply nms to detections so that we don't have
 %%too many redundant windows
-mining_params.NMS_MINES_OS = 0.8;
+mining_params.NMS_MINES_OS = 0.5;
 
 %if non-zero, then skip detection at any objects
 mining_params.SKIP_GTS_ABOVE_THIS_OS = 10.0;
