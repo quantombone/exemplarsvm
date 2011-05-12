@@ -10,6 +10,10 @@ function [resstruct,t] = localizemeHOG(I, models, localizeparams)
 % t: the feature pyramid output
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
+if ~exist('localizeparams','var')
+  localizeparams = get_default_mining_params;
+end
+
 doflip = 0;
 if localizeparams.FLIP_LR == 1
   doflip = 1;
@@ -37,29 +41,16 @@ for q = 1:length(rs1.score_grid)
   rs1.id_grid{q} = cat(2,rs1.id_grid{q},rs2.id_grid{q});
 end
 
-
 resstruct = rs1;
 t = cell(2,1);
 t{1} = t1;
 t{2} = t2;
 
-% bb=cellfun2(@(x)x.bb,resstruct.id_grid{1});
-% bbs=cat(1,bb{:});
-
-% if sum(bbs(:,3)<0)>0
-%   fprintf(1,'bad stuff with bb\n');
-%   keyboard
-% end
-
-
 function [resstruct,t] = localizemeHOGdriver(I, models, ...
                                              localizeparams)
-
 adjust = 0;
 if isfield(models{1},'models_name') ...
-      && strfind(models{1}.models_name,'-ncc')
-%if isfield(localizeparams,'ADJUST_DISTANCES') && ...
-%      localizeparams.ADJUST_DISTANCES == 1
+      && length(strfind(models{1}.models_name,'-ncc'))>0
   adjust = 1;
 end
 
