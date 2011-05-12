@@ -2,9 +2,10 @@ function [status,m] = pool_train(fff)
 %use the worker pool to do super fast training
 
 status = 0;
-BASEDIR = '/nfs/baikal/tmalisie/pool/';
+%BASEDIR = '/nfs/baikal/tmalisie/pool/';
+BASEDIR = get_pool_directory;
 %filer = dir([BASEDIR fff]);
-file = [BASEDIR fff];%filer(1).name];
+file = [BASEDIR fff];
 m = load(file);
 m = m.m;
 
@@ -56,7 +57,7 @@ end
 Isv = get_sv_stack(m,bg,NNN);
 figure(1)
 clf
-imagesc(Isv);%cat(2,pad_image(Isv,10),pad_image(Isv2,10)))
+imagesc(Isv);
 drawnow
 
 % r = m.model.w(:)'*superx-m.model.b;
@@ -118,13 +119,13 @@ if ~isfield(m.model,'K')
   m.model.K = 10;
 end
 
-VOCinit;
-target = find(ismember(m.cls,VOCopts.classes));
-[aa,bb] = sort((maxos>.5)+r'+(maxclass==target),'descend');
+%VOCinit;
+%target = find(ismember(m.cls,VOCopts.classes));
+%[aa,bb] = sort((maxos>.5)+r'+(maxclass==target),'descend');
 %% find top K things, but do nms on them
 %write function that does NMS on a set of detections from multiple images
 
-m.model.x = msave.model.nsv(:,bb(1:m.model.K));
+%m.model.x = msave.model.nsv(:,bb(1:m.model.K));
 
 [m] = do_svm(m, mining_params);
 save(file,'m');

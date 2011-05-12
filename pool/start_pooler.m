@@ -195,6 +195,7 @@ mining_params.TOPK = data.localizeparams.TOPK;
 mining_params.lpo = data.localizeparams.lpo;
 mining_params.SAVE_SVS = 1;
 mining_params.FLIP_LR = data.localizeparams.FLIP_LR;
+%localizeparams.NMS_MINES_OS = 0.5;
 
 %%NOTE: this should be carefully set to not blow things up too heavily
 mining_params.MAX_WINDOWS_BEFORE_SVM = 2000;
