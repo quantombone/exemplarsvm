@@ -40,6 +40,7 @@ localizeparams.TOPK = TOPK_FINAL;
 localizeparams.lpo = mining_params.lpo;
 localizeparams.SAVE_SVS = KEEPSV;
 localizeparams.FLIP_LR = mining_params.FLIP_LR;
+localizeparams.NMS_MINES_OS = mining_params.NMS_MINES_OS;
 
 for i = 1:length(mining_queue)
   index = mining_queue{i}.index;
