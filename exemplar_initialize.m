@@ -13,6 +13,18 @@ if ~exist('cls','var')
   [cls,mode] = load_default_class;
 end
 
+if strmatch(cls,'all')
+  classes = VOCopts.classes;
+  myRandomize;
+  r = randperm(length(classes));
+  classes = classes(r);
+  for i = 1:length(classes)
+    exemplar_initialize(classes{i},mode);
+  end
+  return;
+end
+
+
 cache_dir =  ...
     sprintf('%s/models/',VOCopts.localdir);
 
@@ -73,7 +85,8 @@ DTstring = '';
 if dalalmode == 1
   %Find the best window size from taking statistics over all
   %training instances of matching class
-  hg_size = get_hg_size(cls);
+  hg_size = [5 5];
+  %hg_size = get_hg_size(cls);
   DTstring = '-dt';
   %hg_size = [7 10];
 end
@@ -135,6 +148,7 @@ for i = 1:length(ids)
       continue
     end
         
+    anno = recs.objects(objectid);
     bbox = recs.objects(objectid).bbox;
     gt_box = bbox;
     I = Ibase;
@@ -173,6 +187,7 @@ for i = 1:length(ids)
     m.objectid = objectid;
     m.cls = cls;    
     m.gt_box = gt_box;
+    m.anno = anno;
     m.model = model;
     m.sizeI = size(I);
     
