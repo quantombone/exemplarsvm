@@ -28,7 +28,6 @@ if ~exist('models','var')
   models = load_all_models(cls,mode);
 end
 
-
 %Only allow display to be enabled on a machine with X
 [v,r] = unix('hostname');
 if strfind(r,VOCopts.display_machine)==1
