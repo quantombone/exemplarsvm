@@ -2,6 +2,9 @@ function exemplar_initialize(cls,mode)
 %% Initialize script which writes out initial model files for all
 %% exemplars of a single category from PASCAL VOC trainval set
 %% Script is parallelizable (and dalalizable!)
+%% There are several different initialization modes
+%% DalalMode: Warp instances to mean frame from in-class exemplars
+%% Globalmode: Warp instances to hardcoded [8 8] frame
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 VOCinit;
 
@@ -24,6 +27,18 @@ if strmatch(cls,'all')
   return;
 end
 
+%If this is enabled, then the features will be scaled to the
+%canonical dalal-size
+dalalmode = 0;
+if strfind(mode,'-dt')
+  dalalmode = 1;
+  fprintf(1,' --##-- DALAL_MODE enabled --##--');
+elseif strfind(mode,'-gt')
+  dalalmode = 2;
+  fprintf(1,' --##-- GLOBAL_DALAL_MODE enabled --##--');
+else
+  dalalmode = 0;
+end
 
 cache_dir =  ...
     sprintf('%s/models/',VOCopts.localdir);
@@ -34,18 +49,6 @@ cache_file = ...
 if fileexists(cache_file)
   fprintf(1,'No need to initialize, because models already stored\n');
   return;
-end
-
-%If this is enabled, then the features will be scaled to the
-%canonical dalal-size
-if strfind(mode,'-dt')
-  dalalmode = 1;
-else
-  dalalmode = 0;
-end
-
-if dalalmode == 1
-  fprintf(1,' --##-- DALAL_MODE enabled --##--');
 end
 
 %Goal ncells gives us a constraint on how many cells we cut the
@@ -66,7 +69,8 @@ else
   display = 0;
 end
 
-display = 0;
+%always turn off display
+%display = 0;
 
 
 fprintf(1,'Class = %s\n',cls);
@@ -85,10 +89,11 @@ DTstring = '';
 if dalalmode == 1
   %Find the best window size from taking statistics over all
   %training instances of matching class
-  hg_size = [5 5];
-  %hg_size = get_hg_size(cls);
+  hg_size = get_hg_size(cls);
   DTstring = '-dt';
-  %hg_size = [7 10];
+elseif dalalmode == 2
+  hg_size = [8 8];
+  DTstring = '-gt';
 end
 
 results_directory = ...
@@ -252,10 +257,13 @@ masker = cell(length(f_real),1);
 sizer = zeros(length(f_real),2);
 
 for a = 1:length(f_real)
+  goods = double(sum(f_real{a}.^2,3)>0);
+  
   masker{a} = max(0.0,min(1.0,imresize(I2,[size(f_real{a},1) size(f_real{a}, ...
                                                   2)])));
   [tmpval,ind] = max(masker{a}(:));
-  masker{a} = (masker{a}>.1);
+  masker{a} = (masker{a}>.1) & goods;
+
   if sum(masker{a}(:))==0
     [aa,bb] = ind2sub(size(masker{a}),ind);
     masker{a}(aa,bb) = 1;
@@ -269,11 +277,23 @@ function [targetlvl,mask] = get_ncell_mask(GOAL_NCELLS, masker, ...
                                                         sizer)
 %Get a the mask and features, where mask is closest to NCELL cells
 %as possible
+
+MAXDIM = 10;
+fprintf(1,'maxdim is %d\n',MAXDIM);
+for i = 1:size(masker)
+  [uu,vv] = find(masker{i});
+  if ((max(uu)-min(uu)+1) <= MAXDIM) && ...
+        ((max(vv)-min(vv)+1) <= MAXDIM)
+    targetlvl = i;
+    mask = masker{targetlvl};
+    return;
+  end
+end
+fprintf(1,'didnt find a match\n');
+%Default to older strategy
 ncells = prod(sizer,2);
 [aa,targetlvl] = min(abs(ncells-GOAL_NCELLS));
-
 mask = masker{targetlvl};
-    
 
 function target_id = get_target_id(model,I)
 %Get the id of the top detection
@@ -374,10 +394,15 @@ I_real_pad = pad_image(I,ARTPAD);
                                                 sizer);
 [uu,vv] = find(mask);
 curfeats = f_real{targetlvl}(min(uu):max(uu),min(vv):max(vv),:);
-model.hg_size = size(curfeats);    
-
+model.hg_size = size(curfeats);
+fprintf(1,'hg_size = [%d %d]\n',model.hg_size(1),model.hg_size(2));
 model.w = curfeats - mean(curfeats(:));
 model.b = 0;
 
 [model.target_id] = get_target_id(model,I);
 model.coarse_box = model.target_id.bb;
+%model.mask = (sum(curfeats.^2,3)~=0);
+
+%figure(2)
+%imagesc(model.mask)
+%drawnow
