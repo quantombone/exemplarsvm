@@ -48,7 +48,10 @@ if display == 1
   %we apply results on in-class images from trainval
   curset = 'trainval';
   curcls = models{1}.cls;  
-  bg = get_pascal_bg(curset,sprintf('%s',curcls));
+  %bg = get_pascal_bg(curset,sprintf('%s',curcls));
+  %even better yet, we apply on the images from where the models
+  %came from
+  bg = cellfun2(@(x)sprintf(VOCopts.imgpath,x.curid),models);
 else
   bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
   fprintf(1,'bg length is %d\n',length(bg));
@@ -119,6 +122,8 @@ for i = 1:length(ordering)
     boxes = coarse_boxes;
     %map GT boxes from training images onto test image
     boxes = adjust_boxes(coarse_boxes,models);
+
+
     
     if display == 1       
       if size(boxes,1)>=1
