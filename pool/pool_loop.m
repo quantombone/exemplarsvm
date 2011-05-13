@@ -5,7 +5,9 @@ function pool_loop
 
 %allfiles = dir(['/nfs/baikal/tmalisie/nips11/local/VOC2007/exemplars/*train*mat']);
 
-allfiles = dir(['/nfs/baikal/tmalisie/nips11/local/VOC2007/exemplars/000540.1.train.mat'])
+%allfiles =
+%dir(['/nfs/baikal/tmalisie/nips11/local/VOC2007/exemplars/000540.1.train.mat'])
+allfiles = dir(['/nfs/baikal/tmalisie/nips11/local/VOC2007/exemplars/002810.1.dog.mat']);
 %allfiles =
 %dir(['/nfs/baikal/tmalisie/nips11/local/VOC2007/dalals/dalal.train.mat']);
 
