@@ -1,13 +1,13 @@
 %classes =...
 %{'car','dog','cat','bird','chair','pottedplant'};%'tvmonitor','bottle','cow'};
-classes = {'all'};
+classes = {'dog'};
 
 for i = 1:length(classes)
 %% Here is the main script for doing the NN baseline
 
 %Set default class and detector mode, by writing into the default
 %file, which our mao,2n-.0mpreduces will be reading.
-save_default_class(classes{i},'exemplars-dt');
+save_default_class(classes{i},'exemplars');
 return;
 %Run an "exemplar_initialize" mapreduce
 timing.initialize = spawn_job('ei',50,2);
