@@ -67,7 +67,7 @@ Ibase = pad_image(Ibase,PADDER);
 
 cb = m.model.coarse_box+PADDER;
 
-Ibase = Ibase(cb(2):cb(4), cb(1):cb(3),:);
+Ibase = Ibase(round(cb(2):cb(4)), round(cb(1):cb(3)),:);
 catch
   Ibase = zeros(m.model.hg_size(1)*10,m.model.hg_size(2)*10,3);
 end
