@@ -59,16 +59,11 @@ for i = 1:length(mining_queue)
     end
   end
 
-  
   %[rs, newpositives] = prune_gts(rs, bg, index, m, mining_params, I);
-  
   %if length(newpositives.id_grid) > 0
   %  newx=cat(2,newpositives.support_grid{:});
   %  m.model.x = cat(2,m.model.x,newx);
-  %end
-  
-  %keyboard
-  %rs = prune_nms(rs, mining_params);
+  %end  
 
   %% Make sure we only keep 3 times the number of violating windows
   clear scores
@@ -78,7 +73,12 @@ for i = 1:length(mining_queue)
     bb = bb(1:min(length(bb),ceil(nviol*mining_params.beyond_nsv_multiplier)));
     rs.score_grid{q}=rs.score_grid{q}(bb);
     rs.id_grid{q}=rs.id_grid{q}(bb);
-    rs.support_grid{q}=rs.support_grid{q}(bb);    
+    try
+      rs.support_grid{q}=rs.support_grid{q}(bb);    
+    catch
+      fprintf(1,'biggy\n');
+      keyboard
+    end
     scores{q} = cat(2,rs.score_grid{q});
   end
   
