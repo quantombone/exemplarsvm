@@ -21,35 +21,40 @@ end
 [hn, mining_queue, mining_stats] = ...
     load_hn_fg(models, mining_queue, bg, mining_params);
 
-for i = 1:length(hn.objids)
-  allids{i} = cellfun(@(x)x.curid,hn.objids{i});
+for i = 1:length(models)
+  models{i} = add_new_detections(models{i},hn.xs{i},hn.objids{i});
 end
-allids = [allids{:}];
-uids = unique(allids);
-r = randperm(length(uids));
-utrain = uids(r(1:round(length(r)/2)));
-uval = setdiff(uids,utrain);
 
-for i = 1:length(hn.objids)
-  curids = cellfun(@(x)x.curid,hn.objids{i});
-  trains = ismember(curids,utrain);
-  vals = ~trains;
-  hn.valxs{i} = hn.xs{i}(:,vals);
-  hn.xs{i} = hn.xs{i}(:,trains);
+
+% for i = 1:length(hn.objids)
+%   allids{i} = cellfun(@(x)x.curid,hn.objids{i});
+% end
+% allids = [allids{:}];
+% uids = unique(allids);
+% r = randperm(length(uids));
+% utrain = uids(r(1:round(length(r)/2)));
+% uval = setdiff(uids,utrain);
+
+% for i = 1:length(hn.objids)
+%   curids = cellfun(@(x)x.curid,hn.objids{i});
+%   trains = ismember(curids,utrain);
+%   vals = ~trains;
+%   hn.valxs{i} = hn.xs{i}(:,vals);
+%   hn.xs{i} = hn.xs{i}(:,trains);
   
-  hn.valobjids{i} = hn.objids{i}(vals);
-  hn.objids{i} = hn.objids{i}(trains);
+%   hn.valobjids{i} = hn.objids{i}(vals);
+%   hn.objids{i} = hn.objids{i}(trains);
   
-  models{i}.model.nsv = cat(2,models{i}.model.nsv,hn.xs{i});
-  models{i}.model.vsv = cat(2,models{i}.model.vsv,hn.valxs{i});
+%   models{i}.model.nsv = cat(2,models{i}.model.nsv,hn.xs{i});
+%   models{i}.model.vsv = cat(2,models{i}.model.vsv,hn.valxs{i});
   
 
-  models{i}.model.svids = cat(2,models{i}.model.svids, ...
-                              hn.objids{i});
+%   models{i}.model.svids = cat(2,models{i}.model.svids, ...
+%                               hn.objids{i});
 
-  models{i}.model.vsvids = cat(2,models{i}.model.vsvids, ...
-                              hn.valobjids{i});
-end
+%   models{i}.model.vsvids = cat(2,models{i}.model.vsvids, ...
+%                               hn.valobjids{i});
+% end
 
 for q = 1:length(models)
   if (size(models{q}.model.nsv,2) >= mining_params.MAX_WINDOWS_BEFORE_SVM) || ...
@@ -80,6 +85,8 @@ supery = cat(1,...
              +1*ones(size(goodx,2),1),...
              -1*ones(size(badx,2),1));
 
+
+
 % m3 = [];
 
 % %% if exemplar comes with a mask, then we restring learning to weights within
@@ -91,8 +98,9 @@ supery = cat(1,...
 %   m3 = m3(:);
 % end
 
-% old_scores = m.model.w(:)'*superx - m.model.b;
-[m, svm_model] = do_svm(supery, superx, mining_params, m);
+old_scores = m.model.w(:)'*superx - m.model.b;
+[m] = do_svm(m, mining_params);
+%[m, svm_model] = do_svm(supery, superx, mining_params, m);
 % m3, ...
 %                            m.model.hg_size, old_scores);
 
@@ -177,13 +185,13 @@ hold on;
 plot([1 LENX],[0 0],'k','LineWidth',2)
 hold on;
 superr = wex'*superx - b;
-plot(linspace(1,LENX,sum(supery==1)),superr(supery==1),'r.');
+plot(linspace(1,LENX,sum(supery==1)),superr(supery==1),'r.','MarkerSize',20);
 hold on;
 plot(1:LENX,old_scores(supery==-1),'m.','MarkerSize',2);
 hold on;
-rsv = wex'*m.model.vsv - m.model.b;
-plot(linspace(1,LENX,length(rsv)),rsv,'y*');
-hold on;
+%rsv = wex'*m.model.vsv - m.model.b;
+%plot(linspace(1,LENX,length(rsv)),rsv,'y*');
+%hold on;
 r = wex'*superx - b;
 plot(1:LENX,r(supery==-1),'b.');
 
@@ -201,41 +209,42 @@ title(sprintf(['Iter %d\n MaxMine = %.3f, #ViolI=%d #EmptyI=%d'],...
 xlabel('Detection Window index')
 ylabel('w*x score');
 
-Isv1 = get_sv_stack(m.model.svids(1:min(length(m.model.svids),25)),bg,m,5,5);
-Isv2 = get_sv_stack(m.model.vsvids(1:min(length(m.model.vsvids), ...
-                                         25)),bg,m,5,5);
+Isv1 = get_sv_stack(m,bg,5,5);%m.model.svids(1:min(length(m.model.svids),25)),bg,m,5,5);
+%Isv2 = get_sv_stack(m.model.vsvids(1:min(length(m.model.vsvids), ...
+%                                         25)),bg,m,5,5);
 
-if length(m.model.fsvids) > 0
-  Isv3 = get_sv_stack(m.model.fsvids(1:min(length(m.model.fsvids),25)),fg,m,5,5);
+% if length(m.model.fsvids) > 0
+%   Isv3 = get_sv_stack(m.model.fsvids(1:min(length(m.model.fsvids),25)),fg,m,5,5);
 
-  fsv = m.model.fsvids;
-  for aaa = 1:length(fsv)
-    fsv{aaa}.curid = fsv{aaa}.curid + length(bg);
-  end
+%   fsv = m.model.fsvids;
+%   for aaa = 1:length(fsv)
+%     fsv{aaa}.curid = fsv{aaa}.curid + length(bg);
+%   end
   
-  combinedids = cat(2,m.model.svids,m.model.vsvids,fsv);
-  allx = cat(2,m.model.nsv,m.model.vsv,m.model.fsv);
-  r = m.model.w(:)'*allx - m.model.b;
-  [aa,bb] = sort(r,'descend');
-  combinedids = combinedids(bb);
-  combinedfg = cat(1,bg,fg);
-  Isv4 = get_sv_stack(combinedids(1:min(length(combinedids),25)), ...
-                      combinedfg,m,5,5);
-else
-  Isv3 = Isv2*0;
-  Isv4 = Isv2*0;
-end
+%   combinedids = cat(2,m.model.svids,m.model.vsvids,fsv);
+%   allx = cat(2,m.model.nsv,m.model.vsv,m.model.fsv);
+%   r = m.model.w(:)'*allx - m.model.b;
+%   [aa,bb] = sort(r,'descend');
+%   combinedids = combinedids(bb);
+%   combinedfg = cat(1,bg,fg);
+%   Isv4 = get_sv_stack(combinedids(1:min(length(combinedids),25)), ...
+%                       combinedfg,m,5,5);
+% else
+%   Isv3 = Isv2*0;
+%   Isv4 = Isv2*0;
+% end
+
 %imagesc(Isv)
 %axis image
 %axis off
 %title('Top 25 FSVs');
 %drawnow
 
-top = cat(2,Isv1,Isv2);
-bot = cat(2,Isv3,Isv4);
-Isv = cat(1,top,bot);
+%top = cat(2,Isv1,Isv2);
+%bot = cat(2,Isv3,Isv4);
+%Isv = cat(1,top,bot);
 subplot(1,2,2)
-imagesc(Isv)
+imagesc(Isv1)
 axis image
 axis off
 title('nsv,vsv,fsv,all')
