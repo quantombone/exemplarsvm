@@ -27,6 +27,7 @@ if strfind(r,VOCopts.display_machine)==1
 else
   display = 0;
 end
+display = 0;
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
@@ -46,12 +47,13 @@ fprintf(1,'Loading default set of images\n');
 if display == 1
   %If display is enabled, we must be on a machine running X, thus
   %we apply results on in-class images from trainval
-  curset = 'trainval';
+  curset = 'test';%'trainval';
   curcls = models{1}.cls;  
-  %bg = get_pascal_bg(curset,sprintf('%s',curcls));
+
+  bg = get_pascal_bg(curset,sprintf('%s',curcls));
   %even better yet, we apply on the images from where the models
   %came from
-  bg = cellfun2(@(x)sprintf(VOCopts.imgpath,x.curid),models);
+  %bg = cellfun2(@(x)sprintf(VOCopts.imgpath,x.curid),models);
 else
   bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
   fprintf(1,'bg length is %d\n',length(bg));
@@ -99,6 +101,8 @@ for i = 1:length(ordering)
   clear Is;
   for j = 1:length(inds{ordering(i)})
     Is{j} = convert_to_I(bg{inds{ordering(i)}(j)});
+    %fprintf(1,'size .4 hack\n');
+    %Is{j} = max(0.0,min(1.0,imresize(Is{j},.2)));
   end
   
   for j = 1:length(inds{ordering(i)})
@@ -110,7 +114,6 @@ for i = 1:length(ordering)
     
     starter = tic;
     [rs,t] = localizemeHOG(I,models,localizeparams);
-    
     scores = cat(2,rs.score_grid{:});
     [aa,bb] = max(scores);
     fprintf(1,' took %.3fsec, maxhit=%.3f, #hits=%d\n',...
@@ -123,8 +126,6 @@ for i = 1:length(ordering)
     %map GT boxes from training images onto test image
     boxes = adjust_boxes(coarse_boxes,models);
 
-
-    
     if display == 1       
       if size(boxes,1)>=1
         boxes(:,5) = 1:size(boxes,1);
@@ -138,7 +139,7 @@ for i = 1:length(ordering)
       boxes = boxes(bb,:);
       
       boxes = nms_within_exemplars(boxes,.5);
-      
+
       %% ONLY SHOW TOP 5 detections or fewer
       boxes = boxes(1:min(size(boxes,1),8),:);
       
