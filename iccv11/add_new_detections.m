@@ -3,7 +3,6 @@ function m = add_new_detections(m, xs, objids)
 m.model.nsv = cat(2,m.model.nsv,xs);
 m.model.svids = cat(2,m.model.svids,objids);
 
-
 names = cellfun2(@(x)sprintf('%d.%d.%d.%d.%d',x.curid,x.level, ...
                              x.offset(1),x.offset(2),x.flip),m.model.svids);
 r = m.model.w(:)'*m.model.nsv;
