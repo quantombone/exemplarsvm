@@ -58,7 +58,12 @@ models = cell(1,length(files));
 for i = 1:length(files)
   fprintf(1,'.');
   m = load([results_directory files(i).name]);
-  models{i} = m.m;
+
+  try
+    models{i} = m.m;
+  catch
+    models{i} = m.models{1};
+  end
 
   if max(models{i}.model.hg_size(1:2)) >= 25 %| length(models{i}.model.x)==0
     fprintf(1,'Truncating very large exemplar id=%d\n', i);
