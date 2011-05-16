@@ -397,6 +397,7 @@ curfeats = f_real{targetlvl}(min(uu):max(uu),min(vv):max(vv),:);
 model.hg_size = size(curfeats);
 fprintf(1,'hg_size = [%d %d]\n',model.hg_size(1),model.hg_size(2));
 model.w = curfeats - mean(curfeats(:));
+model.x = curfeats;
 model.b = 0;
 
 [model.target_id] = get_target_id(model,I);
