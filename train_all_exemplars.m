@@ -16,7 +16,7 @@ initial_directory = ...
     sprintf('%s/exemplars/',VOCopts.localdir);
 
 final_directory = ...
-    sprintf('%s/mined/',initial_directory);
+    sprintf('%s/exemplars-svm/',VOCopts.localdir);
 
 %make results directory if needed
 if ~exist(final_directory,'dir')
@@ -25,6 +25,7 @@ end
 
 %fprintf(1,'WARNING hardcoded trains\n');
 files = dir([initial_directory '*.mat']);
+%files = dir([initial_directory '*004951.1*.mat']);
 
 mining_params.final_directory = final_directory;
 
@@ -82,8 +83,8 @@ for i = 1:length(ordering)
   %Set up the negative set for this exemplars
   %CVPR2011 paper used all train images excluding category images
   %m.bg = sprintf('get_pascal_bg(''trainval'',''%s'')',m.cls);
-  bg = get_pascal_bg('trainval',['-' models{1}.cls]);
-  mining_params.alternate_validation = 1;
+  bg = get_pascal_bg('train',['-' models{1}.cls]);
+  mining_params.alternate_validation = 0;
   
   %remove self image (not needed)
   %bg = setdiff(bg,sprintf(VOCopts.imgpath,m.curid));
