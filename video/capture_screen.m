@@ -69,8 +69,8 @@ for i = 1:NITER
       ms = max(sizer(1:2));
       
       
-      %I = imresize(I,sizer(1:2)*300/ms);
-      %I = max(0.0,min(1.0,I));
+      I = imresize(I,sizer(1:2)*200/ms);
+      I = max(0.0,min(1.0,I));
       
       if length(Is)>=1
         normer = norm(Is{end}(:)-I(:));
@@ -92,9 +92,9 @@ for i = 1:NITER
   
   if exist('models','var')
     
-    localizeparams.thresh = -1.0;
-    localizeparams.TOPK = 10;
-    localizeparams.lpo = 20;
+    
+    localizeparams = get_default_mining_params;
+    localizeparams.FLIP_LR = 0;
     localizeparams.SAVE_SVS = 1;
     
     
@@ -107,15 +107,15 @@ for i = 1:NITER
     
     bb = nms_within_exemplars(bb,.5);
     
-    xraw = get_box_features(bb, size(M.C,1), M.neighbor_thresh);
+    % xraw = get_box_features(bb, size(M.C,1), M.neighbor_thresh);
 
-    res2 = apply_boost_M(xraw,bb,M);
+    % res2 = apply_boost_M(xraw,bb,M);
 
-    if length(res2)>0
-      res2
-    end
+    % if length(res2)>0
+    %   res2
+    % end
     
-    bb(:,end) = res2;
+    % bb(:,end) = res2;
     
     bbs{end+1} = bb;
     %bb = nms(bb,.5);

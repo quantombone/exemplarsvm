@@ -1,4 +1,4 @@
-function exemplar_initialize(cls,mode)
+function video_exemplar_initialize(Is,cls)
 %% Initialize script which writes out initial model files for all
 %% exemplars of a single category from PASCAL VOC trainval set
 %% Script is parallelizable (and dalalizable!)
@@ -11,21 +11,8 @@ VOCinit;
 %The sbin size 
 SBIN = 8;
 
-%Load default class and mode if no arguments are given
-if ~exist('cls','var')
-  [cls,mode] = load_default_class;
-end
+mode = 'video_exemplars';
 
-if strmatch(cls,'all')
-  classes = VOCopts.classes;
-  myRandomize;
-  r = randperm(length(classes));
-  classes = classes(r);
-  for i = 1:length(classes)
-    exemplar_initialize(classes{i},mode);
-  end
-  return;
-end
 
 %If this is enabled, then the features will be scaled to the
 %canonical dalal-size
@@ -75,15 +62,6 @@ end
 
 fprintf(1,'Class = %s\n',cls);
 
-if ismember(cls,{'all'})
-  classes = VOCopts.classes;
-  
-  r = randperm(length(classes));
-  for i = 1:length(classes)
-    exemplar_initialize(classes{r(i)});
-  end
-  return;
-end
 
 DTstring = '';
 if dalalmode == 1
@@ -106,44 +84,13 @@ if ~exist(results_directory,'dir')
   mkdir(results_directory);
 end
 
-% results_directory = [results_directory cls '/']
-% if ~exist(results_directory,'dir')
-%   fprintf(1,'Making directory %s\n',results_directory);
-%   mkdir(results_directory);
-% end
-
-%% Load ids of all images in trainval that contain cls
-[ids,gt] = textread(sprintf(VOCopts.clsimgsetpath,cls,'trainval'),...
-                  '%s %d');
-ids = ids(gt==1);
-
-%randomize ordering of exemplar images if script is ran on cluster
-myRandomize;
-rrr = randperm(length(ids));
-ids = ids(rrr);
-
-%figure(1)
-%clf
-%imagesc(Ibase)
-%plot_bbox(recs.objects(objectid).bbox)
-%title(sprintf('i=%d objectid=%d',i,objectid));
-%pause
-%continue
-
-for i = 1:length(ids)
-  curid = ids{i};
-
-  recs = PASreadrecord(sprintf(VOCopts.annopath,curid));  
-  Ibase = imread(sprintf(VOCopts.imgpath,curid));
-  Ibase = im2double(Ibase);
+N_PER_FRAME = 1;
+for i = 1:length(Is)
+  Ibase = Is{i};
+  curid = sprintf('%05d',i);
   
-  for objectid = 1:length(recs.objects)
+  for objectid = 1:N_PER_FRAME
     
-    %skip difficult objects, and objects not of target class
-    if (recs.objects(objectid).difficult==1) | ...
-          ~ismember({recs.objects(objectid).class},{cls})
-      continue
-    end
 
     fprintf(1,'.');
     
@@ -153,8 +100,36 @@ for i = 1:length(ids)
       continue
     end
         
-    anno = recs.objects(objectid);
-    bbox = recs.objects(objectid).bbox;
+    %anno = recs.objects(objectid);
+    
+     %% Get selection regions
+    while 1
+      figure(1)
+      clf
+      imagesc(Ibase)
+      axis image
+      axis off
+      title(sprintf('IM %d/%d, Select Rectangular Region %d/%d:', i,...
+                    length(Is), objectid, N_PER_FRAME));
+      fprintf(1,['Click a corner, hold until diagonally opposite corner,' ...
+                 ' and release\n']);
+      h = imrect;
+      bbox = getPosition(h);
+      
+      if (bbox(3)*bbox(4) < 50)
+        fprintf(1,'Region too small, try again\n');
+      else
+        break;
+      end
+    end
+      
+    bbox(3) = bbox(3) + bbox(1);
+    bbox(4) = bbox(4) + bbox(2);
+    bbox = round(bbox);
+    
+    plot_bbox(bbox)
+   
+   
     gt_box = bbox;
     I = Ibase;
 
@@ -162,17 +137,20 @@ for i = 1:length(ids)
     %constraints (if it it too horizontal, expand vertically, etc)
     clear model;
     
+
     if dalalmode == 1
       %Do the dalal-triggs anisotropic warping initialization
       model = initialize_model_dt(I,bbox,SBIN,hg_size);
     else
       bbox = expand_bbox(bbox,I);
       %Do default exemplar initialization
+
       model = initialize_model(I,bbox,GOAL_NCELLS,SBIN);
       model = populate_wiggles(I, model, NWIGGLES);
     end
     
     fprintf(1,'Extracting random %d wiggles\n',NWIGGLES);
+
 
     
     %Negative support vectors
@@ -192,9 +170,10 @@ for i = 1:length(ids)
     m.objectid = objectid;
     m.cls = cls;    
     m.gt_box = gt_box;
-    m.anno = anno;
+    %m.anno = anno;
     m.model = model;
     m.sizeI = size(I);
+    m.I = I;
     
     %Print the bounding box overlap between the initial window and
     %the final window
@@ -278,7 +257,7 @@ function [targetlvl,mask] = get_ncell_mask(GOAL_NCELLS, masker, ...
 %Get a the mask and features, where mask is closest to NCELL cells
 %as possible
 
-MAXDIM = 10;
+MAXDIM = 8;
 fprintf(1,'maxdim is %d\n',MAXDIM);
 for i = 1:size(masker)
   [uu,vv] = find(masker{i});

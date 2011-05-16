@@ -63,15 +63,20 @@ t{2} = t2;
 function [resstruct,t] = localizemeHOGdriver(I, models, ...
                                              localizeparams)
 
-if 1
+if length(models)>40
   [resstruct,t] = localizemeHOGdrivernew(I, models, ...
                                          localizeparams);
   return;
 end
-adjust = 1;
+
+adjust = 0;
 if isfield(models{1},'models_name') ...
       && length(strfind(models{1}.models_name,'-ncc'))>0
   adjust = 1;
+end
+
+if adjust == 1
+  fprintf(1,'DISTANCE ADJUSTMENT TURNED ON\n');
 end
 
 oldsave = localizeparams.SAVE_SVS;
