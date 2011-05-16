@@ -49,11 +49,15 @@ end
 
 %% look into the object inds to figure out which subset of the data
 %% is actually hard negatives for mining
+if mining_params.alternate_validation == 1
+  [negatives,vals,pos] = find_set_membership(m);
 
-[negatives,vals,pos] = find_set_membership(m);
-
-xs = m.model.nsv(:,negatives);
-objids = m.model.svids(negatives);
+  xs = m.model.nsv(:,negatives);
+  objids = m.model.svids(negatives);
+else
+  xs = m.model.nsv;
+  objids = m.model.svids;
+end
 
 %maxos = cellfun(@(x)x.maxos,objids);
 %maxclass = cellfun(@(x)x.maxclass,objids);
@@ -175,3 +179,5 @@ total_length = min(total_length,mining_params.max_negatives);
 svs = beta(1:min(length(beta),total_length));
 m.model.nsv = m.model.nsv(:,svs);
 m.model.svids = m.model.svids(svs);
+%TODO: Note, we are keeping vectors, but some are actually for
+%validation, some for training...
