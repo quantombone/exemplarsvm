@@ -1,4 +1,10 @@
 function swarp(Is,bbs)
+%Is is a (N x 1) cell array of images
+%bbs is a (N x 4) (or NxK with K>4 as long as bbs(:,1:4) is the bbs)
+
+%writes a bunch of files with each bb aligned to itself in the center
+
+filestring = 'combo%05d.png';
 
 if ~exist('Is','var')
   %% generate fake data
@@ -83,7 +89,7 @@ for i = 1:size(result,1)
   %drawnow
 
   %keyboard
-  imwrite(zi,sprintf('filer%05d.png',i));
+  imwrite(zi,sprintf(filestring,i));
 end
 
 totalI = totalI / size(result,1);
