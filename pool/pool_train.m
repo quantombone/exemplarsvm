@@ -1,4 +1,4 @@
-function [status,m] = pool_train(fff)
+function [status,m,Isv] = pool_train(fff)
 %use the worker pool to do super fast training
 
 status = 0;
@@ -21,7 +21,8 @@ end
 mining_params = get_default_mining_params;
 mining_params.BALANCE_POSITIVES = 0;
 mining_params.SVMC = .01;
-
+mining_params.SVMC = 1;
+mining_params.extract_negatives = 1;
 
 %%NOTE hardcoded to use one exemplar, not a stack of multiple
 xs = cellfun2(@(x)x.hn.xs{1},resser);
@@ -34,7 +35,7 @@ if length(objids) == 0
 end
 
 m = add_new_detections(m,xs,objids);
-NNN = 10;
+NNN = 12;
 bg = get_pascal_bg('trainval');
 %Isv = get_sv_stack(m,bg,NNN);
 
@@ -83,6 +84,7 @@ msave.model.svids = msave.model.svids(bb(1:N));
 [negatives,vals,pos] = find_set_membership(msave);
 
 %get os
+
 fprintf(1,'getting overlaps\n');
 tic
 [maxos,maxind,maxclass] = get_overlaps_with_gt(msave, [msave.model.svids{:}], bg);
@@ -94,9 +96,9 @@ subplot(2,1,1)
 scores = log(scores+1+eps);
 plot(pos,scores(pos),'ro')
 hold on;
-plot(vals,scores(vals),'k.')
+plot(vals,scores(vals),'b.')
 hold on;
-plot(negatives,scores(negatives),'b.','MarkerSize',14)
+plot(negatives,scores(negatives),'k.','MarkerSize',14)
 
 xlabel('Rank')
 ylabel('SVM score (log(w^Tx+1)')
@@ -105,9 +107,9 @@ legend('Positives','Validation Negatives','Hard Negatives')
 
 subplot(2,1,2)
 scores = maxos;
-plot(negatives,scores(negatives),'b.','MarkerSize',14)
+plot(negatives,scores(negatives),'k.','MarkerSize',14)
 hold on;
-plot(vals,scores(vals),'k.')
+plot(vals,scores(vals),'b.')
 hold on;
 plot(pos,scores(pos),'ro')
 xlabel('Rank')
