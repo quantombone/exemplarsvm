@@ -229,6 +229,7 @@ for i = 1:length(hn.objids)
     maxclass = ...
         find(ismember(VOCopts.classes,...
                       {data.recs{recid}.objects(maxind).class}));
+    
     hn.objids{i}{j}.maxos = maxos;
     hn.objids{i}{j}.maxclass = maxclass;
     hn.objids{i}{j}.maxind = maxind;
@@ -242,19 +243,6 @@ for i = 1:length(hn.objids)
   hn.xs{i} = hn.xs{i}(:,hits);
   hn.objids{i} = hn.objids{i}(hits);
 end
-
-%
-%for i = 1:length(models)
-%  Isv = get_sv_stack(hn.objids{i}, subg, ...
-%                                   models{i}, 5, 5);
-%  figure(i)
-%  clf
-%  imagesc(Isv);
-%  drawnow
-%end
-
-%keep only the top 100 dets from this chunk
-
 
 save(donefile,'hn','timing','mining_queue');
 status = 1;
