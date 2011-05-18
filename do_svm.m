@@ -49,9 +49,8 @@ end
 
 %% look into the object inds to figure out which subset of the data
 %% is actually hard negatives for mining
-if mining_params.alternate_validation == 1
+if mining_params.extract_negatives == 1
   [negatives,vals,pos] = find_set_membership(m);
-
   xs = m.model.nsv(:,negatives);
   objids = m.model.svids(negatives);
 else
@@ -138,7 +137,7 @@ newx = A'*bsxfun(@minus,superx,mu);
 fprintf(1,' -----\nStarting SVM dim=%d... s+=%d, s-=%d ',size(newx,1),spos,sneg);
 starttime = tic;
   
-svm_model = libsvmtrain(supery, newx(m.model.mask,:)',sprintf(['-s 0 -t 0 -c' ...
+svm_model = libsvmtrain(supery, newx(logical(m.model.mask),:)',sprintf(['-s 0 -t 0 -c' ...
                     ' %f -w1 %.9f -q'],mining_params.SVMC, wpos));
 
 %convert support vectors to decision boundary
@@ -163,6 +162,7 @@ wex(m.model.mask) = svm_weights;
 if norm(wex) < .00001
   fprintf(1,'learning broke down!\n');
 end
+
 
 fprintf(1,'took %.3f sec\n',toc(starttime));
 m.model.w = reshape(wex,size(m.model.w));
