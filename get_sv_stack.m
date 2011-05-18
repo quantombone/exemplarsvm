@@ -80,15 +80,23 @@ svims = cellfun2(@(x)max(0.0,min(1.0,imresize(x,newsize))),svims);
 
 [negatives,vals,pos] = find_set_membership(m);
 
-
+svimstack = cat(4,svims{:});
+NMS = K2-4;
+cuts = round(linspace(1,size(svimstack,4),NMS));
+for i = 1:length(cuts)
+  mss{i} = mean(svimstack(:,:,:,1:cuts(i)),4);
+end
 for i = 1:length(svims)
   %% find membership here
   if sum(i == negatives)
     svims{i} = pad_image(svims{i},-5);
-    svims{i} = pad_image(svims{i},5,[0 0 1]);
+    svims{i} = pad_image(svims{i},5,[0 0 0]);
   elseif sum(i == pos)
     svims{i} = pad_image(svims{i},-5);
     svims{i} = pad_image(svims{i},5,[1 0 0]);
+  else
+    svims{i} = pad_image(svims{i},-5);
+    svims{i} = pad_image(svims{i},5,[0 0 1]);
   end
 end
 
@@ -99,7 +107,10 @@ end
 for j = (N+1):(K1*K2)
   svims{j} = zeros(newsize(1),newsize(2),3);
 end
-sstack = cat(4,svims{:});
+
+%sstack = cat(4,svims{:});
+%% compute the mean image
+%ms = mean(sstack,4);
 
 mx = mean(m.model.x,2);
 raw_picture = HOGpicture(reshape(mx-mean(mx(:)),m.model.hg_size));
@@ -116,24 +127,25 @@ neg_picture = jettify(imresize(neg_picture,newsize,'nearest'));
 spatial_picture = jettify(imresize(spatial_picture,newsize,'nearest'));
 
 
-%% compute the mean image
-ms = mean(sstack,4);
+NSHIFT = length(mss) + 4;
 
-svims(6:end) = svims(1:end-5);
+
+svims((NSHIFT+1):end) = svims(1:end-NSHIFT);
 
 %ex goes in slot 1
-svims{1} = max(0.0,min(1.0,imresize(Ibase,[size(ms,1),size(ms, ...
+svims{1} = max(0.0,min(1.0,imresize(Ibase,[size(pos_picture,1),size(pos_picture, ...
                                                   2)])));
 svims{2} = pos_picture;
 svims{3} = neg_picture;
 svims{4} = spatial_picture;
-svims{5} = ms;
+svims(4+(1:length(mss))) = mss;
 %svims{3} = max(0.0,min(1.0,imresize(hogpic,[size(ms,1),size(ms, ...
 %                                                  2)])));
 %VOCinit;
 
 %looks bad with padding
-%svims = cellfun2(@(x)pad_image(x,2),svims);
+%svims = cellfun2(@(x)pad_image(x,2,[1 1 1]),svims);
+
 svims = reshape(svims,K1,K2)';
 for j = 1:K2
   svrows{j} = cat(2,svims{j,:});
