@@ -88,3 +88,7 @@ mining_params.DO_PCA = 0;
 mining_params.PCA_K = 300;
 
 mining_params.A_FROM_POSITIVES = 0;
+
+%if enabled, we must extract training negatives from positives and
+%held-out positives
+mining_params.extract_negatives = 0;
