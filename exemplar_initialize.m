@@ -1,9 +1,9 @@
-function exemplar_initialize(cls,mode)
+function exemplar_initialize(cls, mode)
 %% Initialize script which writes out initial model files for all
 %% exemplars of a single category from PASCAL VOC trainval set
 %% Script is parallelizable (and dalalizable!)
 %% There are several different initialization modes
-%% DalalMode: Warp instances to mean frame from in-class exemplars
+%% DalalMode:  Warp instances to mean frame from in-class exemplars
 %% Globalmode: Warp instances to hardcoded [8 8] frame
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 VOCinit;
@@ -162,15 +162,22 @@ for i = 1:length(ids)
     %constraints (if it it too horizontal, expand vertically, etc)
     clear model;
     
-    if dalalmode == 1
+    if (dalalmode == 1) || (dalalmode == 2)
       %Do the dalal-triggs anisotropic warping initialization
       model = initialize_model_dt(I,bbox,SBIN,hg_size);
     else
-      bbox = expand_bbox(bbox,I);
       %Do default exemplar initialization
-      model = initialize_model(I,bbox,GOAL_NCELLS,SBIN);
-      model = populate_wiggles(I, model, NWIGGLES);
-    end
+      %bbox = expand_bbox(bbox,I);
+      %model = initialize_model(I,bbox,GOAL_NCELLS,SBIN);
+      %model = populate_wiggles(I, model, NWIGGLES);
+      hg_size = [8 8];
+      [bbox,model] = new10model(I,bbox,SBIN,hg_size);
+    end    
+    
+
+    %gt2 = squareize_bbox(gt_box);
+    %imagesc(I)
+    %plot_bbox(gt2)
     
     fprintf(1,'Extracting random %d wiggles\n',NWIGGLES);
 
@@ -202,6 +209,7 @@ for i = 1:length(ids)
     fprintf(1,'Final OS is %.3f\n', ...
             finalos);
 
+    fprintf(1,'final hg_size is %d %d\n',m.model.hg_size(1),m.model.hg_size(2));
 
     save(filer,'m');
     if exist(filerlock,'dir')
@@ -212,7 +220,8 @@ for i = 1:length(ids)
       figure(1)
       clf
       imagesc(Ibase)
-      plot_bbox(m.model.coarse_box,'',[1 0 0])
+      %plot_bbox(m.model.coarse_box,'',[1 0 0])
+      plot_bbox(m.model.coarse_box,'',[1 0 0],[0 1 0],0,[1 3],m.model.hg_size)
       plot_bbox(m.gt_box,'',[0 0 1])
       axis image
       title(sprintf('%s.%d',m.curid,m.objectid))
@@ -221,6 +230,36 @@ for i = 1:length(ids)
     end
   end  
 end
+
+function bbox = squareize_bbox(bbox)
+%Expand region such that is still within image and tries to satisfy
+%these constraints best
+%requirements: each dimension is at least 50 pixels, and max aspect
+%ratio os (.25,4)
+
+
+w = bbox(3)-bbox(1)+1;
+h = bbox(4)-bbox(2)+1;
+
+if w < h
+  neww = h;
+  differ = neww - w;
+  left = ceil(differ/2);
+  right = floor(differ/2);
+  bbox(3) = bbox(3) + right;
+  bbox(1) = bbox(1) - left;
+elseif h < w
+  newh = w;
+  differ = newh - h;
+  left = ceil(differ/2);
+  right = floor(differ/2);
+  bbox(4) = bbox(4) + right;
+  bbox(2) = bbox(2) - left;
+end
+
+
+
+
 
 function bbox = expand_bbox(bbox,I)
 %Expand region such that is still within image and tries to satisfy
@@ -407,3 +446,97 @@ model.coarse_box = model.target_id.bb;
 %figure(2)
 %imagesc(model.mask)
 %drawnow
+
+function [bbox,model] = new10model(I,bbox,SBIN,hg_size)
+
+bbox = squareize_bbox(bbox);
+
+%Compute pyramid and all bounding boxes
+clear t
+lpo = 10;
+[t.hog, t.scales] = featpyramid2(I, SBIN, lpo);  
+t.padder = 2;
+
+clear allbb
+clear alluv
+clear alllvl
+for level = 1:length(t.hog)
+  t.hog{level} = padarray(t.hog{level}, [t.padder t.padder 0], ...
+                          0);
+  curids = zeros(size(t.hog{level},1),size(t.hog{level},2));
+  curids = reshape(1:numel(curids),size(curids));
+  goodids = curids(1:size(curids,1)-hg_size(1)+1,1:size(curids,2)- ...
+                   hg_size(2)+1);
+  [rawuuu,rawvvv] = ind2sub(size(curids),goodids(:));
+  uuu = rawuuu - t.padder;
+  vvv = rawvvv - t.padder;
+  
+  bb = ([vvv uuu vvv+hg_size(2) uuu+hg_size(1)] -1) * ...
+       SBIN/t.scales(level) + 1;
+  bb(:,3:4) = bb(:,3:4) - 1;
+  
+  % figure(1)
+  % clf
+  % imagesc(I)
+  % plot_bbox(bb)
+  % axis image
+  % axis off
+  % drawnow   
+  allbb{level} = bb;
+  alluv{level} = [rawuuu rawvvv];
+  alllvl{level} = goodids(:)*0+level;
+end
+
+% ip.bb = [([ip.offset(2) ip.offset(1) ip.offset(2)+size(ws{exid},2) ...
+%            ip.offset(1)+size(ws{exid},1)] - 1) * ...
+%          sbin/ip.scale + 1] + [0 0 -1 -1];
+
+
+
+alluv = cat(1,alluv{:});
+allbb = cat(1,allbb{:});
+alllvl = cat(1,alllvl{:});
+os = getosmatrix_bb(allbb,bbox);
+
+%% get the symmetry measure
+sym1 = abs((allbb(:,1)-bbox(1)) - (allbb(:,3)-bbox(3)));
+sym2 = abs((allbb(:,2)-bbox(2)) - (allbb(:,4)-bbox(4)));
+meansym = (sym1+sym2)/100;
+
+[aa,bb] = sort(os-meansym,'descend');
+meansym(bb(1))
+K = 100;
+curfeats = cell(K,1);
+ips = cell(K,1);
+for q = 1:K
+  superind = bb(q);
+  curfeat = t.hog{alllvl(superind)}(alluv(superind,1)-1+(1:hg_size(1)),...
+                                     alluv(superind,2)-1+(1: ...
+                                                  hg_size(2)),:);
+  
+  ip.level = alllvl(superind);
+  ip.scale = t.scales(ip.level);
+  ip.offset = [alluv(superind,:) - t.padder];
+  ip.flip = 0;
+  ip.bb = allbb(superind,:);
+  ips{q} = ip;
+  curfeats{q} = curfeat;
+end
+
+model.coarse_box = allbb(bb(1),:);
+
+model.params.sbin = SBIN;
+model.hg_size = [hg_size(1) hg_size(2) features];
+model.w = curfeats{1} - mean(curfeats{1}(:));
+model.x = curfeats{1};
+model.b = 0;
+model.target_id = ips;
+model.x = cellfun2(@(x)reshape(x,[],1),curfeats);
+model.x = cat(2,model.x{:});
+
+% bbs = cellfun2(@(x)x.bb,model.target_id);bbs = cat(1,bbs{:});
+% rc = rand(size(bbs,1),3);
+% for i = 1:size(bbs,1)
+%   plot_bbox(bbs(i,:),'',rc(i,:));
+%   hold on;
+% end
