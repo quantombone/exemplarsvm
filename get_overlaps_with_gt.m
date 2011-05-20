@@ -8,6 +8,7 @@ overlaps = zeros(length(objids),1);
 matchind = zeros(length(objids),1);
 matchclass = zeros(length(objids),1);
 
+
 %load each image at once
 uids = unique([objids.curid]);
 VOCinit;
@@ -26,7 +27,9 @@ for i = 1:length(uids)
   hits = find([objids.curid]==uids(i));
   startbb = cat(1,objids(hits).bb);
   endbb = startbb;
-  %if ~isfield(m,'models_name') || strcmp(m.models_name,'dalal') == 0
+  %if ~isfield(m,'models_name') || strcmp(m.models_name,'dalal') ==
+  %0
+  
   for j = 1:size(startbb,1)
     xform = find_xform(m.model.coarse_box, startbb(j,:));
     endbb(j,:) = apply_xform(m.gt_box, xform);
