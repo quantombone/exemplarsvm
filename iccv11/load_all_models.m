@@ -24,7 +24,7 @@ end
 
 %if enabled, we cache result on disk to facilitate loading at a
 %later stage (NOTE: these files might have to be removed manually)
-CACHE_FILE = 1;
+CACHE_FILE = 0;
 
 VOCinit;
 
