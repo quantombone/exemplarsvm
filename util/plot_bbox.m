@@ -1,4 +1,4 @@
-function plot_bbox(bb,titler,col1,col2,do_spacing,linewidths)
+function plot_bbox(bb,titler,col1,col2,do_spacing,linewidths,hg_size)
 %Plot a bounding box in the image with an optional title,
 %inner/outer colors, and a boolean flag indicating whether the box
 %should be dotted or not
@@ -27,9 +27,31 @@ if ~exist('linewidths','var')
 else
   linewidth1 = linewidths(1);
   linewidth2 = linewidths(2);
-
 end
 
+if ~exist('hg_size','var')
+  hg_size = [1 1];
+end
+
+if prod(hg_size) > 1
+  %%% draw grids here
+  x1 = bb(:,3) - bb(:,1);
+  y1 = bb(:,4) - bb(:,2);
+  
+  for i = 1:(hg_size(2))
+    for j = 1:(hg_size(1))
+      curbb = bb;
+      curbb(:,1) = curbb(:,1) + (i-1)*x1/hg_size(2);
+      curbb(:,3) = curbb(:,1) + (1)*x1/hg_size(2);
+            
+      curbb(:,2) = curbb(:,2) + (j-1)*y1/hg_size(1);
+      curbb(:,4) = curbb(:,2) + (1)*y1/hg_size(1);
+
+      plot_bbox(curbb,titler,col1,col2,do_spacing,[1 1]);%linewidths);
+      
+    end
+  end
+end
 
 if size(bb,1) > 1
   for i = 1:size(bb,1)
@@ -38,7 +60,6 @@ if size(bb,1) > 1
   end
   return;
 end
-
 
 if do_spacing == 1
   
@@ -52,7 +73,6 @@ if do_spacing == 1
     hold on;
     plot(bx,by,'--','Color',col2,'linewidth',linewidth2);
   end
-  
 else
   hold on;
   plot(bb([1 3 3 1 1 3]),bb([2 2 4 4 2 2]),'Color',col1,'linewidth',linewidth1);
@@ -60,7 +80,7 @@ else
   plot(bb([1 3 3 1 1 3]),bb([2 2 4 4 2 2]),'Color',col2,'linewidth',linewidth2);
 end
 
-fontscale=  (bb(3)-bb(1)+1)*(bb(4)-bb(2)+1) / (100*100);
+fontscale = (bb(3)-bb(1)+1)*(bb(4)-bb(2)+1) / (100*100);
 
 if exist('titler','var') & length(titler)>0
   hold on;
