@@ -6,7 +6,11 @@ function pool_loop
 %allfiles = dir(['/nfs/baikal/tmalisie/nips11/local/VOC2007/exemplars/*train*mat']);
 
 allfiles =...
-dir(['/nfs/baikal/tmalisie/nips11/local/VOC2007/exemplars/000540.1.train.mat'])
+dir(['/nfs/baikal/tmalisie/nips11/local/VOC2007/e/' ...
+     '000540.1.train.mat'])
+%pause(.4)
+%allfiles =...
+%dir(['/nfs/baikal/tmalisie/nips11/local/VOC2007/e/*.train.mat']);
 %allfiles = dir(['/nfs/baikal/tmalisie/nips11/local/VOC2007/exemplars/002810.1.dog.mat']);
 %allfiles =
 %dir(['/nfs/baikal/tmalisie/nips11/local/VOC2007/dalals/dalal.train.mat']);
@@ -30,8 +34,7 @@ for giter = 1:length(allfiles)
     fprintf(1,'iteration %d\n',i);
     
     BASEDIR = [get_pool_directory '/pool/'];
-    [a,b] = unix(['rm ' BASEDIR '*' fff]);
-    
+    %[a,b] = unix(['rm ' BASEDIR '*' fff]);
     
     if (i == 1)
       unix(sprintf('cp /nfs/baikal/tmalisie/nips11/local/VOC2007/exemplars/%s %s/',fff,get_pool_directory));
@@ -49,9 +52,6 @@ for giter = 1:length(allfiles)
     %Run training procedure
     [status,m,Isv] = pool_train(fff);
     imwrite(Isv,[finalfile '.pic.' num2str(i) '.png']);
-    %figure(1)
-    %set(gcf,'PaperPosition',[0 0 10 10]);
-    %print(gcf,'-dpng',[finalfile '.pic.' num2str(i) '.png'])
     
     figure(2)
     set(gcf,'PaperPosition',[0 0 10 10]);
@@ -61,7 +61,7 @@ for giter = 1:length(allfiles)
     if status == 1
       save([finaldir fff],'m');
       delete([get_pool_directory fff]);
-      unix(['rm ' get_pool_directory '/pool/*' fff]);      
+      %unix(['rm ' get_pool_directory '/pool/*' fff]);      
       break;
     end
   end

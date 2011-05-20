@@ -11,9 +11,6 @@ if ~exist('NPROC','var')
 end
 VOCinit;
 
-%A directory where the workers register themselves
-%BASEDIR = '/nfs/baikal/tmalisie/pool/';
-
 %Get the directory used for worker pools
 BASEDIR = get_pool_directory;
 
@@ -173,7 +170,7 @@ end
 
 function status = process_file(startfile,donefile,data)
 %process the detections now
-
+bg = get_pascal_bg('trainval');
 lockfile = [donefile '.lock'];
 if fileexists(donefile) || (mymkdir_dist(lockfile) == 0)
   status = 0;  
@@ -195,6 +192,7 @@ mining_params.TOPK = data.localizeparams.TOPK;
 mining_params.lpo = data.localizeparams.lpo;
 mining_params.SAVE_SVS = 1;
 mining_params.FLIP_LR = data.localizeparams.FLIP_LR;
+mining_params.GET_GT_OS = 1;
 %localizeparams.NMS_MINES_OS = 0.5;
 
 %%NOTE: this should be carefully set to not blow things up too heavily
@@ -206,7 +204,8 @@ mining_queue = ...
 
 chunkstart = tic;
 [hn,mining_queue] = load_hn_fg(models, mining_queue, ...
-                  data.ts, mining_params);
+                               data.ts, mining_params);
+
 %Save the time it took for the mining operation
 timing = toc(chunkstart);
 
@@ -221,19 +220,15 @@ for i = 1:length(hn.objids)
     %% take values from data.inds
 
     recid = hn.objids{i}{j}.curid;
-    r = cat(1, ...
-            data.recs{recid}.objects.bbox);
-    os = ...
-        getosmatrix_bb(hn.objids{i}{j}.bb,r);
-    [maxos,maxind] = max(os);
-    maxclass = ...
-        find(ismember(VOCopts.classes,...
-                      {data.recs{recid}.objects(maxind).class}));
+    %r = cat(1, ...
+    %        data.recs{recid}.objects.bbox);
+    %os = ...
+    %    getosmatrix_bb(hn.objids{i}{j}.bb,r);
+    %[maxos,maxind] = max(os);
+    %maxclass = ...
+    %    find(ismember(VOCopts.classes,...
+    %                  {data.recs{recid}.objects(maxind).class}));
     
-    hn.objids{i}{j}.maxos = maxos;
-    hn.objids{i}{j}.maxclass = maxclass;
-    hn.objids{i}{j}.maxind = maxind;
-    hn.objids{i}{j}.maxbb = r(maxind,:);
     hn.objids{i}{j}.curid = data.inds(hn.objids{i}{j}.curid);
   end
   
@@ -242,6 +237,18 @@ for i = 1:length(hn.objids)
   hits = bb(1:min(length(bb),MAXDETS));
   hn.xs{i} = hn.xs{i}(:,hits);
   hn.objids{i} = hn.objids{i}(hits);
+  
+  %NOTE: only works for 1 model, not a real cell array
+  [maxos,maxind,maxclass] = ...
+      get_overlaps_with_gt(models{i},...
+                           [hn.objids{i}{:}], bg);
+  
+  for j = 1:length(hn.objids{i})
+    hn.objids{i}{j}.maxos = maxos;
+    hn.objids{i}{j}.maxclass = maxclass;
+    hn.objids{i}{j}.maxind = maxind;
+  end
+  
 end
 
 save(donefile,'hn','timing','mining_queue');

@@ -21,7 +21,6 @@ end
 mining_params = get_default_mining_params;
 mining_params.BALANCE_POSITIVES = 0;
 mining_params.SVMC = .01;
-mining_params.SVMC = 1;
 mining_params.extract_negatives = 1;
 
 %%NOTE hardcoded to use one exemplar, not a stack of multiple
@@ -47,7 +46,7 @@ msave = m;
 bb2 = bb2(1:100);
 bb3 = bb3(1:100);
 fprintf(1,'overlap is %.3f \n', length(intersect(bb2,bb3))/length(bb2));
-if length(intersect(bb2,bb3))/length(bb2)>.8
+if length(intersect(bb2,bb3))/length(bb2)>.9
   status = 1;
   %% we are done training if the sets are the same
 end
@@ -131,3 +130,4 @@ end
 
 [m] = do_svm(m, mining_params);
 save(file,'m');
+
