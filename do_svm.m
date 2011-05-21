@@ -51,8 +51,28 @@ end
 %% is actually hard negatives for mining
 if mining_params.extract_negatives == 1
   [negatives,vals,pos] = find_set_membership(m);
-  xs = m.model.nsv(:,negatives);
-  objids = m.model.svids(negatives);
+  %xs = m.model.nsv(:,[negatives pos]);
+  %objids = m.model.svids([negatives pos]);
+
+  
+  xs = m.model.nsv(:,[negatives]);
+  objids = m.model.svids([negatives]);
+  
+  %xs_val = m.model.nsv(:,[negatives pos]);
+  %objids_val = m.model.svids([vals]);
+  
+  bg = get_pascal_bg('trainval');
+  %fprintf(1,'getting overlaps with gt\n');
+  %tic
+  %[maxos,maxind,maxclass] = ...
+  %    get_overlaps_with_gt(m, [objids{:}], bg);
+  %toc
+  
+  %keyboard
+  %VOCinit;
+  %targetc = find(ismember(VOCopts.classes,m.cls));
+  %gainvec = maxos + .5*double(maxclass==targetc);
+  
 else
   xs = m.model.nsv;
   objids = m.model.svids;
@@ -74,7 +94,32 @@ if size(xs,2) >= 10000
   r = [r1 r];
   xs = xs(:,r);
   objids = objids(r);
+  %gainvec = gainvec(r);
 end
+
+if 0
+[aa,bb] = sort(gainvec,'descend');
+goods = find(aa>.5);
+aa = aa(goods);
+bb = bb(goods);
+xd = xs(:,bb);
+dd = diff(xd,[],2);
+superx = -dd;
+neggies = xs(:,gainvec<.2);
+supery = cat(1,ones(size(superx,2),1),...
+             -1*ones(size(neggies,2),1));
+superx = cat(2,superx,neggies);
+fprintf(1,'liblinearing...\n');
+tic
+model = liblinear_train(supery, sparse(superx)', sprintf(['-s 2 -B -1 -c' ...
+                    ' %f'],1000));%mining_params.SVMC));
+toc
+wex = model.w(1:end)';
+b = 0;
+end
+if 1
+  %old method
+
 
 superx = cat(2,m.model.x,xs);
 supery = cat(1,ones(size(m.model.x,2),1),-1*ones(size(xs,2),1));
@@ -162,9 +207,9 @@ wex(m.model.mask) = svm_weights;
 if norm(wex) < .00001
   fprintf(1,'learning broke down!\n');
 end
-
-
 fprintf(1,'took %.3f sec\n',toc(starttime));
+end %end old methods
+
 m.model.w = reshape(wex,size(m.model.w));
 m.model.b = b;
 
