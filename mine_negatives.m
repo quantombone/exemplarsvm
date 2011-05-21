@@ -57,10 +57,15 @@ end
 % end
 
 for q = 1:length(models)
+  fprintf(1,'about to svm\n');
   if (size(models{q}.model.nsv,2) >= mining_params.MAX_WINDOWS_BEFORE_SVM) || ...
-    (iteration == mining_params.MAXITER)
+    (iteration == mining_params.MAXITER) || (length(mining_queue) == 0)
+    fprintf(1,' --- REAL svm\n');
+    
     [models{q}] = update_the_model(models, q, mining_params, lastw, ...
                                    iteration, mining_stats, bg);
+  else
+    fprintf(1,' --- NO svm\n');
   end
 end
 
@@ -100,12 +105,7 @@ supery = cat(1,...
 
 old_scores = m.model.w(:)'*superx - m.model.b;
 [m] = do_svm(m, mining_params);
-%[m, svm_model] = do_svm(supery, superx, mining_params, m);
-% m3, ...
-%                            m.model.hg_size, old_scores);
 
-%m.model.w = reshape(wex,m.model.hg_size);
-%m.model.b = b;
 wex = m.model.w(:);
 b = m.model.b;
 
@@ -249,6 +249,7 @@ axis image
 axis off
 title('nsv,vsv,fsv,all')
 
+fprintf(1,'GOT TO PRINT FUNCTION\n');
 if (mining_params.dump_images == 1) || ...
       (mining_params.dump_last_image == 1 && ...
        m.iteration == mining_params.MAXITER)
