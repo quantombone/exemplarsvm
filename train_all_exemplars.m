@@ -12,6 +12,9 @@ mining_params = get_default_mining_params;
 mining_params.SKIP_GTS_ABOVE_THIS_OS = 1.0;
 mining_params.dump_last_image = 1;
 
+%original training doesnt do flips
+mining_params.FLIP_LR = 0;
+
 initial_directory = ...
     sprintf('%s/exemplars/',VOCopts.localdir);
 
@@ -23,8 +26,10 @@ if ~exist(final_directory,'dir')
   mkdir(final_directory);
 end
 
+[cls,mode] = load_default_class;
+  
 %fprintf(1,'WARNING hardcoded trains\n');
-files = dir([initial_directory '*.mat']);
+files = dir([initial_directory '*' cls '*.mat']);
 %files = dir([initial_directory '*004951.1*.mat']);
 
 mining_params.final_directory = final_directory;
@@ -84,6 +89,11 @@ for i = 1:length(ordering)
   %CVPR2011 paper used all train images excluding category images
   %m.bg = sprintf('get_pascal_bg(''trainval'',''%s'')',m.cls);
   bg = get_pascal_bg('train',['-' models{1}.cls]);
+  for q = 1:length(models)
+    models{q}.bg_string1 = 'train';
+    models{q}.bg_string2 = ['-' models{1}.cls];
+  end
+  
   mining_params.alternate_validation = 0;
   
   %remove self image (not needed)
