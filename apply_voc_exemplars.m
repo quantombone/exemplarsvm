@@ -11,7 +11,6 @@ function apply_voc_exemplars(models)
 %we save results every NIMS_PER_CHUNK images
 NIMS_PER_CHUNK = 10;
 
-
 VOCinit;
 curset = 'both';
 
@@ -27,7 +26,7 @@ if strfind(r,VOCopts.display_machine)==1
 else
   display = 0;
 end
-display = 0;
+%display = 0;
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
@@ -56,6 +55,7 @@ if display == 1
   %bg = cellfun2(@(x)sprintf(VOCopts.imgpath,x.curid),models);
 else
   bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
+  %bg = get_pascal_bg('trainval');
   fprintf(1,'bg length is %d\n',length(bg));
 end
 
@@ -179,16 +179,13 @@ for i = 1:length(ordering)
     try
       % get GT objects for this image
       recs = PASreadrecord(sprintf(VOCopts.annopath,curid));
-      
+
       % get overlaps with all ground-truths (makes sense for VOC
       % images only)
       gtbb = cat(1,recs.objects.bbox);
       extras.os = getosmatrix_bb(boxes,gtbb);
       extras.cats = {recs.objects.class};
       res{j}.extras = extras;
-      
-      %best_gt_os = max(extras.os,[],1);
-      %best_gt_os(find(ismember({recs.objects.class},models{1}.cls)))
     catch
     end
     
