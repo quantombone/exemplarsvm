@@ -1,11 +1,13 @@
 function Isv = get_sv_stack(m, bg, K1, K2)
-%Create an image which visualizes the negative support vectors
-%Tomasz Malisiewicz (tomasz@cmu.edu)
+%% Create a K1xK2 image which visualizes the negative support vectors as
+%% well as the exemplar learned HOG, and averaged SVs
+%% Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if ~exist('K2','var')
   K2 = K1;
 end
 
+%% sort by score
 r = m.model.w(:)'*m.model.nsv - m.model.b;
 [aa,bb] = sort(r,'descend');
 m.model.svids = m.model.svids(bb);
@@ -24,7 +26,6 @@ N = min(N,K1*K2);
 svids = svids(1:N);
 svids = [svids{:}];
 
-
 if N > 0
   ucurids = unique([svids.curid]);
 else
@@ -33,8 +34,6 @@ end
 svims = cell(N,1);
 
 PADDER = 100;
-
-
 
 for i = 1:length(ucurids)
   I = convert_to_I(bg{ucurids(i)});
@@ -58,16 +57,12 @@ end
 
 VOCinit;
 try
-Ibase = imread(sprintf(VOCopts.imgpath,m.curid));
-Ibase = im2double(Ibase);
-
-PADDER = 100;
-
-Ibase = pad_image(Ibase,PADDER);
-
-cb = m.model.coarse_box+PADDER;
-
-Ibase = Ibase(round(cb(2):cb(4)), round(cb(1):cb(3)),:);
+  Ibase = imread(sprintf(VOCopts.imgpath,m.curid));
+  Ibase = im2double(Ibase);
+  PADDER = 100;
+  Ibase = pad_image(Ibase,PADDER);
+  cb = m.model.coarse_box+PADDER;
+  Ibase = Ibase(round(cb(2):cb(4)), round(cb(1):cb(3)),:);
 catch
   Ibase = zeros(m.model.hg_size(1)*10,m.model.hg_size(2)*10,3);
 end
@@ -152,4 +147,3 @@ for j = 1:K2
 end
 
 Isv = cat(1,svrows{:});
-
