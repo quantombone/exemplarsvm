@@ -21,7 +21,7 @@ mining_params.SVMC = .01;
 mining_params.alternate_validation = 0;
 
 %maximum number of image-scans during training
-mining_params.MAX_TOTAL_MINED_IMAGES = 2000;
+mining_params.MAX_TOTAL_MINED_IMAGES = 2500;
 
 %if enabled, we dump learning images into results directory
 mining_params.dump_images = 1;
@@ -43,7 +43,7 @@ mining_params.TOPK = 10;
 
 %Maximum number of negatives to mine before SVM kicks in (this
 %defines one iteration)
-mining_params.MAX_WINDOWS_BEFORE_SVM = 2000;
+mining_params.MAX_WINDOWS_BEFORE_SVM = 500;
 
 %Maximum number of violating images before SVM kicks in (another
 %way to define one iteration)
@@ -92,5 +92,5 @@ mining_params.A_FROM_POSITIVES = 0;
 %if enabled, we must extract training negatives from positives and
 %held-out positives
 mining_params.extract_negatives = 0;
-
 mining_params.GET_GT_OS = 0;
+mining_params.MINE_MODE = 0;
