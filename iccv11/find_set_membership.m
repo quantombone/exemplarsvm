@@ -1,7 +1,13 @@
 function [negatives,vals,pos] = find_set_membership(m)
 %Given the objects inside m.svids, parse their curids to see which
 %of the following three sets they belong to
-bg = get_pascal_bg('trainval');
+
+if ~isfield(m,'bg_string1')
+  bg = get_pascal_bg('trainval');
+else
+  bg = get_pascal_bg(m.bg_string1, m.bg_string2);
+end
+
 bgtrain = get_pascal_bg('train',['-' m.cls]);
 bgval = get_pascal_bg('val',['-' m.cls]);
 fg = get_pascal_bg('trainval',m.cls);
