@@ -6,14 +6,17 @@ function [Iex,alphamask,Icb] = get_exemplar_icon(models,index,flip,subind)
 %Subind indicates which window to show (defaults to the base)
 if ~exist('subind','var')
   subind = 1;
+else
+  flip = models{index}.model.target_id{subind}.flip;
 end
 
 if ~exist('flip','var')
   flip = 0;
-  if isfield(models{index},'FLIP_LR') && models{index}.FLIP_LR==1
-    flip = 1;
-  end
+  %if isfield(models{index},'FLIP_LR') && models{index}.FLIP_LR==1
+  %  flip = 1;
+  %end
 end
+
 
 cb = models{index}.model.target_id{subind}.bb;
 d1 = max(0,1 - cb(1));
@@ -68,7 +71,6 @@ else
 end
 
 if flip == 1
-  fprintf(1,'flipping\n');
   Iex = flip_image(Iex);
   Icb = flip_image(Icb);
 end
