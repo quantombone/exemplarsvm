@@ -24,7 +24,7 @@ end
 
 %if enabled, we cache result on disk to facilitate loading at a
 %later stage (NOTE: these files might have to be removed manually)
-CACHE_FILE = 0;
+CACHE_FILE = 1;
 
 VOCinit;
 
@@ -72,13 +72,13 @@ for i = 1:length(files)
     models{i}.model.b = 1000;
   end
   
- % models{i}.model.x = [];
-  models{i}.model.allx = [];
-  models{i}.model.wtrace = [];
-  models{i}.model.btrace = [];
+  %models{i}.model.x = [];
+  %models{i}.model.allx = [];
+  %models{i}.model.wtrace = [];
+  %models{i}.model.btrace = [];
 
   %disable negative support vectors to save space
-  models{i}.model.nsv = [];
+  %models{i}.model.nsv = [];
   
   if ~isfield(models{i},'models_name')
     models{i}.models_name=strrep(DET_TYPE,'/','_');
