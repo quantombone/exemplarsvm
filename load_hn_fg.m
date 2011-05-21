@@ -1,7 +1,7 @@
 function [hn, mining_queue, mining_stats] = ...
     load_hn_fg(models, mining_queue, bg, mining_params)
 %% Compute detections "aka Hard-Negatives" for N images (bg) given K
-%% classifeirs (models) 
+%% classifiers (models) 
 %% 
 %% Input Data:
 %% models: Kx1 cell array of models
@@ -58,7 +58,7 @@ for i = 1:length(mining_queue)
       rs.id_grid{aaa}{bbb}.curid = index;
     end
   end
-
+ 
   %[rs, newpositives] = prune_gts(rs, bg, index, m, mining_params, I);
   %if length(newpositives.id_grid) > 0
   %  newx=cat(2,newpositives.support_grid{:});
@@ -77,7 +77,6 @@ for i = 1:length(mining_queue)
       rs.support_grid{q}=rs.support_grid{q}(bb);    
     catch
       fprintf(1,'biggy\n');
-      keyboard
     end
     scores{q} = cat(2,rs.score_grid{q});
   end
@@ -104,13 +103,24 @@ for i = 1:length(mining_queue)
     if length(rs.support_grid{q})==0
       continue
     end
+    
     goods = cellfun(@(x)prod(size(x)),rs.support_grid{q})>0;
     x{q} = cat(2,x{q},rs.support_grid{q}{goods});
     objid{q} = cat(2,objid{q},rs.id_grid{q}(goods));
-    
+
+    %% get oss
+    % if mining_params.GET_GT_OS == 1
+    %   [maxos, maxind, maxcls] = ...
+    %       get_overlaps_with_gt(models{q}, [objid{q}{:}], bg);
+    %   for z = 1:length(maxos)
+    %     objid{q}{z}.maxos = maxos(z);
+    %     objid{q}{z}.maxind = maxind(z);
+    %     objid{q}{z}.maxcls = maxcls(z);
+    %   end
+    % end
+
   end
   
-
   Ndets = cellfun(@(x)size(x,2),x);
   %if no detections, just skip image because there is nothing to store
   if sum(Ndets) == 0
