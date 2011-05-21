@@ -1,8 +1,11 @@
-function train_all_exemplars
+function train_all_exemplars(cls)
 %% Train models with hard negatives for all exemplars written to
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
+%This field is here to allow mining of multiple exemplars
+%simultaneously (but it is experimental since i'm still not 100%
+%happy with what is happening).. so please keep this at 1
 EX_PER_CHUNK = 1;
 
 VOCinit;
@@ -14,6 +17,7 @@ mining_params.dump_last_image = 1;
 
 %original training doesnt do flips
 mining_params.FLIP_LR = 0;
+mining_params.NMS_MINES_OS = 1.0;
 
 initial_directory = ...
     sprintf('%s/exemplars/',VOCopts.localdir);
@@ -26,11 +30,12 @@ if ~exist(final_directory,'dir')
   mkdir(final_directory);
 end
 
-[cls,mode] = load_default_class;
-  
-%fprintf(1,'WARNING hardcoded trains\n');
+if ~exist('cls','var')
+  [cls] = load_default_class;
+end
+
 files = dir([initial_directory '*' cls '*.mat']);
-%files = dir([initial_directory '*004951.1*.mat']);
+%files = dir([initial_directory '*000540.1*.mat']);
 
 mining_params.final_directory = final_directory;
 
@@ -41,7 +46,6 @@ inds = do_partition(1:length(files),EX_PER_CHUNK);
 % randomize chunk orderings
 myRandomize;
 ordering = randperm(length(inds));
-%ordering = 1:length(inds);
 
 for i = 1:length(ordering)
 
@@ -53,6 +57,7 @@ for i = 1:length(ordering)
     m = m.m;
     m.model.wtrace{1} = m.model.w;
     m.model.btrace{1} = m.model.b;
+    
     %Set the name of this exemplar type
     m.models_name = 'nips11';
     m.iteration = 0;
@@ -68,16 +73,27 @@ for i = 1:length(ordering)
     models{z} = m;
   end
 
-  % Create a naming scheme for saving files
-  filer2fill = sprintf('%s/%%s.%s.%05d.mat',final_directory, ...
-                        models{1}.cls,ordering(i));
+  if EX_PER_CHUNK == 1
 
-  %% this is the final file which we can write to a file
-  %filer2final = sprintf(filer2fill,num2str(mining_params.MAXITER));
-  % 
-  filer2final = sprintf('%s/%s.%05d.mat',final_directory, ...
-                        models{1}.cls,ordering(i));
-  
+    % Create a naming scheme for saving files
+    filer2fill = sprintf('%s/%%s.%s.%d.%s.mat',final_directory, ...
+                         models{1}.curid, ...
+                         models{1}.objectid, ...
+                         models{1}.cls);
+    
+    filer2final = sprintf('%s/%s.%d.%s.mat',final_directory, ...
+                         models{1}.curid, ...
+                         models{1}.objectid, ...
+                         models{1}.cls);
+  else
+    % Create a naming scheme for saving files
+    filer2fill = sprintf('%s/%%s.%s.%05d.mat',final_directory, ...
+                         models{1}.cls,ordering(i));
+   
+    filer2final = sprintf('%s/%s.%05d.mat',final_directory, ...
+                          models{1}.cls,ordering(i));
+  end
+    
   %% check if we are ready for an update
   filerlock = [filer2final '.mining.lock'];
   
@@ -93,6 +109,8 @@ for i = 1:length(ordering)
     models{q}.bg_string1 = 'train';
     models{q}.bg_string2 = ['-' models{1}.cls];
   end
+  
+
   
   mining_params.alternate_validation = 0;
   
@@ -185,11 +203,9 @@ function m = prune_svs(m)
 %When saving file, only keep negative support vectors, not
 %the extra ones we save during training
 rs = m.model.w(:)'*m.model.nsv - m.model.b;
-goods = find(rs >= -1.0);
+[aa,bb] = sort(rs,'descend');
+goods = bb(aa >= -1.0);
 oldnsv = m.model.nsv;
 oldsvids = m.model.svids;
-oldx = m.model.x;
 m.model.nsv = oldnsv(:,goods);
 m.model.svids = oldsvids(goods);
-%don't prune the x's
-%m.model.x = [];
