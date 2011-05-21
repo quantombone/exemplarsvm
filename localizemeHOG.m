@@ -357,7 +357,7 @@ function [resstruct,t] = localizemeHOGdrivernew(I, models, ...
                                              localizeparams)
 
 %%HERE is the chunk version of this
-adjust = 1;
+adjust = 0;
 if isfield(models{1},'models_name') ...
       && length(strfind(models{1}.models_name,'-ncc'))>0
   adjust = 1;
