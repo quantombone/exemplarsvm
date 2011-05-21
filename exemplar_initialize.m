@@ -170,29 +170,44 @@ for i = 1:length(ids)
       %bbox = expand_bbox(bbox,I);
       %model = initialize_model(I,bbox,GOAL_NCELLS,SBIN);
       %model = populate_wiggles(I, model, NWIGGLES);
+      if 1
       hg_size = [8 8];
-      [bbox,model] = new10model(I,bbox,SBIN,hg_size);
+      newK = 1;
+      [tmp,model] = new10model(I,bbox,SBIN,hg_size,newK);
+      
+      %[tmp,model2] = new10model(flip_image(I), ...
+      %                          flip_box(bbox, size(I)), ...
+      %                          SBIN, hg_size, newK);
+      %x2 = model2.x;
+      %t2 = model2.target_id;
+      %for j = 1:length(t2)
+      %  t2{j}.flip = 1;
+      %  t2{j}.bb = flip_box(t2{j}.bb,size(I));
+      %end
+      
+      %model.x = cat(2,model.x,x2);
+      %model.target_id = cat(1,model.target_id,t2);
+      %model.target_x = model.x;
+      
+      %% we start with first one
+      %model.x = model.x(:,1);
+      end
     end    
-    
-
-    %gt2 = squareize_bbox(gt_box);
-    %imagesc(I)
-    %plot_bbox(gt2)
     
     fprintf(1,'Extracting random %d wiggles\n',NWIGGLES);
 
-    
     %Negative support vectors
     model.nsv = zeros(prod(model.hg_size),0);
     model.svids = [];
     
+    %dont save these, not using them
     %Validation support vectors
-    model.vsv = zeros(prod(model.hg_size),0);
-    model.vsvids = [];
+    %model.vsv = zeros(prod(model.hg_size),0);
+    %model.vsvids = [];
     
     %Friend support vectors
-    model.fsv = zeros(prod(model.hg_size),0);
-    model.fsvids = [];
+    %model.fsv = zeros(prod(model.hg_size),0);
+    %model.fsvids = [];
       
     clear m
     m.curid = curid;
@@ -447,7 +462,8 @@ model.coarse_box = model.target_id.bb;
 %imagesc(model.mask)
 %drawnow
 
-function [bbox,model] = new10model(I,bbox,SBIN,hg_size)
+function [bbox,model] = new10model(I,bbox,SBIN,hg_size,K)
+
 
 bbox = squareize_bbox(bbox);
 
@@ -505,7 +521,7 @@ meansym = (sym1+sym2)/100;
 
 [aa,bb] = sort(os-meansym,'descend');
 meansym(bb(1))
-K = 100;
+
 curfeats = cell(K,1);
 ips = cell(K,1);
 for q = 1:K
@@ -527,8 +543,13 @@ model.coarse_box = allbb(bb(1),:);
 
 model.params.sbin = SBIN;
 model.hg_size = [hg_size(1) hg_size(2) features];
-model.w = curfeats{1} - mean(curfeats{1}(:));
 model.x = curfeats{1};
+model.mask = sum(model.x.^2,3)>0;
+model.w = model.x*0;
+mask3 = repmat(model.mask,[1 1 features]);
+mask3 = mask3(:);
+model.w(mask3) = curfeats{1}(mask3) - mean(curfeats{1}(mask3));
+
 model.b = 0;
 model.target_id = ips;
 model.x = cellfun2(@(x)reshape(x,[],1),curfeats);
