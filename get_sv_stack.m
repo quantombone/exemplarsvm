@@ -13,6 +13,14 @@ r = m.model.w(:)'*m.model.nsv - m.model.b;
 m.model.svids = m.model.svids(bb);
 m.model.nsv = m.model.nsv(:,bb);
 
+inds = nms_objid(m.model.svids);
+
+%length(m.model.svids)
+%length(inds)
+
+m.model.svids = m.model.svids(inds);
+m.model.nsv = m.model.nsv(:,inds);
+
 svids = m.model.svids;
 
 if exist('m','var')
@@ -33,20 +41,31 @@ else
 end
 svims = cell(N,1);
 
-PADDER = 100;
+%PADDER = 100;
 
 for i = 1:length(ucurids)
-  I = convert_to_I(bg{ucurids(i)});
-  I = pad_image(I, PADDER);
+  Ibase = convert_to_I(bg{ucurids(i)});
+  %I = pad_image(Ibase, PADDER);
   hits = find([svids.curid]==ucurids(i));
   for j = 1:length(hits)
+
+    cb = svids(hits(j)).bb;
+    
+    d1 = max(0,1 - cb(1));
+    d2 = max(0,1 - cb(2));
+    d3 = max(0,cb(3) - size(Ibase,2));
+    d4 = max(0,cb(4) - size(Ibase,1));
+    mypad = max([d1,d2,d3,d4]);
+    PADDER = round(mypad)+2;
+    I = pad_image(Ibase,PADDER);
     
     bb = round(svids(hits(j)).bb + PADDER);
-    try
-      svims{hits(j)} = I(bb(2):bb(4),bb(1):bb(3),:);
-    catch
-      svims{hits(j)} = rand(bb(4)-bb(2)+1,bb(3)-bb(1)+1,3);
-    end
+    
+    %try
+    svims{hits(j)} = I(bb(2):bb(4),bb(1):bb(3),:);
+    %catch
+    %  svims{hits(j)} = rand(bb(4)-bb(2)+1,bb(3)-bb(1)+1,3);
+    %end
    
     if svids(hits(j)).flip == 1
       svims{hits(j)} = flip_image(svims{hits(j)});
@@ -57,12 +76,13 @@ end
 
 VOCinit;
 try
-  Ibase = imread(sprintf(VOCopts.imgpath,m.curid));
-  Ibase = im2double(Ibase);
-  PADDER = 100;
-  Ibase = pad_image(Ibase,PADDER);
-  cb = m.model.coarse_box+PADDER;
-  Ibase = Ibase(round(cb(2):cb(4)), round(cb(1):cb(3)),:);
+  % Ibase = imread(sprintf(VOCopts.imgpath,m.curid));
+  % Ibase = im2double(Ibase);
+  % PADDER = 100;
+  % Ibase = pad_image(Ibase,PADDER);
+  % cb = m.model.coarse_box+PADDER;
+  % Ibase = Ibase(round(cb(2):cb(4)), round(cb(1):cb(3)),:);
+  [aaa,bbb,Ibase] = get_exemplar_icon({m},1);
 catch
   Ibase = zeros(m.model.hg_size(1)*10,m.model.hg_size(2)*10,3);
 end
@@ -70,6 +90,7 @@ end
 newsize = [size(Ibase,1) size(Ibase,2)];
 newsize = 100/newsize(1) * newsize;
 newsize = round(newsize);
+newsize = newsize + 10;
 
 svims = cellfun2(@(x)max(0.0,min(1.0,imresize(x,newsize))),svims);
 
@@ -84,13 +105,13 @@ end
 for i = 1:length(svims)
   %% find membership here
   if sum(i == negatives)
-    svims{i} = pad_image(svims{i},-5);
-    svims{i} = pad_image(svims{i},5,[0 0 0]);
-  elseif sum(i == pos)
-    svims{i} = pad_image(svims{i},-5);
+    %svims{i} = pad_image(svims{i},-5);
     svims{i} = pad_image(svims{i},5,[1 0 0]);
+  elseif sum(i == pos)
+    %svims{i} = pad_image(svims{i},-5);
+    svims{i} = pad_image(svims{i},5,[0 1 0]);
   else
-    svims{i} = pad_image(svims{i},-5);
+    %svims{i} = pad_image(svims{i},-5);
     svims{i} = pad_image(svims{i},5,[0 0 1]);
   end
 end
@@ -134,6 +155,10 @@ svims{2} = pos_picture;
 svims{3} = neg_picture;
 svims{4} = spatial_picture;
 svims(4+(1:length(mss))) = mss;
+
+for q = 1:(4+length(mss))
+  svims{q} = pad_image(svims{q},5,[1 1 1]);
+end
 %svims{3} = max(0.0,min(1.0,imresize(hogpic,[size(ms,1),size(ms, ...
 %                                                  2)])));
 %VOCinit;
@@ -145,5 +170,6 @@ svims = reshape(svims,K1,K2)';
 for j = 1:K2
   svrows{j} = cat(2,svims{j,:});
 end
+
 
 Isv = cat(1,svrows{:});
