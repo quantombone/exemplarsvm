@@ -1,4 +1,4 @@
-function [negatives,vals,pos] = find_set_membership(m)
+function [negatives,vals,pos,m] = find_set_membership(m)
 %Given the objects inside m.svids, parse their curids to see which
 %of the following three sets they belong to
 
@@ -20,6 +20,25 @@ bgids(aa) = 2;
 aa = find(ismember(bg,fg));
 bgids(aa) = 3;
 
+%% HERE we take all string curids, and treat them as literals into
+%the images
+
+s = cellfun(@(x)isstr(x.curid),m.model.svids);
+s = find(s);
+if length(s) > 0
+  train_curids = cell(length(bg),1);
+  for i = 1:length(bg)
+    [tmp,train_curids{i},ext] = fileparts(bg{i});
+  end
+  
+  test_curids = cellfun2(@(x)x.curid,m.model.svids(s));
+
+  [aa,bb] = ismember(test_curids,train_curids);
+  for i = 1:length(s)
+    m.model.svids{s(i)}.curid = bb(i);
+  end  
+end
+
 ids = cellfun(@(x)x.curid,m.model.svids);
 %Train only with negatives
 negatives = find(ismember(ids,(find(bgids==1))));
@@ -28,4 +47,5 @@ pos = find(ismember(ids,(find(bgids==3))));
 
 fprintf(1,'Sets NEG,VAL,POS=%d,%d,%d\n',...
         length(negatives),length(vals),length(pos));
+
 
