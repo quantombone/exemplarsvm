@@ -172,25 +172,25 @@ for i = 1:length(ids)
       %model = populate_wiggles(I, model, NWIGGLES);
       if 1
       hg_size = [8 8];
-      newK = 1;
-      [tmp,model] = new10model(I,bbox,SBIN,hg_size,newK);
+      newK = 10;
+      [tmp,model] = new10model(I,bbox,SBIN,hg_size,newK,curid);
       
-      %[tmp,model2] = new10model(flip_image(I), ...
-      %                          flip_box(bbox, size(I)), ...
-      %                          SBIN, hg_size, newK);
-      %x2 = model2.x;
-      %t2 = model2.target_id;
-      %for j = 1:length(t2)
-      %  t2{j}.flip = 1;
-      %  t2{j}.bb = flip_box(t2{j}.bb,size(I));
-      %end
+      [tmp,model2] = new10model(flip_image(I), ...
+                                flip_box(bbox, size(I)), ...
+                                SBIN, hg_size, newK,curid);
+      x2 = model2.x;
+      t2 = model2.target_id;
+      for j = 1:length(t2)
+        t2{j}.flip = 1;
+        t2{j}.bb = flip_box(t2{j}.bb,size(I));
+      end
       
-      %model.x = cat(2,model.x,x2);
-      %model.target_id = cat(1,model.target_id,t2);
-      %model.target_x = model.x;
+      model.x = cat(2,model.x,x2);
+      model.target_id = cat(1,model.target_id,t2);
+      model.target_x = model.x;
       
       %% we start with first one
-      %model.x = model.x(:,1);
+      model.x = model.x(:,1);
       end
     end    
     
@@ -462,7 +462,7 @@ model.coarse_box = model.target_id.bb;
 %imagesc(model.mask)
 %drawnow
 
-function [bbox,model] = new10model(I,bbox,SBIN,hg_size,K)
+function [bbox,model] = new10model(I,bbox,SBIN,hg_size,K,curid)
 
 
 bbox = squareize_bbox(bbox);
@@ -535,6 +535,7 @@ for q = 1:K
   ip.offset = [alluv(superind,:) - t.padder];
   ip.flip = 0;
   ip.bb = allbb(superind,:);
+  ip.curid = curid;
   ips{q} = ip;
   curfeats{q} = curfeat;
 end
