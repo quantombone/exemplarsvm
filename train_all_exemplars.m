@@ -16,8 +16,13 @@ mining_params.SKIP_GTS_ABOVE_THIS_OS = 1.0;
 mining_params.dump_last_image = 1;
 
 %original training doesnt do flips
-mining_params.FLIP_LR = 0;
-mining_params.NMS_MINES_OS = 1.0;
+mining_params.FLIP_LR = 1;
+
+%nms prevents thrashing
+%mining_params.NMS_MINES_OS = 1.0;
+
+%%% note loading
+am = load_all_models;
 
 initial_directory = ...
     sprintf('%s/exemplars/',VOCopts.localdir);
@@ -38,6 +43,9 @@ files = dir([initial_directory '*' cls '*.mat']);
 %files = dir([initial_directory '*000540.1*.mat']);
 
 mining_params.final_directory = final_directory;
+
+%% memex needs validation nodes
+mining_params.extract_negatives = 1;
 
 %% Chunk the data into EX_PER_CHUNK exemplars per chunk so that we
 %process several images, then write results for entire chunk
@@ -104,11 +112,19 @@ for i = 1:length(ordering)
   %Set up the negative set for this exemplars
   %CVPR2011 paper used all train images excluding category images
   %m.bg = sprintf('get_pascal_bg(''trainval'',''%s'')',m.cls);
-  bg = get_pascal_bg('train',['-' models{1}.cls]);
+  
+  bg = get_pascal_bg('trainval','');
   for q = 1:length(models)
-    models{q}.bg_string1 = 'train';
-    models{q}.bg_string2 = ['-' models{1}.cls];
+    models{q}.bg_string1 = 'trainval';
+    models{q}.bg_string2 = '';
   end
+  
+  
+  % bg = get_pascal_bg('train',['-' models{1}.cls]);
+  % for q = 1:length(models)
+  %   models{q}.bg_string1 = 'train';
+  %   models{q}.bg_string2 = ['-' models{1}.cls];
+  % end
   
 
   
@@ -146,7 +162,11 @@ for i = 1:length(ordering)
     filer2 = sprintf(filer2fill,num2str(FILEID));
     
     %select exemplars which haven't finished training
-    goods = find(cellfun(@(x)x.iteration <= mining_params.MAXITER,models));
+    goods = find(cellfun(@(x)x.iteration <= mining_params.MAXITER, ...
+                         models));
+    
+    [target_ids,target_xs] = get_top_from_ex(m,am);
+    models{goods} = add_new_detections(models{goods},target_xs,target_ids);
     
     [models(goods), mining_queue] = ...
         mine_negatives(models(goods), mining_queue, bg, mining_params, ...
@@ -209,3 +229,43 @@ oldnsv = m.model.nsv;
 oldsvids = m.model.svids;
 m.model.nsv = oldnsv(:,goods);
 m.model.svids = oldsvids(goods);
+
+
+function [target_ids,target_xs] = get_top_from_ex(m,am)
+
+
+
+res = cellfun2(@(x)m.model.w(:)'*x.model.target_x-m.model.b,am);
+for i = 1:length(res)
+  [tmp,ind] = max(res{i});
+  am{i}.model.target_x = am{i}.model.target_x(:,ind);
+  am{i}.model.target_id = am{i}.model.target_id(ind);
+end
+
+target_ids= cellfun2(@(x)x.model.target_id,am);
+target_xs= cellfun2(@(x)x.model.target_x,am);
+
+target_ids = cat(1,target_ids{:})';
+target_xs = cat(2,target_xs{:});
+
+%% convert to curid format as integer
+
+%% HERE we take all string curids, and treat them as literals into
+%the images
+
+bg = get_pascal_bg('trainval');
+s = cellfun(@(x)isstr(x.curid),target_ids);
+s = find(s);
+if length(s) > 0
+  train_curids = cell(length(bg),1);
+  for i = 1:length(bg)
+    [tmp,train_curids{i},ext] = fileparts(bg{i});
+  end
+  
+  test_curids = cellfun2(@(x)x.curid,target_ids);
+
+  [aa,bb] = ismember(test_curids,train_curids);
+  for i = 1:length(s)
+    target_ids{s(i)}.curid = bb(i);
+  end  
+end
