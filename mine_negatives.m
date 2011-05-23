@@ -172,89 +172,34 @@ end
 %TODO: make sure overlapping windows get capped since now we can
 %get duplicates added here...
 
+figure(2)
+clf
+show_cool_os(m)
+
+if (mining_params.dump_images == 1) || ...
+      (mining_params.dump_last_image == 1 && ...
+       m.iteration == mining_params.MAXITER)
+  set(gcf,'PaperPosition',[0 0 20 5]);
+  print(gcf,sprintf('%s/%s.%d_iter=%05d.png', ...
+                    mining_params.final_directory,m.curid,...
+                    m.objectid,m.iteration),'-dpng'); 
+end
 
 %% HERE WE DRAW THE FIGURES
 figure(1)
 clf
-subplot(1,2,1)
-LENX = sum(supery==-1);
-plot([1 LENX],[-1 -1],'g--','LineWidth',2)
-hold on;
-plot([1 LENX],[1 1],'g--','LineWidth',2)
-hold on;
-plot([1 LENX],[0 0],'k','LineWidth',2)
-hold on;
-superr = wex'*superx - b;
-plot(linspace(1,LENX,sum(supery==1)),superr(supery==1),'r.','MarkerSize',20);
-hold on;
-plot(1:LENX,old_scores(supery==-1),'m.','MarkerSize',2);
-hold on;
-%rsv = wex'*m.model.vsv - m.model.b;
-%plot(linspace(1,LENX,length(rsv)),rsv,'y*');
-%hold on;
-r = wex'*superx - b;
-plot(1:LENX,r(supery==-1),'b.');
-
-if length(m.model.fsv) > 0
-  hold on;
-  rfsv = wex'*m.model.fsv - m.model.b;
-  plot(linspace(1,LENX,length(rfsv)),rfsv,'ko');
-end
-axis([1 LENX min(r) max(1.05,max(r))]);
-mr = max(rstart);
-title(sprintf(['Iter %d\n MaxMine = %.3f, #ViolI=%d #EmptyI=%d'],...
-              m.iteration,mr,mining_stats.num_violating,...
-              mining_stats.num_empty));
-
-xlabel('Detection Window index')
-ylabel('w*x score');
-
-Isv1 = get_sv_stack(m,bg,5,5);%m.model.svids(1:min(length(m.model.svids),25)),bg,m,5,5);
-%Isv2 = get_sv_stack(m.model.vsvids(1:min(length(m.model.vsvids), ...
-%                                         25)),bg,m,5,5);
-
-% if length(m.model.fsvids) > 0
-%   Isv3 = get_sv_stack(m.model.fsvids(1:min(length(m.model.fsvids),25)),fg,m,5,5);
-
-%   fsv = m.model.fsvids;
-%   for aaa = 1:length(fsv)
-%     fsv{aaa}.curid = fsv{aaa}.curid + length(bg);
-%   end
-  
-%   combinedids = cat(2,m.model.svids,m.model.vsvids,fsv);
-%   allx = cat(2,m.model.nsv,m.model.vsv,m.model.fsv);
-%   r = m.model.w(:)'*allx - m.model.b;
-%   [aa,bb] = sort(r,'descend');
-%   combinedids = combinedids(bb);
-%   combinedfg = cat(1,bg,fg);
-%   Isv4 = get_sv_stack(combinedids(1:min(length(combinedids),25)), ...
-%                       combinedfg,m,5,5);
-% else
-%   Isv3 = Isv2*0;
-%   Isv4 = Isv2*0;
-% end
-
-%imagesc(Isv)
-%axis image
-%axis off
-%title('Top 25 FSVs');
-%drawnow
-
-%top = cat(2,Isv1,Isv2);
-%bot = cat(2,Isv3,Isv4);
-%Isv = cat(1,top,bot);
-subplot(1,2,2)
+[negatives,vals,pos,m] = find_set_membership(m);
+Isv1 = get_sv_stack(m,bg,12,12);
 imagesc(Isv1)
 axis image
 axis off
-title('nsv,vsv,fsv,all')
+title('Exemplar Weights + Sorted Matches')
 
-fprintf(1,'GOT TO PRINT FUNCTION\n');
 if (mining_params.dump_images == 1) || ...
       (mining_params.dump_last_image == 1 && ...
        m.iteration == mining_params.MAXITER)
-  set(gcf,'PaperPosition',[0 0 40 20]);
-  print(gcf,sprintf('%s/%s.%d_iter=%05d.png', ...
+
+  imwrite(Isv1,sprintf('%s/%s.%d_iter_I=%05d.png', ...
                     mining_params.final_directory,m.curid,...
-                    m.objectid,m.iteration),'-dpng'); 
+                    m.objectid,m.iteration),'png');
 end
