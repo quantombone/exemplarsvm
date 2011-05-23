@@ -50,11 +50,11 @@ end
 %% look into the object inds to figure out which subset of the data
 %% is actually hard negatives for mining
 if mining_params.extract_negatives == 1
-  [negatives,vals,pos] = find_set_membership(m);
+  [negatives,vals,pos,m] = find_set_membership(m);
   %xs = m.model.nsv(:,[negatives pos]);
   %objids = m.model.svids([negatives pos]);
 
-  
+
   xs = m.model.nsv(:,[negatives]);
   objids = m.model.svids([negatives]);
   
@@ -110,6 +110,7 @@ supery = cat(1,ones(size(superx,2),1),...
              -1*ones(size(neggies,2),1));
 superx = cat(2,superx,neggies);
 fprintf(1,'liblinearing...\n');
+
 tic
 model = liblinear_train(supery, sparse(superx)', sprintf(['-s 2 -B -1 -c' ...
                     ' %f'],1000));%mining_params.SVMC));
@@ -121,9 +122,29 @@ if 1
   %old method
 
 
-superx = cat(2,m.model.x,xs);
-supery = cat(1,ones(size(m.model.x,2),1),-1*ones(size(xs,2),1));
-
+  % wm = zeros(m.model.hg_size(1),m.model.hg_size(2));
+  
+  % wm(1:end,1) = 1;
+  % wm(1:end,end) = 1;
+  % wm(1,1:end) = 1;
+  % wm(end,1:end) = 1;
+  % wm = bwdist(wm);
+  % wm = max(wm(:))-wm;
+  % wm = wm / max(wm(:));
+  % wm = (exp(-2*wm));
+  % wm = double(repmat(wm,[1 1 features]));
+  
+  superx = cat(2,m.model.x,xs);
+  supery = cat(1,ones(size(m.model.x,2),1),-1*ones(size(xs,2),1));
+  
+  
+  % if size(m.model.x,2) > 1
+  %   superx = cat(2,1*(repmat(m.model.x(:,1),...
+  %                             1,size(m.model.x,2)- ...
+  %                             1)-m.model.x(:,2:end)),superx);
+  %   supery = cat(1,1*ones(size(m.model.x,2)-1,1),supery);
+  %   %% add self max
+  % end
 spos = sum(supery==1);
 sneg = sum(supery==-1);
 
@@ -131,6 +152,7 @@ wpos = 1;
 wneg = 1;
 
 if mining_params.BALANCE_POSITIVES == 1
+  fprintf(1,'balancing positives\n');
   wpos = 1/spos;
   wneg = 1/sneg;
   wpos = wpos / wneg;
@@ -176,41 +198,67 @@ elseif mining_params.A_FROM_POSITIVES == 1
   A(:,end+1) = 1;
   A(:,end) = A(:,end) / norm(A(:,end));
 end
-  
-newx = A'*bsxfun(@minus,superx,mu);
+
+newx = bsxfun(@minus,superx,mu);
+newx = newx(logical(m.model.mask),:);
+newx = A(m.model.mask,:)'*newx;
 
 fprintf(1,' -----\nStarting SVM dim=%d... s+=%d, s-=%d ',size(newx,1),spos,sneg);
 starttime = tic;
-  
-svm_model = libsvmtrain(supery, newx(logical(m.model.mask),:)',sprintf(['-s 0 -t 0 -c' ...
+
+
+svm_model = libsvmtrain(supery, newx',sprintf(['-s 0 -t 0 -c' ...
                     ' %f -w1 %.9f -q'],mining_params.SVMC, wpos));
 
-%convert support vectors to decision boundary
-svm_weights = full(sum(svm_model.SVs .* ...
-                       repmat(svm_model.sv_coef,1,size(svm_model.SVs,2)),1));
-wex = svm_weights';
-b = svm_model.rho;
-
-if supery(1) == -1
-  wex = wex*-1;
-  b = b*-1;
+if length(svm_model.sv_coef) == 0
+  %learning had no negatives
+  wex = m.model.w;
+  b = m.model.b;
+  fprintf(1,'reverting to old model...\n');
+else
+  
+  
+  %convert support vectors to decision boundary
+  
+  svm_weights = full(sum(svm_model.SVs .* ...
+                         repmat(svm_model.sv_coef,1, ...
+                                size(svm_model.SVs,2)),1));
+  
+  wex = svm_weights';
+  b = svm_model.rho;
+  
+  if supery(1) == -1
+    wex = wex*-1;
+    b = b*-1;    
+  end
+  %% project back to original space
+  b = b + wex'*A(m.model.mask,:)'*mu(m.model.mask);
+  wex = A(m.model.mask,:)*wex;
+  
+  wex2 = zeros(size(superx,1),1);
+  wex2(m.model.mask) = wex;
+  
+  wex = wex2;
+  
+  %% issue a warning if the norm is very small
+  if norm(wex) < .00001
+    fprintf(1,'learning broke down!\n');
+  end  
 end
 
-%% project back to original space
-b = b + wex'*A(m.model.mask,m.model.mask)'*mu(m.model.mask);
-wex = A(m.model.mask,m.model.mask)*wex;
 
-wex = zeros(size(superx,1),1);
-wex(m.model.mask) = svm_weights;
+%wex'*m.model.x - b
 
-%% issue a warning if the norm is very small
-if norm(wex) < .00001
-  fprintf(1,'learning broke down!\n');
-end
 fprintf(1,'took %.3f sec\n',toc(starttime));
 end %end old methods
 
-m.model.w = reshape(wex,size(m.model.w));
+try
+  m.model.w = reshape(wex,size(m.model.w));
+catch
+  fprintf(1,'reshape bug?\n');
+  keyboard
+  
+end
 m.model.b = b;
 
 r = m.model.w(:)'*m.model.nsv - m.model.b;
