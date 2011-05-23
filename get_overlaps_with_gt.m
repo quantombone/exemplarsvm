@@ -4,6 +4,10 @@ function [overlaps,matchind,matchclass] = get_overlaps_with_gt(m, objids, bg)
 %% belonging to m (inside m.cls)
 %% 
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
+
+if iscell(objids)
+  objids = [objids{:}];
+end
 overlaps = zeros(length(objids),1);
 matchind = zeros(length(objids),1);
 matchclass = zeros(length(objids),1);
