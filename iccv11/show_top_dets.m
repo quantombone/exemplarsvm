@@ -88,7 +88,7 @@ if 0
 end
 
 counter = 1;
-maxk = 40;
+maxk = 100;
 KKK = [1 1];
 
 counter = 1;%20;
@@ -245,7 +245,7 @@ for k = 1:maxk
                           exemplar_overlay.segI,exemplar_overlay,gtim);
 
     drawnow
-    
+
 %     output.I = I;
 %     output.result = exemplar_overlay.segI;
 %     output.WARNINGgt = gtim;
