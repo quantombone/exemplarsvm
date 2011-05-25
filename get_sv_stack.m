@@ -13,13 +13,10 @@ r = m.model.w(:)'*m.model.nsv - m.model.b;
 m.model.svids = m.model.svids(bb);
 m.model.nsv = m.model.nsv(:,bb);
 
-inds = nms_objid(m.model.svids);
-
-%length(m.model.svids)
-%length(inds)
-
-m.model.svids = m.model.svids(inds);
-m.model.nsv = m.model.nsv(:,inds);
+%NO NMS
+%inds = nms_objid(m.model.svids);
+%m.model.svids = m.model.svids(inds);
+%m.model.nsv = m.model.nsv(:,inds);
 
 svids = m.model.svids;
 
@@ -98,30 +95,38 @@ svims = cellfun2(@(x)max(0.0,min(1.0,imresize(x,newsize))),svims);
 
 svimstack = cat(4,svims{:});
 NMS = K2-4;
-cuts = round(linspace(1,size(svimstack,4),NMS));
+%cuts = round(linspace(1,size(svimstack,4),NMS));
+cuts = (1:NMS);
+
+
 for i = 1:length(cuts)
   mss{i} = mean(svimstack(:,:,:,1:cuts(i)),4);
 end
-for i = 1:length(svims)
+
+PADSIZE = 5;
+
+for i = 1:numel(svims)
   %% find membership here
   if sum(i == negatives)
     %svims{i} = pad_image(svims{i},-5);
-    svims{i} = pad_image(svims{i},5,[1 0 0]);
+    svims{i} = pad_image(svims{i},PADSIZE,[1 0 0]);
   elseif sum(i == pos)
     %svims{i} = pad_image(svims{i},-5);
-    svims{i} = pad_image(svims{i},5,[0 1 0]);
+    svims{i} = pad_image(svims{i},PADSIZE,[0 1 0]);
   else
     %svims{i} = pad_image(svims{i},-5);
-    svims{i} = pad_image(svims{i},5,[0 0 1]);
+    svims{i} = pad_image(svims{i},PADSIZE,[0 0 1]);
   end
 end
 
 if length(svims)<K1*K2
-  svims{K1*K2} = zeros(newsize(1),newsize(2),3);
+  svims{K1*K2} = zeros(newsize(1)+PADSIZE*2,...
+                       newsize(2)+PADSIZE*2,3);
 end
 
 for j = (N+1):(K1*K2)
-  svims{j} = zeros(newsize(1),newsize(2),3);
+  svims{j} = zeros(newsize(1)+PADSIZE*2,...
+                   newsize(2)+PADSIZE*2,3);
 end
 
 %sstack = cat(4,svims{:});
@@ -145,7 +150,6 @@ spatial_picture = jettify(imresize(spatial_picture,newsize,'nearest'));
 
 NSHIFT = length(mss) + 4;
 
-
 svims((NSHIFT+1):end) = svims(1:end-NSHIFT);
 
 %ex goes in slot 1
@@ -157,7 +161,7 @@ svims{4} = spatial_picture;
 svims(4+(1:length(mss))) = mss;
 
 for q = 1:(4+length(mss))
-  svims{q} = pad_image(svims{q},5,[1 1 1]);
+  svims{q} = pad_image(svims{q},PADSIZE,[1 1 1]);
 end
 %svims{3} = max(0.0,min(1.0,imresize(hogpic,[size(ms,1),size(ms, ...
 %                                                  2)])));
