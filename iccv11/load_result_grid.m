@@ -7,6 +7,7 @@ function grid = load_result_grid(models)
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 VOCinit;
 
+
 % final_dir = ...
 %     sprintf('%s/grids',VOCopts.localdir);
 % if ~exist(final_dir,'dir')
@@ -76,6 +77,7 @@ fprintf(1,'base directory: %s\n',baser);
 
 files = dir([baser 'result*mat']);
 grid = cell(1,length(files));
+
 for i = 1:length(files)
   
   if mod(i,100) == 0
