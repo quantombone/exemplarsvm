@@ -5,6 +5,10 @@ function [overlaps,matchind,matchclass] = get_overlaps_with_gt(m, objids, bg)
 %% 
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
+if length(objids) == 0
+  objids = [m.model.svids{:}];
+end
+
 if iscell(objids)
   objids = [objids{:}];
 end
