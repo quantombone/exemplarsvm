@@ -1,6 +1,10 @@
-function keepers = nms_objid(objid)
+function keepers = nms_objid(objid,osthresh)
 %Give a stack of objids, assume they are already sorted and perform
 %NMS across detections from the same image, ...
+
+if ~exist('osthresh','var')
+  osthresh = 0.5;
+end
 
 curids = cellfun(@(x)x.curid, objid);
 bbs = cellfun2(@(x)x.bb, objid);
@@ -19,7 +23,7 @@ for i = 1:length(ucurids)
   b = bbs(hits,:);
   b(:,5) = 1:size(b,1);
   b(:,8) = size(b,1):-1:1;
-  [res] = nms(b,.5);
+  [res] = nms(b,osthresh);
 
   keepers(hits(res(:,5)))=1;
 
