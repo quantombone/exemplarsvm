@@ -6,6 +6,7 @@ function A = get_dominant_basis(meanx, K)
 %A: [NMF x NMF] projection matrix such that A*meanx(:) gets
 %projected onto top K gradients per cell
 
+Klist = [1:K];
 A = zeros(prod(size(meanx)),0);
 for aaa = 1:size(meanx,1)
   for bbb = 1:size(meanx,2)
@@ -23,13 +24,9 @@ for aaa = 1:size(meanx,1)
     %wmask(wmask<.5) = 0;
     %wmask = double(wmask>0);
     %wmask = repmat(wmask,[1 1 size(curx,3)]);
-    %curx = curx.*wmask;
     
-    
-    [alpha,beta] = sort(squeeze(meanx(aaa,bbb,1:18)),'descend');
-    %mchannel = mode(bb(find(wmask(:,:,1))));
-    %curx(:,:,setdiff(1:size(curx,3),mchannel)) = 0;
-    Klist = [1:K];
+    [alpha,beta] = sort(squeeze(meanx(aaa,bbb,1:27)),'descend');
+
     for K = Klist
       curx(aaa,bbb,beta(K)) = alpha(K) / (eps+alpha(K));    
       A = [A curx(:)];
