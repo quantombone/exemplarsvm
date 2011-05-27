@@ -186,6 +186,8 @@ end
 
 curids = cellfun2(@(x)x.curid,grid);
 
+bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
+
 for exid = 1:length(models)
   fprintf(1,'.');
   
@@ -241,7 +243,7 @@ for exid = 1:length(models)
       
   %if exid==221
   %if exid==171
-  if 0 %%display == 1
+  if 1 %%display == 1
     
     figure(1)
     clf
@@ -273,7 +275,35 @@ for exid = 1:length(models)
     %plot_bbox(ALL_bboxes(hits(bb),1:4),'',[0 1 0]);
     axis image
     axis off
-    pause
+
+    bbs=ALL_bboxes(hits,:);
+    bbs_os = ALL_os(hits,:);
+    [aa,bb] = sort(bbs(:,end)+bbs_os*.2,'descend');
+    
+    figure(445)
+    clf
+    for jjj = 1:25
+      I = convert_to_I(bg{bbs(bb(jjj),11)});
+      curbb = bbs(bb(jjj),:);
+      subplot(5,5,jjj)
+      imagesc(I)
+      plot_bbox(curbb)
+      axis image
+      axis off
+    end
+    if 0
+    VOCinit;
+    curdir = sprintf('%s/visual_regression_trainval/',VOCopts.wwwdir);
+    if ~exist(curdir,'dir')
+      mkdir(curdir);
+    end
+    filer = sprintf('%s/%05d_trainonly.png',curdir,exid);
+    
+    drawnow
+    set(gcf,'PaperPosition',[0 0 10 10]);
+    print(gcf,filer,'-dpng');
+    end
+
   end
   
   if (display == 0)
