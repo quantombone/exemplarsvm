@@ -52,12 +52,12 @@ if fileexists(cache_file)
 end
 
 %Goal ncells gives us a constraint on how many cells we cut the
-%object up to
+%object up to (NOTE: not used in new10 function)
 GOAL_NCELLS = 100;
 
 %(only non-dalal mode) If greater than one, creates tiny exemplar
 %perturbations as additional positives
-NWIGGLES = 1;
+NWIGGLES = 1; (NOTE: not used in new10 function)
 
 fprintf(1,'GOAL_NCELLS=%d sbin=%d\n',GOAL_NCELLS,SBIN);
 
@@ -172,7 +172,8 @@ for i = 1:length(ids)
       %model = populate_wiggles(I, model, NWIGGLES);
       if 1
       hg_size = [8 8];
-      newK = 10;
+      newK = 50;
+      %newK = 1;
       [tmp,model] = new10model(I,bbox,SBIN,hg_size,newK,curid);
       
       [tmp,model2] = new10model(flip_image(I), ...
