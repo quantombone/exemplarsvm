@@ -16,7 +16,8 @@ curset = 'both';
 
 %Store exemplars for this class
 if ~exist('models','var')
-  models = load_all_models;
+  [cls,DET_TYPE] = load_default_class;
+  models = load_all_models(cls,[DET_TYPE '-stripped']);
 end
 
 %Only allow display to be enabled on a machine with X
@@ -26,7 +27,7 @@ if strfind(r,VOCopts.display_machine)==1
 else
   display = 0;
 end
-%display = 0;
+display = 0;
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
@@ -48,7 +49,10 @@ if display == 1
   %we apply results on in-class images from trainval
   curset = 'test';%'trainval';
   curcls = models{1}.cls;  
-
+  %curcls = 'car';
+  curcls = 'bus';
+  %curcls = 'tvmonitor';
+  
   bg = get_pascal_bg(curset,sprintf('%s',curcls));
   %even better yet, we apply on the images from where the models
   %came from
@@ -106,27 +110,32 @@ for i = 1:length(ordering)
   end
   
   for j = 1:length(inds{ordering(i)})
-    
-    fprintf(1,'   ---image %d\n',inds{ordering(i)}(j));
-    Iname = bg{inds{ordering(i)}(j)};
+
+    index = inds{ordering(i)}(j);
+    fprintf(1,'   ---image %d\n',index);
+    Iname = bg{index};
     I = Is{j};
-   
-    
+       
     starter = tic;
     [rs,t] = localizemeHOG(I,models,localizeparams);
     scores = cat(2,rs.score_grid{:});
     [aa,bb] = max(scores);
     fprintf(1,' took %.3fsec, maxhit=%.3f, #hits=%d\n',...
             toc(starter),aa,length(scores));
-    
-    %extract detection box vectors from the localization results
-    [coarse_boxes] = extract_bbs_from_rs(rs, models);
+
+    tic
+    [coarse_boxes] = extract_bbs_from_rs(rs, index);
+    toc
     
     boxes = coarse_boxes;
     %map GT boxes from training images onto test image
     boxes = adjust_boxes(coarse_boxes,models);
+      
 
     if display == 1       
+      %extract detection box vectors from the localization results
+
+      
       if size(boxes,1)>=1
         boxes(:,5) = 1:size(boxes,1);
       end
@@ -137,8 +146,9 @@ for i = 1:length(ordering)
       
       [aa,bb] = sort(boxes(:,end),'descend');
       boxes = boxes(bb,:);
-      
-      boxes = nms_within_exemplars(boxes,.5);
+ 
+      %already nmsed
+      %boxes = nms_within_exemplars(boxes,.5);
 
       %% ONLY SHOW TOP 5 detections or fewer
       boxes = boxes(1:min(size(boxes,1),8),:);
@@ -157,22 +167,27 @@ for i = 1:length(ordering)
         
         show_hits_figure(models, boxes, I);
         drawnow
+
         pause
       else
         fprintf(1,'No detections in this Image\n');
       end
     end
         
-    index = inds{ordering(i)}(j);
+
     extras = [];
-    
     res{j}.coarse_boxes = coarse_boxes;
     res{j}.bboxes = boxes;
+    %dont save SVs
+    %if isfield(rs,'support_grid')
+    %  rs = rmfield(rs,'support_grid');
+    %end
+    %res{j}.rs = rs;
     res{j}.index = index;
     res{j}.extras = extras;
     res{j}.imbb = [1 1 size(I,2) size(I,1)];
     
-    Iname = bg{inds{ordering(i)}(j)};
+    Iname = bg{index};
     [tmp,curid,tmp] = fileparts(Iname);
     res{j}.curid = curid;
     
