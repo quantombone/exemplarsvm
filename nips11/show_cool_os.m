@@ -52,11 +52,15 @@ title(sprintf('Top Matching Objects for Exemplar %s.%d Object Overlap',msave.cur
 legend('Positives','Validation Negatives','Hard Negatives')
 
 
-cuts = round(linspace(1,length(scores),10));
+cuts = unique(round(linspace(1,length(scores),10)));
 for i = 1:length(cuts)
   labels{i} = sprintf('%.3f',scores(cuts(i)));
 end
+try
 set(gca,'XTick',cuts);
+catch
+  keyboard
+end
 set(gca,'XTickLabel',labels)
 
 topcuts = [0:.1:1];
@@ -67,5 +71,6 @@ end
 set(gca,'YTick',topcuts);
 set(gca,'YTickLabel',toplabels)
 grid on;
+axis([1 length(scores) 0 1])
 
 drawnow
