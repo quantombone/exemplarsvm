@@ -69,12 +69,14 @@ if mining_params.extract_negatives == 1
       get_overlaps_with_gt(m, [], bg);
   toc
   
-  for qqq = 1:3
+  for qqq = 1:5
     [aa,bb] = sort(m.model.w(:)'*oldm.model.nsv,'descend');
     m.model.svids = oldm.model.svids(bb);
     m.model.nsv = oldm.model.nsv(:,bb);
 
+    %keepers = 1:length(m.model.svids);
     keepers = nms_objid(m.model.svids,.2);
+    fprintf(1,'after nms keepers is %d\n',length(keepers));
     m.model.svids = m.model.svids(keepers);
     m.model.nsv = m.model.nsv(:,keepers);
     maxos = Amaxos(bb(keepers));
@@ -85,15 +87,18 @@ if mining_params.extract_negatives == 1
     targetc = find(ismember(VOCopts.classes,m.cls));
     gainvec = (maxos-.5);
     gainvec(maxclass~=targetc) = gainvec(maxclass~=targetc) - .2;
-    gainvec(maxos<.1) = gainvec(maxos<.1) - .1;
     
     visual = m.model.w(:)'*m.model.nsv - m.model.b;
     visual = visual - min(visual(:));
     visual = visual / max(visual(:));
+    gainvec = maxos;
+    
     R = .1*(gainvec) + visual';
+    %R = R - min(R(:));
+    %R = R / max(R(:));
+    %R(maxos<.1) = -1;
     
-
-    
+        
     [negatives,vals,pos] = find_set_membership(m);
     
     X = m.model.nsv(:,[negatives pos]);
@@ -106,23 +111,23 @@ if mining_params.extract_negatives == 1
     
     cs = (1./((1:length(bb))).^.3);
     C = diag(cs);
+
     
-    lambda = 10;
-    W=inv(X*C'*X'+lambda*eye(size(X,1),size(X,1)))*X*C'*R;
+    lambda = .1;
+    W = inv(X*C'*X'+lambda*eye(size(X,1),size(X,1)))*X*C'*R;
     w = W(1:end-1);
     b = -w(end-1);
-    X2 = m.model.nsv;
-    X2(end+1,:) = 1;
-    figure(1)
-    plot(W'*X,R,'r.')
-    drawnow
+
+    %figure(1)
+    %plot(W'*X,R,'r.')
+    %drawnow
     % figure(2)
     % imagesc(HOGpicture(reshape(w,[8 8 31])))
     
     m.model.w = reshape(w,size(m.model.w));
     m.model.b = b;
     figure(3)
-    imagesc(get_sv_stack(m,bg,15,15))
+    imagesc(get_sv_stack(m,bg,5,5))
     drawnow
   end
 
@@ -282,10 +287,7 @@ if length(svm_model.sv_coef) == 0
   b = m.model.b;
   fprintf(1,'reverting to old model...\n');
 else
-  
-  
   %convert support vectors to decision boundary
-  
   svm_weights = full(sum(svm_model.SVs .* ...
                          repmat(svm_model.sv_coef,1, ...
                                 size(svm_model.SVs,2)),1));
@@ -295,7 +297,7 @@ else
   
   if supery(1) == -1
     wex = wex*-1;
-    b = b*-1;    
+    b = b*-1;
   end
   %% project back to original space
   b = b + wex'*A(m.model.mask,:)'*mu(m.model.mask);
