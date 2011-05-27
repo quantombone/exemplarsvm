@@ -39,6 +39,9 @@ if CACHE_FILE == 1
   cache_file = ...
       sprintf('%s/%s-%s.mat',cache_dir,cls,DET_TYPE);
   
+  cache_file_stripped = ...
+      sprintf('%s/%s-%s.mat',cache_dir,cls,[DET_TYPE '-stripped']);
+  
   if fileexists(cache_file)
     fprintf(1,'Loading CACHED file: %s\n', cache_file);
     load(cache_file);
@@ -109,7 +112,11 @@ fprintf(1,'\n');
 %   fprintf(1,'finished making nn file\n');
 % end
 
-if CACHE_FILE==1
+if CACHE_FILE==1 && (nargout==0)
   fprintf(1,'Loaded models, saving to %s\n',cache_file);
   save(cache_file,'models');
+  models_save = models;
+  models = strip_model(models);
+  save(cache_file_stripped,'models');
+  models = models_save;
 end
