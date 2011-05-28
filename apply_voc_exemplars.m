@@ -12,7 +12,8 @@ function apply_voc_exemplars(models)
 NIMS_PER_CHUNK = 10;
 
 VOCinit;
-curset = 'both';
+%curset = 'both';
+curset = 'trainval';
 
 %Store exemplars for this class
 if ~exist('models','var')
@@ -27,7 +28,7 @@ if strfind(r,VOCopts.display_machine)==1
 else
   display = 0;
 end
-display = 0;
+%display = 0;
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
@@ -50,7 +51,7 @@ if display == 1
   curset = 'test';%'trainval';
   curcls = models{1}.cls;  
   %curcls = 'car';
-  curcls = 'bus';
+  %curcls = 'bus';
   %curcls = 'tvmonitor';
   
   bg = get_pascal_bg(curset,sprintf('%s',curcls));
@@ -58,8 +59,8 @@ if display == 1
   %came from
   %bg = cellfun2(@(x)sprintf(VOCopts.imgpath,x.curid),models);
 else
-  bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
-  %bg = get_pascal_bg('trainval');
+  %bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
+  bg = get_pascal_bg(curset);
   fprintf(1,'bg length is %d\n',length(bg));
 end
 
@@ -118,14 +119,20 @@ for i = 1:length(ordering)
        
     starter = tic;
     [rs,t] = localizemeHOG(I,models,localizeparams);
+    % for i = 1:length(rs.score_grid)
+    %   bads = find(rs.score_grid{i}<=models{i}.model.svscores(50));
+    %   rs.score_grid{i}(bads) = [];
+    %   rs.id_grid{i}(bads) = [];
+    %   rs.support_grid{i}(:,bads) = [];
+    % end
     scores = cat(2,rs.score_grid{:});
     [aa,bb] = max(scores);
     fprintf(1,' took %.3fsec, maxhit=%.3f, #hits=%d\n',...
             toc(starter),aa,length(scores));
 
-    tic
-    [coarse_boxes] = extract_bbs_from_rs(rs, index);
-    toc
+
+    [coarse_boxes] = extract_bbs_from_rs(rs.id_grid, rs.score_grid, index);
+
     
     boxes = coarse_boxes;
     %map GT boxes from training images onto test image
@@ -153,6 +160,7 @@ for i = 1:length(ordering)
       %% ONLY SHOW TOP 5 detections or fewer
       boxes = boxes(1:min(size(boxes,1),8),:);
       
+      
       if size(boxes,1) >=1
         figure(1)
         clf
@@ -173,7 +181,6 @@ for i = 1:length(ordering)
         fprintf(1,'No detections in this Image\n');
       end
     end
-        
 
     extras = [];
     res{j}.coarse_boxes = coarse_boxes;
@@ -191,18 +198,24 @@ for i = 1:length(ordering)
     [tmp,curid,tmp] = fileparts(Iname);
     res{j}.curid = curid;
     
-    try
+    %try
       % get GT objects for this image
       recs = PASreadrecord(sprintf(VOCopts.annopath,curid));
 
       % get overlaps with all ground-truths (makes sense for VOC
       % images only)
       gtbb = cat(1,recs.objects.bbox);
-      extras.os = getosmatrix_bb(boxes,gtbb);
-      extras.cats = {recs.objects.class};
+      os = getosmatrix_bb(boxes,gtbb);
+      cats = {recs.objects.class};
+      [tmp,cats] = ismember(cats,VOCopts.classes);
+      
+      [alpha,beta] = max(os,[],2);
+      extras.maxos = alpha;
+      extras.maxind = beta;
+      extras.maxclass = cats(beta);
       res{j}.extras = extras;
-    catch
-    end
+    %catch
+    %end
     
   end
 
