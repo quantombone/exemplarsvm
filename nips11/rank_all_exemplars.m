@@ -1,5 +1,5 @@
-function rank_all_exemplars(cls,am)
-%% Here we do training where there are 100 pyramid wiggles around
+function rank_all_exemplars(am)
+%% Here we do visual direction pre-training where there are 100 pyramid wiggles around
 %% each GT object
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
@@ -133,10 +133,10 @@ for i = 1:length(ordering)
   %% check if we are ready for an update
   filerlock = [filer2final '.mining.lock'];
   
-  %if fileexists(filer2final) || (mymkdir_dist(filerlock) == 0)
-  %  continue
-  %end
-  fprintf(1,'warning no skip\n');
+  if fileexists(filer2final) || (mymkdir_dist(filerlock) == 0)
+    continue
+  end
+  %fprintf(1,'warning no skip\n');
 
   %Set up the negative set for this exemplar
   %CVPR2011 paper used all train images excluding category images

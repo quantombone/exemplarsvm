@@ -15,7 +15,7 @@ for i = 1:length(models)
   % end
   % toc
  
-  filer = sprintf('/nfs/baikal/tmalisie/grids/%05d.mat',i);
+  filer = sprintf('/nfs/baikal/tmalisie/grids/%s.%05d.mat',models{1}.cls,i);
   save(filer,'coarse_boxes');
   fprintf(1,'.');
 end
