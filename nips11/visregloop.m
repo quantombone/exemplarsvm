@@ -10,7 +10,7 @@ mode = 'exemplars';
 
 %Set default class and detector mode, by writing into the default
 %file, which our mapreduces will be reading.
-save_default_class(cls,mode);
+save_default_class(cls,'exemplars');
 
 %Run an "exemplar_initialize" mapreduce
 %timing.initialize = spawn_job('ei',50,2);
@@ -18,6 +18,16 @@ save_default_class(cls,mode);
 timing.initialize = spawn_job('ei',50,2);
 
 timing.rank1 = spawn_job('rank_all_exemplars',50,2);
+
+save_default_class(cls,'exemplars-rank2');
+
+%Create initialization of file, as well as stripped file, by
+%loading without output arguments
+load_all_models;
+
+%apply everything on trainval
+timing.app1 = spawn_job('apply_voc_exemplars',50,2);
+
 
 for q = 1:10
   %Load the models -- which will force a caching of result file
