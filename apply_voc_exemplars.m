@@ -1,4 +1,4 @@
-function apply_voc_exemplars(models)
+function apply_voc_exemplars(models,M,curset)
 %% Apply a set of models (raw exemplars, trained exemplars, dalals, etc) to a set of images.  Script can be ran in
 %% parallel with no arguments.  
 %% After running script, use grid=load_result_grid(models) to
@@ -12,8 +12,10 @@ function apply_voc_exemplars(models)
 NIMS_PER_CHUNK = 10;
 
 VOCinit;
-%curset = 'both';
-curset = 'trainval';
+if ~exist('curset','var')
+  curset = 'both';
+end
+%curset = 'trainval';
 
 %Store exemplars for this class
 if ~exist('models','var')
@@ -28,13 +30,14 @@ if strfind(r,VOCopts.display_machine)==1
 else
   display = 0;
 end
-%display = 0;
+%display = 1;
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
 end
 
 localizeparams = get_default_mining_params;
+localizeparams.thresh = -1.5;
 if length(strfind(models{1}.models_name,'-ncc'))
   localizeparams.ADJUST_DISTANCES = 1;
 end
@@ -50,6 +53,9 @@ if display == 1
   %we apply results on in-class images from trainval
   curset = 'test';%'trainval';
   curcls = models{1}.cls;  
+  %curcls = '';
+
+  %curcls = 'dog';
   %curcls = 'car';
   %curcls = 'bus';
   %curcls = 'tvmonitor';
@@ -142,20 +148,21 @@ for i = 1:length(ordering)
     if display == 1       
       %extract detection box vectors from the localization results
 
-      
       if size(boxes,1)>=1
         boxes(:,5) = 1:size(boxes,1);
       end
       
-      % if exist('betas','var')
-      %   boxes = calibrate_boxes(boxes,betas);
-      % end
-      
-      [aa,bb] = sort(boxes(:,end),'descend');
-      boxes = boxes(bb,:);
+      if exist('M','var') && length(M)>0
+        boxes = calibrate_boxes(boxes,M.betas);
+      end
+
+      if numel(boxes)>0
+        [aa,bb] = sort(boxes(:,end),'descend');
+        boxes = boxes(bb,:);
+      end
  
-      %already nmsed
-      %boxes = nms_within_exemplars(boxes,.5);
+      %already nmsed (but not for LRs)
+      boxes = nms_within_exemplars(boxes,.5);
 
       %% ONLY SHOW TOP 5 detections or fewer
       boxes = boxes(1:min(size(boxes,1),8),:);
@@ -172,12 +179,16 @@ for i = 1:length(ordering)
         %                                     stuff);
 
         % show_hits_figure_iccv(models,boxes,I,I,exemplar_overlay,I);
-        
         show_hits_figure(models, boxes, I);
+
         drawnow
 
         pause
       else
+        figure(1)
+        clf
+        imagesc(I)
+        drawnow
         fprintf(1,'No detections in this Image\n');
       end
     end
