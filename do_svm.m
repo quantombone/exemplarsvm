@@ -54,14 +54,14 @@ if mining_params.extract_negatives == 1
   %xs = m.model.nsv(:,[negatives pos]);
   %objids = m.model.svids([negatives pos]);
 
-
-  xs = m.model.nsv(:,[negatives]);
+  xs = m.model.nsv(:, [negatives]);
   objids = m.model.svids([negatives]);
   
   %xs_val = m.model.nsv(:,[negatives pos]);
   %objids_val = m.model.svids([vals]);
   
-  bg = get_pascal_bg('trainval');
+  %bg = get_pascal_bg('trainval');
+  
   %fprintf(1,'getting overlaps with gt\n');
   %tic
   %[maxos,maxind,maxclass] = ...
@@ -83,14 +83,16 @@ end
 %xs = xs(:,maxos<.5);
 %objids = objids(maxos<.5);
 
-if size(xs,2) >= 10000
+MAXSIZE = 2000;
+if size(xs,2) >= MAXSIZE
+  HALFSIZE = MAXSIZE/2;
   %NOTE: random is better than top 5000
   r = m.model.w(:)'*xs;
   [tmp,r] = sort(r,'descend');
-  r1 = r(1:5000);
+  r1 = r(1:HALFSIZE);
   
-  r = 5000+randperm(length(r(5001:end)));
-  r = r(1:5000);
+  r = HALFSIZE+randperm(length(r((HALFSIZE+1):end)));
+  r = r(1:HALFSIZE);
   r = [r1 r];
   xs = xs(:,r);
   objids = objids(r);
@@ -98,29 +100,28 @@ if size(xs,2) >= 10000
 end
 
 if 0
-[aa,bb] = sort(gainvec,'descend');
-goods = find(aa>.5);
-aa = aa(goods);
-bb = bb(goods);
-xd = xs(:,bb);
-dd = diff(xd,[],2);
-superx = -dd;
-neggies = xs(:,gainvec<.2);
-supery = cat(1,ones(size(superx,2),1),...
-             -1*ones(size(neggies,2),1));
-superx = cat(2,superx,neggies);
-fprintf(1,'liblinearing...\n');
-
-tic
-model = liblinear_train(supery, sparse(superx)', sprintf(['-s 2 -B -1 -c' ...
+  [aa,bb] = sort(gainvec,'descend');
+  goods = find(aa>.5);
+  aa = aa(goods);
+  bb = bb(goods);
+  xd = xs(:,bb);
+  dd = diff(xd,[],2);
+  superx = -dd;
+  neggies = xs(:,gainvec<.2);
+  supery = cat(1,ones(size(superx,2),1),...
+               -1*ones(size(neggies,2),1));
+  superx = cat(2,superx,neggies);
+  fprintf(1,'liblinearing...\n');
+  
+  tic
+  model = liblinear_train(supery, sparse(superx)', sprintf(['-s 2 -B -1 -c' ...
                     ' %f'],1000));%mining_params.SVMC));
-toc
-wex = model.w(1:end)';
-b = 0;
+  toc
+  wex = model.w(1:end)';
+  b = 0;
 end
 if 1
   %old method
-
 
   % wm = zeros(m.model.hg_size(1),m.model.hg_size(2));
   
@@ -136,19 +137,25 @@ if 1
   
   superx = cat(2,m.model.x,xs);
   supery = cat(1,ones(size(m.model.x,2),1),-1*ones(size(xs,2),1));
+
+
   
+  if 0 %size(m.model.x,2) > 1
+    %superx2 = -1*repmat(m.model.x(:,1), 1,size(m.model.nsv,2))-m.model.nsv(:,1:end);
+    %supery2 = 1*ones(size(m.model.nsv,2),1);
+
+    %% add self max
+    superx2 = m.model.xstart*10;
+    supery2 = 1;
+
+    superx = cat(2,superx,superx2);
+    supery = cat(1,supery,supery2);
+  end
   
-  % if size(m.model.x,2) > 1
-  %   superx = cat(2,1*(repmat(m.model.x(:,1),...
-  %                             1,size(m.model.x,2)- ...
-  %                             1)-m.model.x(:,2:end)),superx);
-  %   supery = cat(1,1*ones(size(m.model.x,2)-1,1),supery);
-  %   %% add self max
-  % end
 spos = sum(supery==1);
 sneg = sum(supery==-1);
 
-wpos = 1;
+wpos = 50;
 wneg = 1;
 
 if mining_params.BALANCE_POSITIVES == 1
@@ -163,15 +170,21 @@ A = eye(size(superx,1));
 mu = zeros(size(superx,1),1);
 
 if mining_params.DOMINANT_GRADIENT_PROJECTION == 1
-  A = get_dominant_basis(reshape(mean(superx(:,supery==1),2), ...
+  % A = get_dominant_basis(reshape(mean(superx(:,supery==1),2), ...
+  %                                m.model.hg_size),...
+  %                        mining_params ...
+  %                        .DOMINANT_GRADIENT_PROJECTION_K);
+  
+  A = get_dominant_basis(reshape(mean(m.model.x(:,1),2), ...
                                  m.model.hg_size),...
-                         mining_params ...
-                         .DOMINANT_GRADIENT_PROJECTION_K);
-  %A2 = get_dominant_basis(reshape(mean(superx(:,supery==-1 & old_scores'>=-1),2), ...
-  %                               hg_size),...
-  %                       mining_params ...
-  %                       .DOMINANT_GRADIENT_PROJECTION_K);
-  %A = [A A2];
+                         mining_params.DOMINANT_GRADIENT_PROJECTION_K);
+
+  
+  A2 = get_dominant_basis(reshape(mean(superx(:,supery==-1),2), ...
+                                  m.model.hg_size),...
+                          mining_params ...
+                          .DOMINANT_GRADIENT_PROJECTION_K);
+  A = [A A2];
 elseif mining_params.DO_PCA == 1
   [A,d,mu] = mypca(superx,mining_params.PCA_K);
 elseif mining_params.A_FROM_POSITIVES == 1
@@ -247,18 +260,15 @@ else
 end
 
 
-%wex'*m.model.x - b
+maxpos = max(wex'*m.model.x - b);
+fprintf(1,' --- Max positive is %.3f\n',maxpos);
+
 
 fprintf(1,'took %.3f sec\n',toc(starttime));
 end %end old methods
 
-try
-  m.model.w = reshape(wex,size(m.model.w));
-catch
-  fprintf(1,'reshape bug?\n');
-  keyboard
-  
-end
+
+m.model.w = reshape(wex,size(m.model.w));
 m.model.b = b;
 
 r = m.model.w(:)'*m.model.nsv - m.model.b;
@@ -274,3 +284,5 @@ m.model.nsv = m.model.nsv(:,svs);
 m.model.svids = m.model.svids(svs);
 %TODO: Note, we are keeping vectors, but some are actually for
 %validation, some for training...
+
+
