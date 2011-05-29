@@ -83,15 +83,24 @@ if mining_params.extract_negatives == 1
     maxind = Amaxind(bb(keepers));
     maxclass = Amaxclass(bb(keepers));
     
-    VOCinit;
-    targetc = find(ismember(VOCopts.classes,m.cls));
-    gainvec = (maxos-.5);
-    gainvec(maxclass~=targetc) = gainvec(maxclass~=targetc) - .2;
-    
     visual = m.model.w(:)'*m.model.nsv - m.model.b;
     visual = visual - min(visual(:));
     visual = visual / max(visual(:));
-    gainvec = maxos;
+    
+    VOCinit;
+    targetc = find(ismember(VOCopts.classes,m.cls));
+    gainvec = double(maxos>.5);
+    %gainvec = max(0.0,(maxos-.5));
+    
+    [aa,bb] = sort(visual,'descend');
+    [alpha,beta] = sort(bb);
+    
+
+    gainvec(maxclass~=targetc) = gainvec(maxclass~=targetc) - .5;
+    
+    %gainvec = gainvec.*(1./beta');
+
+    %gainvec = maxos;
     
     R = .1*(gainvec) + visual';
     %R = R - min(R(:));
