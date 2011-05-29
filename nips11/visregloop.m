@@ -2,8 +2,8 @@
 %{'car','dog','cat','bird','chair','pottedplant'};%'tvmonitor','bottle','cow'};
 %classes = { 'motorbike' };
 
-%cls = 'motorbike';
-cls = 'train';
+cls = 'motorbike';
+%cls = 'train';
 mode = 'exemplars';
 
 %% Here is the main script for doing the NN baseline
@@ -26,8 +26,17 @@ save_default_class(cls,'exemplars-rank2');
 load_all_models;
 
 %apply everything on trainval
-timing.app1 = spawn_job('apply_voc_exemplars',50,2);
+timing.app1 = spawn_job('ave_trainval',50,2);
+models = load_all_models;
+grid = load_result_grid_trainval(models);
 
+separate_grid(models,grid);
+
+%Run the visual sim learning task
+timing.app1 = spawn_job('reregt',50,4);
+
+
+return;
 
 for q = 1:10
   %Load the models -- which will force a caching of result file

@@ -15,8 +15,9 @@ for i = 1:length(ht)
   goods = find(g.bboxes(:,end)>=-1);
   b = g.bboxes(goods,:);
   b = calibrate_boxes(b,betas);
-  [aa,bb] = sort(b(:,end),'descend');
-  b = b(bb(1:min(length(bb),30)),:);
+  b = b(b(:,end)>.1,:);
+  %[aa,bb] = sort(b(:,end),'descend');
+  %b = b(bb(1:min(length(bb),30)),:);
   
   b = clip_to_image(b,[1 1 size(I,2) size(I,1)]);
   b(:,1:4) = round(b(:,1:4));
@@ -37,12 +38,18 @@ for i = 1:length(ht)
   %summer = summer ./ (counter+eps);
   %summer = summer / size(b,1);
 
+  %b2 = nms(b,.5);
+  b2 = b;
+  [alpha,beta] = sort(b2(:,end),'descend');
+  b2 = b2(beta(1:min(length(beta),20)),:);
   %summer = summer / max(summer(:));
   %summer = summer.^2;
   figure(1)
   clf
   subplot(1,2,1)
-  imagesc(I.*repmat(summer/max(summer(:)),[1 1 3]))
+  %imagesc(I.*repmat(summer/max(summer(:)),[1 1 3]))
+  imagesc(I)
+  plot_bbox(b2)
   %plot_bbox(mean(b,1))
   subplot(1,2,2)
   imagesc(summer)
