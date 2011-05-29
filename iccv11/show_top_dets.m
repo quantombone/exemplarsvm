@@ -1,28 +1,13 @@
-function allbbs=show_top_dets(models,grid,target_directory,finalstruct)%final_boxes,final_maxos)
-%Show the top detections on a set of images
-%NOTE his also writes out bus transfer files (which can clobber
-%good results!)
-
+function allbbs = show_top_dets(models, grid, target_directory, finalstruct)
+%Show the top detections on a set of images, finalstruct is obtain
+%from the eval_voc script
 
 VOCinit;
-
 %finalstruct.basedir = '/nfs/baikal/tmalisie/labelme400/www/voc/iccv11/VOC2007/newones/';
-models = add_sizes_to_models(models);
-
-gridsave = grid;
-if isfield(finalstruct,'friendclass')
-  for i = 1:length(models)
-    models{i}.friendclass = finalstruct.friendclass;
-  end
-end
 
 allbbs = cell(0,1);
-%final_boxes = final.final_boxes;
 final_boxes = finalstruct.unclipped_boxes;
 final_maxos = finalstruct.final_maxos;
-
-
-VOCinit;
 
 %if enabled we show images
 saveimages = 0;
@@ -48,7 +33,6 @@ for i = 1:length(final_boxes)
   imids{i} = [];
   if size(final_boxes{i},1) > 0
     imids{i} = i * ones(size(final_boxes{i},1),1);
-    %final_boxes{i}(:,5) = i;
   end
 end
 
@@ -57,7 +41,6 @@ bbs = cat(1,final_boxes{:});
 imids = cat(1,imids{:});
 moses = [final_maxos{:}];
 [aa,bb] = sort(bbs(:,end),'descend');
-
 
 %% only good ones now!
 %bb = bb(moses(bb)>.5);
@@ -91,7 +74,8 @@ counter = 1;
 maxk = 100;
 KKK = [1 1];
 
-counter = 1;%20;
+counter = 1;
+
 for k = 1:maxk
   k
   %figure(1)
@@ -141,65 +125,37 @@ for k = 1:maxk
     stuff.filer = sprintf(['/nfs/baikal/tmalisie/labelme400/www/voc/'...
                     'segxfer/%s%s-on-%s-%s-%d.eps'],...
                           models{1}.cls,extra,target_directory,estring,k);
-
-
-    
     ccc = bbox(6);
     
-    %curb = final_boxes{imids(curb)};
-    %curb = final_boxes{bbox(5)};
-    
-    %curb = grid{bbox(5)}.bboxes;
-    %curb = nms_within_exemplars(curb,.5);
-    
-    %[alpha,beta] = sort(curb(:,end),'descend');
-    %curb = curb(beta(1:min(5,length(beta))),:);
     
     target_image_id = imids(bb(counter));
     target_cluster_id = bbs(bb(counter),5);
-    
-    
+        
     allbb = finalstruct.raw_boxes{target_image_id};
     osmat = getosmatrix_bb(allbb,bbs(bb(counter),:));
     goods = find(osmat>.5);
     allbb = allbb(goods,:);
-    allbb(:,end) = allbb(:,end)+1;
-    %allbb = calibrate_boxes(allbb,finalstruct.M.betas);
-    allbb = nms_within_exemplars(allbb,.5);
     [alpha,beta] = sort(allbb(:,end),'descend');
     allbb = allbb(beta,:);
-    
-    %rawhits = ...
-    %    finalstruct.nbrlist{target_image_id}{target_cluster_id};
-    %curb = finalstruct.pre_nms_boxes{target_image_id}(rawhits,:);
-
-    %[alpha,beta] = sort(curb(:,end),'descend');
-    %curb = curb(beta,:);
-
-    
+        
     sumI = I*0;
     countI = zeros(size(I,1),size(I,2),1);
     ooo = cell(0,1);
     
     mean0 = mean(allbb,1);
     curoses = getosmatrix_bb(mean0(1,:),allbb);
-
     
     for zzz = 1:min(1,size(allbb,1))
 
       exemplar_overlay = exemplar_inpaint(allbb(zzz,:), ...
                                           models{allbb(zzz,6)}, ...
                                           stuff);
-
-
       
       ooo{end+1} = exemplar_overlay;
-      %if sum(1-exemplar_overlay.alphamask(:)) > 0
+
       sumI = sumI + curoses(zzz)*allbb(zzz,end)*exemplar_overlay.segI;
       countI = countI + ...
-               curoses(zzz)*allbb(zzz,end);%*exemplar_overlay.mask;
-                                           %   break;
-                                           % end                                       
+               curoses(zzz)*allbb(zzz,end);                                       
     end
     sumI = sumI ./ repmat(countI,[1 1 3]);
     
@@ -245,6 +201,8 @@ for k = 1:maxk
                           exemplar_overlay.segI,exemplar_overlay,gtim);
 
     drawnow
+    
+
 
 %     output.I = I;
 %     output.result = exemplar_overlay.segI;

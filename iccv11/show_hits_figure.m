@@ -72,6 +72,7 @@ end
 N = min(5,size(topboxes,1));
 for i = 1:N
 
+
   mid = topboxes(i,6);
   % subplot(N,15,15*i-3-5)
   % imagesc(score_masks{i}.hogdet);
@@ -89,7 +90,7 @@ for i = 1:N
   subplot(N,6,6*(i-1)+3)
   imagesc(chunks{i});
   plot_bbox([1 1 size(chunks{i},2) size(chunks{i},1)],'',colors(i,:));
-  title(num2str(topboxes(i,end)));
+  title([num2str(topboxes(i,end)) ' ' models{topboxes(i,6)}.models_name]);
   axis image
   axis off
   

@@ -1,4 +1,4 @@
-function [x,nbrids] = get_box_features(boxes, N, neighbor_thresh)
+function [x] = get_box_features(boxes, N, neighbor_thresh)
 %Get the box features for this particular set of boxes from a
 %single image (boxes are the boxes, N is the # of exemplars) and
 %the neighbor list (which are the box ids contributing to this
@@ -19,23 +19,38 @@ function [x,nbrids] = get_box_features(boxes, N, neighbor_thresh)
 %N is the number of exemplars
 %K is the number of boxes
 K = size(boxes,1);
-x = sparse(N, K);
-nbrids = cell(1,K);
+x = sparse(N*2, K);
+%nbrids = cell(1,K);
 
 %Get overlaps between all boxes in the set
 osmat = getosmatrix_bb(boxes, boxes);
 
-tdm = getaspectmatrix_bb(boxes, boxes);
+%tdm = getaspectmatrix_bb(boxes, boxes);
  
 exid = boxes(:,6)';
+exid(boxes(:,7)==1) = exid(boxes(:,7)==1) + N;
 uc = unique(exid);
 
 %by adding one to the scores, we effectively get a positive score
-scorerow = boxes(:,end)+1;
+%scorerow = boxes(:,end)+1;
 
 %scores already calibrated
-%scorerow = boxes(:,end);
+scorerow = boxes(:,end);
 
+osmat = osmat - diag(diag(osmat));
+for j = 1:K
+  friends = find(osmat(:,j) > neighbor_thresh);
+  x(exid(j),j) = scorerow(j);
+  if length(friends) == 0
+    continue
+  end
+  x(exid(friends),j) = scorerow(friends);
+end
+
+%nbrids = [];
+return;
+
+tic
 for j = 1:K
   neighbors = (osmat(:,j) >= neighbor_thresh);% & (tdm(:,j) < .1);
   friend_scores = scorerow.*neighbors;
@@ -62,3 +77,6 @@ for j = 1:K
   nbrids{j} = nbrids{j}(1:(counter-1));
 
 end
+toc
+
+keyboard

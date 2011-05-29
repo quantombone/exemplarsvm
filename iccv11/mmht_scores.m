@@ -1,5 +1,6 @@
 function M = mmht_scores(boxes, maxos, models, neighbor_thresh, count_thresh)
-%Given a bunch of detection, learn the max-margin scoring function
+%Given a bunch of detections, learn the M boosting matrix, which
+%makes the final scores multiplexed
 
 if ~exist('neighbor_thresh','var')
   neighbor_thresh = 0.5;
@@ -9,18 +10,21 @@ if ~exist('count_thresh','var')
   count_thresh = 0.5;
 end
 
+%already nms-ed within exemplars
+if 0
 for i = 1:length(boxes)
   boxes{i}(:,5) = 1:size(boxes{i},1);
   boxes{i} = nms_within_exemplars(boxes{i},.5);
   maxos{i} = maxos{i}(boxes{i}(:,5));
   boxes{i}(:,5) = i;
 end
+end
 
 K = length(models);
 N = sum(cellfun(@(x)size(x,2),maxos));
 
-y = [maxos{:}];
-os = [maxos{:}];
+y = cat(1,maxos{:});
+os = cat(1,maxos{:})';
 
 scores = cellfun2(@(x)x(:,end)',boxes);
 scores = [scores{:}];
@@ -41,16 +45,22 @@ for i = 1:length(boxes)
 end
 x = [xraw{:}];
 
-
 exids = allboxes(:,6);
+exids(allboxes(:,7)==1)= exids(allboxes(:,7)==1) + length(models);
 imids = allboxes(:,5);
 
-osmats = cellfun2(@(x)getosmatrix_bb(x,x),boxes);
-thetadiffmats = cellfun2(@(x)getaspectmatrix_bb(x,x),boxes);
+%osmats = cellfun2(@(x)getosmatrix_bb(x,x),boxes);
+%thetadiffmats = cellfun2(@(x)getaspectmatrix_bb(x,x),boxes);
 
+fprintf(1,'learning M by counting\n');
+tic
 %This one works best so far
 M = learn_M_counting(x, exids, os, count_thresh);
+toc
 
+
+%lambda = .001;
+%w = inv(x*x'+lambda*eye(size(x,1),size(x,1)))*x*os';
 %M = learn_M_counting(x, exids, maxos, count_thresh,osmats, ...
 %                     thetadiffmats,boxes);
 %M = learn_M_gaussian(x, exids, os, count_thresh);
@@ -68,6 +78,7 @@ M.count_thresh = count_thresh;
 %M = optimize_M(M,x,exids,os);
 
 r = cell(length(xraw),1);
+fprintf(1,'applying boost matrix\n');
 tic
 for j = 1:length(xraw)
   r{j} = apply_boost_M(xraw{j},boxes{j},M);
@@ -76,8 +87,9 @@ end
 r = [r{:}];
 [aa,bb] = sort(r,'descend');
 goods = os>.5;
-lenvec = 1:N;
-res = cumsum(goods(bb)>.5)./lenvec;
+%lenvec = 1:N;
+
+res = (cumsum(goods(bb))./(1:length(bb)));
 M.score = mean(res);
 toc
 
@@ -170,7 +182,6 @@ function M = learn_M_counting(x, exids, os, count_thresh)
 %Learn the matrix by counting activations on positives
 N = size(x,2);
 K = size(x,1);
-
 
 C = zeros(K,K);
 % for i = 1:length(osmats)

@@ -6,7 +6,7 @@ x = scores;
 y = os;
 
 %DO THIS OR NOT?
-%y(y>=.5) = 1;
+y(y>=.5) = 1;
 
 y(y<=.2) = 0;
 bads = y>.2 & y<.5;

@@ -72,16 +72,19 @@ if REMOVE_SELF == 0
 end
 
 fprintf(1,'Loading bboxes\n');
+curcls = find(ismember(VOCopts.classes,models{1}.cls));
 for i = 1:length(grid)
   
   curid = grid{i}.curid;
   bboxes{i} = grid{i}.bboxes;
   
   if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'os')
-    grid{i}.extras.os(:,end+1) = 0;
-    grid{i}.extras.cats{end+1} = models{1}.cls;
-    curhits = find(ismember(grid{i}.extras.cats,{models{1}.cls}));
-    maxos{i} = max(grid{i}.extras.os(:,curhits),[],2)';
+    %grid{i}.extras.os(:,end+1) = 0;
+    %grid{i}.extras.cats{end+1} = models{1}.cls;
+    %curhits = find(ismember(grid{i}.extras.cats,{models{1}.cls}));
+    %maxos{i} = max(grid{i}.extras.os(:,curhits),[],2)';
+    maxos{i} = grid{i}.extras.maxos;
+    maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
   end
 
   if REMOVE_SELF == 1
@@ -99,6 +102,7 @@ end
 
 raw_boxes = bboxes;
 
+%%%NOTE: the LRs haven't been consolidated
 if 0 %turned off for nn baseline, since it is done already
   fprintf(1,'applying exemplar nms\n');
   for i = 1:length(bboxes)
@@ -112,40 +116,49 @@ if 0 %turned off for nn baseline, since it is done already
   end
 end
 
-if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
-  fprintf(1,'Applying M\n');
-  tic
-  nbrlist = cell(1,length(bboxes));
-  for i = 1:length(bboxes)
-    [xraw,nbrlist{i}] = get_box_features(bboxes{i},length(models),M.neighbor_thresh);
-    r2 = apply_boost_M(xraw,bboxes{i},M);
-    bboxes{i}(:,end) = r2;
-  end
-  toc
-end
-
 if exist('M','var') && length(M)>0 && isfield(M,'betas')
   fprintf(1,'Propagating scores onto raw detections\n');
   %% propagate scores onto raw boxes
   for i = 1:length(bboxes)
     calib_boxes = calibrate_boxes(bboxes{i},M.betas);
+    %Threshold at .1
+    oks = find(calib_boxes(:,end)>.1);
+    bboxes{i} = bboxes{i}(oks,:);
+    
+    
+    calib_boxes = calib_boxes(oks,:);
     raw_scores = calib_boxes(:,end);
     
     new_scores = raw_scores;
-    if exist('nbrlist','var')
-      for j = 1:length(nbrlist{i})
-        new_scores(nbrlist{i}{j}) = max(new_scores(nbrlist{i}{j}),...
-                                        raw_scores(nbrlist{i}{j}).*...
-                                        bboxes{i}(nbrlist{i}{j},end));
-      end
-    end
+    % if exist('nbrlist','var')
+    %   for j = 1:length(nbrlist{i})
+    %     new_scores(nbrlist{i}{j}) = max(new_scores(nbrlist{i}{j}),...
+    %                                     raw_scores(nbrlist{i}{j}).*...
+    %                                     bboxes{i}(nbrlist{i}{j},end));
+    %   end
+    % end
     bboxes{i}(:,end) = new_scores;
   end
 end
 
+if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
+  fprintf(1,'Applying M\n');
+  tic
+  %nbrlist = cell(1,length(bboxes));
+  for i = 1:length(bboxes)
+    fprintf(1,'.');
+    [xraw] = get_box_features(bboxes{i},length(models),M.neighbor_thresh);
+    r2 = apply_boost_M(xraw,bboxes{i},M);
+    oldd = bboxes{i}(:,end);
+    bboxes{i}(:,end) = r2;
+
+  end
+  toc
+end
+
 pre_nms_boxes = bboxes;
 
-fprintf(1,'applying NMS\n');
+fprintf(1,'applying competitive NMS\n');
 for i = 1:length(bboxes)
   if size(bboxes{i},1) > 0
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
@@ -153,9 +166,9 @@ for i = 1:length(bboxes)
     if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'os')
       maxos{i} = maxos{i}(bboxes{i}(:,5));
     end
-    if exist('nbrlist','var')
-      nbrlist{i} = nbrlist{i}(bboxes{i}(:,5));
-    end
+    % if exist('nbrlist','var')
+    %   nbrlist{i} = nbrlist{i}(bboxes{i}(:,5));
+    % end
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
   end
 end
@@ -173,7 +186,6 @@ end
 %  fprintf(1,'Applying betas\n');
 %  pre_nms_boxes = cellfun2(@(x)calibrate_boxes(x,M.betas),pre_nms_boxes);
 %end
-
 final_boxes = bboxes;
 final_maxos = maxos;
 
@@ -181,14 +193,14 @@ final_maxos = maxos;
 final.final_boxes = final_boxes;
 final.final_maxos = final_maxos;
 final.unclipped_boxes = unclipped_boxes;
-final.pre_nms_boxes = pre_nms_boxes;
-final.raw_boxes = raw_boxes;
-if exist('M','var') && exist('nbrlist','var')
-  final.nbrlist = nbrlist;
-  final.M = M;
-end
+%final.pre_nms_boxes = pre_nms_boxes;
+%final.raw_boxes = raw_boxes;
+%if exist('M','var') && exist('nbrlist','var')
+%  final.nbrlist = nbrlist;
+%  final.M = M;
+%end
 
-filer=sprintf(VOCopts.detrespath,'comp3',cls);
+filer = sprintf(VOCopts.detrespath,'comp3',cls);
 %Create directory if it is not present
 [aaa,bbb,ccc] = fileparts(filer);
 if ~exist(aaa,'dir')
@@ -241,4 +253,4 @@ if ~exist('M','var')
 end
 
 %TODO: we are saving really large files for exemplarNN
-save(resfile,'results','final','M');
+%save(resfile,'results','final','M');

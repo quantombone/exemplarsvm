@@ -1,4 +1,4 @@
-function [M] = mmhtit(models,grid)
+function [M] = mmhtit(models,grid,M)
 %% Learn a combination matrix M which multiplexes the detection
 %% results by compiling co-occurrence statistics on true positives
 
@@ -14,6 +14,12 @@ function [M] = mmhtit(models,grid)
 % end
 
 VOCinit;
+
+if ~exist('M','var')
+  betas = perform_calibration(models, grid);
+  M.betas = betas;
+end
+
 
 target_directory = 'trainval';
 %% prune grid to contain only images from target_directory
@@ -46,18 +52,28 @@ maxos = cell(1,length(grid));
 if REMOVE_SELF == 0
   fprintf(1,'Warning: Not removing self-hits\n');
 end
+curcls = find(ismember(VOCopts.classes,models{1}.cls));
 
 fprintf(1,'Loading bboxes\n');
+tic
 for i = 1:length(grid)
   
   curid = grid{i}.curid;
   bboxes{i} = grid{i}.bboxes;
   
+  calib_boxes = calibrate_boxes(bboxes{i},M.betas);
+  %Threshold at .1
+  oks = find(calib_boxes(:,end)>.1);
+  bboxes{i} = bboxes{i}(oks,:);
   if length(grid{i}.extras)>0
-    grid{i}.extras.os(:,end+1) = 0;
-    grid{i}.extras.cats{end+1} = models{1}.cls;
-    curhits = find(ismember(grid{i}.extras.cats,{models{1}.cls}));
-    maxos{i} = max(grid{i}.extras.os(:,curhits),[],2)';
+    %grid{i}.extras.os(:,end+1) = 0;
+    %grid{i}.extras.cats{end+1} = models{1}.cls;
+    %curhits = find(ismember(grid{i}.extras.cats,{models{1}.cls}));
+    %maxos{i} = max(grid{i}.extras.os(:,curhits),[],2)';
+    
+    maxos{i} = grid{i}.extras.maxos;
+    maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
+    maxos{i} = maxos{i}(oks);
   end
 
   if REMOVE_SELF == 1
@@ -71,6 +87,10 @@ for i = 1:length(grid)
     end
   end
 end
+toc
+
+
+
 
 if 0
 %% clip boxes to image
@@ -85,16 +105,17 @@ bboxes(lens==0) = [];
 maxos(lens==0) = [];
 
 
-%fprintf(1,'Applying betas\n');
+%fprintf(1,'Applyio.mng betas\n');
 %bboxes = cellfun2(@(x)calibrate_boxes(x,betas),bboxes);
 
 nthresh = 0.5;
 cthresh = 0.5;
+
+betas = M.betas;
 [M] = mmht_scores(bboxes, maxos, models, nthresh, ...
                   cthresh);
-
-betas = perform_calibration(models, grid);
 M.betas = betas;
+
 
 % return;
 

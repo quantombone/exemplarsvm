@@ -7,6 +7,7 @@ if prod(size(x))==0
   return;
 end
 exids = boxes(:,6);
+exids(boxes(:,7)==1) = exids(boxes(:,7)==1) + size(x,1)/2;
 r = zeros(1,size(boxes,1));
 
 for i = 1:size(boxes,1)
@@ -22,6 +23,6 @@ for i = 1:size(boxes,1)
   else
 
     r(i) = (M.w{exids(i)}'*x(:,i) + sum(x(:,i)))-M.b{exids(i)};
-
+    %r(i) = (M.w{exids(i)}'*x(:,i))-M.b{exids(i)};
   end
 end

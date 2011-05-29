@@ -30,26 +30,27 @@ mining_params.dump_images = 1;
 mining_params.dump_last_image = 0;
 
 %maximum #windows per image (per exemplar) to mine
-mining_params.MAX_WINDOWS_PER_IMAGE = 1000;
+%mining_params.MAX_WINDOWS_PER_IMAGE = 100;
 
 %Levels-per-octave defines how many levels between 2x sizes in pyramid
 mining_params.lpo = 10;
 
-%By default dont save feature fectors of detections
+%By default dont save feature vectors of detections
 mining_params.SAVE_SVS = 0;
 
+%default detection threshold
 mining_params.thresh = -1;
-mining_params.TOPK = 10;
+mining_params.TOPK = 50;
 
 %Maximum number of negatives to mine before SVM kicks in (this
 %defines one iteration)
-mining_params.MAX_WINDOWS_BEFORE_SVM = 500;
+mining_params.MAX_WINDOWS_BEFORE_SVM = 1000;
 
 %Maximum number of violating images before SVM kicks in (another
 %way to define one iteration)
 %NOTE: this variable breaks how I consider iterations, so make it
 %really large so it never fires
-mining_params.MAX_IMAGES_BEFORE_SVM = 500000;
+mining_params.MAX_IMAGES_BEFORE_SVM = 100;
 
 %At this cutoff, we switch thresholds from basically everything to
 %a reduced threshold
@@ -61,7 +62,7 @@ mining_params.detection_threshold = mining_params.late_detection_threshold;
 %when mining, we keep the N negative support vectors as well as
 %some more beyond the -1 threshold (alpha*N), but no more than 1000
 mining_params.beyond_nsv_multiplier = 3;
-mining_params.max_negatives = 1000;
+mining_params.max_negatives = 2000;
 
 %%if less than 1.0, then we apply nms to detections so that we don't have
 %%too many redundant windows
@@ -78,7 +79,7 @@ mining_params.queue_mode = 'onepass';
 
 %% if non-zero, sets weight of positives such that positives and
 %negatives are treated equally
-mining_params.BALANCE_POSITIVES = 1;
+mining_params.BALANCE_POSITIVES = 0;
 
 % if non-zero, perform learning in dominant-gradient space
 mining_params.DOMINANT_GRADIENT_PROJECTION = 0;
@@ -94,3 +95,5 @@ mining_params.A_FROM_POSITIVES = 0;
 mining_params.extract_negatives = 0;
 mining_params.GET_GT_OS = 0;
 mining_params.MINE_MODE = 0;
+
+mining_params.skip_mine = 0;

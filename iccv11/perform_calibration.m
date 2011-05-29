@@ -141,7 +141,8 @@ for i = 1:length(grid)
       cur.bboxes = nms_within_exemplars(cur.bboxes,.5);
     end
     if length(cur.extras)>0
-      cur.extras.os = cur.extras.os(cur.bboxes(:,5),:);
+      %cur.extras.os = cur.extras.os(cur.bboxes(:,5),:);
+      cur.extras.os = cur.extras.maxos(cur.bboxes(:,5));
     end
   end
   
@@ -157,16 +158,16 @@ for i = 1:length(grid)
     
 
     %% find the ground truth examples of the right category
-    goods = find(ismember(cur.extras.cats,cls));
+    %goods = find(ismember(cur.extras.cats,cls));
     
     exids = cur.bboxes(:,6);
    
-    if length(goods) == 0
-      os{i} = zeros(size(bboxes{i},1),1);
-    else
-      curos = cur.extras.os(:,goods);
-      os{i} = max(curos,[],2);
-    end    
+    %if length(goods) == 0
+    %  os{i} = zeros(size(bboxes{i},1),1);
+    %else
+    %  curos = cur.extras.os(:,goods);
+      os{i} = cur.extras.maxos; %max(curos,[],2);
+    %end    
   else
     os{i} = zeros(size(bboxes{i},1),1);    
   end
@@ -225,6 +226,10 @@ for exid = 1:length(models)
     all_scores = [good_scores; bad_scores];
     all_os = [good_os; bad_os];
     
+    [aaa,bbb] = sort(all_scores, 'descend');
+    bbb = bbb(1:min(100,length(bbb)));
+    all_scores = all_scores(bbb);
+    all_os = all_os(bbb);
     beta = learn_sigmoid(all_scores, all_os);
   end
 
@@ -243,7 +248,7 @@ for exid = 1:length(models)
       
   %if exid==221
   %if exid==171
-  if 1 %%display == 1
+  if 0 %%display == 1
     
     figure(1)
     clf
@@ -278,7 +283,10 @@ for exid = 1:length(models)
 
     bbs=ALL_bboxes(hits,:);
     bbs_os = ALL_os(hits,:);
-    [aa,bb] = sort(bbs(:,end)+bbs_os*.2,'descend');
+    %[aa,bb] = sort(bbs(:,end)+bbs_os*.2,'descend');
+    [aa,bb] = sort(bbs(:,end),'descend');
+
+
     
     figure(445)
     clf
@@ -291,6 +299,8 @@ for exid = 1:length(models)
       axis image
       axis off
     end
+
+
     if 0
     VOCinit;
     curdir = sprintf('%s/visual_regression_trainval/',VOCopts.wwwdir);
@@ -306,6 +316,7 @@ for exid = 1:length(models)
 
   end
   
+
   if (display == 0)
     continue
   end

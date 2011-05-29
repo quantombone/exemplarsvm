@@ -1,4 +1,4 @@
-function [overlaps,matchind,matchclass] = get_overlaps_with_gt(m, objids, bg)
+function [overlaps,matchind,matchclass] = get_overlaps_with_gt(m, objids)
 %% Given an exemplar in m, and its detections in objids, and a set of
 %% images in bg: find the overlaps with all instances of the category
 %% belonging to m (inside m.cls)
@@ -22,7 +22,9 @@ uids = unique([objids.curid]);
 VOCinit;
 
 for i = 1:length(uids)
-  [tmp,curid] = fileparts(bg{uids(i)});
+  %[tmp,curid] = fileparts(bg{uids(i)});
+  curid = sprintf('%06d',uids(i));
+
   recs = PASreadrecord(sprintf(VOCopts.annopath,curid));
   gt_bb = cat(1,recs.objects.bbox);
   [tmp,curclass] = ismember({recs.objects.class},VOCopts.classes);

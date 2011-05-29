@@ -4,6 +4,7 @@ function mining_queue = initialize_mining_queue(bg,rrr)
 
 if ~exist('rrr','var')
   fprintf(1,'Randomizing mining queue\n');
+  myRandomize;
   rrr = randperm(length(bg));
   %rrr = 1:length(bg);
 end
