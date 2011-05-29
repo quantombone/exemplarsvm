@@ -21,6 +21,10 @@ if strcmp(models{1}.models_name,'dalal') || ...
   return;
 end
 
+if numel(boxes)==0
+  return;
+end
+
 top(:,1:4) = 0;
 
 for i = 1:size(boxes,1)
