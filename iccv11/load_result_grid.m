@@ -1,4 +1,4 @@
-function grid = load_result_grid(models)
+function grid = load_result_grid(models,curset)
 %Given a set of models, return a grid of results from those models' firings
 %on the subset of images (target_directory is 'trainval' or 'test')
 %if only_images_of_class is specified, then only the subset of
@@ -22,7 +22,10 @@ VOCinit;
 % final_file = ...
 %     sprintf('%s/grids/%s_%s_grid.mat',VOCopts.localdir,'both',models{1}.cls);
 
-curset = 'both'
+if ~exist('curset','var')
+  curset = 'both'
+end
+%curset = 'trainval';
 curcls = models{1}.cls;
 setname = [curset '.' curcls];
 
@@ -31,11 +34,11 @@ final_file = sprintf('%s/applied/%s-%s.mat',VOCopts.localdir,setname, ...
 
 
 
-if fileexists(final_file)
-  fprintf(1,'Loading final file %s\n',final_file);
-  load(final_file);
-  return;
-end
+% if fileexists(final_file)
+%   fprintf(1,'Loading final file %s\n',final_file);
+%   load(final_file);
+%   return;
+% end
 
 
 % if ~exist('models','var')
@@ -55,7 +58,7 @@ end
   %setname = 'sketchfg';
   %curset = 'trainval'
  
-  curset = 'both'
+  %curset = 'both'
   curcls = models{1}.cls;
   setname = [curset '.' curcls];% models{1}.cls];
 %end
@@ -87,13 +90,9 @@ for i = 1:length(files)
   filer = sprintf('%s/%s', ...
                   baser,files(i).name);
   
-  %Try to lead each file
-  try
-    stuff = load(filer);
-    grid{i} = stuff;
-  catch
-    fprintf(1,'?');
-  end
+
+  stuff = load(filer);
+  grid{i} = stuff;
 end
 
 %Prune away files which didn't load
@@ -106,7 +105,7 @@ grid = [grid2{:}];
 [aa,bb] = sort(cellfun(@(x)x.index,grid));
 grid = grid(bb);
 
-fprintf(1,'Loaded grids, saving to %s\n',final_file);
-save(final_file,'grid');
+%fprintf(1,'Loaded grids, saving to %s\n',final_file);
+%save(final_file,'grid');
 
 fprintf(1,'Got to end of load result grid function\n');

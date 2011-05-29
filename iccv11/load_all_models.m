@@ -60,7 +60,19 @@ fprintf(1,'Length of files to load: %d\n',length(files));
 models = cell(1,length(files));
 for i = 1:length(files)
   fprintf(1,'.');
-  m = load([results_directory files(i).name]);
+  
+  %if a load fails, maybe we are loading a partial result DURING
+  %mining, so we only exit
+  try
+    m = load([results_directory files(i).name]);
+  catch
+    models{i} = [];
+    fprintf(1,'#');
+    if nargout==0
+      fprintf(1,'ERROR: could not load model %s, mining not complete?\n',files(i).name);
+      return;
+    end
+  end
 
   try
     models{i} = m.m;
@@ -81,7 +93,7 @@ for i = 1:length(files)
   %models{i}.model.btrace = [];
 
   %disable negative support vectors to save space
-  %models{i}.model.nsv = [];
+  models{i}.model.nsv = [];
   
   if ~isfield(models{i},'models_name')
     models{i}.models_name=strrep(DET_TYPE,'/','_');
