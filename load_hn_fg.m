@@ -27,10 +27,9 @@ number_of_windows = zeros(length(models),1);
 violating_images = zeros(0,1);
 empty_images = zeros(0,1);
 
-KEEPSV = 1;
 %IF NMS is enabled, get more windows (5 times as many) since
 %nms will prune many away
-TOPK_FINAL = mining_params.MAX_WINDOWS_PER_IMAGE;
+TOPK_FINAL = mining_params.TOPK;
 %if mining_params.NMS_MINES_OS < 1
 %  TOPK_FINAL = TOPK_FINAL * 5;
 %end
@@ -38,9 +37,11 @@ TOPK_FINAL = mining_params.MAX_WINDOWS_PER_IMAGE;
 localizeparams.thresh = mining_params.detection_threshold;
 localizeparams.TOPK = TOPK_FINAL;
 localizeparams.lpo = mining_params.lpo;
-localizeparams.SAVE_SVS = KEEPSV;
+localizeparams.SAVE_SVS = 1;
 localizeparams.FLIP_LR = mining_params.FLIP_LR;
 localizeparams.NMS_MINES_OS = mining_params.NMS_MINES_OS;
+
+numpassed = 0;
 
 for i = 1:length(mining_queue)
   index = mining_queue{i}.index;
@@ -52,10 +53,13 @@ for i = 1:length(mining_queue)
 
   %starter = tic;   
   [rs,t] = localizemeHOG(I, models, localizeparams);
+  numpassed = numpassed + 1;
   
+  [tmp,curid,tmp] = fileparts(bg{index});
+  curid_integer = str2num(curid);
   for aaa = 1:length(rs.id_grid)
     for bbb = 1:length(rs.id_grid{aaa})
-      rs.id_grid{aaa}{bbb}.curid = index;
+      rs.id_grid{aaa}{bbb}.curid = curid_integer;
     end
   end
  
@@ -83,7 +87,7 @@ for i = 1:length(mining_queue)
   
   addon ='';
   supersize = sum(cellfun(@(x)length(x),scores));
-  if supersize > 0 %length(scores)>0
+  if supersize > 0
     addon=sprintf(', max = %.3f',max(cellfun(@(x)max_or_this(x,-1000),scores)));
   end
   total = sum(cellfun(@(x)x.num_visited,mining_queue));
@@ -125,7 +129,7 @@ for i = 1:length(mining_queue)
   %if no detections, just skip image because there is nothing to store
   if sum(Ndets) == 0
     empty_images(end+1) = index;
-    continue
+    %continue
   end
   
   %an image is violating if it contains some violating windows,
@@ -136,8 +140,6 @@ for i = 1:length(mining_queue)
     end
         
     violating_images(end+1) = index;
-  else
-    empty_images(end+1) = index;
   end
   
   for a = 1:length(models)
@@ -146,7 +148,7 @@ for i = 1:length(mining_queue)
   end
      
   if (max(number_of_windows) >= mining_params.MAX_WINDOWS_BEFORE_SVM) || ...
-        (number_of_violating_images >= mining_params.MAX_IMAGES_BEFORE_SVM)
+        (numpassed >= mining_params.MAX_IMAGES_BEFORE_SVM)
     fprintf(1,['Stopping mining because we have %d windows from' ...
                                                 ' %d new violators\n'],...
             max(number_of_windows), number_of_violating_images);
@@ -357,7 +359,7 @@ for i = 1:length(rs.id_grid)
   bbs(:,6) = 1;
   bbs(:,7) = rs.score_grid{i}';
   bbs = nms(bbs, mining_params.NMS_MINES_OS);
-  bbs = bbs(1:min(size(bbs,1),mining_params.MAX_WINDOWS_PER_IMAGE),:);
+  bbs = bbs(1:min(size(bbs,1),mining_params.TOPK),:);
   ids = bbs(:,5);
   rs.score_grid{i} = rs.score_grid{i}(ids);
   rs.id_grid{i} = rs.id_grid{i}(ids);
