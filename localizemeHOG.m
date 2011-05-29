@@ -20,14 +20,8 @@ if localizeparams.FLIP_LR == 1
 end
 
 localizeparams.FLIP_LR = 0;
-%tic
+
 [rs1,t1] = localizemeHOGdriver(I,models,localizeparams);
-
-%toc
-%tic
-%[rs2,t2] = localizemeHOGdriver2(I,models,localizeparams);
-%toc
-
 
 if doflip == 1
   localizeparams.FLIP_LR = 1;
@@ -42,16 +36,9 @@ end
 for q = 1:length(rs1.score_grid)
   rs1.score_grid{q} = cat(2,rs1.score_grid{q},rs2.score_grid{q});
 
-  if numel(rs2.support_grid)>0 && ...
-        numel(rs1.support_grid)>0 && ...
-        numel(rs2.support_grid{q})>0 && ...
-        numel(rs1.support_grid{q})>0
-    
-    rs1.support_grid{q} = cat(2,rs1.support_grid{q}, ...
-                              rs2.support_grid{q});
-
-  end
-
+ 
+  rs1.support_grid{q} = cat(2,rs1.support_grid{q}, ...
+                            rs2.support_grid{q});
   rs1.id_grid{q} = cat(2,rs1.id_grid{q},rs2.id_grid{q});
 end
 
@@ -229,7 +216,7 @@ for level = length(t.hog):-1:1
     
     for z = 1:NKEEP
       score_grid{exid}(end+1) = aa(z);
-      ip.level = level;
+      
       ip.scale = t.scales(level);
       ip.offset = [uus(z) vvs(z)] - t.padder;
       ip.bb = [([ip.offset(2) ip.offset(1) ip.offset(2)+size(ws{exid},2) ...
@@ -240,20 +227,20 @@ for level = length(t.hog):-1:1
             (localizeparams.FLIP_LR == 1)
         %saver = ip.bb;
         
-        %%% NOTE: this is broken because of size(I)
-        ip.bb = flip_box(ip.bb,t.size);
-        if 0 &&(ip.bb(3) <= 0 || ip.bb(4) <= 0) && size(ws{1},1)*size(ws{1},2)>1
-          fprintf(1,'why first one less than 0?\n');
         
-          figure(1)
-          clf
-          imagesc(I)
-          plot_bbox(saver,'',[0 1 0])
-          plot_bbox(ip.bb,'',[1 0 0])
-          axis image
-          axis off
-          drawnow
-        end
+        ip.bb = flip_box(ip.bb,t.size);
+        % if 0 &&(ip.bb(3) <= 0 || ip.bb(4) <= 0) && size(ws{1},1)*size(ws{1},2)>1
+        %   fprintf(1,'why first one less than 0?\n');
+        
+        %   figure(1)
+        %   clf
+        %   imagesc(I)
+        %   plot_bbox(saver,'',[0 1 0])
+        %   plot_bbox(ip.bb,'',[1 0 0])
+        %   axis image
+        %   axis off
+        %   drawnow
+        % end
          
         ip.flip = 1;
       end
@@ -267,6 +254,7 @@ for level = length(t.hog):-1:1
                                  vv+(1:sss(2))-1,:), ...
                     prod(hg_size),1);
       end
+
     end
     
     if (NKEEP > 0)
@@ -320,6 +308,7 @@ end
 
 %% Do NMS (nothing happens if the field is turned off, or absent)
 resstruct = prune_nms(resstruct,localizeparams);
+
 
 function rs = prune_nms(rs, params)
 %Prune via nms to eliminate redundant detections
@@ -513,10 +502,10 @@ for exid = 1:N
 
   for j = 1:TOPK
 
-    ip.level = offsets(2,bb(j));
-    ip.scale = t.scales(ip.level);
+    level = offsets(2,bb(j));
+    ip.scale = t.scales(level);
     
-    [uu,vv] = ind2sub([size(t.hog{ip.level},1) size(t.hog{ip.level},2)],...
+    [uu,vv] = ind2sub([size(t.hog{level},1) size(t.hog{level},2)],...
                       offsets(1,bb(j)));
     ip.offset = [uu vv] - t.padder;
 
