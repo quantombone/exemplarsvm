@@ -1,4 +1,4 @@
-function train_all_exemplars(cls)
+function train_all_exemplars(cls,mode)
 %% Train models with hard negatives for all exemplars written to
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
@@ -10,6 +10,10 @@ EX_PER_CHUNK = 1;
 
 VOCinit;
 
+if ~exist('cls','var')
+  [cls,mode] = load_default_class;
+end
+
 %Get the default mining parameters
 mining_params = get_default_mining_params;
 mining_params.SKIP_GTS_ABOVE_THIS_OS = 1.0;
@@ -18,37 +22,32 @@ mining_params.dump_last_image = 1;
 %original training doesnt do flips
 mining_params.FLIP_LR = 1;
 
-%nms prevents thrashing
-%mining_params.NMS_MINES_OS = 1.0;
-
-%%% note loading
-am = load_all_models;
+%nms prevents thrashing, but it is much slower
+mining_params.NMS_MINES_OS = 1.0;
 
 initial_directory = ...
-    sprintf('%s/exemplars/',VOCopts.localdir);
+    sprintf('%s/%s/',VOCopts.localdir,mode);
 
 final_directory = ...
-    sprintf('%s/exemplars-svm/',VOCopts.localdir);
+    sprintf('%s/%s-svm/',VOCopts.localdir,mode);
 
 %make results directory if needed
 if ~exist(final_directory,'dir')
   mkdir(final_directory);
 end
 
-if ~exist('cls','var')
-  [cls] = load_default_class;
-end
-
+%Find all initial files of the current class/mode
 files = dir([initial_directory '*' cls '*.mat']);
 %files = dir([initial_directory '*000540.1*.mat']);
 
 mining_params.final_directory = final_directory;
 
-%% memex needs validation nodes
-mining_params.extract_negatives = 1;
+% Enable this if we need to check mined windows whethere they are
+% from validation set or from negative set... (esvm only uses negatives)
+mining_params.extract_negatives = 0;
 
-%% Chunk the data into EX_PER_CHUNK exemplars per chunk so that we
-%process several images, then write results for entire chunk
+% Chunk the data into EX_PER_CHUNK exemplars per chunk so that we
+% process several images, then write results for entire chunk
 inds = do_partition(1:length(files),EX_PER_CHUNK);
 
 % randomize chunk orderings
@@ -67,16 +66,16 @@ for i = 1:length(ordering)
     m.model.btrace{1} = m.model.b;
     
     %Set the name of this exemplar type
-    m.models_name = 'nips11';
+    m.models_name = sprintf('%s-svm',mode);
     m.iteration = 0;
     
-    %Validation support vectors
-    m.model.vsv = zeros(prod(m.model.hg_size),0);
-    m.model.vsvids = [];
+    % %Validation support vectors
+    % m.model.vsv = zeros(prod(m.model.hg_size),0);
+    % m.model.vsvids = [];
     
-    %Friend support vectors
-    m.model.fsv = zeros(prod(m.model.hg_size),0);
-    m.model.fsvids = [];
+    % %Friend support vectors
+    % m.model.fsv = zeros(prod(m.model.hg_size),0);
+    % m.model.fsvids = [];
 
     models{z} = m;
   end
@@ -113,20 +112,19 @@ for i = 1:length(ordering)
   %CVPR2011 paper used all train images excluding category images
   %m.bg = sprintf('get_pascal_bg(''trainval'',''%s'')',m.cls);
   
-  bg = get_pascal_bg('trainval','');
-  for q = 1:length(models)
-    models{q}.bg_string1 = 'trainval';
-    models{q}.bg_string2 = '';
-  end
-  
+  set_string = 'train';
+  subset_string = sprintf('-%s',m.cls);
+  bg = get_pascal_bg(set_string,subset_string);
+  %for q = 1:length(models)
+  %  models{q}.bg_string1 = set_string;
+  %  models{q}.bg_string2 = subset_string;
+  %end
   
   % bg = get_pascal_bg('train',['-' models{1}.cls]);
   % for q = 1:length(models)
   %   models{q}.bg_string1 = 'train';
   %   models{q}.bg_string2 = ['-' models{1}.cls];
   % end
-  
-
   
   mining_params.alternate_validation = 0;
   
@@ -165,8 +163,8 @@ for i = 1:length(ordering)
     goods = find(cellfun(@(x)x.iteration <= mining_params.MAXITER, ...
                          models));
     
-    [target_ids,target_xs] = get_top_from_ex(m,am);
-    models{goods} = add_new_detections(models{goods},target_xs,target_ids);
+    %[target_ids,target_xs] = get_top_from_ex(m,am);
+    %models{goods} = add_new_detections(models{goods},target_xs,target_ids);
     
     [models(goods), mining_queue] = ...
         mine_negatives(models(goods), mining_queue, bg, mining_params, ...
@@ -181,25 +179,14 @@ for i = 1:length(ordering)
       filer2 = filer2final;
     end
 
-    %m.iteration = iteration;
-    % if (mining_params.dump_images == 1) || ...
-    %       (mining_params.dump_last_image == 1 && iteration == mining_params.MAXITER)
-    %   for z = 1:EX_PER_CHUNK
-    %     figure(z)
-    %     set(gcf,'PaperPosition',[0 0 20 10]);
-    %     print(gcf,sprintf('%s/%s_z=%03d_iter=%05d.png', ...
-    %                       final_directory,files(i).name,z,iteration),'-dpng');
-    %   end
-    % end
+    %models_save = models; 
+    %for q = 1:length(models)
+    %  models{q} = prune_svs(models{q});
+    %end
     
-    
-    models_save = models; 
-    for q = 1:length(models)
-      models{q} = prune_svs(models{q});
-    end
+    %Save the current result
     save(filer2,'models','mining_queue');
-    models = models_save;
-    
+  
     %delete old files
     if FILEID > 1
       for q = 1:FILEID-1
@@ -232,8 +219,6 @@ m.model.svids = oldsvids(goods);
 
 
 function [target_ids,target_xs] = get_top_from_ex(m,am)
-
-
 
 res = cellfun2(@(x)m.model.w(:)'*x.model.target_x-m.model.b,am);
 for i = 1:length(res)
