@@ -5,6 +5,11 @@ function bg = get_pascal_bg(target_directory, class, kill_image_id)
 
 %% eliminating images with id kill_image_id (if present)
 
+if nargin ==1 && strcmp(target_directory,'both')
+  bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
+  return;  
+end
+
 VOCinit;
 if ~exist('target_directory','var');
   target_directory = 'train';
