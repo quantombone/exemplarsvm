@@ -2,9 +2,13 @@ function exemplar_initialize(cls, mode)
 %% Initialize script which writes out initial model files for all
 %% exemplars of a single category from PASCAL VOC trainval set
 %% Script is parallelizable (and dalalizable!)
+%% [inputs]: cls ('cow') and mode('e') are not specified, then they are read from the
+%% default_class file
 %% There are several different initialization modes
 %% DalalMode:  Warp instances to mean frame from in-class exemplars
 %% Globalmode: Warp instances to hardcoded [8 8] frame
+%% new10mode: Use a canonical 8x8 framing of each exemplar (this
+%%            allows for negative sharing in the future)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 VOCinit;
 
@@ -57,7 +61,7 @@ GOAL_NCELLS = 100;
 
 %(only non-dalal mode) If greater than one, creates tiny exemplar
 %perturbations as additional positives
-NWIGGLES = 1; (NOTE: not used in new10 function)
+NWIGGLES = 1; %(NOTE: not used in new10 function)
 
 fprintf(1,'GOAL_NCELLS=%d sbin=%d\n',GOAL_NCELLS,SBIN);
 
@@ -172,10 +176,11 @@ for i = 1:length(ids)
       %model = populate_wiggles(I, model, NWIGGLES);
       if 1
       hg_size = [8 8];
-      newK = 50;
-      %newK = 1;
+      %newK = 50;
+      newK = 1;
       [tmp,model] = new10model(I,bbox,SBIN,hg_size,newK,curid);
       
+      if 0
       [tmp,model2] = new10model(flip_image(I), ...
                                 flip_box(bbox, size(I)), ...
                                 SBIN, hg_size, newK,curid);
@@ -188,6 +193,9 @@ for i = 1:length(ids)
       
       model.x = cat(2,model.x,x2);
       model.target_id = cat(1,model.target_id,t2);
+      end
+      
+      
       model.target_x = model.x;
       
       %% we start with first one
@@ -235,6 +243,7 @@ for i = 1:length(ids)
     if display == 1
       figure(1)
       clf
+      subplot(1,2,1)
       imagesc(Ibase)
       %plot_bbox(m.model.coarse_box,'',[1 0 0])
       plot_bbox(m.model.coarse_box,'',[1 0 0],[0 1 0],0,[1 3],m.model.hg_size)
@@ -242,7 +251,12 @@ for i = 1:length(ids)
       axis image
       title(sprintf('%s.%d',m.curid,m.objectid))
       drawnow
-      pause(.5)
+      subplot(1,2,2)
+
+      %imagesc(HOGpicture(m.model.w))
+      imagesc(m.model.mask);
+      drawnow
+      pause(.4)
     end
   end  
 end
@@ -464,8 +478,9 @@ model.coarse_box = model.target_id.bb;
 %drawnow
 
 function [bbox,model] = new10model(I,bbox,SBIN,hg_size,K,curid)
+curid = str2num(curid);
 
-
+rawbox = bbox;
 bbox = squareize_bbox(bbox);
 
 %Compute pyramid and all bounding boxes
@@ -508,8 +523,6 @@ end
 %            ip.offset(1)+size(ws{exid},1)] - 1) * ...
 %          sbin/ip.scale + 1] + [0 0 -1 -1];
 
-
-
 alluv = cat(1,alluv{:});
 allbb = cat(1,allbb{:});
 alllvl = cat(1,alllvl{:});
@@ -521,7 +534,7 @@ sym2 = abs((allbb(:,2)-bbox(2)) - (allbb(:,4)-bbox(4)));
 meansym = (sym1+sym2)/100;
 
 [aa,bb] = sort(os-meansym,'descend');
-meansym(bb(1))
+meansym(bb(1));
 
 curfeats = cell(K,1);
 ips = cell(K,1);
@@ -531,8 +544,8 @@ for q = 1:K
                                      alluv(superind,2)-1+(1: ...
                                                   hg_size(2)),:);
   
-  ip.level = alllvl(superind);
-  ip.scale = t.scales(ip.level);
+  level = alllvl(superind);
+  ip.scale = t.scales(level);
   ip.offset = [alluv(superind,:) - t.padder];
   ip.flip = 0;
   ip.bb = allbb(superind,:);
@@ -541,12 +554,39 @@ for q = 1:K
   curfeats{q} = curfeat;
 end
 
+I2 = I*0;
+I2(rawbox(2):rawbox(4),rawbox(1):rawbox(3),:) = 1;
+oks = find(I2(:));
+I2(oks) = rand(size(oks));
+I2 = resize(I2,ips{1}.scale);
+
+% f1 = features(I2,SBIN);
+% f1 = padarray(f1,[1 1 0]);
+% I3 = imresize(I2,[size(f1,1) size(f1,2)],'nearest');
+% I3 = double(I3>0);
+% I3 = repmat(I3(:,:,1),[1 1 31]);
+% f2 = padarray(I3,[t.padder t.padder 0]);
+
+
+f2 = features_raw(I2,SBIN);
+f2 = padarray(f2,[t.padder+1 t.padder+1 0]);
+f2 = f2(ips{1}.offset(1)+(0:7)+t.padder,...
+        ips{1}.offset(2)+(0:7)+t.padder,:);
+
+%keyboard
+
+fmask = sum(f2.^2,3)>0;
+
+
+%sum(fmask(:)==0)
+
+
 model.coarse_box = allbb(bb(1),:);
 
 model.params.sbin = SBIN;
 model.hg_size = [hg_size(1) hg_size(2) features];
 model.x = curfeats{1};
-model.mask = sum(model.x.^2,3)>0;
+model.mask = sum(model.x.^2,3)>0 & fmask;
 model.w = model.x*0;
 mask3 = repmat(model.mask,[1 1 features]);
 mask3 = mask3(:);
