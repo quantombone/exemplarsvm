@@ -1,4 +1,4 @@
 *.mat
 *~
 .DS_Store
-/.#NNlocalizemeHOG.m
+data/
