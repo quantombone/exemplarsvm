@@ -22,6 +22,10 @@ K = size(boxes,1);
 x = sparse(N*2, K);
 %nbrids = cell(1,K);
 
+if K == 0
+  return;
+end
+
 %Get overlaps between all boxes in the set
 osmat = getosmatrix_bb(boxes, boxes);
 
@@ -38,6 +42,7 @@ uc = unique(exid);
 scorerow = boxes(:,end);
 
 osmat = osmat - diag(diag(osmat));
+
 for j = 1:K
   friends = find(osmat(:,j) > neighbor_thresh);
   x(exid(j),j) = scorerow(j);

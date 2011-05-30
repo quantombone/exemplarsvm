@@ -194,7 +194,7 @@ final.final_boxes = final_boxes;
 final.final_maxos = final_maxos;
 final.unclipped_boxes = unclipped_boxes;
 %final.pre_nms_boxes = pre_nms_boxes;
-%final.raw_boxes = raw_boxes;
+final.raw_boxes = raw_boxes;
 %if exist('M','var') && exist('nbrlist','var')
 %  final.nbrlist = nbrlist;
 %  final.M = M;

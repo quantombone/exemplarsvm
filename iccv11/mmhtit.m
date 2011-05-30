@@ -64,7 +64,7 @@ for i = 1:length(grid)
   calib_boxes = calibrate_boxes(bboxes{i},M.betas);
   %Threshold at .1
   oks = find(calib_boxes(:,end)>.1);
-  bboxes{i} = bboxes{i}(oks,:);
+  bboxes{i} = calib_boxes(oks,:);
   if length(grid{i}.extras)>0
     %grid{i}.extras.os(:,end+1) = 0;
     %grid{i}.extras.cats{end+1} = models{1}.cls;
@@ -112,6 +112,7 @@ nthresh = 0.5;
 cthresh = 0.5;
 
 betas = M.betas;
+
 [M] = mmht_scores(bboxes, maxos, models, nthresh, ...
                   cthresh);
 M.betas = betas;

@@ -50,7 +50,7 @@ mining_params.MAX_WINDOWS_BEFORE_SVM = 1000;
 %way to define one iteration)
 %NOTE: this variable breaks how I consider iterations, so make it
 %really large so it never fires
-mining_params.MAX_IMAGES_BEFORE_SVM = 100;
+mining_params.MAX_IMAGES_BEFORE_SVM = 400;
 
 %At this cutoff, we switch thresholds from basically everything to
 %a reduced threshold

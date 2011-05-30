@@ -93,6 +93,23 @@ for i = 1:length(files)
 
   stuff = load(filer);
   grid{i} = stuff;
+  for j = 1:length(grid{i}.res)
+    goods = (grid{i}.res{j}.bboxes(:,end)>=-1);
+
+    grid{i}.res{j}.bboxes = grid{i}.res{j}.bboxes(goods,:);
+    grid{i}.res{j}.coarse_boxes = ...
+        grid{i}.res{j}.coarse_boxes(goods,:);
+    grid{i}.res{j}.extras.maxos = ...
+        grid{i}.res{j}.extras.maxos(goods);
+
+    grid{i}.res{j}.extras.maxind = ...
+        grid{i}.res{j}.extras.maxind(goods);
+    
+    grid{i}.res{j}.extras.maxclass = ...
+        grid{i}.res{j}.extras.maxclass(goods);
+
+  end
+
 end
 
 %Prune away files which didn't load

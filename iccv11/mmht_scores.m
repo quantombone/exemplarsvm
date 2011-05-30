@@ -52,6 +52,7 @@ imids = allboxes(:,5);
 %osmats = cellfun2(@(x)getosmatrix_bb(x,x),boxes);
 %thetadiffmats = cellfun2(@(x)getaspectmatrix_bb(x,x),boxes);
 
+
 fprintf(1,'learning M by counting\n');
 tic
 %This one works best so far
