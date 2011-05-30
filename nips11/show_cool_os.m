@@ -1,5 +1,21 @@
 function show_cool_os(msave)
-%show the cool plots, call figure first
+%show the cool os score plot, call figure first
+
+minestring = '';
+if isfield(msave,'mining_stats')
+  TOTAL = 0;
+  for i = 1:length(msave.mining_stats)
+    TOTAL = TOTAL + msave.mining_stats{i}.num_violating;
+    TOTAL = TOTAL + msave.mining_stats{i}.num_empty;
+  end
+  minestring = sprintf('#Mined=%d ',TOTAL);
+end
+
+%% add self
+msave.model.svids = cat(2,msave.model.target_id(1),...
+                        msave.model.svids);
+msave.model.nsv = cat(2,msave.model.target_x(:,1),...
+                      msave.model.nsv);
 
 inds = nms_objid(msave.model.svids);
 
@@ -7,15 +23,16 @@ msave.model.svids = msave.model.svids(inds);
 msave.model.nsv = msave.model.nsv(:,inds);
 
 
-bg = get_pascal_bg('trainval');
-[negatives,vals,pos,msave] = find_set_membership(msave);
+%bg = get_pascal_bg('trainval');
+[negatives,vals,pos] = find_set_membership(msave);
 
 %get os
 
 fprintf(1,'getting overlaps\n');
 tic
-[maxos,maxind,maxclass] = get_overlaps_with_gt(msave, [msave.model.svids{:}], bg);
+[maxos,maxind,maxclass] = get_overlaps_with_gt(msave, [msave.model.svids{:}]);
 toc
+
 
 scores = msave.model.w(:)'*msave.model.nsv - msave.model.b;
 % subplot(2,1,1)
@@ -45,22 +62,18 @@ plot(negatives,maxos(negatives),[negcolor 's'],'MarkerSize',10,'MarkerFaceColor'
 %plot os == .5 line
 %plot(1:length(scores),.5,'k--')
 
-xlabel('Rank')
-ylabel('Maxos')
-title(sprintf('Top Matching Objects for Exemplar %s.%d Object Overlap',msave.curid,msave.objectid))
-
-legend('Positives','Validation Negatives','Hard Negatives')
-
+xlabel('w^Tx+b: score')
+ylabel('Maximum GT os')
+title(sprintf('%sSorted Top Detections for Exemplar %s.%d',...
+              minestring,msave.curid,msave.objectid))
+%legend('Positives','Validation Negatives','Hard Negatives')
 
 cuts = unique(round(linspace(1,length(scores),10)));
 for i = 1:length(cuts)
   labels{i} = sprintf('%.3f',scores(cuts(i)));
 end
-try
+
 set(gca,'XTick',cuts);
-catch
-  keyboard
-end
 set(gca,'XTickLabel',labels)
 
 topcuts = [0:.1:1];

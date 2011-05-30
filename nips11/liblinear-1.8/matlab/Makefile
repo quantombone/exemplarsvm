@@ -1,8 +1,8 @@
 # This Makefile is used under Linux
 
-#MATLABDIR ?= /afs/cs.cmu.edu/local/matlab/amd64_f7/7.11/lib/matlab7/
+MATLABDIR ?= /afs/cs.cmu.edu/local/matlab/amd64_f7/7.11/lib/matlab7/
 #MATLABDIR ?= /usr/local/matlab
-MATLABDIR ?= /Applications/MATLAB_R2010a.app/
+#MATLABDIR ?= /Applications/MATLAB_R2010a.app/
 CXX ?= g++
 #CXX = g++-3.3
 CC ?= gcc

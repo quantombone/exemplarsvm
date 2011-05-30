@@ -314,6 +314,7 @@ for exid = 1:length(models)
     print(gcf,filer,'-dpng');
     end
 
+    pause
   end
   
 
