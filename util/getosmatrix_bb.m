@@ -4,6 +4,10 @@ function os = getosmatrix_bb(boxes,gts)
 %% overlap score is the ratio of the intersection to union
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
+if ~exist('gts','var')
+  gts = boxes;
+end
+
 if numel(boxes) == 0 || numel(gts) == 0
   os = zeros(size(boxes,1),size(boxes,2));
   return;
