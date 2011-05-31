@@ -131,12 +131,19 @@ for k = 1:maxk
     target_image_id = imids(bb(counter));
     target_cluster_id = bbs(bb(counter),5);
         
-    allbb = finalstruct.raw_boxes{target_image_id};
-    osmat = getosmatrix_bb(allbb,bbs(bb(counter),:));
-    goods = find(osmat>.5);
-    allbb = allbb(goods,:);
-    [alpha,beta] = sort(allbb(:,end),'descend');
-    allbb = allbb(beta,:);
+    
+    %USE THE RAW DETECTION
+    fprintf(1,' -- Taking Final det score\n');
+    allbb = bbs(bb(counter),:);
+    
+    %CVPR VERSION: use the top local score within a cluster
+    %fprintf(1,' -- Finding within-cluster local max\n');
+    % allbb = finalstruct.raw_boxes{target_image_id};
+    % osmat = getosmatrix_bb(allbb,bbs(bb(counter),:));
+    % goods = find(osmat>.5);
+    % allbb = allbb(goods,:);
+    % [alpha,beta] = sort(allbb(:,end),'descend');
+    % allbb = allbb(beta,:);
     
     sumI = I*0;
     countI = zeros(size(I,1),size(I,2),1);
@@ -192,7 +199,7 @@ for k = 1:maxk
       counter = counter + 1;
       continue
     end
-    allbb(zzz,:)
+    
     figure(1)
     clf
     NR=show_hits_figure_iccv(models,allbb(zzz,:),I, ...
