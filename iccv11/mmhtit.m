@@ -4,15 +4,6 @@ function [M] = mmhtit(models,grid,M)
 
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-% if ~exist('models','var')
-%   models = load_all_models('tvmonitor','exemplars','10');
-% end
-
-
-% if ~exist('grid','var')
-%   grid = load_result_grid(models, target_directory);
-% end
-
 VOCinit;
 
 if ~exist('M','var')
@@ -90,8 +81,6 @@ end
 toc
 
 
-
-
 if 0
 %% clip boxes to image
 fprintf(1,'clipping boxes\n');
@@ -116,63 +105,3 @@ betas = M.betas;
 [M] = mmht_scores(bboxes, maxos, models, nthresh, ...
                   cthresh);
 M.betas = betas;
-
-
-% return;
-
-
-% %% below is some code for doing a parameter search on validation data
-
-% nthreshes = .2:.05:.9;
-% cthreshes = .2:.05:.9;
-
-% %myRandomize;
-% %rrr = randperm(length(nthreshes));
-% %nthreshes = nthreshes(rrr);
-
-% %rrr = randperm(length(cthreshes));
-% %cthreshes = cthreshes(rrr);
-% [uu,vv] = meshgrid(1:length(nthreshes),1:length(cthreshes));
-
-% vals = [uu(:) vv(:)];
-% vals(:,1) = nthreshes(vals(:,1));
-% vals(:,2) = cthreshes(vals(:,2));
-
-% myRandomize;
-% rrr = randperm(size(vals,1));
-% vals = vals(rrr,:);
-
-% for i = 1:size(vals,1)
-  
-%   nthresh = (vals(i,1));
-%   cthresh = (vals(i,2));
-
-%   startfile = sprintf('%s/M/%s-%d-%s-%f-%f',VOCopts.localdir,...
-%                       models{1}.cls,length(models),target_directory,...
-%                       nthresh,cthresh);
-%   filerlock = sprintf('%s.lock',startfile);
-%   ddd = dir([startfile '*']);
-%   if length(ddd)>0 || (mymkdir_dist(filerlock) == 0)
-%     continue
-%   end
-  
-%   [M] = mmht_scores(bboxes, maxos, models, nthresh, ...
-%                     cthresh);
-    
-%   [results,selffinal] = evaluate_pascal_voc_grid(models, ...
-%                                        grid, target_directory, ...
-%                                        M);
-  
-%   M.results = results;
-%   M.selffinal = selffinal;
-  
-%   endfile = sprintf('%s-%.3f-%.3f.mat',startfile,results.ap, ...
-%                     results.apold);
-%   save(endfile,'M');
-%   try
-%     rmdir(filerlock);
-%   catch
-%     fprintf(1,'Directory %s already gone\n',filerlock);
-%   end
-  
-% end
