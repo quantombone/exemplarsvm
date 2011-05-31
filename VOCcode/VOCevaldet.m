@@ -1,4 +1,4 @@
-function [rec,prec,ap,apold] = VOCevaldet(VOCopts,id,cls,draw,gtids,recs)
+function [rec,prec,ap,apold,fp,tp,npos,is_correct] = VOCevaldet(VOCopts,id,cls,draw,gtids,recs)
 
 % load test set
 tic
@@ -69,6 +69,8 @@ if strcmp(VOCopts.dataset,'VOC2007')
   end
 end
 tic;
+
+is_correct = zeros(nd,1);
 for d=1:nd
     % display progress
     if toc>1
@@ -111,6 +113,7 @@ for d=1:nd
             if ~gt(i).det(jmax)
                 tp(d)=1;            % true positive
 		gt(i).det(jmax)=true;
+                is_correct(d) = 1;
             else
                 fp(d)=1;            % false positive (multiple detection)
             end
@@ -127,7 +130,6 @@ rec=tp/npos;
 prec=tp./(fp+tp);
 
 % compute average precision
-
 ap=0;
 for t=0:0.1:1
     p=max(prec(rec>=t));
