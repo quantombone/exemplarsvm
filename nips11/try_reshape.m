@@ -1,10 +1,10 @@
 function m = try_reshape(m,cb,N)
 
-if ~isfield(m,'bg_string1')
-  bg = get_pascal_bg('trainval');
-else
-  bg = get_pascal_bg(m.bg_string1, m.bg_string2);
-end
+% if ~isfield(m,'bg_string1')
+%   bg = get_pascal_bg('trainval');
+% else
+%   bg = get_pascal_bg(m.bg_string1, m.bg_string2);
+% end
 
 %bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
 
@@ -15,6 +15,7 @@ if ~exist('N','var')
 end
 xs = zeros(8*8*31,N);
 target_id = cell(1,N);
+VOCinit;
 tic
 for i = 1:N
   fprintf(1,'.');
@@ -25,7 +26,9 @@ for i = 1:N
   target_id{i}.bb = cb(bb(i),1:4);
   target_id{i}.curid = cb(bb(i),11);
   
-  I = convert_to_I(bg{cb(bb(i),11)});
+  I = convert_to_I(sprintf(VOCopts.imgpath,...
+                           sprintf('%06d',cb(bb(i),11))));
+
   
   if (target_id{i}.flip == 1)
     I = flip_image(I);
