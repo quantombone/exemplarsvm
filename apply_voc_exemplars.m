@@ -121,6 +121,10 @@ for i = 1:length(ordering)
     index = inds{ordering(i)}(j);
     fprintf(1,'   ---image %d\n',index);
     Iname = bg{index};
+    [tmp,current_curid,tmp] = fileparts(Iname);
+    %NOTE: not used, but should be!
+    current_curid = str2num(current_curid);
+    
     I = Is{j};
        
     starter = tic;
@@ -136,7 +140,8 @@ for i = 1:length(ordering)
     fprintf(1,' took %.3fsec, maxhit=%.3f, #hits=%d\n',...
             toc(starter),aa,length(scores));
 
-
+    %%NOTE/BUG/TODO: this is a bug here, index should be
+    %current_curid instead
     [coarse_boxes] = extract_bbs_from_rs(rs.id_grid, rs.score_grid, index);
 
     
@@ -155,6 +160,7 @@ for i = 1:length(ordering)
       if exist('M','var') && length(M)>0
         boxes = calibrate_boxes(boxes,M.betas);
       end
+
 
       if numel(boxes)>0
         [aa,bb] = sort(boxes(:,end),'descend');
@@ -182,6 +188,7 @@ for i = 1:length(ordering)
         show_hits_figure(models, boxes, I);
 
         drawnow
+
 
         pause
       else
