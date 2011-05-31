@@ -4,6 +4,7 @@ function [results,final] = ...
 %% firings grid, on the set target_directory which can be either
 %% 'trainval' or 'test'
 
+%In case we want to evaluate a subset of detectors
 % targets = [4 5];
 % for i = 1:length(grid)
 %   goods = find(ismember(grid{i}.bboxes(:,6),targets));
@@ -35,7 +36,6 @@ if fileexists(resfile)
   return;
 end
 
-
 %% prune grid to contain only images from target_directory
 [cur_set, gt] = textread(sprintf(VOCopts.imgsetpath,target_directory),['%s' ...
                     ' %d']);
@@ -57,12 +57,6 @@ REMOVE_SELF = 1;
 
 cls = models{1}.cls;
 
-for i = 1:length(models)
-  if ~isfield(models{i},'curid')
-    models{i}.curid = '-1';
-  end
-end
-
 excurids = cellfun2(@(x)x.curid,models);
 bboxes = cell(1,length(grid));
 maxos = cell(1,length(grid));
@@ -79,10 +73,6 @@ for i = 1:length(grid)
   bboxes{i} = grid{i}.bboxes;
   
   if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'os')
-    %grid{i}.extras.os(:,end+1) = 0;
-    %grid{i}.extras.cats{end+1} = models{1}.cls;
-    %curhits = find(ismember(grid{i}.extras.cats,{models{1}.cls}));
-    %maxos{i} = max(grid{i}.extras.os(:,curhits),[],2)';
     maxos{i} = grid{i}.extras.maxos;
     maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
   end
@@ -121,42 +111,25 @@ if exist('M','var') && length(M)>0 && isfield(M,'betas')
   %% propagate scores onto raw boxes
   for i = 1:length(bboxes)
     calib_boxes = calibrate_boxes(bboxes{i},M.betas);
+
     %Threshold at .1
-    oks = find(calib_boxes(:,end)>.1);
-    bboxes{i} = bboxes{i}(oks,:);
-    
-    
+    oks = find(calib_boxes(:,end) > .1);
     calib_boxes = calib_boxes(oks,:);
-    raw_scores = calib_boxes(:,end);
-    
-    new_scores = raw_scores;
-    % if exist('nbrlist','var')
-    %   for j = 1:length(nbrlist{i})
-    %     new_scores(nbrlist{i}{j}) = max(new_scores(nbrlist{i}{j}),...
-    %                                     raw_scores(nbrlist{i}{j}).*...
-    %                                     bboxes{i}(nbrlist{i}{j},end));
-    %   end
-    % end
-    bboxes{i}(:,end) = new_scores;
+    bboxes{i} = calib_boxes;
   end
 end
 
 if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
   fprintf(1,'Applying M\n');
   tic
-  %nbrlist = cell(1,length(bboxes));
   for i = 1:length(bboxes)
     fprintf(1,'.');
     [xraw] = get_box_features(bboxes{i},length(models),M.neighbor_thresh);
     r2 = apply_boost_M(xraw,bboxes{i},M);
-    oldd = bboxes{i}(:,end);
     bboxes{i}(:,end) = r2;
-
   end
   toc
 end
-
-pre_nms_boxes = bboxes;
 
 fprintf(1,'applying competitive NMS\n');
 for i = 1:length(bboxes)
@@ -166,26 +139,20 @@ for i = 1:length(bboxes)
     if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'os')
       maxos{i} = maxos{i}(bboxes{i}(:,5));
     end
-    % if exist('nbrlist','var')
-    %   nbrlist{i} = nbrlist{i}(bboxes{i}(:,5));
-    % end
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
   end
 end
 
 %% clip boxes to image dimensions
+unclipped_boxes = bboxes;
 if 1
-  fprintf(1,'clipping boxes\n');
-  unclipped_boxes = bboxes;
   for i = 1:length(bboxes)
     bboxes{i} = clip_to_image(bboxes{i},grid{i}.imbb);
   end
+else
+  fprintf(1,'NOT clipping boxes!\n');
 end
 
-%if isfield(M,'betas')
-%  fprintf(1,'Applying betas\n');
-%  pre_nms_boxes = cellfun2(@(x)calibrate_boxes(x,M.betas),pre_nms_boxes);
-%end
 final_boxes = bboxes;
 final_maxos = maxos;
 
@@ -193,12 +160,7 @@ final_maxos = maxos;
 final.final_boxes = final_boxes;
 final.final_maxos = final_maxos;
 final.unclipped_boxes = unclipped_boxes;
-%final.pre_nms_boxes = pre_nms_boxes;
 final.raw_boxes = raw_boxes;
-%if exist('M','var') && exist('nbrlist','var')
-%  final.nbrlist = nbrlist;
-%  final.M = M;
-%end
 
 filer = sprintf(VOCopts.detrespath,'comp3',cls);
 %Create directory if it is not present
@@ -223,34 +185,34 @@ fclose(fid);
 
 figure(2)
 clf
-try
-  [recall,prec,ap,apold] = VOCevaldet(VOCopts,'comp3',cls,true);
-catch
-  recall = [];
-  prec = [];
-  ap = -1;
-  apold = -1;
-end
+
+[results.recall,results.prec,results.ap,results.apold,results.fp,results.tp,results.npos,results.corr] = VOCevaldet(VOCopts,'comp3',cls,true);
+
+  
 axis([0 1 0 1]);
 
-filer = sprintf(['%s/%s-%s%s-on-%s-ap=%.5f.png'], VOCopts.dumpdir, ...
-                models{1}.cls,models{1}.models_name,calib_string, ...
-                target_directory,ap);
+filer = sprintf(['%s/%s-%s%s-on-%s-ap=%.5f.png'], ...
+                VOCopts.dumpdir, ...
+                models{1}.cls,...
+                models{1}.models_name,...
+                calib_string, ...
+                target_directory,results.ap);
 set(gcf,'PaperPosition',[0 0 5 5])
 print(gcf,'-dpng',filer);
 fprintf(1,'Just Wrote %s\n',filer);
 
-results.recall = recall;
-results.prec = prec;
-results.ap = ap;
-results.apold = apold;
+%results.recall = recall;
+%results.prec = prec;
+%results.ap = ap;
+%results.apold = apold;
 results.cls = models{1}.cls;
 drawnow
 
-fprintf(1,'Saving results to %s\n',resfile);
-if ~exist('M','var')
-  M = [];
-end
+
+%fprintf(1,'Saving results to %s\n',resfile);
+%if ~exist('M','var')
+%  M = [];
+%end
 
 %TODO: we are saving really large files for exemplarNN
 %save(resfile,'results','final','M');

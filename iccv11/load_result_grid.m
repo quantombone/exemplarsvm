@@ -82,19 +82,21 @@ files = dir([baser 'result*mat']);
 grid = cell(1,length(files));
 
 for i = 1:length(files)
-  
   if mod(i,100) == 0
     fprintf(1,'%d/%d\n',i,length(files));
   end
   
   filer = sprintf('%s/%s', ...
                   baser,files(i).name);
-  
-
   stuff = load(filer);
   grid{i} = stuff;
+  
   for j = 1:length(grid{i}.res)
-    goods = (grid{i}.res{j}.bboxes(:,end)>=-1);
+    
+    newid = str2num(grid{i}.res{j}.curid);
+    grid{i}.res{j}.bboxes(:,11) = newid;
+    grid{i}.res{j}.coarse_boxes(:,11) = newid;
+    goods = (grid{i}.res{j}.bboxes(:,end) >= -1.1);
 
     grid{i}.res{j}.bboxes = grid{i}.res{j}.bboxes(goods,:);
     grid{i}.res{j}.coarse_boxes = ...

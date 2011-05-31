@@ -14,8 +14,10 @@ for i = 1:length(models)
   %   grid{j} = rmfield(grid{j},'extras');
   % end
   % toc
- 
-  filer = sprintf('/nfs/baikal/tmalisie/grids/%s.%05d.mat',models{1}.cls,i);
+  basedir = '/nfs/baikal/tmalisie/grids/';
+  filer = sprintf('%s/%s-%s.%05d.mat',...
+                  basedir,...
+                  models{1}.cls,models{1}.models_name,i);
   save(filer,'coarse_boxes');
   fprintf(1,'.');
 end

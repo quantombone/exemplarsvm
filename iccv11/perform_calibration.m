@@ -121,6 +121,7 @@ targets = 1:length(models);
 
 cls = models{1}.cls;
 
+fprintf(1,'processing boxes\n');
 for i = 1:length(grid)    
   if mod(i,100)==0
     fprintf(1,'.');
@@ -133,12 +134,15 @@ for i = 1:length(grid)
   if OS_THRESH > 0
     curos = getosmatrix_bb(cur.bboxes(:,1:4),cur.imbb);
     cur.bboxes = cur.bboxes(curos>=OS_THRESH,:);
+    cur.coarse_boxes = cur.coarse_boxes(curos>=OS_THRESH,:);
   end
   
   if size(cur.bboxes,1) >= 1
     cur.bboxes(:,5) = 1:size(cur.bboxes,1);    
+    cur.coarse_boxes(:,5) = 1:size(cur.bboxes,1);    
     if DO_NMS == 1
       cur.bboxes = nms_within_exemplars(cur.bboxes,.5);
+      cur.coarse_boxes = cur.coarse_boxes(cur.bboxes(:,5),:);
     end
     if length(cur.extras)>0
       %cur.extras.os = cur.extras.os(cur.bboxes(:,5),:);
@@ -147,7 +151,9 @@ for i = 1:length(grid)
   end
   
   cur.bboxes(:,5) = grid{i}.index;
+  cur.coarse_boxes(:,5) = grid{i}.index;
   
+  coarse_boxes{i} = cur.coarse_boxes;
   bboxes{i} = cur.bboxes;
    
   %if we have overlaps, collect them
@@ -166,7 +172,7 @@ for i = 1:length(grid)
     %  os{i} = zeros(size(bboxes{i},1),1);
     %else
     %  curos = cur.extras.os(:,goods);
-      os{i} = cur.extras.maxos; %max(curos,[],2);
+    os{i} = cur.extras.maxos; %max(curos,[],2);
     %end    
   else
     os{i} = zeros(size(bboxes{i},1),1);    
@@ -176,8 +182,8 @@ for i = 1:length(grid)
 end
   
 ALL_bboxes = cat(1,bboxes{:});
+ALL_coarse_boxes = cat(1,coarse_boxes{:});
 ALL_os = cat(1,os{:});
-
 
 if nargout == 2
   betas = [];
@@ -187,7 +193,8 @@ end
 
 curids = cellfun2(@(x)x.curid,grid);
 
-bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
+%bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
+fprintf(1,'proessing models\n');
 
 for exid = 1:length(models)
   fprintf(1,'.');
@@ -227,9 +234,9 @@ for exid = 1:length(models)
     all_os = [good_os; bad_os];
     
     [aaa,bbb] = sort(all_scores, 'descend');
-    bbb = bbb(1:min(100,length(bbb)));
-    all_scores = all_scores(bbb);
-    all_os = all_os(bbb);
+    %bbb = bbb(1:min(1000,length(bbb)));
+    %all_scores = all_scores(bbb);
+    %all_os = all_os(bbb);
     beta = learn_sigmoid(all_scores, all_os);
   end
 
@@ -240,16 +247,13 @@ for exid = 1:length(models)
   
   betas(exid,:) = beta;
 
-
   if (sum(ismember(exid,targets))==0)
     continue
   end
   
-      
   %if exid==221
   %if exid==171
   if 0 %%display == 1
-    
     figure(1)
     clf
     subplot(1,2,1)  
@@ -281,25 +285,32 @@ for exid = 1:length(models)
     axis image
     axis off
 
-    bbs=ALL_bboxes(hits,:);
+    bbs=ALL_coarse_boxes(hits,:);
     bbs_os = ALL_os(hits,:);
     %[aa,bb] = sort(bbs(:,end)+bbs_os*.2,'descend');
     [aa,bb] = sort(bbs(:,end),'descend');
 
-
+    bbs_show = bbs(bb,:);
     
+    models{exid}.model.svids = {};
+    m = try_reshape(models{exid},bbs_show,100);
     figure(445)
     clf
+    imagesc(get_sv_stack(m,8,8))
+
+    
+    figure(446)
+    clf
     for jjj = 1:25
-      I = convert_to_I(bg{bbs(bb(jjj),11)});
-      curbb = bbs(bb(jjj),:);
+      I = convert_to_I(sprintf(VOCopts.imgpath,...
+                  sprintf('%06d',bbs(bb(jjj),11))));
+      curbb = bbs_show(jjj,:); %bbs(bb(jjj),:);
       subplot(5,5,jjj)
       imagesc(I)
       plot_bbox(curbb)
       axis image
       axis off
     end
-
 
     if 0
     VOCinit;
@@ -314,7 +325,8 @@ for exid = 1:length(models)
     print(gcf,filer,'-dpng');
     end
 
-    pause
+    keyboard
+    %pause
   end
   
 

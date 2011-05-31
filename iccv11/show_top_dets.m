@@ -1,6 +1,9 @@
 function allbbs = show_top_dets(models, grid, target_directory, finalstruct)
-%Show the top detections on a set of images, finalstruct is obtain
-%from the eval_voc script
+%% Show the top detections for the exemplar model inside models,
+%% where grid is the set of detections, target_directory is 'test',
+%% and finalstruct (which contains final boxes) is obtained from the
+%% evaluate_pascal_voc_grid script
+%% Tomasz Malisiewicz (tomasz@cmu.edu)
 
 VOCinit;
 %finalstruct.basedir = '/nfs/baikal/tmalisie/labelme400/www/voc/iccv11/VOC2007/newones/';
@@ -35,7 +38,6 @@ for i = 1:length(final_boxes)
     imids{i} = i * ones(size(final_boxes{i},1),1);
   end
 end
-
 
 bbs = cat(1,final_boxes{:});
 imids = cat(1,imids{:});
@@ -86,7 +88,7 @@ for k = 1:maxk
     end
     curb = bb(counter);
     curid = grid{imids(curb)}.curid;
-    %curid = grid{bbs(curb,5)}.curid;
+
     I = im2double(imread(sprintf(VOCopts.imgpath,curid)));
     gtrecs = PASreadrecord(sprintf(VOCopts.annopath,curid));
     businds = find(ismember({gtrecs.objects.class},{'bus'}) & ~[gtrecs.objects.difficult]);
@@ -97,7 +99,6 @@ for k = 1:maxk
 
     TARGET_BUS = -1;
     if length(businds) > 0
-
       [alpha,beta] = max(getosmatrix_bb(gtbbs,bbox));
       TARGET_BUS = businds(beta);
     end
@@ -127,7 +128,6 @@ for k = 1:maxk
                           models{1}.cls,extra,target_directory,estring,k);
     ccc = bbox(6);
     
-    
     target_image_id = imids(bb(counter));
     target_cluster_id = bbs(bb(counter),5);
         
@@ -137,7 +137,7 @@ for k = 1:maxk
     allbb = allbb(goods,:);
     [alpha,beta] = sort(allbb(:,end),'descend');
     allbb = allbb(beta,:);
-        
+    
     sumI = I*0;
     countI = zeros(size(I,1),size(I,2),1);
     ooo = cell(0,1);
@@ -159,9 +159,7 @@ for k = 1:maxk
     end
     sumI = sumI ./ repmat(countI,[1 1 3]);
     
-    %exemplar_overlay = exemplar_inpaint(allbb(1,:), ...
-    %                                    models{allbb(1,6)}, ...
-    %                                    stuff);
+
 
     if TARGET_BUS > -1
       %% load GT for test 
