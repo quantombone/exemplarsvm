@@ -21,6 +21,8 @@ r = m.model.w(:)'*m.model.nsv - m.model.b;
 m.model.svids = m.model.svids(bb);
 m.model.nsv = m.model.nsv(:,bb);
 
+
+
 %NO NMS
 %inds = nms_objid(m.model.svids);
 %m.model.svids = m.model.svids(inds);
@@ -68,12 +70,7 @@ for i = 1:length(ucurids)
     I = pad_image(Ibase,PADDER);
     
     bb = round(svids(hits(j)).bb + PADDER);
-    
-    %try
     svims{hits(j)} = I(bb(2):bb(4),bb(1):bb(3),:);
-    %catch
-    %  svims{hits(j)} = rand(bb(4)-bb(2)+1,bb(3)-bb(1)+1,3);
-    %end
    
     if svids(hits(j)).flip == 1
       svims{hits(j)} = flip_image(svims{hits(j)});
