@@ -24,10 +24,10 @@ mining_params.alternate_validation = 0;
 mining_params.MAX_TOTAL_MINED_IMAGES = 2500;
 
 %if enabled, we dump learning images into results directory
-mining_params.dump_images = 1;
+mining_params.dump_images = 0;
 
 %if enabled, we dump the last image
-mining_params.dump_last_image = 0;
+mining_params.dump_last_image = 1;
 
 %maximum #windows per image (per exemplar) to mine
 %mining_params.MAX_WINDOWS_PER_IMAGE = 100;
