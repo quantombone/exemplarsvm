@@ -1,10 +1,10 @@
-function grid = load_result_grid(models,curset)
+function grid = load_result_grid(models,curset,curthresh)
 %Given a set of models, return a grid of results from those models' firings
 %on the subset of images (target_directory is 'trainval' or 'test')
-%if only_images_of_class is specified, then only the subset of
-%images containing elements of that class are loaded
-
+%[curthresh]: only keep detections above this number (-1.1 for
+%esvm, .5 for vis-reg)
 %Tomasz Malisiewicz (tomasz@cmu.edu)
+
 VOCinit;
 
 
@@ -25,6 +25,11 @@ VOCinit;
 if ~exist('curset','var')
   curset = 'both'
 end
+
+if ~exist('curthresh','var')
+  curthresh = -1.1;
+end
+
 %curset = 'trainval';
 curcls = models{1}.cls;
 setname = [curset '.' curcls];
@@ -96,7 +101,7 @@ for i = 1:length(files)
     newid = str2num(grid{i}.res{j}.curid);
     grid{i}.res{j}.bboxes(:,11) = newid;
     grid{i}.res{j}.coarse_boxes(:,11) = newid;
-    goods = (grid{i}.res{j}.bboxes(:,end) >= -1.1);
+    goods = find(grid{i}.res{j}.bboxes(:,end) >= curthresh);
 
     grid{i}.res{j}.bboxes = grid{i}.res{j}.bboxes(goods,:);
     grid{i}.res{j}.coarse_boxes = ...
@@ -120,6 +125,7 @@ grid = grid(lens>0);
 grid = cellfun2(@(x)x.res,grid);
 grid2 = grid;
 grid = [grid2{:}];
+
 
 [aa,bb] = sort(cellfun(@(x)x.index,grid));
 grid = grid(bb);

@@ -1,55 +1,41 @@
-function [negatives,vals,pos] = find_set_membership(m)
-%Given the objects inside m.svids, parse their curids to see which
-%of the following three sets they belong to
+function [negatives,vals,pos,test,indicator] = find_set_membership(svids,cls)
+%Given the detection objects svids and a class cls,
+%parse each detection's curid to see which image set it belongs to.
+%There are 4 possible sets for a given category: train-, val-, trainval+, test
+% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-% if ~isfield(m,'bg_string1')
-%   bg = get_pascal_bg('trainval');
-% else
-%   bg = get_pascal_bg(m.bg_string1, m.bg_string2);
-% end
+bgtrain = get_pascal_bg('train',['-' cls]);
+bgval = get_pascal_bg('val',['-' cls]);
+fg = get_pascal_bg('trainval',cls);
+fgtest = get_pascal_bg('test');
 
-bgtrain = get_pascal_bg('train',['-' m.cls]);
-bgval = get_pascal_bg('val',['-' m.cls]);
-fg = get_pascal_bg('trainval',m.cls);
 
 bgtrain = cellfun(@(x)get_file_id(x),bgtrain);
 bgval = cellfun(@(x)get_file_id(x),bgval);
 fg = cellfun(@(x)get_file_id(x),fg);
+fgtest = cellfun(@(x)get_file_id(x),fgtest);
 
-% bgids = zeros(length(bg),1);
-% aa = find(ismember(bg,bgtrain));
-% bgids(aa) = 1;
-% aa = find(ismember(bg,bgval));
-% bgids(aa) = 2;
-% aa = find(ismember(bg,fg));
-% bgids(aa) = 3;
+ids = cellfun(@(x)x.curid,svids);
 
-%% HERE we take all string curids, and treat them as literals into
-%the images
-
-% s = cellfun(@(x)isstr(x.curid),m.model.svids);
-% s = find(s);
-% if length(s) > 0
-%   train_curids = cell(length(bg),1);
-%   for i = 1:length(bg)
-%     [tmp,train_curids{i},ext] = fileparts(bg{i});
-%   end
-  
-%   test_curids = cellfun2(@(x)x.curid,m.model.svids(s));
-
-%   [aa,bb] = ismember(test_curids,train_curids);
-%   for i = 1:length(s)
-%     m.model.svids{s(i)}.curid = bb(i);
-%   end  
-% end
-
-ids = cellfun(@(x)x.curid,m.model.svids);
-%Train only with negatives
 negatives = find(ismember(ids,bgtrain));
 vals = find(ismember(ids,bgval));
 pos = find(ismember(ids,fg));
+test = find(ismember(ids,fgtest));
+indicator = zeros(length(svids),1);
+indicator(negatives) = 1;
+indicator(vals) = 2;
+indicator(pos) = 3;
+indicator(test) = 4;
 
-fprintf(1,'Sets NEG,VAL,POS=%d,%d,%d\n',...
-        length(negatives),length(vals),length(pos));
+%left out images must be the difficult in-class images
+indicator(indicator==0) = 3;
+pos = find(indicator==3);
 
+fprintf(1,'Sets NEG,VAL,POS,TEST=%d,%d,%d,%d\n',...
+        length(negatives),length(vals),...
+        length(pos),length(test));
 
+%should not get here
+if sum(indicator==0)
+  fprintf(1,'WARNING FOUND IDS NOT IN THESE SETS\n');
+end

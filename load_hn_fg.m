@@ -53,8 +53,17 @@ for i = 1:length(mining_queue)
 
   %starter = tic;   
   [rs,t] = localizemeHOG(I, models, localizeparams);
-  numpassed = numpassed + 1;
   
+  % [bboxes] = extract_bbs_from_rs(rs.id_grid, ...
+  %                                rs.score_grid,0);
+  % figure(1)
+  % clf
+  % imagesc(I)
+  % plot_bbox(bboxes)
+  % drawnow
+  % pause
+  numpassed = numpassed + 1;
+
   [tmp,curid,tmp] = fileparts(bg{index});
   curid_integer = str2num(curid);
   for aaa = 1:length(rs.id_grid)

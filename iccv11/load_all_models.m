@@ -79,7 +79,8 @@ for i = 1:length(files)
   catch
     models{i} = m.models{1};
   end
-
+  
+  models{i}.models_name = DET_TYPE;
   if max(models{i}.model.hg_size(1:2)) >= 25 %| length(models{i}.model.x)==0
     fprintf(1,'Truncating very large exemplar id=%d\n', i);
     models{i}.model.w = zeros(1,1,31);

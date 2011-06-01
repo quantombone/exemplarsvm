@@ -79,7 +79,7 @@ for indexi = 1:length(models)
     
 
        
-    [negatives,vals,pos,m] = find_set_membership(m);
+    [negatives,vals,pos,m] = find_set_membership(m.model.svids);
     
     % curfeats = reshape(m.model.x,m.model.hg_size);
     % m.model.w = m.model.x*0;

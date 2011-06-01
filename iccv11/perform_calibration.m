@@ -92,6 +92,8 @@ if strcmp(setname,'voc')
   
 end
 
+
+
 % if ~exist(final_dir','dir')
 %   mkdir(final_dir);
 % end
@@ -219,14 +221,17 @@ for exid = 1:length(models)
   good_os = cat(1,good_os,1.0);
   good_scores = cat(1,good_scores,1.0);
 
-  if length(good_os) <= 1
+  if length(good_os) <= 1 || (length(bad_os) ==0)
     beta = [.1 100];
   else
 
-
     [aa,bb] = sort(bad_scores,'descend');
     curlen = min(length(bb),10000*length(good_scores));
+    try
     bb = bb(round(linspace(1,length(bb),curlen)));
+    catch
+      keyboard
+    end
 
     bad_scores = bad_scores(bb);
     bad_os = bad_os(bb);
@@ -293,24 +298,28 @@ for exid = 1:length(models)
     bbs_show = bbs(bb,:);
     
     models{exid}.model.svids = {};
-    m = try_reshape(models{exid},bbs_show,100);
+    %m = try_reshape(models{exid},bbs_show,100);
+
+    [models{exid}.model.svids,models{exid}.model.nsv] = ...
+        extract_svs(bbs_show,100);%,'trainval','');
+
     figure(445)
     clf
-    imagesc(get_sv_stack(m,8,8))
+    imagesc(get_sv_stack(models{exid},8))
 
     
-    figure(446)
-    clf
-    for jjj = 1:25
-      I = convert_to_I(sprintf(VOCopts.imgpath,...
-                  sprintf('%06d',bbs(bb(jjj),11))));
-      curbb = bbs_show(jjj,:); %bbs(bb(jjj),:);
-      subplot(5,5,jjj)
-      imagesc(I)
-      plot_bbox(curbb)
-      axis image
-      axis off
-    end
+    % figure(446)
+    % clf
+    % for jjj = 1:25
+    %   I = convert_to_I(sprintf(VOCopts.imgpath,...
+    %               sprintf('%06d',bbs(bb(jjj),11))));
+    %   curbb = bbs_show(jjj,:); %bbs(bb(jjj),:);
+    %   subplot(5,5,jjj)
+    %   imagesc(I)
+    %   plot_bbox(curbb)
+    %   axis image
+    %   axis off
+    % end
 
     if 0
     VOCinit;
@@ -325,8 +334,8 @@ for exid = 1:length(models)
     print(gcf,filer,'-dpng');
     end
 
-    keyboard
-    %pause
+    
+    pause
   end
   
 
