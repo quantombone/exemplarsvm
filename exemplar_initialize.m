@@ -176,23 +176,27 @@ for i = 1:length(ids)
       %model = populate_wiggles(I, model, NWIGGLES);
       if 1
       hg_size = [8 8];
-      %newK = 50;
-      newK = 1;
+      
+      newK = 50;
       [tmp,model] = new10model(I,bbox,SBIN,hg_size,newK,curid);
+
+      DO_FRIENDS = 1;
       
-      if 0
-      [tmp,model2] = new10model(flip_image(I), ...
-                                flip_box(bbox, size(I)), ...
-                                SBIN, hg_size, newK,curid);
-      x2 = model2.x;
-      t2 = model2.target_id;
-      for j = 1:length(t2)
-        t2{j}.flip = 1;
-        t2{j}.bb = flip_box(t2{j}.bb,size(I));
-      end
+      if DO_FRIENDS == 1
       
-      model.x = cat(2,model.x,x2);
-      model.target_id = cat(1,model.target_id,t2);
+        [tmp,model2] = new10model(flip_image(I), ...
+                                  flip_box(bbox, size(I)), ...
+                                  SBIN, hg_size, newK,curid);
+        x2 = model2.x;
+        t2 = model2.target_id;
+        for j = 1:length(t2)
+          t2{j}.flip = 1;
+          t2{j}.bb = flip_box(t2{j}.bb,size(I));
+        end
+        
+        model.x = cat(2,model.x,x2);
+        model.target_id = cat(1,model.target_id,t2);
+        
       end
       
       
@@ -555,6 +559,7 @@ for q = 1:K
 end
 
 I2 = I*0;
+rawbox = clip_to_image(rawbox,[1 1 size(I,2) size(I,1)]);
 I2(rawbox(2):rawbox(4),rawbox(1):rawbox(3),:) = 1;
 oks = find(I2(:));
 I2(oks) = rand(size(oks));
