@@ -1,7 +1,11 @@
 function Isv = get_sv_stack(m, K1, K2)
-%% Create a K1xK2 image which visualizes the negative support vectors as
-%% well as the exemplar learned HOG, and averaged SVs
-%% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Create a K1xK2 image which visualizes the detection windows, as
+% well as information about the trained exemplar m
+% The first shows shows [exemplar image, w+, w-, sum(w.*x,3),
+% mean0, mean 1, ... ,mean N]
+% Second row first icon starts the top detections, with a coloring
+% indicating the set they belong to
+% Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if ~exist('K1','var')
   K1 = 5;
@@ -98,7 +102,17 @@ newsize = round(newsize);
 newsize = newsize + 10;
 
 svims = cellfun2(@(x)max(0.0,min(1.0,imresize(x,newsize))),svims);
-[negatives,vals,pos] = find_set_membership(m);
+if ~isfield(m.model.svids{1},'set')
+  [negatives,vals,pos,test,indicator] = ...
+      find_set_membership(m.model.svids,m.cls);
+
+else
+  indicator = cellfun(@(x)x.set,m.model.svids);
+  negatives = find(indicator==1);
+  vals = find(indicator==2);
+  pos = find(indicator==3);
+  test = find(indicator==4);
+end
 
 svimstack = cat(4,svims{:});
 NMS = K2-4;
@@ -119,15 +133,14 @@ PADSIZE = 5;
 
 for i = 1:numel(svims)
   %% find membership here
-  if sum(i == negatives)
-    %svims{i} = pad_image(svims{i},-5);
+  if sum(i == negatives)  %train- red
     svims{i} = pad_image(svims{i},PADSIZE,[1 0 0]);
-  elseif sum(i == pos)
-    %svims{i} = pad_image(svims{i},-5);
+  elseif sum(i == pos) %trainval+ green
     svims{i} = pad_image(svims{i},PADSIZE,[0 1 0]);
-  else
-    %svims{i} = pad_image(svims{i},-5);
+  elseif sum(i == vals) %val- blue
     svims{i} = pad_image(svims{i},PADSIZE,[0 0 1]);
+  else %test gray
+    svims{i} = pad_image(svims{i},PADSIZE,[.5 .5 .5]);
   end
 end
 
