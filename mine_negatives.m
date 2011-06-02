@@ -36,7 +36,7 @@ for q = 1:length(models)
   models{q} = update_the_model(models, q, mining_params, ...
                                  iteration, mining_stats, bg);
   
-  dump_figures(models{q},mining_params);
+  %dump_figures(models{q},mining_params);
   %else
   %
   %end

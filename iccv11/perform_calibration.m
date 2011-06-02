@@ -123,6 +123,9 @@ targets = 1:length(models);
 
 cls = models{1}.cls;
 
+VOCinit;
+targetc = find(ismember(VOCopts.classes,models{1}.cls));
+
 fprintf(1,'processing boxes\n');
 for i = 1:length(grid)    
   if mod(i,100)==0
@@ -149,6 +152,10 @@ for i = 1:length(grid)
     if length(cur.extras)>0
       %cur.extras.os = cur.extras.os(cur.bboxes(:,5),:);
       cur.extras.os = cur.extras.maxos(cur.bboxes(:,5));
+
+      cur.extras.os = cur.extras.os.* ...
+          reshape((cur.extras.maxclass(cur.bboxes(:,5))==targetc),size(cur.extras.os));
+
     end
   end
   
@@ -218,8 +225,9 @@ for exid = 1:length(models)
   bad_os = all_os(all_os<.5);
 
   %add virtual sample at os=1.0, score=1.0
-  good_os = cat(1,good_os,1.0);
-  good_scores = cat(1,good_scores,1.0);
+  %good_os = cat(1,good_os,1.0);
+  %good_scores = cat(1,good_scores,1.0);
+
 
   if length(good_os) <= 1 || (length(bad_os) ==0)
     beta = [.1 100];
@@ -245,11 +253,9 @@ for exid = 1:length(models)
     beta = learn_sigmoid(all_scores, all_os);
   end
 
-  
   %if beta(1)<.001
   %  beta(1) = .001;
-  %end
-  
+  %end  
   betas(exid,:) = beta;
 
   if (sum(ismember(exid,targets))==0)
