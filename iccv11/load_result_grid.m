@@ -37,8 +37,6 @@ setname = [curset '.' curcls];
 final_file = sprintf('%s/applied/%s-%s.mat',VOCopts.localdir,setname, ...
                      models{1}.models_name);
 
-
-
 % if fileexists(final_file)
 %   fprintf(1,'Loading final file %s\n',final_file);
 %   load(final_file);
@@ -101,8 +99,8 @@ for i = 1:length(files)
     newid = str2num(grid{i}.res{j}.curid);
     grid{i}.res{j}.bboxes(:,11) = newid;
     grid{i}.res{j}.coarse_boxes(:,11) = newid;
-    goods = find(grid{i}.res{j}.bboxes(:,end) >= curthresh);
 
+    goods = find(grid{i}.res{j}.bboxes(:,end) >= curthresh);
     grid{i}.res{j}.bboxes = grid{i}.res{j}.bboxes(goods,:);
     grid{i}.res{j}.coarse_boxes = ...
         grid{i}.res{j}.coarse_boxes(goods,:);

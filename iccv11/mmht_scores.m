@@ -102,12 +102,20 @@ N = size(x,2);
 K = size(x,1);
 
 C = zeros(K,K);
-
+C2 = zeros(K,K);
 for i = 1:N
   cur = find(x(:,i)>0);  
-  C(cur,exids(i)) = C(cur,exids(i)) + os(i)*(os(i) >= count_thresh) / ...
-      length(cur)*sum(x(:,i));
+  % C(cur,exids(i)) = C(cur,exids(i)) + os(i)*(os(i) >= count_thresh) / ...
+  %     length(cur)*sum(x(:,i));
+  
+  % C2(cur,exids(i)) = C(cur,exids(i)) + (os(i) < count_thresh) / ...
+  %     length(cur)*sum(x(:,i));
+  
+  C(cur,exids(i)) = C(cur,exids(i)) + (os(i) >= count_thresh);
+  C2(cur,exids(i)) = C(cur,exids(i)) + (os(i) < count_thresh);
 end
+
+C = C ./(C2+eps);
 
 for i = 1:K
   M.w{i} = C(:,i);
