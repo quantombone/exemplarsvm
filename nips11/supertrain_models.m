@@ -1,5 +1,5 @@
 function supertrain_models(models)
-%Retrain ESVM models via VisRegression
+%Retrain VisRegression (NIPS2011) model
 
 VOCinit;
 if ~exist('models','var')
@@ -18,7 +18,6 @@ final_directory = ...
     sprintf('%s/%s-vregmine/',...
             VOCopts.localdir,...
             models{1}.models_name);
-
 
 if ~exist(final_directory,'dir')
   mkdir(final_directory);
@@ -268,9 +267,8 @@ for indexi = 1:length(models)
   
   %m.models_name = [m.models_name '-rereg'];
   save(filer,'m');
-  if exists(filerlock,'dir')
+  if exist(filerlock,'dir')
     rmdir(filerlock);
   end
 end
-
 

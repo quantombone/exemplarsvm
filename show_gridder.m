@@ -6,7 +6,7 @@ for i = 1:length(bg)
   [tmp,curids{i},tmp] = fileparts(bg{i});
 end
 
-ht = get_pascal_bg('test','train');
+ht = get_pascal_bg('test','dog');
 for i = 1:length(ht)
   [tmp,curid,tmp] = fileparts(ht{i});
   hit = find(ismember(curids,curid));
@@ -40,8 +40,13 @@ for i = 1:length(ht)
 
   %b2 = nms(b,.5);
   b2 = b;
-  [alpha,beta] = sort(b2(:,end),'descend');
-  b2 = b2(beta(1:min(length(beta),20)),:);
+  %[alpha,beta] = sort(b2(:,end),'descend');
+  %b2 = b2(beta(1:min(length(beta),20)),:);
+  
+  if size(b2,1)==0
+    fprintf(1,'continuing\n');
+    continue
+  end
   %summer = summer / max(summer(:));
   %summer = summer.^2;
   figure(1)
@@ -49,6 +54,7 @@ for i = 1:length(ht)
   subplot(1,2,1)
   %imagesc(I.*repmat(summer/max(summer(:)),[1 1 3]))
   imagesc(I)
+
   plot_bbox(b2)
   %plot_bbox(mean(b,1))
   subplot(1,2,2)

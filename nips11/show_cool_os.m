@@ -30,7 +30,11 @@ msave.model.svids = msave.model.svids(inds);
 msave.model.nsv = msave.model.nsv(:,inds);
 
 
+%if isfield(model.svids,'set')
 sets = cellfun(@(x)x.set,msave.model.svids);
+%else
+%  sets = cellfun(@(x)1,msave.model.svids);
+%end
 negatives = find(sets==1);
 vals = find(sets==2);
 pos = find(sets==3);
