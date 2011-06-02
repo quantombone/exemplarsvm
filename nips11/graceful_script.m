@@ -8,6 +8,9 @@ cats = {'bus','sofa', 'cow', 'train'};
 modes = {'e-svm', 'e-svm-vregmine'};
 
 for i = 1:length(cats)
+  show_graceful_confusion(cats{i},1);
+  show_graceful_confusion(cats{i},0);
+  if 0
   for j = 1:length(modes)
 
     models = load_all_models(cats{i},modes{j});
@@ -27,6 +30,6 @@ for i = 1:length(cats)
     %save(filer,'results','final');
 
   end
+  end
 end
 
-%show_graceful_confusion(models,final)
