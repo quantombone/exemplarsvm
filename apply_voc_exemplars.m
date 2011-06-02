@@ -55,7 +55,7 @@ if display == 1
   curcls = models{1}.cls;  
   %curcls = '';
 
-  curcls = 'dog';
+  %curcls = 'horse';
   %curcls = 'car';
   %curcls = 'bus';
   %curcls = 'tvmonitor';

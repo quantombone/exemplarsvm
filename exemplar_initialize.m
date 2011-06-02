@@ -177,10 +177,10 @@ for i = 1:length(ids)
       if 1
       hg_size = [8 8];
       
-      newK = 50;
+      newK = 1;
       [tmp,model] = new10model(I,bbox,SBIN,hg_size,newK,curid);
 
-      DO_FRIENDS = 1;
+      DO_FRIENDS = 0;
       
       if DO_FRIENDS == 1
       
