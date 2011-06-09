@@ -8,11 +8,11 @@ end
 
 myi = j;
 pedro = load('/onega_no_backups/users/ss1/finalAllDets.mat');
-filer = sprintf('%s/nips-%s-%s.mat', VOCopts.resdir, cls, ...
+filer = sprintf('%s/finalnips-%s-%s.mat', VOCopts.resdir, cls, ...
                     'e-svm');
 esvm = load(filer);
 
-filer = sprintf('%s/nips-%s-%s.mat', VOCopts.resdir, cls, ...
+filer = sprintf('%s/finalnips-%s-%s.mat', VOCopts.resdir, cls, ...
                 'e-svm-vregmine');
 
 vregmine = load(filer);
@@ -53,7 +53,7 @@ end
 % [aa,bb] = sort(bbs(:,end), 'descend');
 % bbs = bbs(bb,:);
 
-Ns = [500];
+Ns = [1000];
 N = Ns(end);
 
 for q = 1:length(scores)
@@ -97,16 +97,6 @@ for i = 1:N
     [aa,ind] = max(os);
   end
 
-  % figure(1)
-  % clf
-  % imagesc(I)
-  % plot_bbox(cur)
-  % title(sprintf('os=%.3f cls=%s',aa,VOCopts.classes{gtc(ind)}))
-  % axis image
-  % axis off
-  % drawnow
-  % print(gcf,sprintf('/onega_no_backups/users/tmalisie/bustopdets/%s-%05d.png',titler{q},i),'-dpng');
-
   if MODE == 1
     other = (aa>.5);
   else
@@ -121,11 +111,30 @@ for i = 1:N
     hits{q}(i) = 21;
     corr(i) = 0;
   end  
+  
+  if 0
+  figure(1)
+  clf
+  imagesc(I)
+  plot_bbox(cur)
+
+  resc = VOCopts.classes{gtc(ind)};
+  if (aa < .5)
+    resc = 'NONE';
+  end
+  title(sprintf('os=%.3f cls=%s',aa,resc))
+  axis image
+  axis off
+  drawnow
+  print(gcf,sprintf('/onega_no_backups/users/tmalisie/alltopdets2/%s-%s-%05d-%s.png',cls,titler{q},i,resc),'-dpng');
+  end
+  
 end
 
 prs{q} = cumsum(corr)./(1:length(corr))';
 
 end
+
 
 figure(34)
 clf
@@ -135,7 +144,12 @@ for q =1:length(prs)
   hold all;  
 end
 grid on;
-legend(titler)
+
+newtitler = titler;
+for zzz = 1:length(newtitler)
+  newtitler{zzz} = [titler{zzz} sprintf(' AP=%.3f',mean(prs{zzz}))];
+end
+legend(newtitler)
 if MODE == 1
   subtitle = 'All Object';
 else
@@ -148,15 +162,18 @@ ylabel('precision')
 
 set(gcf,'PaperPosition',[0 0 10 10])
 
-basedir = [VOCopts.wwwdir '/graceful2/'];
+basedir = [VOCopts.wwwdir '/gracefulF/'];
 if ~exist(basedir,'dir')
   mkdir(basedir);
 end
 
-print(gcf,sprintf('%s/objpr-%d-%s-%s.eps',basedir, MODE, cls, ...
+print(gcf,sprintf('%s/Fobjpr-%d-%s-%s.eps',basedir, MODE, cls, ...
                   'all'), '-depsc2');
-print(gcf,sprintf('%s/objpr-%d-%s-%s.png',basedir, MODE, cls, ...
+print(gcf,sprintf('%s/Fobjpr-%d-%s-%s.png',basedir, MODE, cls, ...
                   'all'), '-dpng');
+
+
+return;
 
 names = VOCopts.classes;
 names{end+1} = 'none';
@@ -166,21 +183,26 @@ clf
 for i = 1:length(Ns)
   for q = 1:length(hits)
     crow(q,:) = hist(hits{q}(1:Ns(i)),1:21);
+    crow(q,:) = crow(q,end:-1:1);
   end
 
   subplot(length(Ns),1,i)
-  bar(crow')
-  axis([1 22 0 Ns(i)])
+  barh(crow')
+  %axis([1 22 0 Ns(i)])
+  axis([0 Ns(i) 0 22])
 
-  set(gca,'XTick',1:21);
-  set(gca,'XTickLabel',names)
-  ylabel(cls)
-  title(sprintf('Confusions from top %d Detections[%s]',Ns(i),subtitle))
+  %set(gca,'YTick',1:21);
+  %set(gca,'YTickLabel',names(end:-1:1))
+  %xlabel(cls)
+  %title(sprintf('Confusions from top %d Detections[%s]',Ns(i), ...
+  %              subtitle))
+  title(cls,'FontSize',14)
 end
+drawnow
 
-set(gcf,'PaperPosition',[0 0 10 10])
+set(gcf,'PaperPosition',[0 0 2 10])
 
-basedir = [VOCopts.wwwdir '/graceful2/'];
+basedir = [VOCopts.wwwdir '/graceful4/'];
 if ~exist(basedir,'dir')
   mkdir(basedir);
 end

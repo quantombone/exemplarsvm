@@ -4,13 +4,13 @@
 
 VOCinit;
 
-cats = {'bus','sofa', 'cow', 'train'};
+cats = {'bicycle','dog','motorbike','bus','sofa', 'cow', 'train'};
 modes = {'e-svm', 'e-svm-vregmine'};
 
 for i = 1:length(cats)
-  show_graceful_confusion(cats{i},1);
-  show_graceful_confusion(cats{i},0);
-  if 0
+  %show_graceful_confusion(cats{i},1);
+  %show_graceful_confusion(cats{i});
+  if 1 
   for j = 1:length(modes)
 
     models = load_all_models(cats{i},modes{j});
@@ -25,9 +25,9 @@ for i = 1:length(cats)
                                                M);
     
     %good files already saved
-    %ofiler = sprintf('%s/nips-%s-%s.mat', VOCopts.resdir, cats{i}, ...
-    %                modes{j});
-    %save(filer,'results','final');
+    filer = sprintf('%s/finalnips-%s-%s.mat', VOCopts.resdir, cats{i}, ...
+                    modes{j});
+    save(filer,'results','final');
 
   end
   end
