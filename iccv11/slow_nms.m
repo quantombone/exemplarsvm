@@ -20,6 +20,7 @@ else
   while ~isempty(I)
     last = length(I);
     i = I(last);
+
     pick = [pick; i];
     suppress = [last];
     for pos = 1:last-1
@@ -33,6 +34,7 @@ else
       if w > 0 && h > 0
         % compute overlap 
         o = w * h / area(j);
+        %o
         if o > overlap
           suppress = [suppress; pos];
         end
