@@ -1,4 +1,4 @@
-function os = getosmatrix_bb(boxes,gts)
+function [os,os1] = getosmatrix_bb(boxes,gts)
 %% Given two sets of bounding boxes, N1 in the first one, and N2 in
 %% the second one, compute a N1xN2 overlap score matrix where the
 %% overlap score is the ratio of the intersection to union
@@ -31,6 +31,11 @@ os = zeros(size(boxes,1),size(gts,1));
 if size(boxes,1)*size(gts,1)==0
   return;
 end
+
+if nargout == 2
+  os1 = os;
+end
+
 for i = 1:size(boxes,1)
   
   xx1 = max(boxes(i,1),gts(:,1));
@@ -46,4 +51,11 @@ for i = 1:size(boxes,1)
 
   os(i,:) = o ./ (area(i) + area2 - o);
   
+  if nargout == 2
+    os1(i,:) = o ./ area2;
+    %os1(i,:) = o ./ area(i);
+  end
 end
+
+  
+
