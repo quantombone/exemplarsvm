@@ -1,8 +1,13 @@
-function top = nms_fast(boxes, overlap)
+function top = nms(boxes, overlap)
 % top = nms_fast(boxes, overlap)
-% Non-maximum suppression.
+% Non-maximum suppression. (FAST VERSION)
 % Greedily select high-scoring detections and skip detections
-% that are significantly covered by a previously selected detection.
+% that are significantly covered by a previously selected
+% detection.
+% NOTE: This is adapted from Pedro Felzenszwalb's version (nms.m),
+% but an inner loop has been eliminated to significantly speed it
+% up in the case of a large number of boxes
+% Tomasz Maliseiwicz (tomasz@cmu.edu)
 
 if isempty(boxes)
   top = [];
