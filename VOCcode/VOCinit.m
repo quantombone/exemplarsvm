@@ -11,10 +11,16 @@ VOCopts.wwwdir = [VOCopts.devkitroot '/www/'];
 
 %datadir is where the PASCAL VOC datasets are installed (this
 %directory can be a read-only shared resource)
-VOCopts.datadir ='/nfs/hn38/users/sdivvala/Datasets/Pascal_VOC/';
 
-%In some scripts, I do something different if I'm on the display
-VOCopts.display_machine = 'onega';
+[v,r] = unix('hostname');
+if strfind(r,'airbone')==1
+  VOCopts.datadir ='/projects/Pascal_VOC/';
+  VOCopts.display_machine = 'airbone';
+else
+  VOCopts.datadir ='/nfs/hn38/users/sdivvala/Datasets/Pascal_VOC/';
+  VOCopts.display_machine = 'onega';
+end
+
 
 if length(VOCopts.devkitroot) == 0
   error('Error, paths not initialized in VOCinit.m\n');
