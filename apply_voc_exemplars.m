@@ -30,7 +30,7 @@ if strfind(r,VOCopts.display_machine)==1
 else
   display = 0;
 end
-%display = 1;
+
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
@@ -143,12 +143,10 @@ for i = 1:length(ordering)
     %%NOTE/BUG/TODO: this is a bug here, index should be
     %current_curid instead
     [coarse_boxes] = extract_bbs_from_rs(rs.id_grid, rs.score_grid, index);
-
     
     boxes = coarse_boxes;
     %map GT boxes from training images onto test image
-    boxes = adjust_boxes(coarse_boxes,models);
-      
+    boxes = adjust_boxes(coarse_boxes,models);      
 
     if display == 1       
       %extract detection box vectors from the localization results
@@ -161,7 +159,6 @@ for i = 1:length(ordering)
         boxes = calibrate_boxes(boxes,M.betas);
       end
 
-
       if numel(boxes)>0
         [aa,bb] = sort(boxes(:,end),'descend');
         boxes = boxes(bb,:);
@@ -172,7 +169,7 @@ for i = 1:length(ordering)
 
       %% ONLY SHOW TOP 5 detections or fewer
       boxes = boxes(1:min(size(boxes,1),8),:);
-      
+
       
       if size(boxes,1) >=1
         figure(1)
@@ -186,9 +183,7 @@ for i = 1:length(ordering)
 
         % show_hits_figure_iccv(models,boxes,I,I,exemplar_overlay,I);
         show_hits_figure(models, boxes, I);
-
         drawnow
-
 
         pause
       else
