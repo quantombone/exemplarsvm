@@ -1,13 +1,17 @@
 function [resstruct,t] = localizemeHOG(I, models, localizeparams)
 % Localize object in pyramid via sliding windows and (dot product +
-% bias recognition score)
+% bias recognition score).  If there is a small number of models,
+% then fconv is used, if the number is large, then the feature
+% matrix (with a single matrix multiplication) is used.
+%
 % I: input image (or already precomputed pyramid)
 % models: a cell array of models to localize inside this image
-% models{.}.model.w: cell array of learned templates
-% models{.}.model.b: cell array of corresponding offsets
+% models{:}.model.w: cell array of learned templates
+% models{:}.model.b: cell array of corresponding offsets
 % localizeparams: localization parameters
 % resstruct: sliding window output struct
 % t: the feature pyramid output
+%
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if ~exist('localizeparams','var')
@@ -225,23 +229,7 @@ for level = length(t.hog):-1:1
       ip.flip = 0;
       if isfield(localizeparams,'FLIP_LR') && ...
             (localizeparams.FLIP_LR == 1)
-        %saver = ip.bb;
-        
-        
-        ip.bb = flip_box(ip.bb,t.size);
-        % if 0 &&(ip.bb(3) <= 0 || ip.bb(4) <= 0) && size(ws{1},1)*size(ws{1},2)>1
-        %   fprintf(1,'why first one less than 0?\n');
-        
-        %   figure(1)
-        %   clf
-        %   imagesc(I)
-        %   plot_bbox(saver,'',[0 1 0])
-        %   plot_bbox(ip.bb,'',[1 0 0])
-        %   axis image
-        %   axis off
-        %   drawnow
-        % end
-         
+        ip.bb = flip_box(ip.bb,t.size);         
         ip.flip = 1;
       end
       id_grid{exid}{end+1} = ip; 
@@ -308,7 +296,6 @@ end
 
 %% Do NMS (nothing happens if the field is turned off, or absent)
 resstruct = prune_nms(resstruct,localizeparams);
-
 
 function rs = prune_nms(rs, params)
 %Prune via nms to eliminate redundant detections
@@ -443,8 +430,6 @@ else
         t.size(1),t.size(2),localizeparams.lpo);
 end
 
-
-
 finalf  = cell(length(t.hog), 1);
 offsets = cell(length(t.hog), 1);
 
@@ -462,15 +447,20 @@ for i = 1:length(t.hog)
   for j = 1:size(b,2)
     finalf{i}(:,j) = reshape(curf(b(:,j),:),[],1);
   end
-
+  
+  [uus{i},vvs{i}] = ind2sub(s,offsets{i}(1,:));
 end
 
 offsets = cat(2,offsets{:});
 finalf = cat(2,finalf{:});
 
+uus = cat(2,uus{:});
+vvs = cat(2,vvs{:});
+
 www = reshape(templates,[],size(templates,4));
 
 %subtract bias
+
 r = www'*finalf;
 r = bsxfun(@minus,r,cellfun(@(x)x.model.b,models)');
 
@@ -505,8 +495,12 @@ for exid = 1:N
     level = offsets(2,bb(j));
     ip.scale = t.scales(level);
     
-    [uu,vv] = ind2sub([size(t.hog{level},1) size(t.hog{level},2)],...
-                      offsets(1,bb(j)));
+    %[uu,vv] = ind2sub([size(t.hog{level},1) size(t.hog{level},2)],...
+    %                offsets(1,bb(j)));
+  
+    uu = uus(bb(j));
+    vv = vvs(bb(j));
+        
     ip.offset = [uu vv] - t.padder;
 
     ip.bb = [([ip.offset(2) ip.offset(1) ip.offset(2)+size(ws{exid},2) ...
@@ -520,6 +514,7 @@ for exid = 1:N
       ip.bb = flip_box(ip.bb,t.size);
       ip.flip = 1;
     end
+        
     id_grid{exid}{end+1} = ip;
   end
 end
@@ -553,11 +548,6 @@ if adjust == 1
     norms = sqrt(sum(xs.^2,1));
     xs = xs ./ repmat(norms,size(xs,1),1);
 
-    %newx = templates(:,:,:,1)*0;
-    
-    
-    %newx(1:size(curx,1),1:size(curx,2),:) = curx;
-
     newd =  xs'* ...
             (curx(:)/norm(curx(:)));
 
@@ -579,3 +569,4 @@ end
 
 %% Do NMS (nothing happens if the field is turned off, or absent)
 resstruct = prune_nms(resstruct,localizeparams);
+
