@@ -34,5 +34,5 @@ for i = 1:size(boxes,1)
   
   %find the xform from c to d
   xform = find_xform(c, d(1:4));
-  top(i,1:4) = apply_xform(gt, xform);
+  top(i,1:4) = apply_xform(gt, xform);      
 end
