@@ -42,6 +42,9 @@ mining_params.SAVE_SVS = 0;
 mining_params.thresh = -1;
 mining_params.TOPK = 50;
 
+%How much we pad the pyramid (to let detections fall outside the image)
+mining_params.pyramid_padder = 5;
+
 %Maximum number of negatives to mine before SVM kicks in (this
 %defines one iteration)
 mining_params.MAX_WINDOWS_BEFORE_SVM = 1000;
@@ -54,10 +57,10 @@ mining_params.MAX_IMAGES_BEFORE_SVM = 400;
 
 %At this cutoff, we switch thresholds from basically everything to
 %a reduced threshold
-mining_params.early_late_cutoff = 3;
-mining_params.early_detection_threshold = -10000;
-mining_params.late_detection_threshold = -1.05;
-mining_params.detection_threshold = mining_params.late_detection_threshold;
+%mining_params.early_late_cutoff = 3;
+%mining_params.early_detection_threshold = -10000;
+%mining_params.late_detection_threshold = -1.05;
+%mining_params.detection_threshold = mining_params.late_detection_threshold;
 
 %when mining, we keep the N negative support vectors as well as
 %some more beyond the -1 threshold (alpha*N), but no more than 1000
@@ -96,4 +99,5 @@ mining_params.extract_negatives = 0;
 mining_params.GET_GT_OS = 0;
 mining_params.MINE_MODE = 0;
 
+%experimental flag to skip the mining process
 mining_params.skip_mine = 0;

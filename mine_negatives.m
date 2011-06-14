@@ -1,53 +1,36 @@
-function [models,mining_queue] = mine_negatives(models, mining_queue, bg, ...
-                                                mining_params, iteration)
+function [m,mining_queue] = mine_negatives(m, mining_queue, bg, ...
+                                           mining_params, iteration)
 %% Mine negatives (for a set of models, but only one works
 %% currently) and update the current classifiers inside models 
 %%
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
 %during first few iterations, we take many windows per image
-if iteration <= mining_params.early_late_cutoff
-  mining_params.detection_threshold = mining_params.early_detection_threshold;
-else
-  %in later iterations when we pass through many images, we use SVM cutoff
-  mining_params.detection_threshold = mining_params.late_detection_threshold;
-end
+% if iteration <= mining_params.early_late_cutoff
+%   mining_params.detection_threshold = mining_params.early_detection_threshold;
+% else
+%   %in later iterations when we pass through many images, we use SVM cutoff
+%   mining_params.detection_threshold = mining_params.late_detection_threshold;
+% end
 
 if mining_params.skip_mine == 0
   [hn, mining_queue, mining_stats] = ...
-      load_hn_fg(models, mining_queue, bg, mining_params);
+      load_hn_fg({m}, mining_queue, bg, mining_params);
   
-  for i = 1:length(models)
-    models{i} = add_new_detections(models{i},hn.xs{i},hn.objids{i});
-  end
+  m = add_new_detections(m, cat(2,hn.xs{1}{:}), cat(1,hn.bbs{1}{:}));
 else
   mining_stats.num_visited = 0;
   fprintf(1,'warning not really mining\n');  
 end
 
-for q = 1:length(models)
+   
+m = update_the_model(m, mining_params, ...
+                     iteration, mining_stats, bg);
 
-  % if (size(models{q}.model.nsv,2) >= mining_params.MAX_WINDOWS_BEFORE_SVM) || ...
-  %   (iteration == mining_params.MAXITER) || (length(mining_queue) == ...
-  %                                            0) || ...
-  %       (mining_params.skip_mine==1)
-
-    
-  models{q} = update_the_model(models, q, mining_params, ...
-                                 iteration, mining_stats, bg);
-  
-  %dump_figures(models{q},mining_params);
-  %else
-  %
-  %end
-end
-
-
-function [m] = update_the_model(models,index,mining_params, ...
+function [m] = update_the_model(m,mining_params, ...
                                 iteration, mining_stats, bg)
-%% UPDATE the current SVM and show the results
 
-m = models{index};
+%% UPDATE the current SVM and show the results
 m.iteration = m.iteration + 1;
 if ~isfield(m,'mining_stats')
   m.mining_stats{1} = mining_stats;
@@ -60,7 +43,7 @@ end
 
 wex = m.model.w(:);
 b = m.model.b;
-r = m.model.w(:)'*m.model.nsv - m.model.b;
+r = m.model.w(:)'*m.model.svxs - m.model.b;
 
 if strmatch(m.models_name,'dalal')
   %% here we take the best exemplars
@@ -81,8 +64,8 @@ total_length = min(total_length,mining_params.max_negatives);
 
 [alpha,beta] = sort(r,'descend');
 svs = beta(1:min(length(beta),total_length));
-m.model.nsv = m.model.nsv(:,svs);
-m.model.svids = m.model.svids(svs);
+m.model.svxs = m.model.svxs(:,svs);
+m.model.svbbs = m.model.svbbs(svs,:);
 
 % Append new w to trace
 m.model.wtrace{end+1} = m.model.w;

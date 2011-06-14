@@ -1,15 +1,28 @@
-function [feat, scale] = featpyramid2(im, sbin, interval)
-% [feat, scale] = featpyramid2(im, sbin, interval);
+function [feat, scale] = featpyramid2(im, sbin, params)
+% [feat, scale] = featpyramid2(im, sbin, params);
 
-sc = 2 ^(1/interval);
-
+%Make sure image is in double format
 im = double(im);
 
-MAXSCALE = 1.0;
-MINSCALE = .01;
+if isfield(params,'MAXSCALE')
+  MAXSCALE = params.MAXSCALE;
+else
+  MAXSCALE = 1.0;
+end
+
+if isfield(params,'MINSCALE')
+  MINSCALE = params.MINSCALE;
+else
+  MINSCALE = .01;
+end
 
 MAXLEVELS = 200;
 MINDIMENSION = 5;
+
+%Get the levels per octave from the parameters
+interval = params.lpo;
+
+sc = 2 ^(1/interval);
 
 % Start at MAXSCALE, and keep going down by the increment sc, until
 % we reach MAXLEVELS or MINSCALE

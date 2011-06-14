@@ -1,15 +1,18 @@
 function exemplar_initialize(cls, mode)
-%% Initialize script which writes out initial model files for all
-%% exemplars of a single category from PASCAL VOC trainval set
-%% Script is parallelizable (and dalalizable!)
-%% [inputs]: cls ('cow') and mode('e') are not specified, then they are read from the
-%% default_class file
-%% There are several different initialization modes
-%% DalalMode:  Warp instances to mean frame from in-class exemplars
-%% Globalmode: Warp instances to hardcoded [8 8] frame
-%% new10mode: Use a canonical 8x8 framing of each exemplar (this
-%%            allows for negative sharing in the future)
-%% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Initialize script which writes out initial model files for all
+% exemplars of a single category from PASCAL VOC trainval set Script
+% is parallelizable (and dalalizable!)  
+%
+% There are several different initialization modes
+% DalalMode:  Warp instances to mean frame from in-class exemplars
+% Globalmode: Warp instances to hardcoded [8 8] frame
+% new10mode:  Use a canonical 8x8 framing of each exemplar (this
+%             allows for negative sharing in the future)
+%
+% cls: VOC class to process
+% mode: mode name 
+%
+% Tomasz Malisiewicz (tomasz@cmu.edu)
 VOCinit;
 
 %The sbin size 
@@ -73,10 +76,6 @@ else
   display = 0;
 end
 
-%always turn off display
-%display = 0;
-
-
 fprintf(1,'Class = %s\n',cls);
 
 if ismember(cls,{'all'})
@@ -110,12 +109,6 @@ if ~exist(results_directory,'dir')
   mkdir(results_directory);
 end
 
-% results_directory = [results_directory cls '/']
-% if ~exist(results_directory,'dir')
-%   fprintf(1,'Making directory %s\n',results_directory);
-%   mkdir(results_directory);
-% end
-
 %% Load ids of all images in trainval that contain cls
 [ids,gt] = textread(sprintf(VOCopts.clsimgsetpath,cls,'trainval'),...
                   '%s %d');
@@ -125,14 +118,6 @@ ids = ids(gt==1);
 myRandomize;
 rrr = randperm(length(ids));
 ids = ids(rrr);
-
-%figure(1)
-%clf
-%imagesc(Ibase)
-%plot_bbox(recs.objects(objectid).bbox)
-%title(sprintf('i=%d objectid=%d',i,objectid));
-%pause
-%continue
 
 for i = 1:length(ids)
   curid = ids{i};
@@ -175,53 +160,44 @@ for i = 1:length(ids)
       %model = initialize_model(I,bbox,GOAL_NCELLS,SBIN);
       %model = populate_wiggles(I, model, NWIGGLES);
       if 1
-      hg_size = [8 8];
-      
-      newK = 1;
-      [tmp,model] = new10model(I,bbox,SBIN,hg_size,newK,curid);
-
-      DO_FRIENDS = 0;
-      
-      if DO_FRIENDS == 1
-      
-        [tmp,model2] = new10model(flip_image(I), ...
-                                  flip_box(bbox, size(I)), ...
-                                  SBIN, hg_size, newK,curid);
-        x2 = model2.x;
-        t2 = model2.target_id;
-        for j = 1:length(t2)
-          t2{j}.flip = 1;
-          t2{j}.bb = flip_box(t2{j}.bb,size(I));
+        hg_size = [8 8];
+        
+        newK = 1;
+        [tmp,model] = new10model(I,bbox,SBIN,hg_size,newK,curid);
+        
+        DO_FRIENDS = 0;
+        
+        if DO_FRIENDS == 1
+          
+          [tmp,model2] = new10model(flip_image(I), ...
+                                    flip_box(bbox, size(I)), ...
+                                    SBIN, hg_size, newK,curid);
+          x2 = model2.x;
+          t2 = model2.target_id;
+          for j = 1:length(t2)
+            t2{j}.flip = 1;
+            t2{j}.bb = flip_box(t2{j}.bb,size(I));
+          end
+          
+          model.x = cat(2,model.x,x2);
+          model.target_id = cat(1,model.target_id,t2);
+          
         end
         
-        model.x = cat(2,model.x,x2);
-        model.target_id = cat(1,model.target_id,t2);
         
-      end
-      
-      
-      model.target_x = model.x;
-      
-      %% we start with first one
-      model.x = model.x(:,1);
+        model.target_x = model.x;
+        
+        %% we start with first one
+        model.x = model.x(:,1);
       end
     end    
     
     fprintf(1,'Extracting random %d wiggles\n',NWIGGLES);
 
     %Negative support vectors
-    model.nsv = zeros(prod(model.hg_size),0);
-    model.svids = [];
-    
-    %dont save these, not using them
-    %Validation support vectors
-    %model.vsv = zeros(prod(model.hg_size),0);
-    %model.vsvids = [];
-    
-    %Friend support vectors
-    %model.fsv = zeros(prod(model.hg_size),0);
-    %model.fsvids = [];
-      
+    model.svxs = zeros(prod(model.hg_size),0);
+    model.svbbs = [];
+          
     clear m
     m.curid = curid;
     m.objectid = objectid;
@@ -237,7 +213,8 @@ for i = 1:length(ids)
     fprintf(1,'Final OS is %.3f\n', ...
             finalos);
 
-    fprintf(1,'final hg_size is %d %d\n',m.model.hg_size(1),m.model.hg_size(2));
+    fprintf(1,'final hg_size is %d %d\n',...
+            m.model.hg_size(1), m.model.hg_size(2));
 
     save(filer,'m');
     if exist(filerlock,'dir')
@@ -247,19 +224,29 @@ for i = 1:length(ids)
     if display == 1
       figure(1)
       clf
-      subplot(1,2,1)
+      subplot(1,3,1)
       imagesc(Ibase)
-      %plot_bbox(m.model.coarse_box,'',[1 0 0])
       plot_bbox(m.model.coarse_box,'',[1 0 0],[0 1 0],0,[1 3],m.model.hg_size)
       plot_bbox(m.gt_box,'',[0 0 1])
       axis image
-      title(sprintf('%s.%d',m.curid,m.objectid))
-      drawnow
-      subplot(1,2,2)
-
-      %imagesc(HOGpicture(m.model.w))
+      axis off
+      title(sprintf('Image %s.%d',m.curid,m.objectid))
+      
+      subplot(1,3,2)
       imagesc(m.model.mask);
+      axis image
+      axis off
+      grid on
+      title('Mask')
+      
+      subplot(1,3,3)      
+      imagesc(HOGpicture(repmat(m.model.mask,[1 1 features]).*m.model.w))
+      axis image
+      axis off
+      grid on
+      title('HOG features')
       drawnow
+
       pause(.4)
     end
   end  
@@ -270,7 +257,6 @@ function bbox = squareize_bbox(bbox)
 %these constraints best
 %requirements: each dimension is at least 50 pixels, and max aspect
 %ratio os (.25,4)
-
 
 w = bbox(3)-bbox(1)+1;
 h = bbox(4)-bbox(2)+1;
@@ -457,7 +443,8 @@ ARTPAD = 0; %120;
 I_real_pad = pad_image(I,ARTPAD);
 
 %Get the hog features (+wiggles) from the ground-truth bounding box
-[f_real,scales] = featpyramid2(I_real_pad,model.params.sbin, 10);
+params.lpo = 10;
+[f_real,scales] = featpyramid2(I_real_pad, model.params.sbin, params);
 
 %Extract the region from each level in the pyramid
 [masker,sizer] = get_matching_masks(f_real, I2);
@@ -482,20 +469,20 @@ model.coarse_box = model.target_id.bb;
 %drawnow
 
 function [bbox,model] = new10model(I,bbox,SBIN,hg_size,K,curid)
-curid = str2num(curid);
+curid = str2double(curid);
 
 rawbox = bbox;
 bbox = squareize_bbox(bbox);
 
 %Compute pyramid and all bounding boxes
 clear t
-lpo = 10;
-[t.hog, t.scales] = featpyramid2(I, SBIN, lpo);  
+params.lpo = 10;
+[t.hog, t.scales] = featpyramid2(I, SBIN, params);  
 t.padder = 2;
 
-clear allbb
-clear alluv
-clear alllvl
+allbb = cell(length(t.hog),1);
+alluv = cell(length(t.hog),1);
+alllvl= cell(length(t.hog),1);
 for level = 1:length(t.hog)
   t.hog{level} = padarray(t.hog{level}, [t.padder t.padder 0], ...
                           0);
@@ -537,24 +524,34 @@ sym1 = abs((allbb(:,1)-bbox(1)) - (allbb(:,3)-bbox(3)));
 sym2 = abs((allbb(:,2)-bbox(2)) - (allbb(:,4)-bbox(4)));
 meansym = (sym1+sym2)/100;
 
-[aa,bb] = sort(os-meansym,'descend');
-meansym(bb(1));
+[tmp,order] = sort(os-meansym,'descend');
+
 
 curfeats = cell(K,1);
-ips = cell(K,1);
+bbs = cell(K,1);
+
 for q = 1:K
-  superind = bb(q);
-  curfeat = t.hog{alllvl(superind)}(alluv(superind,1)-1+(1:hg_size(1)),...
-                                     alluv(superind,2)-1+(1: ...
-                                                  hg_size(2)),:);
+  superind = order(q);
+  curfeat = t.hog{alllvl(superind)}...
+            (alluv(superind,1)-1+(1:hg_size(1)),...
+             alluv(superind,2)-1+(1:hg_size(2)),:);
   
   level = alllvl(superind);
   ip.scale = t.scales(level);
-  ip.offset = [alluv(superind,:) - t.padder];
+  ip.offset = alluv(superind,:) - t.padder;
   ip.flip = 0;
   ip.bb = allbb(superind,:);
   ip.curid = curid;
-  ips{q} = ip;
+  
+  bb = zeros(1,12);
+  bb(1:4) = allbb(superind,:);
+  bb(7) = ip.flip;
+  bb(8) = ip.scale;
+  bb(9:10) = ip.offset;
+  bb(11) = curid;
+  bb(12) = 0;
+  
+  bbs{q} = bb;
   curfeats{q} = curfeat;
 end
 
@@ -563,7 +560,7 @@ rawbox = clip_to_image(rawbox,[1 1 size(I,2) size(I,1)]);
 I2(rawbox(2):rawbox(4),rawbox(1):rawbox(3),:) = 1;
 oks = find(I2(:));
 I2(oks) = rand(size(oks));
-I2 = resize(I2,ips{1}.scale);
+I2 = resize(I2,bbs{1}(8));
 
 % f1 = features(I2,SBIN);
 % f1 = padarray(f1,[1 1 0]);
@@ -572,22 +569,15 @@ I2 = resize(I2,ips{1}.scale);
 % I3 = repmat(I3(:,:,1),[1 1 31]);
 % f2 = padarray(I3,[t.padder t.padder 0]);
 
-
 f2 = features_raw(I2,SBIN);
 f2 = padarray(f2,[t.padder+1 t.padder+1 0]);
-f2 = f2(ips{1}.offset(1)+(0:7)+t.padder,...
-        ips{1}.offset(2)+(0:7)+t.padder,:);
+f2 = f2(bbs{1}(9)+(0:7)+t.padder,...
+        bbs{1}(10)+(0:7)+t.padder,:);
 
-%keyboard
 
 fmask = sum(f2.^2,3)>0;
 
-
-%sum(fmask(:)==0)
-
-
-model.coarse_box = allbb(bb(1),:);
-
+model.coarse_box = allbb(order(1),:);
 model.params.sbin = SBIN;
 model.hg_size = [hg_size(1) hg_size(2) features];
 model.x = curfeats{1};
@@ -598,7 +588,8 @@ mask3 = mask3(:);
 model.w(mask3) = curfeats{1}(mask3) - mean(curfeats{1}(mask3));
 
 model.b = 0;
-model.target_id = ips;
+
+model.target_bb = cat(1,bbs{:});
 model.x = cellfun2(@(x)reshape(x,[],1),curfeats);
 model.x = cat(2,model.x{:});
 

@@ -5,9 +5,6 @@ function xform = find_xform(c, d)
 %d's frame.  the transformation is applied to homogeneous
 %coordinaes
 
-%%NOTE: this could be a bit faster by only using two corners, and
-%not 4
-
 %convert bounding box to cornners
 xs(:,1) = c([1 2])';
 xs(:,2) = c([3 2])';
@@ -26,3 +23,4 @@ A=ys*pinv(xs);
 A(abs(A)<.000001) = 0;
 
 xform = A;
+

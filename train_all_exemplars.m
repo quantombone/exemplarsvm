@@ -3,10 +3,6 @@ function train_all_exemplars(cls,mode)
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-%This field is here to allow mining of multiple exemplars
-%simultaneously (but it is experimental since i'm still not 100%
-%happy with what is happening).. so please keep this at 1
-EX_PER_CHUNK = 1;
 
 VOCinit;
 
@@ -18,6 +14,9 @@ end
 mining_params = get_default_mining_params;
 mining_params.SKIP_GTS_ABOVE_THIS_OS = 1.0;
 mining_params.dump_last_image = 1;
+mining_params.dump_images = 1;
+
+mining_params.MAXSCALE = 0.5;
 
 %original training doesnt do flips
 mining_params.FLIP_LR = 1;
@@ -48,58 +47,34 @@ mining_params.extract_negatives = 0;
 
 % Chunk the data into EX_PER_CHUNK exemplars per chunk so that we
 % process several images, then write results for entire chunk
-inds = do_partition(1:length(files),EX_PER_CHUNK);
+%inds = do_partition(1:length(files),EX_PER_CHUNK);
 
 % randomize chunk orderings
 myRandomize;
-ordering = randperm(length(inds));
+ordering = randperm(length(files));
 
 for i = 1:length(ordering)
 
-  curfiles = inds{ordering(i)};
-  clear models;
-  for z = 1:length(curfiles)
-    filer = sprintf('%s/%s',initial_directory,files(curfiles(z)).name);
-    m = load(filer);
-    m = m.m;
-    m.model.wtrace{1} = m.model.w;
-    m.model.btrace{1} = m.model.b;
+  filer = sprintf('%s/%s',initial_directory, files(ordering(i)).name);
+  m = load(filer);
+  m = m.m;
+  m.model.wtrace{1} = m.model.w;
+  m.model.btrace{1} = m.model.b;
     
-    %Set the name of this exemplar type
-    m.models_name = sprintf('%s-svm',mode);
-    m.iteration = 0;
-    
-    % %Validation support vectors
-    % m.model.vsv = zeros(prod(m.model.hg_size),0);
-    % m.model.vsvids = [];
-    
-    % %Friend support vectors
-    % m.model.fsv = zeros(prod(m.model.hg_size),0);
-    % m.model.fsvids = [];
+  %Set the name of this exemplar type
+  m.models_name = sprintf('%s-svm',mode);
+  m.iteration = 0;
 
-    models{z} = m;
-  end
-
-  if EX_PER_CHUNK == 1
-
-    % Create a naming scheme for saving files
-    filer2fill = sprintf('%s/%%s.%s.%d.%s.mat',final_directory, ...
-                         models{1}.curid, ...
-                         models{1}.objectid, ...
-                         models{1}.cls);
-    
-    filer2final = sprintf('%s/%s.%d.%s.mat',final_directory, ...
-                         models{1}.curid, ...
-                         models{1}.objectid, ...
-                         models{1}.cls);
-  else
-    % Create a naming scheme for saving files
-    filer2fill = sprintf('%s/%%s.%s.%05d.mat',final_directory, ...
-                         models{1}.cls,ordering(i));
-   
-    filer2final = sprintf('%s/%s.%05d.mat',final_directory, ...
-                          models{1}.cls,ordering(i));
-  end
+  % Create a naming scheme for saving files
+  filer2fill = sprintf('%s/%%s.%s.%d.%s.mat',final_directory, ...
+                       m.curid, ...
+                       m.objectid, ...
+                       m.cls);
+  
+  filer2final = sprintf('%s/%s.%d.%s.mat',final_directory, ...
+                        m.curid, ...
+                        m.objectid, ...
+                        m.cls);
     
   %% check if we are ready for an update
   filerlock = [filer2final '.mining.lock'];
@@ -114,36 +89,14 @@ for i = 1:length(ordering)
   
   set_string = 'train';
   subset_string = sprintf('-%s',m.cls);
-  bg = get_pascal_bg(set_string,subset_string);
-  %for q = 1:length(models)
-  %  models{q}.bg_string1 = set_string;
-  %  models{q}.bg_string2 = subset_string;
-  %end
-  
-  % bg = get_pascal_bg('train',['-' models{1}.cls]);
-  % for q = 1:length(models)
-  %   models{q}.bg_string1 = 'train';
-  %   models{q}.bg_string2 = ['-' models{1}.cls];
-  % end
-  
+  bg = get_pascal_bg(set_string,subset_string);  
   mining_params.alternate_validation = 0;
   
   %remove self image (not needed)
   %bg = setdiff(bg,sprintf(VOCopts.imgpath,m.curid));
   
-  % if length(m.model.x) == 0
-  %   fprintf(1,'Problem with this exemplar\n');
-  %   error('quitting');
-  %   m.model.w = m.model.w*0;
-  %   m.model.b = m.model.b*0;
-  %   mining_queue = '';
-  %   filer2 = sprintf(filer2fill,num2str(mining_params.MAXITER));
-  %   save(filer2,'m','mining_queue');
-  %   clear mining_queue
-  %   continue
-  % end
-
-  mining_queue = initialize_mining_queue(bg);
+  fprintf(1,'nonrandom queue\n');
+  mining_queue = initialize_mining_queue(bg,1:length(bg));
   
   % The mining queue is the ordering in which we process new images  
   keep_going = 1;
@@ -158,16 +111,9 @@ for i = 1:length(ordering)
 
     %Get the name of the next chunk file to write
     filer2 = sprintf(filer2fill,num2str(FILEID));
-    
-    %select exemplars which haven't finished training
-    goods = find(cellfun(@(x)x.iteration <= mining_params.MAXITER, ...
-                         models));
-    
-    %[target_ids,target_xs] = get_top_from_ex(m,am);
-    %models{goods} = add_new_detections(models{goods},target_xs,target_ids);
-    
-    [models(goods), mining_queue] = ...
-        mine_negatives(models(goods), mining_queue, bg, mining_params, ...
+      
+    [m, mining_queue] = ...
+        mine_negatives(m, mining_queue, bg, mining_params, ...
                        FILEID);
   
     total_mines = sum(cellfun(@(x)x.num_visited,mining_queue));
@@ -179,13 +125,8 @@ for i = 1:length(ordering)
       filer2 = filer2final;
     end
 
-    %models_save = models; 
-    %for q = 1:length(models)
-    %  models{q} = prune_svs(models{q});
-    %end
-    
     %Save the current result
-    save(filer2,'models','mining_queue');
+    save(filer2,'m','mining_queue');
   
     %delete old files
     if FILEID > 1
@@ -206,17 +147,16 @@ for i = 1:length(ordering)
   rmdir(filerlock);
 end
 
-function m = prune_svs(m)
-%When saving file, only keep negative support vectors, not
-%the extra ones we save during training
-rs = m.model.w(:)'*m.model.nsv - m.model.b;
-[aa,bb] = sort(rs,'descend');
-goods = bb(aa >= -1.0);
-oldnsv = m.model.nsv;
-oldsvids = m.model.svids;
-m.model.nsv = oldnsv(:,goods);
-m.model.svids = oldsvids(goods);
-
+% function m = prune_svs(m)
+% %When saving file, only keep negative support vectors, not
+% %the extra ones we save during training
+% rs = m.model.w(:)'*m.model.nsv - m.model.b;
+% [aa,bb] = sort(rs,'descend');
+% goods = bb(aa >= -1.0);
+% oldnsv = m.model.nsv;
+% oldsvids = m.model.svids;
+% m.model.nsv = oldnsv(:,goods);
+% m.model.svids = oldsvids(goods);
 
 function [target_ids,target_xs] = get_top_from_ex(m,am)
 

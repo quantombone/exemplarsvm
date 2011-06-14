@@ -1,14 +1,17 @@
 function apply_voc_exemplars(models,M,curset)
-%% Apply a set of models (raw exemplars, trained exemplars, dalals, etc) to a set of images.  Script can be ran in
-%% parallel with no arguments.  
-%% After running script, use grid=load_result_grid(models) to
-%% load results
+% Apply a set of models (raw exemplars, trained exemplars, dalals,
+% poselets, components, etc) to a set of images.  Script can be ran in
+% parallel with no arguments.  After running script, use
+% grid=load_result_grid(models) to load results.
 %
-%% models:           input cell array of models (try models=load_all_models)
+% models: Input cell array of models (try models=load_all_models)
+% M: The boosting Matrix (optional)
+% curset: The PASCAL VOC image set to apply the exemplars to
+%   ('trainval' or 'test')
+%
+% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-%% Tomasz Malisiewicz (tomasz@cmu.edu)
-
-%we save results every NIMS_PER_CHUNK images
+%Save results every NIMS_PER_CHUNK images
 NIMS_PER_CHUNK = 10;
 
 VOCinit;
@@ -17,7 +20,7 @@ if ~exist('curset','var')
 end
 %curset = 'trainval';
 
-%Store exemplars for this class
+%Load stripped exemplars for this class
 if ~exist('models','var')
   [cls,DET_TYPE] = load_default_class;
   models = load_all_models(cls,[DET_TYPE '-stripped']);
@@ -37,7 +40,9 @@ if display == 1
 end
 
 localizeparams = get_default_mining_params;
-localizeparams.thresh = -1.5;
+localizeparams.thresh = -1.05;
+%localizeparams.MAXSCALE = .7;
+%localizeparams.MINSCALE = .3;
 if length(strfind(models{1}.models_name,'-ncc'))
   localizeparams.ADJUST_DISTANCES = 1;
 end
@@ -65,7 +70,6 @@ if display == 1
   %came from
   %bg = cellfun2(@(x)sprintf(VOCopts.imgpath,x.curid),models);
 else
-  %bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
   bg = get_pascal_bg(curset);
   fprintf(1,'bg length is %d\n',length(bg));
 end
@@ -112,8 +116,7 @@ for i = 1:length(ordering)
   clear Is;
   for j = 1:length(inds{ordering(i)})
     Is{j} = convert_to_I(bg{inds{ordering(i)}(j)});
-    %fprintf(1,'size .4 hack\n');
-    %Is{j} = max(0.0,min(1.0,imresize(Is{j},.2)));
+    %Is{j} = max(0.0,min(1.0,imresize(Is{j},1.2)));
   end
   
   for j = 1:length(inds{ordering(i)})
@@ -121,31 +124,33 @@ for i = 1:length(ordering)
     index = inds{ordering(i)}(j);
     fprintf(1,'   ---image %d\n',index);
     Iname = bg{index};
-    [tmp,current_curid,tmp] = fileparts(Iname);
-    %NOTE: not used, but should be!
-    current_curid = str2num(current_curid);
+    [tmp,curid,tmp] = fileparts(Iname);
+    
+    %convert image id into an integer
+    curid_integer = str2num(curid);
     
     I = Is{j};
        
     starter = tic;
     [rs,t] = localizemeHOG(I,models,localizeparams);
-    % for i = 1:length(rs.score_grid)
-    %   bads = find(rs.score_grid{i}<=models{i}.model.svscores(50));
-    %   rs.score_grid{i}(bads) = [];
-    %   rs.id_grid{i}(bads) = [];
-    %   rs.support_grid{i}(:,bads) = [];
-    % end
-    scores = cat(2,rs.score_grid{:});
+    
+    for q = 1:length(rs.bbs)
+      if ~isempty(rs.bbs{q})
+        rs.bbs{q}(:,11) = curid_integer;
+      end
+    end
+        
+    coarse_boxes = cat(1,rs.bbs{:});
+    if ~isempty(coarse_boxes)
+      scores = coarse_boxes(:,end);
+    else
+      scores = [];
+    end
     [aa,bb] = max(scores);
     fprintf(1,' took %.3fsec, maxhit=%.3f, #hits=%d\n',...
             toc(starter),aa,length(scores));
-
-    %%NOTE/BUG/TODO: this is a bug here, index should be
-    %current_curid instead
-    [coarse_boxes] = extract_bbs_from_rs(rs.id_grid, rs.score_grid, index);
     
-    boxes = coarse_boxes;
-    %map GT boxes from training images onto test image
+    % Transfer GT boxes from models onto the detection windows
     boxes = adjust_boxes(coarse_boxes,models);      
 
     if display == 1       
@@ -156,7 +161,7 @@ for i = 1:length(ordering)
       end
       
       if exist('M','var') && length(M)>0
-        boxes = calibrate_boxes(boxes,M.betas);
+        boxes = calibrate_boxes(boxes, M.betas);
       end
 
       if numel(boxes)>0
@@ -169,14 +174,11 @@ for i = 1:length(ordering)
 
       %% ONLY SHOW TOP 5 detections or fewer
       boxes = boxes(1:min(size(boxes,1),8),:);
-
       
       if size(boxes,1) >=1
         figure(1)
         clf
-        % stuff.filer = '';
-
-                    
+        % stuff.filer = '';               
         % exemplar_overlay = exemplar_inpaint(boxes(1,:), ...
         %                                     models{boxes(1,6)}, ...
         %                                     stuff);
@@ -184,7 +186,6 @@ for i = 1:length(ordering)
         % show_hits_figure_iccv(models,boxes,I,I,exemplar_overlay,I);
         show_hits_figure(models, boxes, I);
         drawnow
-
         pause
       else
         figure(1)
@@ -198,39 +199,35 @@ for i = 1:length(ordering)
     extras = [];
     res{j}.coarse_boxes = coarse_boxes;
     res{j}.bboxes = boxes;
-    %dont save SVs
-    %if isfield(rs,'support_grid')
-    %  rs = rmfield(rs,'support_grid');
-    %end
-    %res{j}.rs = rs;
+
     res{j}.index = index;
     res{j}.extras = extras;
     res{j}.imbb = [1 1 size(I,2) size(I,1)];
-    
-    Iname = bg{index};
-    [tmp,curid,tmp] = fileparts(Iname);
     res{j}.curid = curid;
     
+    %Iname = bg{index};
+    %[tmp,curid,tmp] = fileparts(Iname);
+        
     %try
-      % get GT objects for this image
-      recs = PASreadrecord(sprintf(VOCopts.annopath,curid));
-
-      % get overlaps with all ground-truths (makes sense for VOC
-      % images only)
-      gtbb = cat(1,recs.objects.bbox);
-      os = getosmatrix_bb(boxes,gtbb);
-      cats = {recs.objects.class};
-      [tmp,cats] = ismember(cats,VOCopts.classes);
-      
-      [alpha,beta] = max(os,[],2);
-      extras.maxos = alpha;
-      extras.maxind = beta;
-      extras.maxclass = cats(beta);
-      res{j}.extras = extras;
-    %catch
-    %end
+    % get GT objects for this image
+    recs = PASreadrecord(sprintf(VOCopts.annopath,curid));
     
+    % get overlaps with all ground-truths (makes sense for VOC
+    % images only)
+    gtbb = cat(1,recs.objects.bbox);
+    os = getosmatrix_bb(boxes,gtbb);
+    cats = {recs.objects.class};
+    [tmp,cats] = ismember(cats,VOCopts.classes);
+    
+    [alpha,beta] = max(os,[],2);
+    extras.maxos = alpha;
+    extras.maxind = beta;
+    extras.maxclass = cats(beta);
+    res{j}.extras = extras;
+    %catch
+    %end    
   end
+  
 
   % save results into file and remove lock file
   if display == 0
