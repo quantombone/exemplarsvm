@@ -1,5 +1,7 @@
 function show_gridder(grid,betas)
-%% Show the segmentation masks
+%% Show a segmentation image by marginalizing across the returned
+%bounding boxes (which can be thought of as rectangular segments)
+
 bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
 curids = cell(length(bg),1);
 for i = 1:length(bg)

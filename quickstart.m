@@ -6,7 +6,7 @@ for i = 1:length(classes)
 %% Here is the main script for doing the NN baseline
 
 %Set default class and detector mode, by writing into the default
-%file, which our mao,2n-.0mpreduces will be reading.
+%file, which our mapreduces will be reading.
 save_default_class(classes{i},'exemplars-svm');
 return;
 %Run an "exemplar_initialize" mapreduce
