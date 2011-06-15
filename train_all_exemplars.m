@@ -1,28 +1,8 @@
-function train_all_exemplars(cls,mode)
+function train_all_exemplars(cls, mode, bg, mining_params)
 %% Train models with hard negatives for all exemplars written to
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
-
-
 VOCinit;
-
-if ~exist('cls','var')
-  [cls,mode] = load_default_class;
-end
-
-%Get the default mining parameters
-mining_params = get_default_mining_params;
-mining_params.SKIP_GTS_ABOVE_THIS_OS = 1.0;
-mining_params.dump_last_image = 1;
-mining_params.dump_images = 1;
-
-mining_params.MAXSCALE = 0.5;
-
-%original training doesnt do flips
-mining_params.FLIP_LR = 1;
-
-%nms prevents thrashing, but it is much slower
-mining_params.NMS_MINES_OS = 1.0;
 
 initial_directory = ...
     sprintf('%s/%s/',VOCopts.localdir,mode);
@@ -41,10 +21,6 @@ files = dir([initial_directory '*' cls '*.mat']);
 
 mining_params.final_directory = final_directory;
 
-% Enable this if we need to check mined windows whethere they are
-% from validation set or from negative set... (esvm only uses negatives)
-mining_params.extract_negatives = 0;
-
 % Chunk the data into EX_PER_CHUNK exemplars per chunk so that we
 % process several images, then write results for entire chunk
 %inds = do_partition(1:length(files),EX_PER_CHUNK);
@@ -58,10 +34,8 @@ for i = 1:length(ordering)
   filer = sprintf('%s/%s',initial_directory, files(ordering(i)).name);
   m = load(filer);
   m = m.m;
-  m.model.wtrace{1} = m.model.w;
-  m.model.btrace{1} = m.model.b;
     
-  %Set the name of this exemplar type
+  %Append '-svm' to the mode to create the models name
   m.models_name = sprintf('%s-svm',mode);
   m.iteration = 0;
 
@@ -83,20 +57,7 @@ for i = 1:length(ordering)
     continue
   end
 
-  %Set up the negative set for this exemplars
-  %CVPR2011 paper used all train images excluding category images
-  %m.bg = sprintf('get_pascal_bg(''trainval'',''%s'')',m.cls);
-  
-  set_string = 'train';
-  subset_string = sprintf('-%s',m.cls);
-  bg = get_pascal_bg(set_string,subset_string);  
-  mining_params.alternate_validation = 0;
-  
-  %remove self image (not needed)
-  %bg = setdiff(bg,sprintf(VOCopts.imgpath,m.curid));
-  
-  fprintf(1,'nonrandom queue\n');
-  mining_queue = initialize_mining_queue(bg,1:length(bg));
+  mining_queue = initialize_mining_queue(bg);
   
   % The mining queue is the ordering in which we process new images  
   keep_going = 1;
@@ -113,7 +74,7 @@ for i = 1:length(ordering)
     filer2 = sprintf(filer2fill,num2str(FILEID));
       
     [m, mining_queue] = ...
-        mine_negatives(m, mining_queue, bg, mining_paramse-, ...
+        mine_negatives(m, mining_queue, bg, mining_params, ...
                        FILEID);
   
     total_mines = sum(cellfun(@(x)x.num_visited,mining_queue));
@@ -158,39 +119,39 @@ end
 % m.model.nsv = oldnsv(:,goods);
 % m.model.svids = oldsvids(goods);
 
-function [target_ids,target_xs] = get_top_from_ex(m,am)
+% function [target_ids,target_xs] = get_top_from_ex(m,am)
 
-res = cellfun2(@(x)m.model.w(:)'*x.model.target_x-m.model.b,am);
-for i = 1:length(res)
-  [tmp,ind] = max(res{i});
-  am{i}.model.target_x = am{i}.model.target_x(:,ind);
-  am{i}.model.target_id = am{i}.model.target_id(ind);
-end
+% res = cellfun2(@(x)m.model.w(:)'*x.model.target_x-m.model.b,am);
+% for i = 1:length(res)
+%   [tmp,ind] = max(res{i});
+%   am{i}.model.target_x = am{i}.model.target_x(:,ind);
+%   am{i}.model.target_id = am{i}.model.target_id(ind);
+% end
 
-target_ids= cellfun2(@(x)x.model.target_id,am);
-target_xs= cellfun2(@(x)x.model.target_x,am);
+% target_ids= cellfun2(@(x)x.model.target_id,am);
+% target_xs= cellfun2(@(x)x.model.target_x,am);
 
-target_ids = cat(1,target_ids{:})';
-target_xs = cat(2,target_xs{:});
+% target_ids = cat(1,target_ids{:})';
+% target_xs = cat(2,target_xs{:});
 
-%% convert to curid format as integer
+% %% convert to curid format as integer
 
-%% HERE we take all string curids, and treat them as literals into
-%the images
+% %% HERE we take all string curids, and treat them as literals into
+% %the images
 
-bg = get_pascal_bg('trainval');
-s = cellfun(@(x)isstr(x.curid),target_ids);
-s = find(s);
-if length(s) > 0
-  train_curids = cell(length(bg),1);
-  for i = 1:length(bg)
-    [tmp,train_curids{i},ext] = fileparts(bg{i});
-  end
+% bg = get_pascal_bg('trainval');
+% s = cellfun(@(x)isstr(x.curid),target_ids);
+% s = find(s);
+% if length(s) > 0
+%   train_curids = cell(length(bg),1);
+%   for i = 1:length(bg)
+%     [tmp,train_curids{i},ext] = fileparts(bg{i});
+%   end
   
-  test_curids = cellfun2(@(x)x.curid,target_ids);
+%   test_curids = cellfun2(@(x)x.curid,target_ids);
 
-  [aa,bb] = ismember(test_curids,train_curids);
-  for i = 1:length(s)
-    target_ids{s(i)}.curid = bb(i);
-  end  
-end
+%   [aa,bb] = ismember(test_curids,train_curids);
+%   for i = 1:length(s)
+%     target_ids{s(i)}.curid = bb(i);
+%   end  
+% end

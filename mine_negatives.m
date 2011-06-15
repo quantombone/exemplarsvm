@@ -13,6 +13,12 @@ function [m,mining_queue] = mine_negatives(m, mining_queue, bg, ...
 %   mining_params.detection_threshold = mining_params.late_detection_threshold;
 % end
 
+% Start wtrace with first round classifier, if not present already
+if ~isfield(m.model,'wtrace')
+  m.model.wtrace{1} = m.model.w;
+  m.model.btrace{1} = m.model.b;
+end
+
 if mining_params.skip_mine == 0
   [hn, mining_queue, mining_stats] = ...
       load_hn_fg({m}, mining_queue, bg, mining_params);
@@ -27,6 +33,7 @@ end
 m = update_the_model(m, mining_params, ...
                      iteration, mining_stats, bg);
 
+dump_figures(m,mining_params);
 function [m] = update_the_model(m,mining_params, ...
                                 iteration, mining_stats, bg)
 
@@ -44,6 +51,7 @@ end
 wex = m.model.w(:);
 b = m.model.b;
 r = m.model.w(:)'*m.model.svxs - m.model.b;
+m.model.svbbs(:,end) = r;
 
 if strmatch(m.models_name,'dalal')
   %% here we take the best exemplars
@@ -68,23 +76,24 @@ m.model.svxs = m.model.svxs(:,svs);
 m.model.svbbs = m.model.svbbs(svs,:);
 
 % Append new w to trace
+
 m.model.wtrace{end+1} = m.model.w;
 m.model.btrace{end+1} = m.model.b;
 
 function dump_figures(m,mining_params)
 
-figure(1)
-clf
-show_cool_os(m)
+% figure(1)
+% clf
+% show_cool_os(m)
 
-if (mining_params.dump_images == 1) || ...
-      (mining_params.dump_last_image == 1 && ...
-       m.iteration == mining_params.MAXITER)
-  set(gcf,'PaperPosition',[0 0 10 3]);
-  print(gcf,sprintf('%s/%s.%d_iter=%05d.png', ...
-                    mining_params.final_directory,m.curid,...
-                    m.objectid,m.iteration),'-dpng'); 
-end
+% if (mining_params.dump_images == 1) || ...
+%       (mining_params.dump_last_image == 1 && ...
+%        m.iteration == mining_params.MAXITER)
+%   set(gcf,'PaperPosition',[0 0 10 3]);
+%   print(gcf,sprintf('%s/%s.%d_iter=%05d.png', ...
+%                     mining_params.final_directory,m.curid,...
+%                     m.objectid,m.iteration),'-dpng'); 
+% end
 
 
 figure(2)

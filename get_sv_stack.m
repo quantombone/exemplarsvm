@@ -20,12 +20,10 @@ K1 = max(K1,5);
 K2 = max(K2,5);
 
 %% sort by score
-r = m.model.w(:)'*m.model.nsv - m.model.b;
+r = m.model.w(:)'*m.model.svxs - m.model.b;
 [aa,bb] = sort(r,'descend');
-m.model.svids = m.model.svids(bb);
-m.model.nsv = m.model.nsv(:,bb);
-
-
+m.model.svbbs = m.model.svbbs(bb, :);
+m.model.svxs = m.model.svxs(:, bb);
 
 %NO NMS
 %inds = nms_objid(m.model.svids);

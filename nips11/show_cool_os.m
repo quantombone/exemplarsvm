@@ -24,6 +24,7 @@ msave.model.target_id{1}.maxclass = -1;
 %msave.model.nsv = cat(2,msave.model.target_x(:,1),...
 %                      msave.model.nsv);
 
+keyboard
 inds = nms_objid(msave.model.svids);
 
 msave.model.svids = msave.model.svids(inds);
