@@ -94,7 +94,7 @@ for i = 1:length(files)
   %models{i}.model.btrace = [];
 
   %disable negative support vectors to save space
-  models{i}.model.nsv = [];
+  models{i}.model.svxs = [];
   
   if ~isfield(models{i},'models_name')
     models{i}.models_name=strrep(DET_TYPE,'/','_');
