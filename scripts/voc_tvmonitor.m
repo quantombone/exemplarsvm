@@ -44,6 +44,7 @@ dataset_params.resdir=[dataset_params.devkitroot ['/' ...
 
 dataset_params = VOCinit(dataset_params);
 
+
 %get the exemplar stream from VOC
 stream_set_name = 'trainval';
 MAX_NUM_EX = 5;
@@ -71,8 +72,8 @@ mining_params.extract_negatives = 0;
 mining_params.alternate_validation = 0;
 mining_params.MAX_WINDOWS_BEFORE_SVM = 40;
 
-training_function = @do_svm;
 
+training_function = @do_svm;
 train_all_exemplars(models, train_set, mining_params, ...
                     dataset_params, training_function);
 
@@ -87,7 +88,12 @@ val_set = val_set(1:10);
 
 dataset_params.display_machine = '';
 
+%No calibration parameters yet
+
 M = [];
+%CHOOSE HOW MANY IMAGES WE APPLY PER CHUNK
+dataset_params.NIMS_PER_CHUNK = 10;
+
 apply_voc_exemplars(models,dataset_params,...
                     val_set,curset_name,...
                     M,@get_pascal_anno_function);

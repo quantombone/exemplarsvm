@@ -1,42 +1,36 @@
-function [m,mining_queue] = ...
-    mine_train_iteration(m, mining_queue, training_function)
-%% Mine negatives until cache is full and update the current
-%% classifier using training_function (do_svm, do_rank, ...)
-%%
-%% Tomasz Malisiewicz (tomasz@cmu.edu)
+function [m] = mine_train_iteration(m, training_function)
+% ONE ITERATION OF: Mine negatives until cache is full and update the current
+% classifier using training_function (do_svm, do_rank, ...). m must
+% contain the field m.train_set, which indicates the current model
+% Returns the updated model the updated mining_queue
+%
+% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-%during first few iterations, we take many windows per image
-% if iteration <= mining_params.early_late_cutoff
-%   mining_params.detection_threshold = mining_params.early_detection_threshold;
-% else
-%   %in later iterations when we pass through many images, we use SVM cutoff
-%   mining_params.detection_threshold = mining_params.late_detection_threshold;
-% end
-
-% Start wtrace with first round classifier, if not present already
+% Start wtrace (trace of learned classifier parameters across
+% iterations) with first round classifier, if not present already
 if ~isfield(m.model,'wtrace')
   m.model.wtrace{1} = m.model.w;
   m.model.btrace{1} = m.model.b;
 end
 
+%If the skip is enabled, we just update the model
 if m.mining_params.skip_mine == 0
-  [hn, mining_queue, mining_stats] = ...
-      load_hn_fg({m}, mining_queue, m.train_set, m.mining_params);
+  [hn, m.mining_queue, mining_stats] = ...
+      mine_negatives({m}, m.mining_queue, m.train_set, m.mining_params);
   
   m = add_new_detections(m, cat(2,hn.xs{1}{:}), cat(1,hn.bbs{1}{:}));
 else
   mining_stats.num_visited = 0;
   fprintf(1,'WARNING: not mining, just updating model\n');  
 end
-
    
 m = update_the_model(m, mining_stats, training_function);
 
 dump_figures(m);
 
 function [m] = update_the_model(m, mining_stats, training_function)
+%% UPDATE the current SVM, keep max number of svs, and show the results
 
-%% UPDATE the current SVM and show the results
 m.iteration = m.iteration + 1;
 if ~isfield(m,'mining_stats')
   m.mining_stats{1} = mining_stats;
@@ -48,14 +42,12 @@ m = training_function(m);
 %m = do_svm(m);
 %m = do_rank(m);
 
-wex = m.model.w(:);
-b = m.model.b;
 r = m.model.w(:)'*m.model.svxs - m.model.b;
 m.model.svbbs(:,end) = r;
 
 if strmatch(m.models_name,'dalal')
   %% here we take the best exemplars
-  allscores = wex'*m.model.x - b;
+  allscores = m.model.w(:)'*m.model.x - m.model.b;
   [aa,bb] = sort(allscores,'descend');
   [aabad,bbbad] = sort(r,'descend');
   maxbad = aabad(ceil(.05*length(aabad)));
@@ -79,7 +71,6 @@ m.model.svbbs = m.model.svbbs(svs,:);
 
 m.model.wtrace{end+1} = m.model.w;
 m.model.btrace{end+1} = m.model.b;
-
 
 function dump_figures(m)
 

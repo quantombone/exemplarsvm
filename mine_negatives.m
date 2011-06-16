@@ -1,21 +1,24 @@
 function [hn, mining_queue, mining_stats] = ...
-    load_hn_fg(models, mining_queue, bg, mining_params)
-%% Compute detections "aka Hard-Negatives" for N images (bg) given K
-%% classifiers (models) 
-%% 
-%% Input Data:
-%% models: Kx1 cell array of models
-%% mining_queue: the mining queue create from
-%%    initialize_mining_queue(bg)
-%% bg: the source of images (potentially already in pyramid feature
-%%   format)
-%% mining_params: the parameters of the mining/localization
-%% procedure
-%% 
-%% Returned Data: 
-%% hn: Kx1 cell array where hn{i} contains hard negatives for models{i} 
+    mine_negatives(models, mining_queue, bg, mining_params)
+% Compute detections "aka Hard-Negatives" hn for the images in the
+% stream/queue [bg/mining_queue] when given K classifiers [models]
+% 
+% Input Data:
+% models: Kx1 cell array of models
+% mining_queue: the mining queue create from
+%    initialize_mining_queue(bg)
+% bg: the source of images (potentially already in pyramid feature
+%   format)
+% mining_params: the parameters of the mining/localization
+% procedure
+% 
+% Returned Data: 
+% hn: Kx1 cell array where hn{i} contains info for model i
+% hn contains:
+%   hn{:}.xs "features"
+%   hn{:}.bbs "bounding boxes"
 
-%% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if ~exist('mining_params','var')
   mining_params = get_default_mining_params;
@@ -41,14 +44,10 @@ for i = 1:length(mining_queue)
 
   %starter = tic;   
   [rs,t] = localizemeHOG(I, models, mining_params);
-  
-  
+    
   numpassed = numpassed + 1;
 
-  %[tmp,curid,tmp] = fileparts(bg{index});
-  %curid_integer = str2num(curid);
-  curid_integer = index;
-  
+  curid_integer = index;  
   for q = 1:length(rs.bbs)
     if ~isempty(rs.bbs{q})
       rs.bbs{q}(:,11) = curid_integer;
@@ -116,7 +115,6 @@ for i = 1:length(mining_queue)
     violating_images(end+1) = index;
   end
   
-  %keyboard
   for a = 1:length(models)
     xs{a}{i} = curxs{a};
     bbs{a}{i} = curbbs{a};
@@ -145,9 +143,6 @@ end
 
 hn.xs = xs;
 hn.bbs = bbs;
-
-%hn.xs = cellfun2(@(x)cat(2,x{:}),xs);
-%hn.bbs = cellfun2(@(x)cat(2,x{:}),bbs);
 
 fprintf(1,'# Violating images: %d, #Non-violating images: %d\n', ...
         length(violating_images), length(empty_images));

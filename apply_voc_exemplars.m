@@ -12,7 +12,8 @@ function apply_voc_exemplars(models,dataset_params,fg,setname,M,gt_function)
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 %Save results every NIMS_PER_CHUNK images
-NIMS_PER_CHUNK = 10;
+
+NIMS_PER_CHUNK = dataset_params.NIMS_PER_CHUNK;
 
 %VOCinit;
 %if ~exist('curset','var')
@@ -33,7 +34,6 @@ if strfind(r,dataset_params.display_machine)==1
 else
   display = 0;
 end
-
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
@@ -100,7 +100,9 @@ end
 
 for i = 1:length(ordering)
 
-  filer = sprintf('%s/result_%05d.mat',baser,ordering(i));
+  ind1 = inds{ordering(i)}(1);
+  ind2 = inds{ordering(i)}(end);
+  filer = sprintf('%s/result_%05d-%05d.mat',baser,ind1,ind2);
   filerlock = [filer '.lock'];
 
   if display == 0

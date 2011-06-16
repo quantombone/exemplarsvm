@@ -35,16 +35,7 @@ for i = 1:length(models)
   %m = load(filer);
   %m = m.m;
   m = models{i};
-  
-  %% Add bg, mining_params, and dataset_params to this exemplar
-  m.train_set = train_set;
-  m.mining_params = mining_params;
-  m.dataset_params = dataset_params;
-
-  %Append '-svm' to the mode to create the models name
-  m.models_name = new_models_name;
-  m.iteration = 1;
-  
+   
   % Create a naming scheme for saving files
   filer2fill = sprintf('%s/%%s.%s.%d.%s.mat',final_directory, ...
                        m.curid, ...
@@ -56,15 +47,25 @@ for i = 1:length(models)
                         m.objectid, ...
                         m.cls);
     
-  %% check if we are ready for an update
+  % Check if we are ready for an update
   filerlock = [filer2final '.mining.lock'];
   
   if fileexists(filer2final) || (mymkdir_dist(filerlock) == 0)
     continue
   end
-
-  mining_queue = initialize_mining_queue(m.train_set);
   
+  % Add training set and training set's mining queue 
+  m.train_set = train_set;
+  m.mining_queue = initialize_mining_queue(m.train_set);
+  
+  % Add mining_params, and dataset_params to this exemplar
+  m.mining_params = mining_params;
+  m.dataset_params = dataset_params;
+
+  % Append '-svm' to the mode to create the models name
+  m.models_name = new_models_name;
+  m.iteration = 1;
+
   % The mining queue is the ordering in which we process new images  
   keep_going = 1;
 
@@ -73,12 +74,11 @@ for i = 1:length(models)
     %Get the name of the next chunk file to write
     filer2 = sprintf(filer2fill,num2str(m.iteration));
       
-    [m, mining_queue] = ...
-        mine_train_iteration(m, mining_queue, training_function);
+    m = mine_train_iteration(m, training_function);
 
     total_mines = m.mining_stats{end}.total_mines;
     if ((total_mines >= mining_params.MAX_TOTAL_MINED_IMAGES) || ...
-          (length(mining_queue) == 0))
+          (length(m.mining_queue) == 0))
       fprintf(1,'Mined enough images, rest up\n');
       keep_going = 0;
       
@@ -87,7 +87,7 @@ for i = 1:length(models)
     end
 
     %Save the current result
-    save(filer2,'m','mining_queue','total_mines');
+    save(filer2,'m');
   
     %delete old files
     if m.iteration > 1
