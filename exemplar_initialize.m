@@ -1,5 +1,5 @@
-function exemplar_initialize(e_set, init_function, init_params, ...
-                             dataset_params, models_name)
+function allfiles = exemplar_initialize(e_set, init_function, init_params, ...
+                                        dataset_params, models_name)
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
 % is parallelizable (and dalalizable!)  
@@ -55,6 +55,9 @@ myRandomize;
 rrr = randperm(length(e_set));
 e_set = e_set(rrr);
 
+%Create an array of all final file names
+allfiles = cell(length(e_set), 1);
+
 for i = 1:length(e_set)
  
   I = convert_to_I(e_set{i}.I);
@@ -69,6 +72,8 @@ for i = 1:length(e_set)
     
   filer = sprintf('%s/%s.%d.%s.mat',...
                   results_directory, curid, objectid, cls);
+  
+  allfiles{i} = filer;
   filerlock = [filer '.lock'];
   
   if fileexists(filer) || (mymkdir_dist(filerlock)==0)
@@ -136,3 +141,5 @@ for i = 1:length(e_set)
 
   end
 end  
+
+[allfiles,bb] = sort(allfiles);

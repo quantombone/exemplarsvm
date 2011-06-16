@@ -12,10 +12,14 @@ if ~exist('mname','var') | length(mname)==0
     mname = '~/Movies/National.Geographic.Clash.of.the.Continents.PDTV.XviD.MP3.MVGroup.org.avi';
 end
 
+%FFMPEG_PATH = '/nfs/baikal/tmalisie/ffmpeg/ffmpeg-0.6/ffmpeg';
+FFMPEG_PATH = 'ffmpeg';
+
 %First we determine the length of the movie
-lenstring = sprintf(['/nfs/baikal/tmalisie/ffmpeg/ffmpeg-0.6/ffmpeg -i' ...
-                    ' %s 2>&1 | grep Duration'], mname);
-[tmp,lenstring] = unix(lenstring);
+instring = sprintf([FFMPEG_PATH ' -i' ...
+                    ' "%s" 2>&1 | grep Duration'], mname);
+[tmp,lenstring] = unix(instring);
+
 
 commas = find(lenstring==',');
 commas = commas(1);

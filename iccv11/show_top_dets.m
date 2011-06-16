@@ -1,14 +1,18 @@
-function allbbs = show_top_dets(dataset_params, models, grid, fg, finalstruct)
+function allbbs = show_top_dets(dataset_params, models, grid, fg, set_name, ...
+                                finalstruct, maxk)
 % Show the top detections for [models]
 % where grid is the set of detections, target_directory is 'test',
 % and finalstruct (which contains final boxes) is obtained from the
 % evaluate_pascal_voc_grid script
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
+if ~exist('maxk','var')
+  maxk = 20;
+end
+
 allbbs = cell(0,1);
 final_boxes = finalstruct.unclipped_boxes;
 final_maxos = finalstruct.final_maxos;
-
 
 % if 0
 % %% prune grid to contain only images from target_directory
@@ -35,7 +39,6 @@ for i = 1:length(final_boxes)
     imids{i} = i * ones(size(final_boxes{i},1),1);
   end
 end
-
 
 bbs = cat(1,final_boxes{:});
 imids = cat(1,imids{:});
@@ -71,17 +74,34 @@ if 0
 end
 
 counter = 1;
-maxk = 100;
+
 KKK = [1 1];
 counter = 1;
 
 for k = 1:maxk
-  fprintf(1,'Top det %d\n', k);
+
 
   for i = 1:prod(KKK)
     if counter > length(bb)
       break;
     end
+    
+    wwwdir = sprintf('%s/www/%s.%s-%s/',dataset_params.localdir,...
+                     set_name, models{1}.cls, ...
+                     models{1}.models_name);
+    if ~exist(wwwdir,'dir')
+      mkdir(wwwdir);
+    end
+    
+    filer = sprintf('%s/%05d.pdf',wwwdir,k);
+    filerlock = [filer '.lock'];
+    if fileexists(filer) || (mymkdir_dist(filerlock) == 0)
+      continue
+    end
+
+    fprintf(1,'Top det %d\n', k);
+    
+    
     curb = bb(counter);
     curid = grid{imids(curb)}.curid;
 
@@ -225,13 +245,12 @@ for k = 1:maxk
 %     save(sprintf('/nfs/baikal/tmalisie/iccvres/finalbusmats/%05d.mat', ...
 %                  k),'output');
 
-   
-    filer = sprintf('%s/%s-%s_%05d.pdf',dataset_params.wwwdir,...
-                    models{1}.cls,models{1}.models_name,k);
+    
     set(gcf,'PaperPosition',[0 0 2*NR(1) 2*NR(2)],...
             'PaperSize',[2*NR(1) 2*NR(2)]);
     
     print(gcf,'-dpdf',filer);
+    rmdir(filerlock);
     %filer2 = filer;
     %filer2(end-2:end) = 'png';
     %print(gcf,'-dpng',filer2);

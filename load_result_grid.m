@@ -5,8 +5,6 @@ function grid = load_result_grid(models,dataset_params,setname,curthresh)
 %esvm, .5 for vis-reg)
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
-%VOCinit;
-
 
 % final_dir = ...
 %     sprintf('%s/grids',dataset_params.localdir);
@@ -30,19 +28,16 @@ if ~exist('curthresh','var')
   curthresh = -1.1;
 end
 
-%curset = 'trainval';
-
 setname = [setname '.' models{1}.cls];
 
 final_file = sprintf('%s/applied/%s-%s.mat',dataset_params.localdir,setname, ...
                      models{1}.models_name);
 
-% if fileexists(final_file)
-%   fprintf(1,'Loading final file %s\n',final_file);
-%   load(final_file);
-%   return;
-% end
-
+if fileexists(final_file)
+  fprintf(1,'Loading final file %s\n',final_file);
+  load(final_file);
+  return;
+end
 
 % if ~exist('models','var')
 %   error('Need to specify models');
@@ -55,23 +50,20 @@ final_file = sprintf('%s/applied/%s-%s.mat',dataset_params.localdir,setname, ...
 % end
 
 %if ~exist('bg','var')
-  fprintf(1,'Loading default set of images\n');
-  %[bg,setname] = default_testset;
-  %bg = eval(models{1}.fg);
-  %setname = 'sketchfg';
-  %curset = 'trainval'
- 
-  %curset = 'both'
-  %curcls = models{1}.cls;
-  %setname = [curset '.' curcls];% models{1}.cls];
-%end
+%fprintf(1,'Loading default set of images\n');
+%[bg,setname] = default_testset;
+%bg = eval(models{1}.fg);
+%setname = 'sketchfg';
+%curset = 'trainval'
 
+%curset = 'both'
+%curcls = models{1}.cls;
+%setname = [curset '.' curcls];% models{1}.cls];
+%end
 
 % if ~exist('setname','var')
 %   [bg,setname] = default_testset;
 % end
-
-
 
 % if ismember(models{1}.models_name,{'dalal'})
 %   models_name = 'dalal';
@@ -136,7 +128,15 @@ grid = [grid2{:}];
 [aa,bb] = sort(cellfun(@(x)x.index,grid));
 grid = grid(bb);
 
-%fprintf(1,'Loaded grids, saving to %s\n',final_file);
-%save(final_file,'grid');
 
-fprintf(1,'Got to end of load result grid function\n');
+lockfile = [final_file '.lock'];
+if fileexists(final_file) || (mymkdir_dist(lockfile) == 0)
+  return;
+end
+
+save(final_file,'grid');
+if exists(lockfile,'dir')
+  rmdir(lockfile);
+end
+
+%fprintf(1,'Got to end of load result grid function\n');

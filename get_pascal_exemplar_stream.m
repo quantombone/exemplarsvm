@@ -2,7 +2,7 @@ function fg = get_pascal_exemplar_stream(set_name, cls, VOCopts, MAXLENGTH)
 %Create an exemplar stream, such that each element fg{i} contains
 %these fields: (I, bbox, cls, curid, [objectid], [anno])
 
-basedir = sprintf('%s/exemplar-streams/',VOCopts.localdir);
+basedir = sprintf('%s/models/exemplar-streams/',VOCopts.localdir);
 if ~exist(basedir,'dir')
   mkdir(basedir);
 end

@@ -2,7 +2,7 @@ function fg = get_pascal_scene_stream(set_name, cls, VOCopts, MAXLENGTH)
 %Create a scene stream, such that each element fg{i} contains
 %these fields: (I, bbox, cls, curid, [objectid], [anno])
 
-basedir = sprintf('%s/scene-streams/',VOCopts.localdir);
+basedir = sprintf('%s/models/scene-streams/',VOCopts.localdir);
 if ~exist(basedir,'dir')
   mkdir(basedir);
 end
@@ -39,7 +39,9 @@ for i = 1:length(ids)
   res.bbox = [1 1 recs.imgsize(1) recs.imgsize(2)];
   
   res.cls = cls;
-  res.objectid = i;
+  
+  %for scenes use a 1 for objectid
+  res.objectid = 1;
   
   %anno is the data-set-specific version
   res.anno = recs.objects;

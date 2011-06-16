@@ -1,4 +1,4 @@
-function [models] = load_all_models(cls, DET_TYPE, dataset_params, ...
+function [models] = load_all_models(cls, DET_TYPE, files, dataset_params, ...
                                     CACHE_FILE, STRIP_FILE)
 %Load all trained models of a specified class 'cls' and
 %type 'DET_TYPE' from a models directory.  If CACHE_FILE is enabled
@@ -26,6 +26,18 @@ function [models] = load_all_models(cls, DET_TYPE, dataset_params, ...
 %   FINAL_PREFIX = '100';
 % end
 
+if ~isempty(files)
+  while 1
+    missingfile = cellfun(@(x)~fileexists(x),files);
+    if sum(missingfile) == 0
+      break;
+    else
+      fprintf(1,'%d File(s) missing, waiting for it to appear\n',sum(missingfile));
+      pause(5)
+    end
+  end
+end
+
 %if enabled, we cache result on disk to facilitate loading at a
 %later stage (NOTE: these files might have to be removed manually)
 if ~exist('CACHE_FILE','var')
@@ -49,39 +61,30 @@ if CACHE_FILE == 1
   
   cache_file_stripped = ...
       sprintf('%s/%s-%s.mat',cache_dir,cls,[DET_TYPE '-stripped']);
-
-  filerlock = [cache_file '.lock'];
-    
-  %keep trying to open model file
-  while 1
-      
-    if fileexists(cache_file)
-      fprintf(1,'Loading CACHED file: %s\n', cache_file);
-      load(cache_file);
-      return;
-    end
-        
-    %If file is not present, then we will do the work to create
-    %one, but let's first check to see if another process is doing
-    %the same thing.. if another process is doing this, then there
-    %will be a lock file present (and we can't create a new one).
-    %in this case, we will just pause and try to read main file again
-    %try to make a lock directory
-    if (mymkdir_dist(filerlock) == 0)
-      break;
-    end
-    pause(3);
-  end
-  
+          
+  if fileexists(cache_file)
+    fprintf(1,'Loading CACHED file: %s\n', cache_file);
+    load(cache_file);
+    return;
+  end  
 end
 
 results_directory = ...
     sprintf('%s/models/%s/',dataset_params.localdir,DET_TYPE);
 
-dirstring = [results_directory '*' cls '*.mat'];
-files = dir(dirstring);
-fprintf(1,'Pattern of files to load: %s\n',dirstring);
-fprintf(1,'Length of files to load: %d\n',length(files));
+if isempty(files)
+  dirstring = [results_directory '*' cls '*.mat'];
+  files = dir(dirstring);
+  fprintf(1,'Pattern of files to load: %s\n',dirstring);
+  fprintf(1,'Length of files to load: %d\n',length(files));
+  newfiles = cell(length(files), 1);
+  for i = 1:length(files)
+    newfiles{i} = [results_directory files(i).name];
+  end
+  files = newfiles;
+else
+  fprintf(1,'Already have %d files\n',length(files));
+end
 
 models = cell(1,length(files));
 for i = 1:length(files)
@@ -89,22 +92,23 @@ for i = 1:length(files)
   
   %if a load fails, maybe we are loading a partial result DURING
   %mining, so we only exit
-  try
-    m = load([results_directory files(i).name]);
-  catch
-    models{i} = [];
-    fprintf(1,'#');
-    if nargout==0
-      fprintf(1,'ERROR: could not load model %s, mining not complete?\n',files(i).name);
-      return;
-    end
-  end
+  %try
+  m = load(files{i});%[results_directory files(i).name]);
+  %m = load([results_directory files(i).name]);
+  % catch
+  %   models{i} = [];
+  %   fprintf(1,'#');
+  %   if nargout==0
+  %     fprintf(1,'ERROR: could not load model %s, mining not complete?\n',files(i).name);
+  %     return;
+  %   end
+  % end
 
-  try
-    models{i} = m.m;
-  catch
-    models{i} = m.models{1};
-  end
+  %try
+  models{i} = m.m;
+  %catch
+  %  models{i} = m.models{1};
+  %end
   
   models{i}.models_name = DET_TYPE;
   if max(models{i}.model.hg_size(1:2)) >= 25 %| length(models{i}.model.x)==0
@@ -152,6 +156,11 @@ fprintf(1,'\n');
 % end
 
 if CACHE_FILE==1
+  filerlock = [cache_file '.lock'];  
+  if fileexists(cache_file) || (mymkdir_dist(filerlock)==0)
+    return;
+  end
+  
   fprintf(1,'Loaded models, saving to %s\n',cache_file);
   save(cache_file,'models');
   

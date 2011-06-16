@@ -7,7 +7,10 @@ function I = get_movie_frame(movie, time)
 % TODO(tmalisie) this function is not safe across a cluster, since
 % files will be clobbered.
 
-istring=sprintf(['/nfs/baikal/tmalisie/ffmpeg/ffmpeg-0.6/ffmpeg -ss %s -vframes 1  -i %s ' ...
+%FFMPEG_PATH = '/nfs/baikal/tmalisie/ffmpeg/ffmpeg-0.6/ffmpeg';
+FFMPEG_PATH = 'ffmpeg';
+
+istring=sprintf([FFMPEG_PATH ' -ss %s -vframes 1  -i %s ' ...
                     ' /tmp/I-%%08d' '.png'],time,movie);
 
 [status,filer] = unix(istring);

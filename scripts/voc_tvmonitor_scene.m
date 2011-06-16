@@ -19,8 +19,11 @@ init_params.goal_ncells = 100;
 %devkitroot is where we write all the result files
 dataset_params.dataset = 'VOC2007';
 dataset_params.testset = 'test';
-dataset_params.devkitroot = ['/nfs/baikal/tmalisie/summer11/' dataset_params.dataset];;
-dataset_params.wwwdir = [dataset_params.devkitroot '/www/'];
+dataset_params.devkitroot = ['/nfs/baikal/tmalisie/summer11/' ...
+                    dataset_params.dataset];
+
+
+%dataset_params.wwwdir = [dataset_params.devkitroot '/www/'];
 
 %This is the directory where we dump visualizations into
 [v,r] = unix('hostname');
@@ -34,7 +37,6 @@ end
 
 %dataset_params.dataset='VOC2010';
 
-
 % change this path to a writable local directory for the example code
 dataset_params.localdir=[dataset_params.devkitroot '/local/'];
 
@@ -47,14 +49,14 @@ dataset_params = VOCinit(dataset_params);
 
 %get the exemplar stream from VOC
 stream_set_name = 'trainval';
-MAX_NUM_EX = 20;
+MAX_NUM_EX = 5;
 e_stream_set = get_pascal_scene_stream(stream_set_name, cls, dataset_params, MAX_NUM_EX);
 
 %Initialize exemplars with the exemplar stream
-exemplar_initialize(e_stream_set,init_function,init_params, ...
-                    dataset_params,models_name);
-
-models = load_all_models(cls,models_name,dataset_params,1);
+efiles = exemplar_initialize(e_stream_set,init_function,init_params, ...
+                             dataset_params,models_name);
+%%%%
+models = load_all_models(cls,models_name,efiles,dataset_params,1);
 
 %get the negative set for training
 train_set = get_pascal_bg('train',['-' cls],dataset_params);
@@ -75,13 +77,14 @@ mining_params.TOPK = 10;
 mining_params.MAX_TOTAL_MINED_IMAGES = 20;
 
 training_function = @do_svm;
-train_all_exemplars(models, train_set, mining_params, ...
-                    dataset_params, training_function);
+tfiles = train_all_exemplars(models, train_set, mining_params, ...
+                             dataset_params, training_function);
 
 models_name = [models_name '-svm'];
 
+
 %Load the trained outputs
-models = load_all_models(cls,models_name,dataset_params, 1);
+models = load_all_models(cls,models_name,tfiles,dataset_params, 1);
 
 curset_name = 'trainval';
 val_set = get_pascal_bg(curset_name,cls,dataset_params);
@@ -104,11 +107,13 @@ apply_all_exemplars(models,dataset_params,...
 
 grid = load_result_grid(models, dataset_params, curset_name);
 
-[results,finalstruct] = evaluate_pascal_voc_grid(dataset_params, models, ...
-                                           grid, curset_name, M);
+finalstruct = pool_results(models,grid,M);
+
+% [results,finalstruct] = evaluate_pascal_voc_grid(dataset_params, models, ...
+%                                            grid, curset_name, M);
 
 %Show bbs and save them into the www dir
-allbbs = show_top_dets(dataset_params, models, grid, val_set, ...
+allbbs = show_top_dets(dataset_params, models, grid, val_set, curset_name, ...
                        finalstruct);
 
 return;

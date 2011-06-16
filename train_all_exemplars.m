@@ -1,5 +1,5 @@
-function train_all_exemplars(models, train_set, mining_params, ...
-                             dataset_params, training_function)
+function allfiles = train_all_exemplars(models, train_set, mining_params, ...
+                                        dataset_params, training_function)
 %% Train models with hard negatives for all exemplars written to
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
@@ -29,6 +29,8 @@ myRandomize;
 ordering = randperm(length(models));
 models = models(ordering);
 
+allfiles = cell(length(models), 1);
+
 for i = 1:length(models)
 
   %filer = sprintf('%s/%s',initial_directory, files(ordering(i)).name);
@@ -46,7 +48,9 @@ for i = 1:length(models)
                         m.curid, ...
                         m.objectid, ...
                         m.cls);
-    
+
+  allfiles{i} = filer2final;
+  
   % Check if we are ready for an update
   filerlock = [filer2final '.mining.lock'];
   
@@ -107,6 +111,9 @@ for i = 1:length(models)
     
   rmdir(filerlock);
 end
+
+
+[allfiles,bb] = sort(allfiles);
 
 % function m = prune_svs(m)
 % %When saving file, only keep negative support vectors, not
