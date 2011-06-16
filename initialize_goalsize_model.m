@@ -1,6 +1,7 @@
 function model = initialize_goalsize_model(I,bbox,init_params)
-GOAL_NCELLS = init_params.GOAL_NCELLS;
-SBIN = init_params.SBIN;
+
+GOAL_NCELLS = init_params.goal_ncells;
+sbin = init_params.sbin;
 %Get an initial model by cutting out a segment of a size which
 %matches the bbox
 
@@ -10,7 +11,7 @@ bbox = expand_bbox(bbox,I);
 
 I2 = zeros(size(I,1),size(I,2));    
 I2(bbox(2):bbox(4),bbox(1):bbox(3)) = 1;
-model.params.sbin = SBIN;
+%model.params.sbin = SBIN;
 
 %% NOTE: why was I padding this at some point and now I'm not???
 ARTPAD = 0; %120;
@@ -18,7 +19,7 @@ I_real_pad = pad_image(I,ARTPAD);
 
 %Get the hog features (+wiggles) from the ground-truth bounding box
 params.lpo = 10;
-[f_real,scales] = featpyramid2(I_real_pad, model.params.sbin, params);
+[f_real,scales] = featpyramid2(I_real_pad, init_params.sbin, params);
 
 %Extract the region from each level in the pyramid
 [masker,sizer] = get_matching_masks(f_real, I2);
@@ -29,15 +30,23 @@ params.lpo = 10;
 [uu,vv] = find(mask);
 curfeats = f_real{targetlvl}(min(uu):max(uu),min(vv):max(vv),:);
 
+model.init_params = init_params;
 model.hg_size = size(curfeats);
 model.mask = logical(ones(model.hg_size(1),model.hg_size(2)));
 
 fprintf(1,'hg_size = [%d %d]\n',model.hg_size(1),model.hg_size(2));
 model.w = curfeats - mean(curfeats(:));
 model.b = 0;
-
 model.x = curfeats;
-model.bb = get_target_bb(model,I);
+
+[model.bb,model.x] = get_target_bb(model,I);
+
+model.w = reshape(model.x,size(model.w))-mean(model.x(:));
+
+%figure(34)
+%imagesc(I)
+%plot_bbox(model.bb);
+%pause
 
 function [targetlvl,mask] = get_ncell_mask(GOAL_NCELLS, masker, ...
                                                         sizer)
@@ -112,7 +121,7 @@ for expandloop = 1:10000
 end
 
 
-function target_bb = get_target_bb(model,I)
+function [target_bb,target_x] = get_target_bb(model,I)
 %Get the id of the top detection
 mmm{1}.model = model;
 mmm{1}.model.hg_size = size(model.w);
@@ -124,3 +133,5 @@ localizeparams.FLIP_LR = 0;
 localizeparams.pyramid_padder = 5;
 [rs,t] = localizemeHOG(I,mmm,localizeparams);
 target_bb = rs.bbs{1}(1,:);
+target_x = rs.xs{1}{1};
+

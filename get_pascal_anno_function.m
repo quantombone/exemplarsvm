@@ -15,4 +15,4 @@ cats = {recs.objects.class};
 [alpha,beta] = max(os,[],2);
 extras.maxos = alpha;
 extras.maxind = beta;
-extras.maxclass = cats(beta);
+extras.maxclass = reshape(cats(beta),size(beta));

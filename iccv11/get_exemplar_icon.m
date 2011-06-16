@@ -28,6 +28,7 @@ I = convert_to_I(models{index}.I);
 cb = models{index}.gt_box;    
 Iex = pad_image(I, PADDER);
 cb = round(cb + PADDER);
+
 Iex = Iex(cb(2):cb(4),cb(1):cb(3),:);
 
 cb = models{index}.model.bb(subind,1:4);

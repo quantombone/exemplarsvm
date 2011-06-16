@@ -67,7 +67,7 @@ if CACHE_FILE == 1
     %will be a lock file present (and we can't create a new one).
     %in this case, we will just pause and try to read main file again
     %try to make a lock directory
-    if (mymkdir_dist(filerlock) == 1)
+    if (mymkdir_dist(filerlock) == 0)
       break;
     end
     pause(3);

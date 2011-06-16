@@ -105,7 +105,8 @@ for i = 1:length(e_set)
   
   fprintf(1,'Final hg_size is %d %d\n',...
           m.model.hg_size(1), m.model.hg_size(2));
-  
+
+
   
   if display == 1
     figure(1)
@@ -132,6 +133,6 @@ for i = 1:length(e_set)
     grid on
     title('Exemplar HOG features')
     drawnow
-    
+
   end
 end  

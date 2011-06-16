@@ -71,7 +71,7 @@ for i = 1:length(grid)
   curid = grid{i}.curid;
   bboxes{i} = grid{i}.bboxes;
   
-  if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'os')
+  if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
     maxos{i} = grid{i}.extras.maxos;
     maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
   end
@@ -81,7 +81,7 @@ for i = 1:length(grid)
     badex = find(ismember(excurids,curid));
     badones = ismember(bboxes{i}(:,6),badex);
     bboxes{i}(badones,:) = [];
-    if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'os')
+    if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
       if length(maxos{i})>0
         maxos{i}(badones) = [];
       end
@@ -135,7 +135,7 @@ for i = 1:length(bboxes)
   if size(bboxes{i},1) > 0
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
     bboxes{i} = nms(bboxes{i},.5);
-    if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'os')
+    if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
       maxos{i} = maxos{i}(bboxes{i}(:,5));
     end
     bboxes{i}(:,5) = 1:size(bboxes{i},1);

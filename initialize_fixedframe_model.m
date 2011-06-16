@@ -125,6 +125,7 @@ model.hg_size = [hg_size(1) hg_size(2) features];
 x = curfeats{1};
 model.mask = sum(x.^2,3)>0 & fmask;
 model.w = zeros(size(x));
+
 mask3 = repmat(model.mask,[1 1 features]);
 mask3 = mask3(:);
 

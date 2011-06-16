@@ -48,7 +48,7 @@ dataset_params = VOCinit(dataset_params);
 %get the exemplar stream from VOC
 stream_set_name = 'trainval';
 MAX_NUM_EX = 5;
-e_stream_set = get_pascal_stream(stream_set_name, cls, dataset_params, MAX_NUM_EX);
+e_stream_set = get_pascal_exemplar_stream(stream_set_name, cls, dataset_params, MAX_NUM_EX);
 
 %Initialize exemplars with the exemplar stream
 exemplar_initialize(e_stream_set,init_function,init_params, ...
@@ -93,15 +93,18 @@ dataset_params.display_machine = '';
 M = [];
 %CHOOSE HOW MANY IMAGES WE APPLY PER CHUNK
 dataset_params.NIMS_PER_CHUNK = 10;
+gt_function = @get_pascal_anno_function;
 
 apply_voc_exemplars(models,dataset_params,...
                     val_set,curset_name,...
-                    M,@get_pascal_anno_function);
+                    M,gt_function);
 
 grid = load_result_grid(models, dataset_params, curset_name);
 
 [results,finalstruct] = evaluate_pascal_voc_grid(dataset_params, models, ...
                                            grid, curset_name, M);
+
+
 
 allbbs = show_top_dets(dataset_params, models, grid, val_set, finalstruct);
 return;
