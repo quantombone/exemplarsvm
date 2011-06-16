@@ -7,7 +7,7 @@ function allbbs = show_top_dets(dataset_params, models, grid, fg, set_name, ...
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if ~exist('maxk','var')
-  maxk = 20;
+  maxk = 100;
 end
 
 allbbs = cell(0,1);
@@ -251,9 +251,9 @@ for k = 1:maxk
     
     print(gcf,'-dpdf',filer);
     rmdir(filerlock);
-    %filer2 = filer;
-    %filer2(end-2:end) = 'png';
-    %print(gcf,'-dpng',filer2);
+    filer2 = filer;
+    filer2(end-2:end) = 'png';
+    print(gcf,'-dpng',filer2);
    
     allbbs{end+1} = allbb;
     

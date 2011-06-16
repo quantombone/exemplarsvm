@@ -135,7 +135,7 @@ if fileexists(final_file) || (mymkdir_dist(lockfile) == 0)
 end
 
 save(final_file,'grid');
-if exists(lockfile,'dir')
+if exist(lockfile,'dir')
   rmdir(lockfile);
 end
 
