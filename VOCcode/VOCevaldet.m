@@ -145,7 +145,7 @@ ap=VOCap(rec,prec);
 
 if draw
     % plot precision/recall
-    plot(rec,prec,'-');
+    plot(rec,prec,'-','LineWidth',2);
     grid;
     xlabel 'recall'
     ylabel 'precision'

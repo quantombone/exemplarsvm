@@ -1,4 +1,5 @@
-function train_all_exemplars(models, train_set, mining_params, dataset_params)
+function train_all_exemplars(models, train_set, mining_params, ...
+                             dataset_params, training_function)
 %% Train models with hard negatives for all exemplars written to
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
@@ -6,11 +7,11 @@ function train_all_exemplars(models, train_set, mining_params, dataset_params)
 models_name = models{1}.models_name;
 new_models_name = [models_name '-svm'];
 
-initial_directory = ...
-    sprintf('%s/%s/',dataset_params.localdir,models_name);
+%initial_directory = ...
+%    sprintf('%s/%s/',dataset_params.localdir,models_name);
 
 final_directory = ...
-    sprintf('%s/%s/',dataset_params.localdir,new_models_name);
+    sprintf('%s/models/%s/',dataset_params.localdir,new_models_name);
 
 %make results directory if needed
 if ~exist(final_directory,'dir')
@@ -72,9 +73,10 @@ for i = 1:length(models)
     %Get the name of the next chunk file to write
     filer2 = sprintf(filer2fill,num2str(m.iteration));
       
-    [m, mining_queue] = mine_negatives(m, mining_queue);
-  
-    total_mines = sum(cellfun(@(x)x.num_visited,mining_queue));
+    [m, mining_queue] = ...
+        mine_train_iteration(m, mining_queue, training_function);
+
+    total_mines = m.mining_stats{end}.total_mines;
     if ((total_mines >= mining_params.MAX_TOTAL_MINED_IMAGES) || ...
           (length(mining_queue) == 0))
       fprintf(1,'Mined enough images, rest up\n');

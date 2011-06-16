@@ -1,5 +1,5 @@
 function [results,final] = ...
-    evaluate_pascal_voc_grid(VOCopts,models,grid,target_directory,M)
+    evaluate_pascal_voc_grid(VOCopts,models,grid,target_directory,M,CACHE_FILE)
 %% Evaluate PASCAL VOC detection task with the models, their output
 %% firings grid, on the set target_directory which can be either
 %% 'trainval' or 'test'
@@ -13,7 +13,9 @@ function [results,final] = ...
 %   grid{i}.extras.os = grid{i}.extras.os(goods,:);
 % end
 
-%VOCinit;
+if ~exist('CACHE_FILE','var')
+  CACHE_FILE = 0;
+end
 VOCopts.testset = target_directory;
 
 calib_string = '';
@@ -27,10 +29,7 @@ resfile = sprintf('%s/%s.%s%s_%s_results.mat',VOCopts.resdir,...
                   target_directory');
 
 
-if fileexists(resfile)
-  if nargout == 0
-    return;
-  end
+if CACHE_FILE && fileexists(resfile) 
   fprintf(1,'Pre loading %s\n',resfile);
   load(resfile);
   return;
@@ -185,24 +184,26 @@ fclose(fid);
 
 figure(2)
 clf
-
 [results.recall,results.prec,results.ap,results.apold,results.fp,results.tp,results.npos,results.corr] = VOCevaldet(VOCopts,'comp3',cls,true);
 
-  
+set(gca,'FontSize',16)
+set(get(gca,'Title'),'FontSize',16)
+set(get(gca,'YLabel'),'FontSize',16)
+set(get(gca,'XLabel'),'FontSize',16)
 axis([0 1 0 1]);
 
 if ~exist(VOCopts.wwwdir,'dir')
   mkdir(VOCopts.wwwdir);
 end
 
-filer = sprintf(['%s/%s-%s%s-on-%s-ap=%.5f.png'], ...
+filer = sprintf(['%s/%s-%s%s-on-%s.pdf'], ...
                 VOCopts.wwwdir, ...
                 models{1}.cls,...
                 models{1}.models_name,...
                 calib_string, ...
-                target_directory,results.ap);
-set(gcf,'PaperPosition',[0 0 5 5])
-print(gcf,'-dpng',filer);
+                target_directory);
+set(gcf,'PaperPosition',[0 0 8 8])
+print(gcf,'-dpdf',filer);
 fprintf(1,'Just Wrote %s\n',filer);
 
 %results.recall = recall;
@@ -219,4 +220,4 @@ drawnow
 %end
 
 %TODO: we are saving really large files for exemplarNN
-%save(resfile,'results','final','M');
+save(resfile,'results','final','M');

@@ -49,16 +49,34 @@ if CACHE_FILE == 1
   
   cache_file_stripped = ...
       sprintf('%s/%s-%s.mat',cache_dir,cls,[DET_TYPE '-stripped']);
-  
-  if fileexists(cache_file)
-    fprintf(1,'Loading CACHED file: %s\n', cache_file);
-    load(cache_file);
-    return;
+
+  filerlock = [cache_file '.lock'];
+    
+  %keep trying to open model file
+  while 1
+      
+    if fileexists(cache_file)
+      fprintf(1,'Loading CACHED file: %s\n', cache_file);
+      load(cache_file);
+      return;
+    end
+        
+    %If file is not present, then we will do the work to create
+    %one, but let's first check to see if another process is doing
+    %the same thing.. if another process is doing this, then there
+    %will be a lock file present (and we can't create a new one).
+    %in this case, we will just pause and try to read main file again
+    %try to make a lock directory
+    if (mymkdir_dist(filerlock) == 1)
+      break;
+    end
+    pause(3);
   end
+  
 end
 
 results_directory = ...
-    sprintf('%s/%s/',dataset_params.localdir,DET_TYPE);
+    sprintf('%s/models/%s/',dataset_params.localdir,DET_TYPE);
 
 dirstring = [results_directory '*' cls '*.mat'];
 files = dir(dirstring);
@@ -144,4 +162,7 @@ if CACHE_FILE==1
     save(cache_file_stripped,'models');
     models = models_save;
   end
+  
+  %delete the lock file for the file write
+  delete(filerlock);
 end

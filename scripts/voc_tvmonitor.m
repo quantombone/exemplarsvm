@@ -18,6 +18,7 @@ init_params.hg_size = [8 8];
 
 %devkitroot is where we write all the result files
 dataset_params.dataset = 'VOC2007';
+dataset_params.testset = 'test';
 dataset_params.devkitroot = ['/nfs/baikal/tmalisie/summer11/' dataset_params.dataset];;
 dataset_params.wwwdir = [dataset_params.devkitroot '/www/'];
 
@@ -61,8 +62,8 @@ train_set = train_set(1:3);
 %Get the default mining parameters
 mining_params = get_default_mining_params;
 mining_params.SKIP_GTS_ABOVE_THIS_OS = 1.0;
-mining_params.dump_last_image = 1;
-mining_params.dump_images = 1;
+mining_params.dump_last_image = 0;%1;
+mining_params.dump_images = 0;%1;
 mining_params.MAXSCALE = 0.5;
 mining_params.FLIP_LR = 1;
 mining_params.NMS_MINES_OS = 1.0;
@@ -70,8 +71,10 @@ mining_params.extract_negatives = 0;
 mining_params.alternate_validation = 0;
 mining_params.MAX_WINDOWS_BEFORE_SVM = 40;
 
+training_function = @do_svm;
+
 train_all_exemplars(models, train_set, mining_params, ...
-                    dataset_params);
+                    dataset_params, training_function);
 
 models_name = [models_name '-svm'];
 

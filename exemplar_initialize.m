@@ -40,7 +40,7 @@ end
 %else
 
 results_directory = ...
-    sprintf('%s/%s/',dataset_params.localdir, models_name);
+    sprintf('%s/models/%s/',dataset_params.localdir, models_name);
 
 if ~exist(results_directory,'dir')
   fprintf(1,'Making directory %s\n',results_directory);
@@ -70,20 +70,18 @@ for i = 1:length(e_set)
   filer = sprintf('%s/%s.%d.%s.mat',...
                   results_directory, curid, objectid, cls);
   filerlock = [filer '.lock'];
+  
   if fileexists(filer) || (mymkdir_dist(filerlock)==0)
     continue
   end
   gt_box = bbox;
-  
+
+
+  %Call the init function which is a mapping from (I,bbox) to (model)
   [model] = init_function(I,bbox,init_params);
-  
-  % curid_double = str2double(curid);
-  % if isnan(curid_double)
-  %   error(sprintf('Cannot convert curid=%s into double\n',curid_double));
-  % end
-  % model.target_bb(:,11) = curid_double;
-  
   clear m
+  m.model = model;    
+
   %Save filename (or original image)
   m.I = e_set{i}.I;
   m.curid = curid;
@@ -91,10 +89,14 @@ for i = 1:length(e_set)
   m.cls = cls;    
   m.gt_box = gt_box;
   
-  m.model = model;
   m.sizeI = size(I);
   m.models_name = models_name;
   
+  save(filer,'m');
+  if exist(filerlock,'dir')
+    rmdir(filerlock);
+  end
+
   %Print the bounding box overlap between the initial window and
   %the final window
   finalos = getosmatrix_bb(m.gt_box, m.model.bb(1,:));
@@ -104,10 +106,6 @@ for i = 1:length(e_set)
   fprintf(1,'Final hg_size is %d %d\n',...
           m.model.hg_size(1), m.model.hg_size(2));
   
-  save(filer,'m');
-  if exist(filerlock,'dir')
-    rmdir(filerlock);
-  end
   
   if display == 1
     figure(1)

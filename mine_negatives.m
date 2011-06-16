@@ -1,113 +1,241 @@
-function [m,mining_queue] = mine_negatives(m, mining_queue)
-%% Mine negatives (for a set of models, but only one works
-%% currently) and update the current classifiers inside models 
-%%
+function [hn, mining_queue, mining_stats] = ...
+    load_hn_fg(models, mining_queue, bg, mining_params)
+%% Compute detections "aka Hard-Negatives" for N images (bg) given K
+%% classifiers (models) 
+%% 
+%% Input Data:
+%% models: Kx1 cell array of models
+%% mining_queue: the mining queue create from
+%%    initialize_mining_queue(bg)
+%% bg: the source of images (potentially already in pyramid feature
+%%   format)
+%% mining_params: the parameters of the mining/localization
+%% procedure
+%% 
+%% Returned Data: 
+%% hn: Kx1 cell array where hn{i} contains hard negatives for models{i} 
+
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-%during first few iterations, we take many windows per image
-% if iteration <= mining_params.early_late_cutoff
-%   mining_params.detection_threshold = mining_params.early_detection_threshold;
-% else
-%   %in later iterations when we pass through many images, we use SVM cutoff
-%   mining_params.detection_threshold = mining_params.late_detection_threshold;
-% end
-
-% Start wtrace with first round classifier, if not present already
-if ~isfield(m.model,'wtrace')
-  m.model.wtrace{1} = m.model.w;
-  m.model.btrace{1} = m.model.b;
+if ~exist('mining_params','var')
+  mining_params = get_default_mining_params;
 end
 
-if m.mining_params.skip_mine == 0
-  [hn, mining_queue, mining_stats] = ...
-      load_hn_fg({m}, mining_queue, m.train_set, m.mining_params);
+number_of_violating_images = 0;
+number_of_windows = zeros(length(models),1);
+
+violating_images = zeros(0,1);
+empty_images = zeros(0,1);
+
+mining_params.SAVE_SVS = 1;
+
+numpassed = 0;
+
+for i = 1:length(mining_queue)
+  index = mining_queue{i}.index;
+  I = convert_to_I(bg{index});
   
-  m = add_new_detections(m, cat(2,hn.xs{1}{:}), cat(1,hn.bbs{1}{:}));
+  %HACK ROTATE UPSIDE DOWN
+  %fprintf(1,'HACK: rotate upside down negatives\n');
+  %I = imrotate(I,180);
+
+  %starter = tic;   
+  [rs,t] = localizemeHOG(I, models, mining_params);
+  
+  
+  numpassed = numpassed + 1;
+
+  %[tmp,curid,tmp] = fileparts(bg{index});
+  %curid_integer = str2num(curid);
+  curid_integer = index;
+  
+  for q = 1:length(rs.bbs)
+    if ~isempty(rs.bbs{q})
+      rs.bbs{q}(:,11) = curid_integer;
+    end
+  end
+ 
+  %% Make sure we only keep 3 times the number of violating windows
+  clear scores
+  scores{1} = [];
+  for q = 1:length(models)
+    if ~isempty(rs.bbs{q})
+      s = rs.bbs{q}(:,end);
+      nviol = sum(s >= -1);
+      [aa,bb] = sort(s,'descend');
+      bb = bb(1:min(length(bb),...
+                    ceil(nviol*mining_params.beyond_nsv_multiplier)));
+      
+
+      rs.xs{q} = rs.xs{q}(bb);    
+      scores{q} = cat(2,s);
+    end
+  end
+  
+  addon ='';
+  supersize = sum(cellfun(@(x)length(x),scores));
+  if supersize > 0
+    addon=sprintf(', max = %.3f',max(cellfun(@(x)max_or_this(x,-1000),scores)));
+  end
+  total = sum(cellfun(@(x)x.num_visited,mining_queue));
+  fprintf(1,'Found %d/%d windows, image:%05d (#seen=%d/%05d%s)\n',...
+          supersize, sum(cellfun(@(x)sum(x>=-1),scores)), index, ...
+          mining_queue{i}.num_visited, total, addon);
+
+  %increment how many times we processed this image
+  mining_queue{i}.num_visited = mining_queue{i}.num_visited + 1;
+
+  number_of_windows = number_of_windows + cellfun(@(x)length(x),scores)';
+  
+  clear curxs curbbs
+  for q = 1:length(models)
+    curxs{q} = [];
+    curbbs{q} = [];
+    if isempty(rs.xs{q})
+      continue
+    end
+    
+    goods = cellfun(@(x)prod(size(x)),rs.xs{q})>0;
+    curxs{q} = cat(2,curxs{q},rs.xs{q}{goods});
+    curbbs{q} = cat(1,curbbs{q},rs.bbs{q}(goods,:));
+  end
+  
+  Ndets = cellfun(@(x)size(x,2),curxs);
+  %if no detections, just skip image because there is nothing to store
+  if sum(Ndets) == 0
+    empty_images(end+1) = index;
+    %continue
+  end
+  
+  %an image is violating if it contains some violating windows,
+  %else it is an empty image
+  if max(cellfun(@(x)max_or_this(x,-1000),scores))>=-1
+    if (mining_queue{i}.num_visited==1)
+      number_of_violating_images = number_of_violating_images + 1;
+    end 
+    violating_images(end+1) = index;
+  end
+  
+  %keyboard
+  for a = 1:length(models)
+    xs{a}{i} = curxs{a};
+    bbs{a}{i} = curbbs{a};
+  end
+     
+  if (max(number_of_windows) >= mining_params.MAX_WINDOWS_BEFORE_SVM) || ...
+        (numpassed >= mining_params.MAX_IMAGES_BEFORE_SVM)
+    fprintf(1,['Stopping mining because we have %d windows from' ...
+                                                ' %d new violators\n'],...
+            max(number_of_windows), number_of_violating_images);
+    break;
+  end
+end
+
+if ~exist('xs','var')
+  %If no detections from from anymodels, return an empty matrix
+  for i = 1:length(models)
+    hn.xs{i} = zeros(prod(size(models{i}.model.w)),0);
+    hn.bbs{i} = [];
+  end
+  mining_stats.num_violating = 0;
+  mining_stats.num_empty = 0;
+  
+  return;
+end
+
+hn.xs = xs;
+hn.bbs = bbs;
+
+%hn.xs = cellfun2(@(x)cat(2,x{:}),xs);
+%hn.bbs = cellfun2(@(x)cat(2,x{:}),bbs);
+
+fprintf(1,'# Violating images: %d, #Non-violating images: %d\n', ...
+        length(violating_images), length(empty_images));
+
+mining_stats.num_empty = length(empty_images);
+mining_stats.num_violating = length(violating_images);
+mining_stats.total_mines = mining_stats.num_violating + mining_stats.num_empty;
+
+%NOTE: there are several different mining scenarios possible here
+%a.) dont process already processed images
+%b.) place violating images at end of queue, eliminate free ones
+%c.) place violating images at start of queue, eliminate free ones
+
+if strcmp(mining_params.queue_mode,'onepass') == 1
+  %% MINING QUEUE UPDATE by removing already seen images
+  mining_queue = update_mq_onepass(mining_queue, violating_images, ...
+                                   empty_images);
+elseif strcmp(mining_params.queue_mode,'cycle-violators') == 1
+  %% MINING QUEUE update by cycling violators to end of queue
+  %mining_queue = update_mq_cycle_violators(mining_queue, violating_images, ...
+  %                                 empty_images);
+elseif strcmp(mining_params.queue_mode,'front-violators') == 1
+  %% MINING QUEUE UPDATE by removing already seen images, and
+  %front-placing violators (used in CVPR11)
+  %mining_queue = update_mq_front_violators(mining_queue, ...
+  %                                         violating_images, ...
+  %                                         empty_images);
 else
-  mining_stats.num_visited = 0;
-  fprintf(1,'warning not really mining\n');  
+  error(sprintf('Invalid queue mode: %s\n', ...
+                mining_params.queue_mode));
 end
 
-   
-m = update_the_model(m, mining_stats);
 
-dump_figures(m);
+function mining_queue = update_mq_onepass(mining_queue, violating_images, ...
+                                           empty_images)
 
-function [m] = update_the_model(m, mining_stats)
+%% Take the violating images and remove them from queue
+mover_ids = find(cellfun(@(x)ismember(x.index,violating_images), ...
+                         mining_queue));
 
-%% UPDATE the current SVM and show the results
-m.iteration = m.iteration + 1;
-if ~isfield(m,'mining_stats')
-  m.mining_stats{1} = mining_stats;
-else
-  m.mining_stats{end+1} = mining_stats;
-end
+mining_queue(mover_ids) = [];
 
-[m] = do_svm(m);
-%m = do_rank(m,mining_params);
+%% We now take the empty images and remove them from queue
+mover_ids = find(cellfun(@(x)ismember(x.index,empty_images), ...
+                         mining_queue));
 
-wex = m.model.w(:);
-b = m.model.b;
-r = m.model.w(:)'*m.model.svxs - m.model.b;
-m.model.svbbs(:,end) = r;
+mining_queue(mover_ids) = [];
 
-if strmatch(m.models_name,'dalal')
-  %% here we take the best exemplars
-  allscores = wex'*m.model.x - b;
-  [aa,bb] = sort(allscores,'descend');
-  [aabad,bbbad] = sort(r,'descend');
-  maxbad = aabad(ceil(.05*length(aabad)));
-  LEN = max(sum(aa>=maxbad), m.model.keepx);
-  m.model.x = m.model.x(:,bb(1:LEN));
-  fprintf(1,'dalal:WE NOW HAVE %d exemplars in category\n',LEN);
-end
+function mining_queue = update_mq_front_violators(mining_queue,...
+                                                  violating_images, ...
+                                                  empty_images)
+%An update procedure where the violating images are pushed to front
+%of queue, and empty images are removed
 
-svs = find(r >= -1.0000);
+%% We now take the empty images and remove them from queue
+mover_ids = find(cellfun(@(x)ismember(x.index,empty_images), ...
+                         mining_queue));
 
-%KEEP 3#SV vectors (but at most max_negatives of them)
-total_length = ceil(m.mining_params.beyond_nsv_multiplier*length(svs));
-total_length = min(total_length,m.mining_params.max_negatives);
+%enders = mining_queue(mover_ids);
+mining_queue(mover_ids) = [];
 
-[alpha,beta] = sort(r,'descend');
-svs = beta(1:min(length(beta),total_length));
-m.model.svxs = m.model.svxs(:,svs);
-m.model.svbbs = m.model.svbbs(svs,:);
 
-% Append new w to trace
+%% We now take the violating images and place them on the start of the queue
+mover_ids = find(cellfun(@(x)ismember((x.index),violating_images), ...
+                         mining_queue));
 
-m.model.wtrace{end+1} = m.model.w;
-m.model.btrace{end+1} = m.model.b;
+starters = mining_queue(mover_ids);
+mining_queue(mover_ids) = [];
+mining_queue = cat(2,starters,mining_queue);
 
-function dump_figures(m)
 
-% figure(1)
-% clf
-% show_cool_os(m)
+function mining_queue = update_mq_cycle_violators(mining_queue,...
+                                                  violating_images, ...
+                                                  empty_images)
+%An update procedure where the violating images are pushed to front
+%of queue, and empty images are pushed to back
 
-% if (mining_params.dump_images == 1) || ...
-%       (mining_params.dump_last_image == 1 && ...
-%        m.iteration == mining_params.MAXITER)
-%   set(gcf,'PaperPosition',[0 0 10 3]);
-%   print(gcf,sprintf('%s/%s.%d_iter=%05d.png', ...
-%                     mining_params.final_directory,m.curid,...
-%                     m.objectid,m.iteration),'-dpng'); 
-% end
+%% We now take the violating images and place them on the end of the queue
+mover_ids = find(cellfun(@(x)ismember((x.index),violating_images), ...
+                         mining_queue));
 
-figure(2)
-clf
-Isv1 = get_sv_stack(m,7);
-imagesc(Isv1)
-axis image
-axis off
-title('Exemplar Weights + Sorted Matches')
-drawnow
+enders = mining_queue(mover_ids);
+mining_queue(mover_ids) = [];
+mining_queue = cat(2,mining_queue,enders);
 
-if (m.mining_params.dump_images == 1) || ...
-      (m.mining_params.dump_last_image == 1 && ...
-       m.iteration == m.mining_params.MAXITER)
+%% We now take the empty images and remove them from the queue
+mover_ids = find(cellfun(@(x)ismember(x.index,empty_images), ...
+                         mining_queue));
 
-  imwrite(Isv1,sprintf('%s/%s.%d_iter_I=%05d.png', ...
-                    m.mining_params.final_directory, m.curid,...
-                    m.objectid, m.iteration), 'png');
-end
-
+enders = mining_queue(mover_ids);
+mining_queue(mover_ids) = [];
