@@ -35,16 +35,11 @@ for i = 1:length(ids)
   
   res.I = filename;
 
+  %Use the entire scene (remember VOC stores imgsize in a strange order)
   res.bbox = [1 1 recs.imgsize(1) recs.imgsize(2)];
-  %res.bbox = recs.objects(objectid).bbox;
+  
   res.cls = cls;
   res.objectid = i;
-  
-  %size(convert_to_I(res.I))
-  %res.bbox
-
-
-
   
   %anno is the data-set-specific version
   res.anno = recs.objects;
