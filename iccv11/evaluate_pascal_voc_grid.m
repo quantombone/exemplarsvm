@@ -70,6 +70,9 @@ for i = 1:length(grid)
   
   curid = grid{i}.curid;
   bboxes{i} = grid{i}.bboxes;
+  if size(bboxes{i},1) == 0
+    continue
+  end
   
   if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
     maxos{i} = grid{i}.extras.maxos;

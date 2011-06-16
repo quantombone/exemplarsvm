@@ -164,5 +164,7 @@ if CACHE_FILE==1
   end
   
   %delete the lock file for the file write
-  delete(filerlock);
+  if exist(filerlock,'dir')
+    rmdir(filerlock);
+  end
 end

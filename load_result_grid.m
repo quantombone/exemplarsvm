@@ -96,22 +96,30 @@ for i = 1:length(files)
   
   for j = 1:length(grid{i}.res)
     
-    newid = str2num(grid{i}.res{j}.curid);
-    grid{i}.res{j}.bboxes(:,11) = newid;
-    grid{i}.res{j}.coarse_boxes(:,11) = newid;
-
-    goods = find(grid{i}.res{j}.bboxes(:,end) >= curthresh);
-    grid{i}.res{j}.bboxes = grid{i}.res{j}.bboxes(goods,:);
-    grid{i}.res{j}.coarse_boxes = ...
-        grid{i}.res{j}.coarse_boxes(goods,:);
-    grid{i}.res{j}.extras.maxos = ...
-        grid{i}.res{j}.extras.maxos(goods);
-
-    grid{i}.res{j}.extras.maxind = ...
-        grid{i}.res{j}.extras.maxind(goods);
+    index = grid{i}.res{j}.index;
     
-    grid{i}.res{j}.extras.maxclass = ...
-        grid{i}.res{j}.extras.maxclass(goods);
+    if size(grid{i}.res{j}.bboxes,1) > 0
+      grid{i}.res{j}.bboxes(:,11) = index;
+      grid{i}.res{j}.coarse_boxes(:,11) = index;
+    
+      goods = find(grid{i}.res{j}.bboxes(:,end) >= curthresh);
+      grid{i}.res{j}.bboxes = grid{i}.res{j}.bboxes(goods,:);
+      grid{i}.res{j}.coarse_boxes = ...
+          grid{i}.res{j}.coarse_boxes(goods,:);
+    
+    
+      if ~isempty(grid{i}.res{j}.extras)
+        grid{i}.res{j}.extras.maxos = ...
+            grid{i}.res{j}.extras.maxos(goods);
+        
+        grid{i}.res{j}.extras.maxind = ...
+            grid{i}.res{j}.extras.maxind(goods);
+        
+        grid{i}.res{j}.extras.maxclass = ...
+            grid{i}.res{j}.extras.maxclass(goods);
+      end
+      
+    end
 
   end
 

@@ -42,14 +42,9 @@ end
 %If we got here, then the flip was turned on and we need to concatenate
 %results
 for q = 1:length(rs1.bbs)
-  %if (~isempty(rs1.xs) && ~isempty(rs2.xs)) && ...
-  %      (~isempty(rs1.xs{q}) || ~isempty(rs1.xs{q}))
+  rs1.xs{q} = cat(2,rs1.xs{q}, ...
+                  rs2.xs{q});
 
-
-    rs1.xs{q} = cat(2,rs1.xs{q}, ...
-                    rs2.xs{q});
-
-  %end
 
   rs1.bbs{q} = cat(1,rs1.bbs{q},rs2.bbs{q});
 end

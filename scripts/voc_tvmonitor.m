@@ -95,9 +95,11 @@ M = [];
 dataset_params.NIMS_PER_CHUNK = 10;
 gt_function = @get_pascal_anno_function;
 
-apply_voc_exemplars(models,dataset_params,...
+test_params = get_default_mining_params;
+
+apply_all_exemplars(models,dataset_params,...
                     val_set,curset_name,...
-                    M,gt_function);
+                    M,test_params,gt_function);
 
 grid = load_result_grid(models, dataset_params, curset_name);
 

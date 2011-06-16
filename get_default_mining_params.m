@@ -101,3 +101,7 @@ mining_params.MINE_MODE = 0;
 
 %experimental flag to skip the mining process
 mining_params.skip_mine = 0;
+
+%if greater than 0, then only keep dets that have this OS with the
+%entire test image
+mining_params.MIN_SCENE_OS = 0.0;

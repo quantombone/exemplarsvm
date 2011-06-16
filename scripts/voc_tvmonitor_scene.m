@@ -1,7 +1,7 @@
 %clear
 
 %Choose the VOC category
-cls = 'tvmonitor';
+cls = 'car';
 
 %Choose a short string to indicate the type of training run we are doing
 models_name = 'fscene';
@@ -58,7 +58,7 @@ models = load_all_models(cls,models_name,dataset_params,1);
 
 %get the negative set for training
 train_set = get_pascal_bg('train',['-' cls],dataset_params);
-train_set = train_set(1:3);
+train_set = train_set(1:50);
 
 %Get the default mining parameters
 mining_params = get_default_mining_params;
@@ -70,8 +70,9 @@ mining_params.FLIP_LR = 1;
 mining_params.NMS_MINES_OS = 1.0;
 mining_params.extract_negatives = 0;
 mining_params.alternate_validation = 0;
-mining_params.MAX_WINDOWS_BEFORE_SVM = 40;
-
+mining_params.MAX_WINDOWS_BEFORE_SVM = 100;
+mining_params.TOPK = 10;
+mining_params.MAX_TOTAL_MINED_IMAGES = 20;
 
 training_function = @do_svm;
 train_all_exemplars(models, train_set, mining_params, ...
@@ -84,29 +85,32 @@ models = load_all_models(cls,models_name,dataset_params, 1);
 
 curset_name = 'trainval';
 val_set = get_pascal_bg(curset_name,cls,dataset_params);
-val_set = val_set(1:10);
+val_set = val_set(1:200);
 
 dataset_params.display_machine = '';
-
 %No calibration parameters yet
 
 M = [];
 %CHOOSE HOW MANY IMAGES WE APPLY PER CHUNK
 dataset_params.NIMS_PER_CHUNK = 10;
-gt_function = @get_pascal_anno_function;
+%gt_function = @get_pascal_anno_function;
 
-apply_voc_exemplars(models,dataset_params,...
+test_params = get_default_mining_params;
+test_params.MAXSCALE = .4;
+test_params.MIN_SCENE_OS = 0.4;
+apply_all_exemplars(models,dataset_params,...
                     val_set,curset_name,...
-                    M,gt_function);
+                    M,test_params);
 
 grid = load_result_grid(models, dataset_params, curset_name);
 
 [results,finalstruct] = evaluate_pascal_voc_grid(dataset_params, models, ...
                                            grid, curset_name, M);
 
+%Show bbs and save them into the www dir
+allbbs = show_top_dets(dataset_params, models, grid, val_set, ...
+                       finalstruct);
 
-
-allbbs = show_top_dets(dataset_params, models, grid, val_set, finalstruct);
 return;
 %get the application set for calibration
 

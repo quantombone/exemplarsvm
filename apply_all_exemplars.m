@@ -1,4 +1,4 @@
-function apply_voc_exemplars(models,dataset_params,fg,setname,M,gt_function)
+function apply_all_exemplars(models,dataset_params,fg,setname,M,default_params,gt_function)
 % Apply a set of models (raw exemplars, trained exemplars, dalals,
 % poselets, components, etc) to a set of images.  Script can be ran in
 % parallel with no arguments.  After running script, use
@@ -39,8 +39,13 @@ if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
 end
 
-localizeparams = get_default_mining_params;
+if ~exist('default_params','var')
+  localizeparams = get_default_mining_params;
+else
+  localizeparams = default_params;
+end
 localizeparams.thresh = -1.05;
+%localizeparams.thresh = -.5;
 %localizeparams.MAXSCALE = .7;
 %localizeparams.MINSCALE = .3;
 if length(strfind(models{1}.models_name,'-ncc'))
@@ -136,6 +141,10 @@ for i = 1:length(ordering)
     for q = 1:length(rs.bbs)
       if ~isempty(rs.bbs{q})
         rs.bbs{q}(:,11) = index;
+        if length(rs.bbs{q}(1,:))==11
+          fprintf(1,'keyboard at shorty\n');
+          keyboard
+        end
       end
     end
         
@@ -150,7 +159,15 @@ for i = 1:length(ordering)
             toc(starter),aa,length(scores));
     
     % Transfer GT boxes from models onto the detection windows
-    boxes = adjust_boxes(coarse_boxes,models);      
+    boxes = adjust_boxes(coarse_boxes,models);
+    
+    if (default_params.MIN_SCENE_OS > 0.0)
+      os = getosmatrix_bb(boxes,[1 1 size(I,2) size(I,1)]);
+      goods = find(os>=default_params.MIN_SCENE_OS);
+      boxes = boxes(goods,:);
+      coarse_boxes = coarse_boxes(goods,:);
+    end
+
 
     if display == 1       
       %extract detection box vectors from the localization results
