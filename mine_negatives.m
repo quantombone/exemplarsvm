@@ -1,5 +1,4 @@
-function [m,mining_queue] = mine_negatives(m, mining_queue, bg, ...
-                                           mining_params, iteration)
+function [m,mining_queue] = mine_negatives(m, mining_queue)
 %% Mine negatives (for a set of models, but only one works
 %% currently) and update the current classifiers inside models 
 %%
@@ -19,9 +18,9 @@ if ~isfield(m.model,'wtrace')
   m.model.btrace{1} = m.model.b;
 end
 
-if mining_params.skip_mine == 0
+if m.mining_params.skip_mine == 0
   [hn, mining_queue, mining_stats] = ...
-      load_hn_fg({m}, mining_queue, bg, mining_params);
+      load_hn_fg({m}, mining_queue, m.bg, m.mining_params);
   
   m = add_new_detections(m, cat(2,hn.xs{1}{:}), cat(1,hn.bbs{1}{:}));
 else
@@ -30,12 +29,11 @@ else
 end
 
    
-m = update_the_model(m, mining_params, ...
-                     iteration, mining_stats, bg);
+m = update_the_model(m, mining_stats);
 
-dump_figures(m,mining_params);
-function [m] = update_the_model(m,mining_params, ...
-                                iteration, mining_stats, bg)
+dump_figures(m);
+
+function [m] = update_the_model(m, mining_stats)
 
 %% UPDATE the current SVM and show the results
 m.iteration = m.iteration + 1;
@@ -45,7 +43,7 @@ else
   m.mining_stats{end+1} = mining_stats;
 end
 
-[m] = do_svm(m, mining_params);
+[m] = do_svm(m);
 %m = do_rank(m,mining_params);
 
 wex = m.model.w(:);
@@ -67,8 +65,8 @@ end
 svs = find(r >= -1.0000);
 
 %KEEP 3#SV vectors (but at most max_negatives of them)
-total_length = ceil(mining_params.beyond_nsv_multiplier*length(svs));
-total_length = min(total_length,mining_params.max_negatives);
+total_length = ceil(m.mining_params.beyond_nsv_multiplier*length(svs));
+total_length = min(total_length,m.mining_params.max_negatives);
 
 [alpha,beta] = sort(r,'descend');
 svs = beta(1:min(length(beta),total_length));
@@ -80,7 +78,7 @@ m.model.svbbs = m.model.svbbs(svs,:);
 m.model.wtrace{end+1} = m.model.w;
 m.model.btrace{end+1} = m.model.b;
 
-function dump_figures(m,mining_params)
+function dump_figures(m)
 
 % figure(1)
 % clf
@@ -95,7 +93,6 @@ function dump_figures(m,mining_params)
 %                     m.objectid,m.iteration),'-dpng'); 
 % end
 
-
 figure(2)
 clf
 Isv1 = get_sv_stack(m,7);
@@ -105,11 +102,12 @@ axis off
 title('Exemplar Weights + Sorted Matches')
 drawnow
 
-if (mining_params.dump_images == 1) || ...
-      (mining_params.dump_last_image == 1 && ...
-       m.iteration == mining_params.MAXITER)
+if (m.mining_params.dump_images == 1) || ...
+      (m.mining_params.dump_last_image == 1 && ...
+       m.iteration == m.mining_params.MAXITER)
 
   imwrite(Isv1,sprintf('%s/%s.%d_iter_I=%05d.png', ...
-                    mining_params.final_directory,m.curid,...
-                    m.objectid,m.iteration),'png');
+                    m.mining_params.final_directory, m.curid,...
+                    m.objectid, m.iteration), 'png');
 end
+

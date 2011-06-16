@@ -45,8 +45,9 @@ for i = 1:length(mining_queue)
   
   numpassed = numpassed + 1;
 
-  [tmp,curid,tmp] = fileparts(bg{index});
-  curid_integer = str2num(curid);
+  %[tmp,curid,tmp] = fileparts(bg{index});
+  %curid_integer = str2num(curid);
+  curid_integer = index;
   
   for q = 1:length(rs.bbs)
     if ~isempty(rs.bbs{q})

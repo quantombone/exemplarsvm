@@ -7,14 +7,14 @@ function [Iex,alphamask,Icb] = get_exemplar_icon(models,index,flip,subind)
 if ~exist('subind','var')
   subind = 1;
 else
-  flip = models{index}.model.target_bb(subind,7);
+  flip = models{index}.model.bb(subind,7);
 end
 
 if ~exist('flip','var')
   flip = 0;
 end
 
-cb = models{index}.model.target_bb(subind,1:4);
+cb = models{index}.model.bb(subind,1:4);
 d1 = max(0,1 - cb(1));
 d2 = max(0,1 - cb(2));
 d3 = max(0,cb(3) - models{index}.sizeI(2));
@@ -32,7 +32,7 @@ if isfield(models{index},'I')
   Iex = Iex(cb(2):cb(4),cb(1):cb(3),:);
   
 
-  cb = models{index}.model.target_bb(subind,1:4);
+  cb = models{index}.model.bb(subind,1:4);
   Icb = pad_image(I, PADDER);
   cb = round(cb + PADDER);
   Icb = Icb(cb(2):cb(4),cb(1):cb(3),:);
@@ -49,10 +49,11 @@ else
     cb = round(cb + PADDER);
     Iex = Iex(cb(2):cb(4),cb(1):cb(3),:);
     
-    cb = models{index}.model.target_bb(subind,1:4);
+    cb = models{index}.model.bb(subind,1:4);
     Icb = pad_image(I, PADDER);
     cb = round(cb + PADDER);
     Icb = Icb(cb(2):cb(4),cb(1):cb(3),:);
+ 
   catch
     fprintf(1,'get exemplar icon bug?\n');
     keyboard

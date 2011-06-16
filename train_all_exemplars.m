@@ -21,10 +21,6 @@ files = dir([initial_directory '*' cls '*.mat']);
 
 mining_params.final_directory = final_directory;
 
-% Chunk the data into EX_PER_CHUNK exemplars per chunk so that we
-% process several images, then write results for entire chunk
-%inds = do_partition(1:length(files),EX_PER_CHUNK);
-
 % randomize chunk orderings
 myRandomize;
 ordering = randperm(length(files));
@@ -34,10 +30,12 @@ for i = 1:length(ordering)
   filer = sprintf('%s/%s',initial_directory, files(ordering(i)).name);
   m = load(filer);
   m = m.m;
+  m.mining_params = mining_params;
+  m.bg = bg;
     
   %Append '-svm' to the mode to create the models name
   m.models_name = sprintf('%s-svm',mode);
-  m.iteration = 0;
+  m.iteration = 1;
 
   % Create a naming scheme for saving files
   filer2fill = sprintf('%s/%%s.%s.%d.%s.mat',final_directory, ...
@@ -57,41 +55,34 @@ for i = 1:length(ordering)
     continue
   end
 
-  mining_queue = initialize_mining_queue(bg);
+  mining_queue = initialize_mining_queue(m.bg);
   
   % The mining queue is the ordering in which we process new images  
   keep_going = 1;
 
-  %% This is the id of the chunk file we are about to write, it is
-  %% not the same as the exemplar iteration, since each mine step
-  %% won't necessarily update an iteration for every single exemplar
-  FILEID = 0;
-  
   while keep_going == 1
-    FILEID = FILEID + 1;
-
+  
     %Get the name of the next chunk file to write
-    filer2 = sprintf(filer2fill,num2str(FILEID));
+    filer2 = sprintf(filer2fill,num2str(m.iteration));
       
-    [m, mining_queue] = ...
-        mine_negatives(m, mining_queue, bg, mining_params, ...
-                       FILEID);
+    [m, mining_queue] = mine_negatives(m, mining_queue);
   
     total_mines = sum(cellfun(@(x)x.num_visited,mining_queue));
     if ((total_mines >= mining_params.MAX_TOTAL_MINED_IMAGES) || ...
           (length(mining_queue) == 0))
       fprintf(1,'Mined enough images, rest up\n');
       keep_going = 0;
+      
       %bump up filename to final file
       filer2 = filer2final;
     end
 
     %Save the current result
-    save(filer2,'m','mining_queue');
+    save(filer2,'m','mining_queue','total_mines');
   
     %delete old files
-    if FILEID > 1
-      for q = 1:FILEID-1
+    if m.iteration > 1
+      for q = 1:m.iteration-1
         filer2old = sprintf(filer2fill,num2str(q));
         if fileexists(filer2old)
           delete(filer2old);

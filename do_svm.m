@@ -1,4 +1,4 @@
-function [m] = do_svm(m,mining_params)
+function [m] = do_svm(m)
 %Perform SVM learning for a single exemplar model, we assume that
 %the exemplar has a set of detections loaded in m.model.svxs and m.model.svbbs
 %Durning Learning, we can apply some pre-processing such as PCA or
@@ -14,6 +14,8 @@ if length(m.model.mask(:)) ~= numel(m.model.w)
   m.model.mask = repmat(m.model.mask,[1 1 features]);
   m.model.mask = logical(m.model.mask(:));
 end
+
+mining_params = m.mining_params;
 
 %% look into the object inds to figure out which subset of the data
 %% is actually hard negatives for mining

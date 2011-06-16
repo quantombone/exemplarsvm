@@ -1,4 +1,6 @@
-function [model,bbox] = new10model(I, bbox, init_params)
+function model = initialize_fixedframe_model(I, bbox, ...
+                                             init_params)
+%Initialize exemplars
 SBIN = init_params.SBIN;
 hg_size = init_params.hg_size;
 K = init_params.topK;

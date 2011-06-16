@@ -76,11 +76,11 @@ for i = 1:length(e_set)
   
   [model] = init_function(I,bbox,init_params);
   
-  curid_double = str2double(curid);
-  if isnan(curid_double)
-    error(sprintf('Cannot convert curid=%s into double\n',curid_double));
-  end
-  model.target_bb(:,11) = curid_double;
+  % curid_double = str2double(curid);
+  % if isnan(curid_double)
+  %   error(sprintf('Cannot convert curid=%s into double\n',curid_double));
+  % end
+  % model.target_bb(:,11) = curid_double;
   
   clear m
   m.curid = curid;
