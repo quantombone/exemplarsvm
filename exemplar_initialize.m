@@ -1,4 +1,5 @@
-function exemplar_initialize(e_set, init_params, init_function)
+function exemplar_initialize(e_set, init_function, init_params, ...
+                             dataset_params, models_name)
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
 % is parallelizable (and dalalizable!)  
@@ -13,11 +14,10 @@ function exemplar_initialize(e_set, init_params, init_function)
 % mode: mode name 
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
-VOCinit;
 
 %Only allow display to be enabled on a machine with X
 [v,r] = unix('hostname');
-if strfind(r, VOCopts.display_machine)==1
+if strfind(r, dataset_params.display_machine)==1
   display = 1;
 else
   display = 0;
@@ -40,7 +40,7 @@ end
 %else
 
 results_directory = ...
-    sprintf('%s/%s/',VOCopts.localdir, init_params.mode);
+    sprintf('%s/%s/',dataset_params.localdir, models_name);
 
 if ~exist(results_directory,'dir')
   fprintf(1,'Making directory %s\n',results_directory);
@@ -62,7 +62,8 @@ for i = 1:length(e_set)
   objectid = e_set{i}.objectid;    
   anno = e_set{i}.anno;
   bbox = e_set{i}.bbox;
-  curid = e_set{i}.curid;
+
+  [tmp,curid,tmp] = fileparts(e_set{i}.I);
   
   fprintf(1,'.');
     
@@ -83,6 +84,8 @@ for i = 1:length(e_set)
   % model.target_bb(:,11) = curid_double;
   
   clear m
+  %Save filename (or original image)
+  m.I = e_set{i}.I;
   m.curid = curid;
   m.objectid = objectid;
   m.cls = cls;    
@@ -90,6 +93,7 @@ for i = 1:length(e_set)
   
   m.model = model;
   m.sizeI = size(I);
+  m.models_name = models_name;
   
   %Print the bounding box overlap between the initial window and
   %the final window

@@ -1,11 +1,11 @@
-function allbbs = show_top_dets(models, grid, target_directory, finalstruct)
+function allbbs = show_top_dets(dataset_params, models, grid, fg, finalstruct)
 %% Show the top detections for the exemplar model inside models,
 %% where grid is the set of detections, target_directory is 'test',
 %% and finalstruct (which contains final boxes) is obtained from the
 %% evaluate_pascal_voc_grid script
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-VOCinit;
+%VOCinit;
 %finalstruct.basedir = '/nfs/baikal/tmalisie/labelme400/www/voc/iccv11/VOC2007/newones/';
 
 allbbs = cell(0,1);
@@ -15,6 +15,7 @@ final_maxos = finalstruct.final_maxos;
 %if enabled we show images
 saveimages = 0;
 
+if 0
 %% prune grid to contain only images from target_directory
 [cur_set, gt] = textread(sprintf(VOCopts.imgsetpath,target_directory),['%s' ...
                     ' %d']);
@@ -30,6 +31,7 @@ end
 gridids = cellfun2(@(x)x.curid,grid);
 goods = find(ismember(gridids,cur_set));
 grid = grid(goods);
+end
 
 imids = cell(1,length(final_boxes));
 for i = 1:length(final_boxes)
@@ -75,13 +77,11 @@ end
 counter = 1;
 maxk = 100;
 KKK = [1 1];
-
 counter = 1;
 
 for k = 1:maxk
   k
-  %figure(1)
-  %clf
+
   for i = 1:prod(KKK)
     if counter > length(bb)
       break;
@@ -89,15 +89,23 @@ for k = 1:maxk
     curb = bb(counter);
     curid = grid{imids(curb)}.curid;
 
-    I = im2double(imread(sprintf(VOCopts.imgpath,curid)));
-    gtrecs = PASreadrecord(sprintf(VOCopts.annopath,curid));
-    businds = find(ismember({gtrecs.objects.class},{'bus'}) & ~[gtrecs.objects.difficult]);
-    gtbbs = cat(1,gtrecs.objects.bbox);
-    gtbbs = gtbbs(businds,:);
+    %keyboard
+    I = convert_to_I(fg{grid{imids(curb)}.index});
+    %I = im2double(imread(sprintf(VOCopts.imgpath,curid)));
+
+    TARGET_BUS = -1;
+
+    if TARGET_BUS > 0
+      gtrecs = PASreadrecord(sprintf(VOCopts.annopath,curid));
+      businds = find(ismember({gtrecs.objects.class},{'bus'}) & ~[gtrecs.objects.difficult]);
+      gtbbs = cat(1,gtrecs.objects.bbox);
+      gtbbs = gtbbs(businds,:);
+    else
+      businds = [];
+    end
 
     bbox = bbs(curb,:);
 
-    TARGET_BUS = -1;
     if length(businds) > 0
       [alpha,beta] = max(getosmatrix_bb(gtbbs,bbox));
       TARGET_BUS = businds(beta);
@@ -123,9 +131,9 @@ for k = 1:maxk
       estring = 'withbetas';
     end
     
-    stuff.filer = sprintf(['/nfs/baikal/tmalisie/labelme400/www/voc/'...
-                    'segxfer/%s%s-on-%s-%s-%d.eps'],...
-                          models{1}.cls,extra,target_directory,estring,k);
+    % stuff.filer = sprintf(['/nfs/baikal/tmalisie/labelme400/www/voc/'...
+    %                 'segxfer/%s%s-on-%s-%s-%d.eps'],...
+    %                       models{1}.cls,extra,target_directory,estring,k);
     ccc = bbox(6);
     
     target_image_id = imids(bb(counter));
@@ -152,6 +160,8 @@ for k = 1:maxk
     mean0 = mean(allbb,1);
     curoses = getosmatrix_bb(mean0(1,:),allbb);
     
+    stuff.I = I;
+    
     for zzz = 1:min(1,size(allbb,1))
 
       exemplar_overlay = exemplar_inpaint(allbb(zzz,:), ...
@@ -166,8 +176,6 @@ for k = 1:maxk
     end
     sumI = sumI ./ repmat(countI,[1 1 3]);
     
-
-
     if TARGET_BUS > -1
       %% load GT for test 
       %gtfiles = dir(sprintf(['/nfs/baikal/tmalisie/buslabeling/' ...

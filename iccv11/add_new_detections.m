@@ -5,10 +5,11 @@ function m = add_new_detections(m, xs, bbs)
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 %First iteration might not have support vector information stored
-if ~isfield(m.model, 'svxs')
+if ~isfield(m.model, 'svxs') || isempty(m.model.svxs)
   m.model.svxs = [];
   m.model.svbbs = [];
 end
+
 
 m.model.svxs = cat(2,m.model.svxs,xs);
 m.model.svbbs = cat(1,m.model.svbbs,bbs);

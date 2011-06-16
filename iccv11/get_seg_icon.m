@@ -1,5 +1,11 @@
 function [Iex,alphamask] = get_seg_icon(models,index)
 
+%% FUNCTION DISABLED
+fprintf(1,'get seg icon disabled\n');
+Iex = [];
+alphamask = [];
+return;
+
 model = models{index};
 
 STEAL_SEGMENTATION = 1;

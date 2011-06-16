@@ -1,7 +1,7 @@
 function show_hits_figure(models,topboxes,I,extraI,extraI2)
 %Show a figure with the detections of the exemplar svm model
 %Tomasz Malisiewicz(tomasz@cmu.edu)
-VOCinit;
+
 
 topboxes = topboxes(1:min(5,size(topboxes,1)),:);
 % if ~exist('score_masks','var')

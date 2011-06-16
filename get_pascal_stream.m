@@ -1,8 +1,6 @@
-function fg = get_pascal_stream(set, cls)
+function fg = get_pascal_stream(set, cls, VOCopts, MAXLENGTH)
 %Create an exemplar stream, such that each element fg{i} contains
 %these fields: (I, bbox, cls, curid, [objectid], [anno])
-
-VOCinit;
 
 basedir = sprintf('%s/%s/',VOCopts.localdir,'streams');
 if ~exist(basedir,'dir')
@@ -13,6 +11,11 @@ if fileexists(streamname)
   fprintf(1,'Loading %s\n',streamname);
   load(streamname);
   return;
+end
+
+%The maximum number of exemplars to process
+if ~exist('MAXLENGTH','var')
+  MAXLENGTH = 1000000;
 end
 
 %% Load ids of all images in trainval that contain cls
@@ -44,11 +47,18 @@ for i = 1:length(ids)
     res.I = filename;
     res.bbox = recs.objects(objectid).bbox;
     res.cls = cls;
-    res.curid = curid;
+    %res.curid = curid;
     res.objectid = objectid;
     res.anno = recs.objects(objectid);
+    
+    res.filer = sprintf('%s.%d.%s.mat', curid, objectid, cls);
 
     fg{end+1} = res;
+    
+    if length(fg) == MAXLENGTH
+      save(streamname,'fg');
+      return;
+    end
   end
 end
 

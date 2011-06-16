@@ -1,35 +1,62 @@
-clear
+%clear
 
 %Choose the VOC category
 cls = 'tvmonitor';
 
 %Choose a short string to indicate the type of training run we are doing
-mode = 'f';
+models_name = 'f';
+
+%Choose Fixed-Frame initialization function, and its parameters
+init_function = @initialize_fixedframe_model;
+init_params.sbin = 8;
+init_params.hg_size = [8 8];
+
+%Choose Goal-Cells initialize function, and its parameters
+% init_function = @initialize_goalsize_model;
+% init_params.sbin = 8;
+% init_params.goal_ncells = 100;
+
+%devkitroot is where we write all the result files
+dataset_params.dataset = 'VOC2007';
+dataset_params.devkitroot = ['/nfs/baikal/tmalisie/summer11/' dataset_params.dataset];;
+dataset_params.wwwdir = [dataset_params.devkitroot '/www/'];
+
+%This is the directory where we dump visualizations into
+[v,r] = unix('hostname');
+if strfind(r,'airbone')==1
+  dataset_params.datadir ='/projects/Pascal_VOC/';
+  dataset_params.display_machine = 'airbone';
+else
+  dataset_params.datadir ='/nfs/hn38/users/sdivvala/Datasets/Pascal_VOC/';
+  dataset_params.display_machine = 'onega';
+end
+
+%dataset_params.dataset='VOC2010';
+
+
+% change this path to a writable local directory for the example code
+dataset_params.localdir=[dataset_params.devkitroot '/local/'];
+
+% change this path to a writable directory for your results
+dataset_params.resdir=[dataset_params.devkitroot ['/' ...
+                    'results/']];
+
+dataset_params = VOCinit(dataset_params);
 
 %get the exemplar stream from VOC
-e_set = get_pascal_stream('trainval', cls);
-
-%take only first 5 objects
-e_set = e_set(1:5);
-
-init_params.mode = mode;
-init_params.SBIN = 8;
-init_params.hg_size = [8 8];
-init_params.topK = 1;
-init_params.ADD_LR = 0;
-init_function = @initialize_fixedframe_model;
-
-% init_params.mode = mode;
-% init_params.SBIN = 8;
-% init_params.GOAL_NCELLS = 100;
-% init_function = @initialize_goalsize_model;
+stream_set_name = 'trainval';
+MAX_NUM_EX = 5;
+e_stream_set = get_pascal_stream(stream_set_name, cls, dataset_params, MAX_NUM_EX);
 
 %Initialize exemplars with the exemplar stream
-exemplar_initialize(e_set,init_params,init_function);
+exemplar_initialize(e_stream_set,init_function,init_params, ...
+                    dataset_params,models_name);
+
+models = load_all_models(cls,models_name,dataset_params,1);
 
 %get the negative set for training
-neg_set = get_pascal_bg('train',['-' cls]);
-neg_set = neg_set(1:3);
+train_set = get_pascal_bg('train',['-' cls],dataset_params);
+train_set = train_set(1:3);
 
 %Get the default mining parameters
 mining_params = get_default_mining_params;
@@ -43,11 +70,33 @@ mining_params.extract_negatives = 0;
 mining_params.alternate_validation = 0;
 mining_params.MAX_WINDOWS_BEFORE_SVM = 40;
 
-train_all_exemplars(cls, mode, neg_set, mining_params);
+train_all_exemplars(models, train_set, mining_params, ...
+                    dataset_params);
 
+models_name = [models_name '-svm'];
+
+%Load the trained outputs
+models = load_all_models(cls,models_name,dataset_params, 1);
+
+curset_name = 'trainval';
+val_set = get_pascal_bg(curset_name,cls,dataset_params);
+val_set = val_set(1:10);
+
+dataset_params.display_machine = '';
+
+M = [];
+apply_voc_exemplars(models,dataset_params,...
+                    val_set,curset_name,...
+                    M,@get_pascal_anno_function);
+
+grid = load_result_grid(models, dataset_params, curset_name);
+
+[results,finalstruct] = evaluate_pascal_voc_grid(dataset_params, models, ...
+                                           grid, curset_name, M);
+
+allbbs = show_top_dets(dataset_params, models, grid, val_set, finalstruct);
 return;
 %get the application set for calibration
-val_set = get_pascal_bg('trainval');
 
-%get the testing set for evaluation
-test_set = get_pascal_bg('test');
+%Get the testing set for evaluation
+test_set = get_pascal_bg('test','',dataset_params);

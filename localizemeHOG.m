@@ -85,7 +85,7 @@ ws = cellfun2(@(x)x.model.w,models);
 bs = cellfun2(@(x)x.model.b,models);
 
 %NOTE: all exemplars in this set must have the same sbin
-sbin = models{1}.model.params.sbin;
+sbin = models{1}.model.init_params.sbin;
 t = get_pyramid(I, sbin, length(models), localizeparams);
 
 resstruct.padder = t.padder;
@@ -232,7 +232,7 @@ for i = 1:length(models)
   template_masks(:,:,i) = double(sum(t.^2,3)>0);
 end
 
-sbin = models{1}.model.params.sbin;
+sbin = models{1}.model.init_params.sbin;
 t = get_pyramid(I, sbin, length(models), localizeparams);
 resstruct.padder = t.padder;
 

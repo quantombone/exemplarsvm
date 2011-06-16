@@ -1,7 +1,7 @@
 function NR=show_hits_figure_iccv(models,topboxes,I,extraI,exemplar_overlay,gtim)
 %Show a figure with the detections of the exemplar svm model
 %Tomasz Malisiewicz(tomasz@cmu.edu)
-VOCinit;
+%VOCinit;
 
 topboxes = topboxes(1:min(5,size(topboxes,1)),:);
 % if ~exist('score_masks','var')
@@ -19,7 +19,9 @@ topboxes = topboxes(1:min(5,size(topboxes,1)),:);
 colors = jet(size(topboxes,1));
 colors = colors(end:-1:1,:);
 
-add_one = 1;
+%if enabled, try to transfer objects too
+%add_one = 1;
+add_one = 0;
 
 % if isfield(exemplar_overlay,'friendbb') & ...
 %       size(exemplar_overlay.friendbb,1)>0

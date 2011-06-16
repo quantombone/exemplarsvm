@@ -1,4 +1,4 @@
-function bg = get_pascal_bg(target_directory, class, kill_image_id)
+function bg = get_pascal_bg(target_directory, class, VOCopts)
 %% Get a PASCAL dataset from the 'train','trainval', or 'test' set
 %% if class is "motorcycle" choose only images containing motorcycle
 %% if class is "-car" chose only images not containing cars
@@ -10,7 +10,7 @@ if nargin ==1 && strcmp(target_directory,'both')
   return;  
 end
 
-VOCinit;
+%VOCinit;
 if ~exist('target_directory','var');
   target_directory = 'train';
 end

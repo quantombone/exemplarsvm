@@ -1,14 +1,16 @@
-function train_all_exemplars(cls, mode, bg, mining_params)
+function train_all_exemplars(models, train_set, mining_params, dataset_params)
 %% Train models with hard negatives for all exemplars written to
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
-VOCinit;
+
+models_name = models{1}.models_name;
+new_models_name = [models_name '-svm'];
 
 initial_directory = ...
-    sprintf('%s/%s/',VOCopts.localdir,mode);
+    sprintf('%s/%s/',dataset_params.localdir,models_name);
 
 final_directory = ...
-    sprintf('%s/%s-svm/',VOCopts.localdir,mode);
+    sprintf('%s/%s/',dataset_params.localdir,new_models_name);
 
 %make results directory if needed
 if ~exist(final_directory,'dir')
@@ -16,27 +18,32 @@ if ~exist(final_directory,'dir')
 end
 
 %Find all initial files of the current class/mode
-files = dir([initial_directory '*' cls '*.mat']);
+%files = dir([initial_directory '*' cls '*.mat']);
 %files = dir([initial_directory '*000540.1*.mat']);
 
 mining_params.final_directory = final_directory;
 
 % randomize chunk orderings
 myRandomize;
-ordering = randperm(length(files));
+ordering = randperm(length(models));
+models = models(ordering);
 
-for i = 1:length(ordering)
+for i = 1:length(models)
 
-  filer = sprintf('%s/%s',initial_directory, files(ordering(i)).name);
-  m = load(filer);
-  m = m.m;
+  %filer = sprintf('%s/%s',initial_directory, files(ordering(i)).name);
+  %m = load(filer);
+  %m = m.m;
+  m = models{i};
+  
+  %% Add bg, mining_params, and dataset_params to this exemplar
+  m.train_set = train_set;
   m.mining_params = mining_params;
-  m.bg = bg;
-    
-  %Append '-svm' to the mode to create the models name
-  m.models_name = sprintf('%s-svm',mode);
-  m.iteration = 1;
+  m.dataset_params = dataset_params;
 
+  %Append '-svm' to the mode to create the models name
+  m.models_name = new_models_name;
+  m.iteration = 1;
+  
   % Create a naming scheme for saving files
   filer2fill = sprintf('%s/%%s.%s.%d.%s.mat',final_directory, ...
                        m.curid, ...
@@ -55,7 +62,7 @@ for i = 1:length(ordering)
     continue
   end
 
-  mining_queue = initialize_mining_queue(m.bg);
+  mining_queue = initialize_mining_queue(m.train_set);
   
   % The mining queue is the ordering in which we process new images  
   keep_going = 1;

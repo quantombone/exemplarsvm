@@ -29,7 +29,7 @@ top(:,1:4) = 0;
 
 for i = 1:size(boxes,1)
   d = boxes(i,:);
-  c = models{boxes(i,6)}.model.coarse_box; %(1,:);
+  c = models{boxes(i,6)}.model.bb(1,1:4); %(1,:);
   gt = models{boxes(i,6)}.gt_box;
   
   %find the xform from c to d

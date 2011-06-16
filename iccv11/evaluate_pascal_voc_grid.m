@@ -1,5 +1,5 @@
 function [results,final] = ...
-    evaluate_pascal_voc_grid(models,grid,target_directory,M)
+    evaluate_pascal_voc_grid(VOCopts,models,grid,target_directory,M)
 %% Evaluate PASCAL VOC detection task with the models, their output
 %% firings grid, on the set target_directory which can be either
 %% 'trainval' or 'test'
@@ -13,7 +13,7 @@ function [results,final] = ...
 %   grid{i}.extras.os = grid{i}.extras.os(goods,:);
 % end
 
-VOCinit;
+%VOCinit;
 VOCopts.testset = target_directory;
 
 calib_string = '';
@@ -191,8 +191,12 @@ clf
   
 axis([0 1 0 1]);
 
+if ~exist(VOCopts.wwwdir,'dir')
+  mkdir(VOCopts.wwwdir);
+end
+
 filer = sprintf(['%s/%s-%s%s-on-%s-ap=%.5f.png'], ...
-                VOCopts.dumpdir, ...
+                VOCopts.wwwdir, ...
                 models{1}.cls,...
                 models{1}.models_name,...
                 calib_string, ...

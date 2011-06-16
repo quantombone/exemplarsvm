@@ -20,7 +20,7 @@ end
 
 if m.mining_params.skip_mine == 0
   [hn, mining_queue, mining_stats] = ...
-      load_hn_fg({m}, mining_queue, m.bg, m.mining_params);
+      load_hn_fg({m}, mining_queue, m.train_set, m.mining_params);
   
   m = add_new_detections(m, cat(2,hn.xs{1}{:}), cat(1,hn.bbs{1}{:}));
 else

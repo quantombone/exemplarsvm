@@ -1,10 +1,11 @@
 function model = initialize_fixedframe_model(I, bbox, ...
                                              init_params)
 %Initialize exemplars
-SBIN = init_params.SBIN;
+sbin = init_params.sbin;
 hg_size = init_params.hg_size;
-K = init_params.topK;
 
+K = 1;
+ADD_LR = 0;
 %Note: here we need to be able to convert curid into a double (only
 %works for VOC???)
 
@@ -14,7 +15,7 @@ K = init_params.topK;
     
   %   [tmp,model2] = new10model(flip_image(I), ...
   %                             flip_box(bbox, size(I)), ...
-  %                             SBIN, hg_size, newK,curid);
+  %                             sbin, hg_size, newK,curid);
   %   x2 = model2.x;
   %   t2 = model2.target_id;
   %   for j = 1:length(t2)
@@ -27,14 +28,15 @@ K = init_params.topK;
     
   % end
 
-
 rawbox = bbox;
+
+bbox = slight_expand(bbox);
 bbox = squareize_bbox(bbox);
 
 %Compute pyramid and all bounding boxes
 clear t
 params.lpo = 10;
-[t.hog, t.scales] = featpyramid2(I, SBIN, params);  
+[t.hog, t.scales] = featpyramid2(I, sbin, params);  
 t.padder = 2;
 
 allbb = cell(length(t.hog),1);
@@ -52,7 +54,7 @@ for level = 1:length(t.hog)
   vvv = rawvvv - t.padder;
   
   bb = ([vvv uuu vvv+hg_size(2) uuu+hg_size(1)] -1) * ...
-       SBIN/t.scales(level) + 1;
+       sbin/t.scales(level) + 1;
   bb(:,3:4) = bb(:,3:4) - 1;
   
   allbb{level} = bb;
@@ -101,20 +103,22 @@ for q = 1:K
 end
 
 I2 = I*0;
-rawbox = clip_to_image(rawbox,[1 1 size(I,2) size(I,1)]);
+rawbox = clip_to_image(slight_expand(rawbox),[1 1 size(I,2) size(I,1)]);
+
 I2(rawbox(2):rawbox(4),rawbox(1):rawbox(3),:) = 1;
 oks = find(I2(:));
 I2(oks) = rand(size(oks));
 I2 = resize(I2,bbs{1}(8));
 
-f2 = features_raw(I2,SBIN);
+f2 = features_raw(I2,sbin);
 f2 = padarray(f2,[t.padder+1 t.padder+1 0]);
 f2 = f2(bbs{1}(9)+(1:hg_size(1))-1+t.padder,...
         bbs{1}(10)+(1:hg_size(2))-1+t.padder,:);
 
 fmask = sum(f2.^2,3)>0;
 
-model.params.sbin = SBIN;
+%model.params.sbin = sbin;
+model.init_params = init_params;
 model.hg_size = [hg_size(1) hg_size(2) features];
 %model.coarse_box = allbb(order(1),:);
 
@@ -162,4 +166,16 @@ elseif h < w
   bbox(2) = bbox(2) - left;
 end
 
+
+function bbox = slight_expand(bbox,fraction)
+if ~exist('fraction','var')
+  fraction = 0;
+end
+offset1 = (bbox(3)-bbox(1))*fraction;
+offset2 = (bbox(4)-bbox(2))*fraction;
+bbox(1) = bbox(1) - offset1;
+bbox(3) = bbox(3) + offset1;
+
+bbox(2) = bbox(2) - offset2;
+bbox(4) = bbox(4) + offset2;
 

@@ -1,4 +1,4 @@
-function apply_voc_exemplars(models,M,curset)
+function apply_voc_exemplars(models,dataset_params,fg,setname,M,gt_function)
 % Apply a set of models (raw exemplars, trained exemplars, dalals,
 % poselets, components, etc) to a set of images.  Script can be ran in
 % parallel with no arguments.  After running script, use
@@ -14,21 +14,21 @@ function apply_voc_exemplars(models,M,curset)
 %Save results every NIMS_PER_CHUNK images
 NIMS_PER_CHUNK = 10;
 
-VOCinit;
-if ~exist('curset','var')
-  curset = 'both';
-end
+%VOCinit;
+%if ~exist('curset','var')
+%  curset = 'both';
+%end
 %curset = 'trainval';
 
 %Load stripped exemplars for this class
-if ~exist('models','var')
-  [cls,DET_TYPE] = load_default_class;
-  models = load_all_models(cls,[DET_TYPE '-stripped']);
-end
+%if ~exist('models','var')
+%  [cls,DET_TYPE] = load_default_class;
+%  models = load_all_models(cls,[DET_TYPE '-stripped']);
+%end
 
 %Only allow display to be enabled on a machine with X
 [v,r] = unix('hostname');
-if strfind(r,VOCopts.display_machine)==1
+if strfind(r,dataset_params.display_machine)==1
   display = 1;
 else
   display = 0;
@@ -52,32 +52,32 @@ end
 %  localizeparams.thresher = -2.5;
 %end
 
-fprintf(1,'Loading default set of images\n');
-if display == 1
-  %If display is enabled, we must be on a machine running X, thus
-  %we apply results on in-class images from trainval
-  curset = 'test';%'trainval';
-  curcls = models{1}.cls;  
-  %curcls = '';
+% fprintf(1,'Loading default set of images\n');
+% if display == 1
+%   %If display is enabled, we must be on a machine running X, thus
+%   %we apply results on in-class images from trainval
+%   curset = 'test';%'trainval';
+%   curcls = models{1}.cls;  
+%   %curcls = '';
 
-  %curcls = 'horse';
-  %curcls = 'car';
-  %curcls = 'bus';
-  %curcls = 'tvmonitor';
+%   %curcls = 'horse';
+%   %curcls = 'car';
+%   %curcls = 'bus';
+%   %curcls = 'tvmonitor';
   
-  bg = get_pascal_bg(curset,sprintf('%s',curcls));
-  %even better yet, we apply on the images from where the models
-  %came from
-  %bg = cellfun2(@(x)sprintf(VOCopts.imgpath,x.curid),models);
-else
-  bg = get_pascal_bg(curset);
-  fprintf(1,'bg length is %d\n',length(bg));
-end
+%   bg = get_pascal_bg(curset,sprintf('%s',curcls));
+%   %even better yet, we apply on the images from where the models
+%   %came from
+%   %bg = cellfun2(@(x)sprintf(dataset_params.imgpath,x.curid),models);
+% else
+%   bg = get_pascal_bg(curset);
+%   fprintf(1,'bg length is %d\n',length(bg));
+% end
 
-setname = [curset '.' models{1}.cls];
+setname = [setname '.' models{1}.cls];
 lrstring = '';
 
-baser = sprintf('%s/applied/%s-%s/',VOCopts.localdir,setname, ...
+baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,setname, ...
                 models{1}.models_name);
 
 if ~exist(baser,'dir') && (display == 0)
@@ -87,7 +87,7 @@ end
 
 %% Chunk the data into NIMS_PER_CHUNK images per chunk so that we
 %process several images, then write results for entire chunk
-inds = do_partition(1:length(bg),NIMS_PER_CHUNK);
+inds = do_partition(1:length(fg),NIMS_PER_CHUNK);
 
 % randomize chunk orderings
 myRandomize;
@@ -115,7 +115,7 @@ for i = 1:length(ordering)
   fprintf(1,'Preloading %d images\n',length(inds{ordering(i)}));
   clear Is;
   for j = 1:length(inds{ordering(i)})
-    Is{j} = convert_to_I(bg{inds{ordering(i)}(j)});
+    Is{j} = convert_to_I(fg{inds{ordering(i)}(j)});
     %Is{j} = max(0.0,min(1.0,imresize(Is{j},1.2)));
   end
   
@@ -123,11 +123,8 @@ for i = 1:length(ordering)
 
     index = inds{ordering(i)}(j);
     fprintf(1,'   ---image %d\n',index);
-    Iname = bg{index};
+    Iname = fg{index};
     [tmp,curid,tmp] = fileparts(Iname);
-    
-    %convert image id into an integer
-    curid_integer = str2num(curid);
     
     I = Is{j};
        
@@ -136,7 +133,7 @@ for i = 1:length(ordering)
     
     for q = 1:length(rs.bbs)
       if ~isempty(rs.bbs{q})
-        rs.bbs{q}(:,11) = curid_integer;
+        rs.bbs{q}(:,11) = index;
       end
     end
         
@@ -204,28 +201,12 @@ for i = 1:length(ordering)
     res{j}.extras = extras;
     res{j}.imbb = [1 1 size(I,2) size(I,1)];
     res{j}.curid = curid;
+
+    %%%NOTE: this is VOC specific stuff
     
-    %Iname = bg{index};
-    %[tmp,curid,tmp] = fileparts(Iname);
-        
-    %try
-    % get GT objects for this image
-    recs = PASreadrecord(sprintf(VOCopts.annopath,curid));
-    
-    % get overlaps with all ground-truths (makes sense for VOC
-    % images only)
-    gtbb = cat(1,recs.objects.bbox);
-    os = getosmatrix_bb(boxes,gtbb);
-    cats = {recs.objects.class};
-    [tmp,cats] = ismember(cats,VOCopts.classes);
-    
-    [alpha,beta] = max(os,[],2);
-    extras.maxos = alpha;
-    extras.maxind = beta;
-    extras.maxclass = cats(beta);
-    res{j}.extras = extras;
-    %catch
-    %end    
+    if exist('gt_function','var')
+      res{j}.extras = gt_function(dataset_params,Iname,res{j}.bboxes);
+    end 
   end
   
 

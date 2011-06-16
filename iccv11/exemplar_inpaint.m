@@ -17,12 +17,14 @@ STEAL_SEGMENTATION = 0;
 %if enabled, steal 3D
 STEAL_3D = 0;
 
-VOCinit;
+%VOCinit;
 
 
 curid = model.curid;
 curid = stuff.curid;
-I = im2double(imread(sprintf(VOCopts.imgpath, curid)));
+I = stuff.I;
+%I = convert_to_I(model.I);
+%I = im2double(imread(sprintf(VOCopts.imgpath, curid)));
 
 if 0
 recs = PASreadrecord(sprintf(VOCopts.annopath, curid));
@@ -55,7 +57,9 @@ if 0 %strcmp(model.cls,'bus')
   [Iex,alphamask] = get_geometry_icon({model},1);
 else
   %[Iex,alphamask] = get_exemplar_icon({model},1);
-  Iex = im2double(imread(sprintf(VOCopts.imgpath,model.curid)));
+  %Iex = im2double(imread(sprintf(VOCopts.imgpath,model.curid)));
+  %Iex = I;
+  Iex = convert_to_I(model.I);
   alphamask = ones(size(Iex,1),size(Iex,2),1);
 end
 

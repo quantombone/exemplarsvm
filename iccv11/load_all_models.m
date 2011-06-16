@@ -1,11 +1,15 @@
-function [models] = load_all_models(cls, DET_TYPE)
-%Load all trained models of a specified class 'cls' and specified
-%type 'DET_TYPE' from a models directory.
+function [models] = load_all_models(cls, DET_TYPE, dataset_params, ...
+                                    CACHE_FILE, STRIP_FILE)
+%Load all trained models of a specified class 'cls' and
+%type 'DET_TYPE' from a models directory.  If CACHE_FILE is enabled
+%(defaults to turned off), then will try to load/save a cached
+%file. if STRIP_FILE is enabled, then save a stripped file (raw
+%detectors only saved)
 
 %Tomasz Malisiewicz (tomasz@cmu.edu)
-if ~exist('cls','var') || length(cls) == 0
-  [cls,DET_TYPE] = load_default_class;
-end
+% if ~exist('cls','var') || length(cls) == 0
+%   [cls,DET_TYPE] = load_default_class;
+% end
 
 %Define the type of classifiers we want to load (exemplars, dalals)
 % if ~exist('DET_TYPE','var')
@@ -24,13 +28,17 @@ end
 
 %if enabled, we cache result on disk to facilitate loading at a
 %later stage (NOTE: these files might have to be removed manually)
-CACHE_FILE = 1;
+if ~exist('CACHE_FILE','var')
+  CACHE_FILE = 0;
+end
 
-VOCinit;
+if ~exist('STRIP_FILE','var')
+  STRIP_FILE = 0;
+end
 
 if CACHE_FILE == 1
   cache_dir =  ...
-      sprintf('%s/models/',VOCopts.localdir);
+      sprintf('%s/models/',dataset_params.localdir);
   
   if ~exist(cache_dir,'dir')
     mkdir(cache_dir);
@@ -50,7 +58,7 @@ if CACHE_FILE == 1
 end
 
 results_directory = ...
-    sprintf('%s/%s/',VOCopts.localdir,DET_TYPE);
+    sprintf('%s/%s/',dataset_params.localdir,DET_TYPE);
 
 dirstring = [results_directory '*' cls '*.mat'];
 files = dir(dirstring);
@@ -125,11 +133,15 @@ fprintf(1,'\n');
 %   fprintf(1,'finished making nn file\n');
 % end
 
-if CACHE_FILE==1 && (nargout==0)
+if CACHE_FILE==1
   fprintf(1,'Loaded models, saving to %s\n',cache_file);
   save(cache_file,'models');
-  models_save = models;
-  models = strip_model(models);
-  save(cache_file_stripped,'models');
-  models = models_save;
+  
+  if STRIP_FILE == 1
+    models_save = models;
+    models = strip_model(models);
+    fprintf(1,'Saving stripped to %s\n',cache_file_stripped);
+    save(cache_file_stripped,'models');
+    models = models_save;
+  end
 end

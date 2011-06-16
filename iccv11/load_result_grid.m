@@ -1,15 +1,15 @@
-function grid = load_result_grid(models,curset,curthresh)
+function grid = load_result_grid(models,dataset_params,setname,curthresh)
 %Given a set of models, return a grid of results from those models' firings
 %on the subset of images (target_directory is 'trainval' or 'test')
 %[curthresh]: only keep detections above this number (-1.1 for
 %esvm, .5 for vis-reg)
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
-VOCinit;
+%VOCinit;
 
 
 % final_dir = ...
-%     sprintf('%s/grids',VOCopts.localdir);
+%     sprintf('%s/grids',dataset_params.localdir);
 % if ~exist(final_dir,'dir')
 %   mkdir(final_dir);
 % end
@@ -20,21 +20,21 @@ VOCinit;
 % end
 
 % final_file = ...
-%     sprintf('%s/grids/%s_%s_grid.mat',VOCopts.localdir,'both',models{1}.cls);
+%     sprintf('%s/grids/%s_%s_grid.mat',dataset_params.localdir,'both',models{1}.cls);
 
-if ~exist('curset','var')
-  curset = 'both'
-end
+% if ~exist('curset','var')
+%   curset = 'both'
+% end
 
 if ~exist('curthresh','var')
   curthresh = -1.1;
 end
 
 %curset = 'trainval';
-curcls = models{1}.cls;
-setname = [curset '.' curcls];
 
-final_file = sprintf('%s/applied/%s-%s.mat',VOCopts.localdir,setname, ...
+setname = [setname '.' models{1}.cls];
+
+final_file = sprintf('%s/applied/%s-%s.mat',dataset_params.localdir,setname, ...
                      models{1}.models_name);
 
 % if fileexists(final_file)
@@ -62,8 +62,8 @@ final_file = sprintf('%s/applied/%s-%s.mat',VOCopts.localdir,setname, ...
   %curset = 'trainval'
  
   %curset = 'both'
-  curcls = models{1}.cls;
-  setname = [curset '.' curcls];% models{1}.cls];
+  %curcls = models{1}.cls;
+  %setname = [curset '.' curcls];% models{1}.cls];
 %end
 
 
@@ -77,7 +77,7 @@ final_file = sprintf('%s/applied/%s-%s.mat',VOCopts.localdir,setname, ...
 %   models_name = 'dalal';
 % end
 
-baser = sprintf('%s/applied/%s-%s/',VOCopts.localdir,setname, ...
+baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,setname, ...
                 models{1}.models_name);
 fprintf(1,'base directory: %s\n',baser);
 

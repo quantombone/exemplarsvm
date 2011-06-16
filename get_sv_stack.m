@@ -52,9 +52,9 @@ svims = cell(N,1);
 
 %PADDER = 100;
 
-VOCinit;
+%VOCinit;
 for i = 1:length(ucurids)
-  Ibase = convert_to_I(m.bg{ucurids(i)});
+  Ibase = convert_to_I(m.train_set{ucurids(i)});
   
   hits = find(svbbs(:,11)==ucurids(i));
   for j = 1:length(hits)
@@ -80,12 +80,8 @@ for i = 1:length(ucurids)
   end
 end
 
-VOCinit;
-%try
-[aaa,bbb,Ibase] = get_exemplar_icon({m},1);
-%catch
-%  Ibase = zeros(m.model.hg_size(1)*10,m.model.hg_size(2)*10,3);
-%end
+%Get the exemplar frame icon
+[tmp,tmp,Ibase] = get_exemplar_icon({m},1);
 
 newsize = [size(Ibase,1) size(Ibase,2)];
 newsize = 100/newsize(1) * newsize;
