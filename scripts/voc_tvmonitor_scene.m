@@ -47,7 +47,7 @@ dataset_params = VOCinit(dataset_params);
 
 %get the exemplar stream from VOC
 stream_set_name = 'trainval';
-MAX_NUM_EX = 5;
+MAX_NUM_EX = 20;
 e_stream_set = get_pascal_scene_stream(stream_set_name, cls, dataset_params, MAX_NUM_EX);
 
 %Initialize exemplars with the exemplar stream
@@ -58,7 +58,7 @@ models = load_all_models(cls,models_name,dataset_params,1);
 
 %get the negative set for training
 train_set = get_pascal_bg('train',['-' cls],dataset_params);
-train_set = train_set(1:50);
+train_set = train_set(1:5);
 
 %Get the default mining parameters
 mining_params = get_default_mining_params;
@@ -85,7 +85,7 @@ models = load_all_models(cls,models_name,dataset_params, 1);
 
 curset_name = 'trainval';
 val_set = get_pascal_bg(curset_name,cls,dataset_params);
-val_set = val_set(1:200);
+val_set = val_set(1:20);
 
 dataset_params.display_machine = '';
 %No calibration parameters yet
