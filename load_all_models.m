@@ -60,10 +60,10 @@ if CACHE_FILE == 1
   end  
 end
 
-results_directory = ...
-    sprintf('%s/models/%s/',dataset_params.localdir,DET_TYPE);
-
 if isempty(files)
+  results_directory = ...
+    sprintf('%s/models/%s-%s/',dataset_params.localdir,cls,DET_TYPE);
+
   dirstring = [results_directory '*' cls '*.mat'];
   files = dir(dirstring);
   fprintf(1,'Pattern of files to load: %s\n',dirstring);

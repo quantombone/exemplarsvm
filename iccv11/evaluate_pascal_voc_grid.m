@@ -44,16 +44,26 @@ if ~exist(aaa,'dir')
 end
 
 fprintf(1,'Writing File %s\n',filer);
-fid = fopen(filer,'w');
-for i = 1:length(final.final_boxes)
-  curid = grid{i}.curid;
-  for q = 1:size(final.final_boxes{i},1)
-    fprintf(fid,'%s %f %f %f %f %f\n',curid,...
-            final.final_boxes{i}(q,end),...
-            final.final_boxes{i}(q,1:4));
+filerlock = [filer '.lock'];
+if fileexists(filer) || (mymkdir_dist(filerlock)==0)
+  
+else
+  
+  fid = fopen(filer,'w');
+  for i = 1:length(final.final_boxes)
+    curid = grid{i}.curid;
+    for q = 1:size(final.final_boxes{i},1)
+      fprintf(fid,'%s %f %f %f %f %f\n',curid,...
+              final.final_boxes{i}(q,end),...
+              final.final_boxes{i}(q,1:4));
+    end
   end
+  fclose(fid);
+  rmdir(filerlock);
 end
-fclose(fid);
+
+%make sure filer is present in order to continue here
+wait_until_all_present({filer});
 
 %fprintf(1,'HACK: changing OVERLAP HERE!\n');
 %VOCopts.minoverlap = .4;

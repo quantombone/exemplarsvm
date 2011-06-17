@@ -1,7 +1,7 @@
-%clear
+function voc_tvmonitor_scene
 
 %Choose the VOC category
-cls = 'bus';
+cls = 'sofa';
 
 scenestring = 'exemplar';
 stream_f = @get_pascal_exemplar_stream;
@@ -21,7 +21,7 @@ init_params.hg_size = [8 8];
 init_params.goal_ncells = 100;
 
 stream_set_name = 'trainval';
-MAX_NUM_EX = 40;
+MAX_NUM_EX = 1000;
 
 training_function = @do_svm;
 
@@ -44,13 +44,13 @@ NIMS_PER_CHUNK = 4;
 
 valset_name = 'trainval';
 valset_name2 = cls;
-valset_maxk = 50;
+valset_maxk = 5000;
 val_gt_function = @get_pascal_anno_function;
 val_params = get_default_param_f();
 
 testset_name = 'test';
 testset_name2 = cls;
-testset_maxk = 50;
+testset_maxk = 5000;
 test_gt_function = @get_pascal_anno_function;
 test_params = get_default_param_f();
 

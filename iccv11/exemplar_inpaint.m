@@ -9,7 +9,7 @@ MAXOS_THRESH = .2;
 SHOW_TITLES = 0;
 
 %if enabled, show top friend`
-SHOW_FRIENDS = 1;
+SHOW_FRIENDS = 0;
 
 %if enabled, steal segmentation
 STEAL_SEGMENTATION = 0;

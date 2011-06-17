@@ -40,7 +40,8 @@ end
 %else
 
 results_directory = ...
-    sprintf('%s/models/%s/',dataset_params.localdir, models_name);
+    sprintf('%s/models/%s-%s/',dataset_params.localdir, e_set{1}.cls, ...
+            models_name);
 
 if ~exist(results_directory,'dir')
   fprintf(1,'Making directory %s\n',results_directory);

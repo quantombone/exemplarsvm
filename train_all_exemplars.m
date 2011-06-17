@@ -12,7 +12,9 @@ new_models_name = [models_name '-svm'];
 %    sprintf('%s/%s/',dataset_params.localdir,models_name);
 
 final_directory = ...
-    sprintf('%s/models/%s/',dataset_params.localdir,new_models_name);
+    sprintf('%s/models/%s-%s/',dataset_params.localdir,...
+            models{1}.cls,...
+            new_models_name);
 
 %make results directory if needed
 if ~exist(final_directory,'dir')
