@@ -1,28 +1,11 @@
-function grid = load_result_grid(models,dataset_params,setname,curthresh)
+function grid = load_result_grid(models,dataset_params,setname,files,curthresh)
 %Given a set of models, return a grid of results from those models' firings
 %on the subset of images (target_directory is 'trainval' or 'test')
 %[curthresh]: only keep detections above this number (-1.1 for
 %esvm, .5 for vis-reg)
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
-
-% final_dir = ...
-%     sprintf('%s/grids',dataset_params.localdir);
-% if ~exist(final_dir,'dir')
-%   mkdir(final_dir);
-% end
-
-% if ~exist('models','var')  
-%   [cls,mode] = load_default_class;
-%   models = load_all_models(cls,mode);
-% end
-
-% final_file = ...
-%     sprintf('%s/grids/%s_%s_grid.mat',dataset_params.localdir,'both',models{1}.cls);
-
-% if ~exist('curset','var')
-%   curset = 'both'
-% end
+wait_until_all_present(files,5);
 
 if ~exist('curthresh','var')
   curthresh = -1.1;
@@ -39,41 +22,12 @@ if fileexists(final_file)
   return;
 end
 
-% if ~exist('models','var')
-%   error('Need to specify models');
-
-%   models = load_all_models_chunks('train','exemplars2','100');  
-%   %fprintf(1,['Need some models, cannot continue without one' ...
-%   %           ' argument\n']);
-%   %grid = [];
-%   %return;
-% end
-
-%if ~exist('bg','var')
-%fprintf(1,'Loading default set of images\n');
-%[bg,setname] = default_testset;
-%bg = eval(models{1}.fg);
-%setname = 'sketchfg';
-%curset = 'trainval'
-
-%curset = 'both'
-%curcls = models{1}.cls;
-%setname = [curset '.' curcls];% models{1}.cls];
-%end
-
-% if ~exist('setname','var')
-%   [bg,setname] = default_testset;
-% end
-
-% if ismember(models{1}.models_name,{'dalal'})
-%   models_name = 'dalal';
-% end
-
 baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,setname, ...
                 models{1}.models_name);
 fprintf(1,'base directory: %s\n',baser);
 
-files = dir([baser 'result*mat']);
+%with the dir command partial results could be loaded 
+%files = dir([baser 'result*mat']);
 grid = cell(1,length(files));
 
 for i = 1:length(files)
@@ -81,8 +35,9 @@ for i = 1:length(files)
     fprintf(1,'%d/%d\n',i,length(files));
   end
   
-  filer = sprintf('%s/%s', ...
-                  baser,files(i).name);
+  %filer = sprintf('%s/%s', ...
+  %                baser,files(i).name);
+  filer = files{i};
   stuff = load(filer);
   grid{i} = stuff;
   
@@ -99,7 +54,6 @@ for i = 1:length(files)
       grid{i}.res{j}.coarse_boxes = ...
           grid{i}.res{j}.coarse_boxes(goods,:);
     
-    
       if ~isempty(grid{i}.res{j}.extras)
         grid{i}.res{j}.extras.maxos = ...
             grid{i}.res{j}.extras.maxos(goods);
@@ -110,11 +64,8 @@ for i = 1:length(files)
         grid{i}.res{j}.extras.maxclass = ...
             grid{i}.res{j}.extras.maxclass(goods);
       end
-      
     end
-
   end
-
 end
 
 %Prune away files which didn't load
@@ -127,7 +78,6 @@ grid = [grid2{:}];
 
 [aa,bb] = sort(cellfun(@(x)x.index,grid));
 grid = grid(bb);
-
 
 lockfile = [final_file '.lock'];
 if fileexists(final_file) || (mymkdir_dist(lockfile) == 0)

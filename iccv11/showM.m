@@ -15,14 +15,23 @@ for i = 1:length(models)
   title(sprintf('Source exemplar %d',i))
   
   for q = 1:15
-    if aa(q) <= 1.0
-      continue
+    if aa(q) == 0
+      break
     end
     subplot(4,4,q+1)
-    imagesc(get_exemplar_icon(models,bb(q)))
+
+    flipper = 0;
+    if bb(q) > length(models)
+      bb(q) = bb(q) - length(models);
+      flipper = 1;
+      I=flip_image(get_exemplar_icon(models,bb(q)));
+    else
+      I=get_exemplar_icon(models,bb(q));
+    end
+    imagesc(I)
     axis image
     axis off
-    title(sprintf('Friend %d s=%.3f',bb(q),aa(q)))
+    title(sprintf('%d.%d %.3f',bb(q),flipper,aa(q)))
   end
   
   pause

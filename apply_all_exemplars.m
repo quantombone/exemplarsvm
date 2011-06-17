@@ -1,4 +1,5 @@
-function apply_all_exemplars(models,dataset_params,fg,setname,M,default_params,gt_function)
+function allfiles = apply_all_exemplars(...
+    models,dataset_params,fg,setname,M,default_params,gt_function)
 % Apply a set of models (raw exemplars, trained exemplars, dalals,
 % poselets, components, etc) to a set of images.  Script can be ran in
 % parallel with no arguments.  After running script, use
@@ -103,11 +104,14 @@ end
 
 [v,host_string]=unix('hostname');
 
+allfiles = cell(length(ordering), 1);
+
 for i = 1:length(ordering)
 
   ind1 = inds{ordering(i)}(1);
   ind2 = inds{ordering(i)}(end);
   filer = sprintf('%s/result_%05d-%05d.mat',baser,ind1,ind2);
+  allfiles{i} = filer;
   filerlock = [filer '.lock'];
 
   if display == 0
@@ -222,8 +226,7 @@ for i = 1:length(ordering)
     res{j}.curid = curid;
 
     %%%NOTE: this is VOC specific stuff
-    
-    if exist('gt_function','var')
+    if exist('gt_function','var') && ~isempty(gt_function)
       res{j}.extras = gt_function(dataset_params,Iname,res{j}.bboxes);
     end 
   end
@@ -239,3 +242,5 @@ for i = 1:length(ordering)
     end
   end  
 end
+
+[allfiles,bb] = sort(allfiles);

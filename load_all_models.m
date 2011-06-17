@@ -26,17 +26,8 @@ function [models] = load_all_models(cls, DET_TYPE, files, dataset_params, ...
 %   FINAL_PREFIX = '100';
 % end
 
-if ~isempty(files)
-  while 1
-    missingfile = cellfun(@(x)~fileexists(x),files);
-    if sum(missingfile) == 0
-      break;
-    else
-      fprintf(1,'%d File(s) missing, waiting for it to appear\n',sum(missingfile));
-      pause(5)
-    end
-  end
-end
+wait_until_all_present(files,5);
+
 
 %if enabled, we cache result on disk to facilitate loading at a
 %later stage (NOTE: these files might have to be removed manually)

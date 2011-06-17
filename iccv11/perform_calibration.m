@@ -1,4 +1,4 @@
-function [betas,ALL_bboxes] = perform_calibration(models, grid)
+function [betas,ALL_bboxes] = perform_calibration(models, grid, dataset_params)
 % Perform calibration by learning the sigmoid parameters (linear
 % transformation of svm scores) for each model independently. If we
 % perform an operation such as NMS, we will now have "comparable"
@@ -34,9 +34,11 @@ display = 0;
 % if display is enabled and dump_images is enabled, then dump images into DUMPDIR
 dump_images = 0;
 
-VOCinit;
-DUMPDIR = sprintf('%s/%s/%s/',VOCopts.dumpdir,VOCopts.dataset,models{1}.cls);
-if ~exist(DUMPDIR,'dir')
+
+DUMPDIR = sprintf('%s/www/calib/%s-%s/',dataset_params.localdir,...
+                  dataset_params.dataset,models{1}.cls,models{1}.models_name);
+
+if dump_images==1 && ~exist(DUMPDIR,'dir')
   mkdir(DUMPDIR);
 end
 % show A NxN grid of top detections (if display is turned on)
@@ -48,7 +50,7 @@ if nargin < 1
 end
 
 % final_dir = ...
-%     sprintf('%s/betas',VOCopts.localdir);
+%     sprintf('%s/betas',dataset_params.localdir);
 
 % if ~exist('fg','var')
 %   fprintf(1,'Loading default set of images\n');
@@ -71,9 +73,8 @@ if strcmp(setname,'voc')
   %target_directory = 'train';
   fprintf(1,'Using VOC set so performing calibration with set: %s\n',target_directory);
   
-  
   %% prune grid to contain only images from target_directory
-  [cur_set, gt] = textread(sprintf(VOCopts.imgsetpath,target_directory),['%s' ...
+  [cur_set, gt] = textread(sprintf(dataset_params.imgsetpath,target_directory),['%s' ...
                     ' %d']);
   
   gridids = cellfun2(@(x)x.curid,grid);
@@ -100,7 +101,7 @@ end
 
 final_file = ...
     sprintf('%s/betas/%s_betas.mat',...
-            VOCopts.localdir,models{1}.cls);
+            dataset_params.localdir,models{1}.cls);
 
 CACHE_BETAS = 0;
 if CACHE_BETAS == 1 && fileexists(final_file)
@@ -123,8 +124,7 @@ targets = 1:length(models);
 
 cls = models{1}.cls;
 
-VOCinit;
-targetc = find(ismember(VOCopts.classes,models{1}.cls));
+targetc = find(ismember(dataset_params.classes,models{1}.cls));
 
 fprintf(1,'processing boxes\n');
 for i = 1:length(grid)    
@@ -286,7 +286,7 @@ for exid = 1:length(models)
       Iex = im2double(models{exid}.I);  
     else
       %try pascal VOC image
-      Iex = im2double(imread(sprintf(VOCopts.imgpath, ...
+      Iex = im2double(imread(sprintf(dataset_params.imgpath, ...
                                      models{exid}.curid)));
     end
     imagesc(Iex)
@@ -317,7 +317,7 @@ for exid = 1:length(models)
     % figure(446)
     % clf
     % for jjj = 1:25
-    %   I = convert_to_I(sprintf(VOCopts.imgpath,...
+    %   I = convert_to_I(sprintf(dataset_params.imgpath,...
     %               sprintf('%06d',bbs(bb(jjj),11))));
     %   curbb = bbs_show(jjj,:); %bbs(bb(jjj),:);
     %   subplot(5,5,jjj)
@@ -329,7 +329,7 @@ for exid = 1:length(models)
 
     if 0
     VOCinit;
-    curdir = sprintf('%s/visual_regression_trainval/',VOCopts.wwwdir);
+    curdir = sprintf('%s/visual_regression_trainval/',dataset_params.wwwdir);
     if ~exist(curdir,'dir')
       mkdir(curdir);
     end
@@ -355,7 +355,7 @@ for exid = 1:length(models)
     Iex = im2double(models{exid}.I);  
   else
     %try pascal VOC image
-    Iex = im2double(imread(sprintf(VOCopts.imgpath, ...
+    Iex = im2double(imread(sprintf(dataset_params.imgpath, ...
                                    models{exid}.curid)));
   end
   
@@ -433,7 +433,7 @@ for exid = 1:length(models)
     end
     
     curI = convert_to_I(fg{all_bb(beta(aaa),5)});   
-    %curI = imread(sprintf(VOCopts.imgpath,sprintf('%06d', ...
+    %curI = imread(sprintf(dataset_params.imgpath,sprintf('%06d', ...
     %                                              all_bb(beta(aaa),5))));
     %curI = im2double(curI);
     

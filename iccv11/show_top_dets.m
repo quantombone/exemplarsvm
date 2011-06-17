@@ -7,10 +7,10 @@ function allbbs = show_top_dets(dataset_params, models, grid, fg, set_name, ...
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if ~exist('maxk','var')
-  maxk = 100;
+  maxk = 20;
 end
 
-allbbs = cell(0,1);
+
 final_boxes = finalstruct.unclipped_boxes;
 final_maxos = finalstruct.final_maxos;
 
@@ -69,7 +69,6 @@ if 0
                                           extradir,...
                                           x.curid, ...
                                           x.objectid)),models(bbs(bb,6)));
-
   bb = bb(find(has_3d));
 end
 
@@ -86,16 +85,19 @@ for k = 1:maxk
       break;
     end
     
-    wwwdir = sprintf('%s/www/%s.%s-%s/',dataset_params.localdir,...
+    wwwdir = sprintf('%s/www/%s.%s-%s%s/',dataset_params.localdir,...
                      set_name, models{1}.cls, ...
-                     models{1}.models_name);
+                     models{1}.models_name,finalstruct.calib_string);
     if ~exist(wwwdir,'dir')
       mkdir(wwwdir);
     end
     
+    
+    allbbs(k,:) = bbs(bb(counter),:);
     filer = sprintf('%s/%05d.pdf',wwwdir,k);
     filerlock = [filer '.lock'];
     if fileexists(filer) || (mymkdir_dist(filerlock) == 0)
+      counter = counter + 1;
       continue
     end
 
@@ -228,8 +230,6 @@ for k = 1:maxk
 
     drawnow
     
-
-
 %     output.I = I;
 %     output.result = exemplar_overlay.segI;
 %     output.WARNINGgt = gtim;
@@ -255,7 +255,7 @@ for k = 1:maxk
     filer2(end-2:end) = 'png';
     print(gcf,'-dpng',filer2);
    
-    allbbs{end+1} = allbb;
+
     
     %paintfiler = ...
     %     sprintf('%s/%s.%d.%s.png',basedir, ...

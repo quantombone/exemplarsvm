@@ -26,7 +26,7 @@ end
    
 m = update_the_model(m, mining_stats, training_function);
 
-dump_figures(m);
+%dump_figures(m);
 
 function [m] = update_the_model(m, mining_stats, training_function)
 %% UPDATE the current SVM, keep max number of svs, and show the results

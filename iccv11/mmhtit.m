@@ -1,25 +1,21 @@
-function [M] = mmhtit(models,grid,M)
+function M = mmhtit(models,grid,dataset_params)
 %% Learn a combination matrix M which multiplexes the detection
 %% results by compiling co-occurrence statistics on true positives
-
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-VOCinit;
-
 if ~exist('M','var')
-  betas = perform_calibration(models, grid);
+  betas = perform_calibration(models, grid, dataset_params);
   M.betas = betas;
 end
 
+% target_directory = 'trainval';
+% %% prune grid to contain only images from target_directory
+% [cur_set, gt] = textread(sprintf(VOCopts.imgsetpath,target_directory),['%s' ...
+%                     ' %d']);
 
-target_directory = 'trainval';
-%% prune grid to contain only images from target_directory
-[cur_set, gt] = textread(sprintf(VOCopts.imgsetpath,target_directory),['%s' ...
-                    ' %d']);
-
-gridids = cellfun2(@(x)x.curid,grid);
-goods = ismember(gridids,cur_set);
-grid = grid(goods);
+% gridids = cellfun2(@(x)x.curid,grid);
+% goods = ismember(gridids,cur_set);
+% grid = grid(goods);
 
 if length(grid) == 0
   error(sprintf('Found no images of type %s\n',results_directory))
@@ -43,7 +39,7 @@ maxos = cell(1,length(grid));
 if REMOVE_SELF == 0
   fprintf(1,'Warning: Not removing self-hits\n');
 end
-curcls = find(ismember(VOCopts.classes,models{1}.cls));
+curcls = find(ismember(dataset_params.classes,models{1}.cls));
 
 fprintf(1,'Loading bboxes\n');
 tic

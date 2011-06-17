@@ -40,7 +40,7 @@ mining_params.SAVE_SVS = 0;
 
 %default detection threshold
 mining_params.thresh = -1;
-mining_params.TOPK = 50;
+mining_params.TOPK = 10;
 
 %How much we pad the pyramid (to let detections fall outside the image)
 mining_params.pyramid_padder = 5;

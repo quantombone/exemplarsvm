@@ -1,4 +1,4 @@
-function final = pool_results(models,grid,M)
+function final = pool_results(dataset_params,models,grid,M)
 %% Perform pos-processing and pool final results (which are ready
 %to go into the PASCAL evaluation code)
 
@@ -16,7 +16,7 @@ bboxes = cell(1,length(grid));
 maxos = cell(1,length(grid));
 
 fprintf(1,'Loading bboxes\n');
-%curcls = find(ismember(VOCopts.classes,models{1}.cls));
+curcls = find(ismember(dataset_params.classes,models{1}.cls));
 
 for i = 1:length(grid)  
   curid = grid{i}.curid;
@@ -25,23 +25,23 @@ for i = 1:length(grid)
     continue
   end
   
-  %if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
-  %  maxos{i} = grid{i}.extras.maxos;
-  %  maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
-  %end
+  if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
+    maxos{i} = grid{i}.extras.maxos;
+    maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
+  end
   
   if REMOVE_SELF == 1
     %% remove self from this detection image!!! LOO stuff!
     exes = bboxes{i}(:,6);
     excurids = curids(exes);
     badex = find(ismember(excurids,{curid}));
-    %badones = ismember(excurids,badex);
     bboxes{i}(badex,:) = [];
-    %if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
-    %  if length(maxos{i})>0
-    %    maxos{i}(badones) = [];
-    %  end
-    %end
+    
+    if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
+      if length(maxos{i})>0
+        maxos{i}(badex) = [];
+      end
+    end
   end
 end
 
@@ -91,9 +91,9 @@ for i = 1:length(bboxes)
   if size(bboxes{i},1) > 0
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
     bboxes{i} = nms(bboxes{i},.5);
-    %if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
-    %  maxos{i} = maxos{i}(bboxes{i}(:,5));
-    %end
+    if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
+      maxos{i} = maxos{i}(bboxes{i}(:,5));
+    end
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
   end
 end
@@ -110,4 +110,14 @@ final_boxes = bboxes;
 final.final_boxes = final_boxes;
 final.final_maxos = maxos;
 final.unclipped_boxes = unclipped_boxes;
-%final.raw_boxes = raw_boxes;
+
+calib_string = '';
+if exist('M','var') && length(M)>0 && isfield(M,'betas')
+   calib_string = '-calibrated';
+end
+
+if exist('M','var') && length(M)>0 && isfield(M,'betas') && isfield(M,'w')
+  calib_string = [calib_string '-M'];
+end
+
+final.calib_string = calib_string;
