@@ -31,7 +31,6 @@ dump_figures(m);
 function [m] = update_the_model(m, mining_stats, training_function)
 %% UPDATE the current SVM, keep max number of svs, and show the results
 
-m.iteration = m.iteration + 1;
 if ~isfield(m,'mining_stats')
   m.mining_stats{1} = mining_stats;
 else

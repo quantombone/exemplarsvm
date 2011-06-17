@@ -107,6 +107,8 @@ for i = 1:length(models)
       fprintf(1,' ##Breaking because we reached end\n');
       break;
     end
+    
+    m.iteration = m.iteration + 1;
   end %iteratiion
     
   rmdir(filerlock);

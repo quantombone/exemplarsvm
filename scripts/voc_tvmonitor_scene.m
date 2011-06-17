@@ -1,7 +1,7 @@
 %clear
 
 %Choose the VOC category
-cls = 'car';
+cls = 'dog';
 
 %Choose a short string to indicate the type of training run we are doing
 models_name = 'fscene';
@@ -46,7 +46,6 @@ dataset_params.resdir=[dataset_params.devkitroot ['/' ...
 
 dataset_params = VOCinit(dataset_params);
 
-
 %get the exemplar stream from VOC
 stream_set_name = 'trainval';
 MAX_NUM_EX = 30;
@@ -85,7 +84,7 @@ models = load_all_models(cls,models_name,tfiles,dataset_params, 1);
 
 curset_name = 'trainval';
 val_set = get_pascal_bg(curset_name,cls,dataset_params);
-val_set = val_set(1:100);
+val_set = val_set(1:30);
 
 dataset_params.display_machine = '';
 %No calibration parameters yet

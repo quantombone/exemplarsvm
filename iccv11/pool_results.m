@@ -2,6 +2,13 @@ function final = pool_results(models,grid,M)
 %% Perform pos-processing and pool final results (which are ready
 %to go into the PASCAL evaluation code)
 
+%REMOVE FIRINGS ON SELF-IMAGE (these create artificially high scores)
+REMOVE_SELF = 1;
+
+if REMOVE_SELF == 1
+  curids=cellfun2(@(x)x.curid,models);
+end
+
 cls = models{1}.cls;
 
 excurids = cellfun2(@(x)x.curid,models);
@@ -22,6 +29,20 @@ for i = 1:length(grid)
   %  maxos{i} = grid{i}.extras.maxos;
   %  maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
   %end
+  
+  if REMOVE_SELF == 1
+    %% remove self from this detection image!!! LOO stuff!
+    exes = bboxes{i}(:,6);
+    excurids = curids(exes);
+    badex = find(ismember(excurids,{curid}));
+    %badones = ismember(excurids,badex);
+    bboxes{i}(badex,:) = [];
+    %if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
+    %  if length(maxos{i})>0
+    %    maxos{i}(badones) = [];
+    %  end
+    %end
+  end
 end
 
 %raw_boxes = bboxes;
