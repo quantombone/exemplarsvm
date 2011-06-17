@@ -15,12 +15,17 @@ setname = [setname '.' models{1}.cls];
 
 final_file = sprintf('%s/applied/%s-%s.mat',dataset_params.localdir,setname, ...
                      models{1}.models_name);
+lockfile = [final_file '.lock'];
 
-if fileexists(final_file)
+if fileexists(final_file) || (mymkdir_dist(lockfile)==0)
+  wait_until_all_present({lockfile},5,1);
   fprintf(1,'Loading final file %s\n',final_file);
   load(final_file);
   return;
 end
+
+%if we got here, then the final file isn't there, and we were able
+%to write a lock file successfully
 
 baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,setname, ...
                 models{1}.models_name);
@@ -79,14 +84,12 @@ grid = [grid2{:}];
 [aa,bb] = sort(cellfun(@(x)x.index,grid));
 grid = grid(bb);
 
-lockfile = [final_file '.lock'];
-if fileexists(final_file) || (mymkdir_dist(lockfile) == 0)
-  return;
-end
 
+%if fileexists(final_file) || (mymkdir_dist(lockfile) == 0)
+%  wait_until_all_present({final_file},5);
+%  return;
+%else
 save(final_file,'grid');
 if exist(lockfile,'dir')
   rmdir(lockfile);
 end
-
-%fprintf(1,'Got to end of load result grid function\n');

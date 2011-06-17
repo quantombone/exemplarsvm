@@ -1,7 +1,9 @@
-function voc_tvmonitor_scene
+function voc_tvmonitor_scene(cls)
 
-%Choose the VOC category
-cls = 'sofa';
+if ~exist('cls','var')
+  %Choose the VOC category
+  cls = 'sofa';
+end
 
 scenestring = 'exemplar';
 stream_f = @get_pascal_exemplar_stream;
