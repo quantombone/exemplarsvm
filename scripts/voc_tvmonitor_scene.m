@@ -21,7 +21,7 @@ init_params.hg_size = [8 8];
 init_params.goal_ncells = 100;
 
 stream_set_name = 'trainval';
-MAX_NUM_EX = 10;
+MAX_NUM_EX = 40;
 
 training_function = @do_svm;
 
