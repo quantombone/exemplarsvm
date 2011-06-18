@@ -20,7 +20,15 @@ lockfile = [final_file '.lock'];
 if fileexists(final_file) || (mymkdir_dist(lockfile)==0)
   wait_until_all_present({lockfile},5,1);
   fprintf(1,'Loading final file %s\n',final_file);
-  load(final_file);
+  while 1
+    try
+      load(final_file);
+      break;
+    catch
+      fprintf(1,'cannot load, sleeping for 5, trying again\n');
+      pause(5);
+    end
+  end
   return;
 end
 

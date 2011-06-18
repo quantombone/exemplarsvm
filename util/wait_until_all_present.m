@@ -6,12 +6,14 @@ if ~exist('PAUSE_TIME','var')
   PAUSE_TIME = 5;
 end
 
-TARGET = 0;
+
 
 if ~exist('invert','var')
-  invert = 0;
+  TARGET = 0;
 elseif invert==1
   TARGET = length(files);
+else
+  error(sprintf('invert must be absent or 1'));
 end
 
 while 1
@@ -19,6 +21,7 @@ while 1
   if sum(missingfile) == TARGET
     break;
   else
+    files(find(missingfile))
     fprintf(1,['%03d File(s) missing [should be %d', ...
                'waiting %d sec until re-try\n'], ...
                sum(missingfile),TARGET, PAUSE_TIME);

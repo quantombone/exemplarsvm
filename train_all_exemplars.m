@@ -83,7 +83,8 @@ for i = 1:length(models)
       
     m = mine_train_iteration(m, training_function);
 
-    total_mines = m.mining_stats{end}.total_mines;
+    total_mines = sum(cellfun(@(x)x.total_mines,m.mining_stats));
+    %total_mines = m.mining_stats{end}.total_mines;
     if ((total_mines >= mining_params.MAX_TOTAL_MINED_IMAGES) || ...
           (length(m.mining_queue) == 0))
       fprintf(1,'Mined enough images, rest up\n');
