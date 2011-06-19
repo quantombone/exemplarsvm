@@ -63,8 +63,7 @@ for i = 1:length(e_set)
  
   I = convert_to_I(e_set{i}.I);
   cls = e_set{i}.cls;
-  objectid = e_set{i}.objectid;    
-  anno = e_set{i}.anno;
+  objectid = e_set{i}.objectid;
   bbox = e_set{i}.bbox;
 
   [tmp,curid,tmp] = fileparts(e_set{i}.I);

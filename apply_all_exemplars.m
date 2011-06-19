@@ -93,6 +93,7 @@ end
 
 %% Chunk the data into NIMS_PER_CHUNK images per chunk so that we
 %process several images, then write results for entire chunk
+
 inds = do_partition(1:length(fg),NIMS_PER_CHUNK);
 
 % randomize chunk orderings

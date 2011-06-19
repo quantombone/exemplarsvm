@@ -21,10 +21,13 @@ while 1
   if sum(missingfile) == TARGET
     break;
   else
-    files(find(missingfile))
-    fprintf(1,['%03d File(s) missing [should be %d', ...
+    missings = find(missingfile);
+    fprintf(1,['%03d File(s) missing [should be %d]', ...
                'waiting %d sec until re-try\n'], ...
                sum(missingfile),TARGET, PAUSE_TIME);
+    for q = 1:length(missings)
+      fprintf(1,' --missing %s\n',files{missings(q)});
+    end
     pause(PAUSE_TIME);
   end
 end

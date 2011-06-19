@@ -1,49 +1,26 @@
 function allbbs = show_top_dets(dataset_params, models, grid, fg, set_name, ...
                                 finalstruct, maxk)
-% Show the top detections for [models]
-% where grid is the set of detections, target_directory is 'test',
-% and finalstruct (which contains final boxes) is obtained from the
-% evaluate_pascal_voc_grid script
+% Show the top detections for [models] where [grid] is the set of
+% detections from the set [fg] with name [set_name] ('test' or 'trainval')
+% finalstruct (which contains final boxes) is obtained from
+% the function pool_results
+%
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
+%maxk is the maximum number of top detections we display
 if ~exist('maxk','var')
   maxk = 20;
 end
 
-
 final_boxes = finalstruct.unclipped_boxes;
 final_maxos = finalstruct.final_maxos;
 
-% if 0
-% %% prune grid to contain only images from target_directory
-% [cur_set, gt] = textread(sprintf(VOCopts.imgsetpath,target_directory),['%s' ...
-%                     ' %d']);
-
-% if 0
-%   fprintf(1,'HACK: choosing only the subset which contains true positives\n');
-%   %% prune grid to contain only images from target_directory
-%   [cur_set, gt] = textread(sprintf(VOCopts.clsimgsetpath,models{1}.cls,target_directory),['%s' ...
-%                     ' %d']);
-%   cur_set = cur_set(gt==1);
-% end
-
-% gridids = cellfun2(@(x)x.curid,grid);
-% goods = find(ismember(gridids,cur_set));
-% grid = grid(goods);
-% end
-
-imids = cell(1,length(final_boxes));
-for i = 1:length(final_boxes)
-  imids{i} = [];
-  if size(final_boxes{i},1) > 0
-    imids{i} = i * ones(size(final_boxes{i},1),1);
-  end
-end
-
 bbs = cat(1,final_boxes{:});
-imids = cat(1,imids{:});
+imids = bbs(:,11);
 moses = cat(1,final_maxos{:});
-[aa,bb] = sort(bbs(:,end),'descend');
+
+%% sort detections by score
+[aa,bb] = sort(bbs(:,end), 'descend');
 
 %% only good ones now!
 %bb = bb(moses(bb)>.5);
@@ -74,13 +51,9 @@ end
 
 counter = 1;
 
-KKK = [1 1];
-counter = 1;
-
 for k = 1:maxk
 
-
-  for i = 1:prod(KKK)
+  if 1 
     if counter > length(bb)
       break;
     end
@@ -92,8 +65,6 @@ for k = 1:maxk
       mkdir(wwwdir);
     end
     
-    
-    allbbs(k,:) = bbs(bb(counter),:);
     filer = sprintf('%s/%05d.pdf',wwwdir,k);
     filerlock = [filer '.lock'];
     if fileexists(filer) || (mymkdir_dist(filerlock) == 0)
@@ -103,6 +74,7 @@ for k = 1:maxk
 
     fprintf(1,'Top det %d\n', k);
     
+    allbbs(k,:) = bbs(bb(counter),:);
     
     curb = bb(counter);
     curid = grid{imids(curb)}.curid;
@@ -147,13 +119,10 @@ for k = 1:maxk
       estring = 'withbetas';
     end
     
-    % stuff.filer = sprintf(['/nfs/baikal/tmalisie/labelme400/www/voc/'...
-    %                 'segxfer/%s%s-on-%s-%s-%d.eps'],...
-    %                       models{1}.cls,extra,target_directory,estring,k);
-    ccc = bbox(6);
+    %ccc = bbox(6);
     
-    target_image_id = imids(bb(counter));
-    target_cluster_id = bbs(bb(counter),5);
+    %target_image_id = imids(bb(counter));
+    %target_cluster_id = bbs(bb(counter),5);
             
     %USE THE RAW DETECTION
     fprintf(1,' -- Taking Final det score\n');
@@ -170,26 +139,22 @@ for k = 1:maxk
     
     sumI = I*0;
     countI = zeros(size(I,1),size(I,2),1);
-    ooo = cell(0,1);
+    %ooo = cell(0,1);
     
-    mean0 = mean(allbb,1);
-    curoses = getosmatrix_bb(mean0(1,:),allbb);
+    %mean0 = mean(allbb,1);
+    %curoses = getosmatrix_bb(mean0(1,:),allbb);
     
     stuff.I = I;
+    stuff.dataset_params = dataset_params;
+    
+    clear overlays
     
     for zzz = 1:min(1,size(allbb,1))
-
-      exemplar_overlay = exemplar_inpaint(allbb(zzz,:), ...
-                                          models{allbb(zzz,6)}, ...
-                                          stuff);
-      
-      ooo{end+1} = exemplar_overlay;
-
-      sumI = sumI + curoses(zzz)*allbb(zzz,end)*exemplar_overlay.segI;
-      countI = countI + ...
-               curoses(zzz)*allbb(zzz,end);                                       
+      overlays{zzz} = exemplar_inpaint(allbb(zzz,:), ...
+                                       models{allbb(zzz,6)}, ...
+                                       stuff);
     end
-    sumI = sumI ./ repmat(countI,[1 1 3]);
+    %sumI = sumI ./ repmat(countI,[1 1 3]);
     
     if TARGET_BUS > -1
       %% load GT for test 
@@ -197,13 +162,6 @@ for k = 1:maxk
       %                '%s*mat'],curid));
       gtmat = load(sprintf(['/nfs/baikal/tmalisie/finalbuslabeling/' ...
                     '%s.%d.mat'],curid,TARGET_BUS));
-
-      %   clear gtmat
-      % for i = 1:length(gtfiles)      
-      %   gtmat{i} = load(sprintf('/nfs/baikal/tmalisie/buslabeling/%s',gtfiles(i).name));
-      % end
-      %segs = cellfun2(@(x)x.res.seg,gtmat);
-      %seg=sum(cat(3,segs{:}),3);
       seg = gtmat.res.seg;
       gtim = faces2colors(seg);
       
@@ -218,34 +176,13 @@ for k = 1:maxk
       gtim = zeros(size(I,1),size(I,2));
     end
     
-    if 0 %size(exemplar_overlay.friendbb,1) == 0
-      counter = counter + 1;
-      continue
-    end
-    
     figure(1)
     clf
-    NR=show_hits_figure_iccv(models,allbb(zzz,:),I, ...
-                          exemplar_overlay.segI,exemplar_overlay,gtim);
+
+    NR = show_hits_figure_iccv(I,models,allbb, ...
+                               overlays);
 
     drawnow
-    
-%     output.I = I;
-%     output.result = exemplar_overlay.segI;
-%     output.WARNINGgt = gtim;
-    
-%     try
-%       dfile = sprintf('/nfs/onega_no_backups/users/ashrivas/buses/%s.mat',curid);
-%       dresult = load(dfile);
-%       output.dresult = dresult.rim;
-%     catch
-%       output.dresult = []; %2*ones(size(output.I,1),size(output.I,2));
-%     end
-    
-%     save(sprintf('/nfs/baikal/tmalisie/iccvres/finalbusmats/%05d.mat', ...
-%                  k),'output');
-
-    
     set(gcf,'PaperPosition',[0 0 2*NR(1) 2*NR(2)],...
             'PaperSize',[2*NR(1) 2*NR(2)]);
     
@@ -254,31 +191,7 @@ for k = 1:maxk
     filer2 = filer;
     filer2(end-2:end) = 'png';
     print(gcf,'-dpng',filer2);
-   
-
-    
-    %paintfiler = ...
-    %     sprintf('%s/%s.%d.%s.png',basedir, ...
-    %             curm.curid, curm.objectid, curm.cls);
-    % imwrite(Ipaint,paintfiler);
-
-    
-    % curm = models{bbox(6)};
-    % basedir = '/nfs/baikal/tmalisie/labelme400/www/voc/exemplars/';
-    % paintfiler = ...
-    %     sprintf('%s/%s.%d.%s.png',basedir, ...
-    %             curm.curid, curm.objectid, curm.cls);
-    % imwrite(Ipaint,paintfiler);
-
-    %imagesc(I)
-    %plot_bbox(bbox,'',color,color);
-    
-    %plot_bbox(bbs(curb,:));
-    %axis image
-    %axis off
-    %title(sprintf('I=%s\nE=%s.%d s=%.3f
-    %os=%.3f',grid{bbs(curb,5)}.curid,models{bbs(curb,6)}.curid,models{bbs(curb,6)}.objectid,bbs(curb,end),moses(curb)));
-    
+       
     counter = counter+1;
     
   end

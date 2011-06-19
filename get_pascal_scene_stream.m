@@ -2,20 +2,20 @@ function fg = get_pascal_scene_stream(set_name, cls, VOCopts, MAXLENGTH)
 %Create a scene stream, such that each element fg{i} contains
 %these fields: (I, bbox, cls, curid, [objectid], [anno])
 
-basedir = sprintf('%s/models/scene-streams/',VOCopts.localdir);
+%The maximum number of scenes to process
+if ~exist('MAXLENGTH','var')
+  MAXLENGTH = 10000;
+end
+
+basedir = sprintf('%s/models/streams/',VOCopts.localdir);
 if ~exist(basedir,'dir')
   mkdir(basedir);
 end
-streamname = sprintf('%s/%s-%s.mat',basedir,set_name,cls);
+streamname = sprintf('%s/%s-%s-scene-%d.mat',basedir,set_name,cls,MAXLENGTH);
 if fileexists(streamname)
   fprintf(1,'Loading %s\n',streamname);
   load(streamname);
   return;
-end
-
-%The maximum number of exemplars to process
-if ~exist('MAXLENGTH','var')
-  MAXLENGTH = 1000000;
 end
 
 %% Load ids of all images in trainval that contain cls

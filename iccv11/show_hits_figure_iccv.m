@@ -1,53 +1,18 @@
-function NR=show_hits_figure_iccv(models,topboxes,I,extraI,exemplar_overlay,gtim)
+function NR = show_hits_figure_iccv(I,models,topboxes,overlays)
 %Show a figure with the detections of the exemplar svm model
 %Tomasz Malisiewicz(tomasz@cmu.edu)
-%VOCinit;
 
-topboxes = topboxes(1:min(5,size(topboxes,1)),:);
-% if ~exist('score_masks','var')
-%   for i = 1:size(topboxes,1)
-%     score_masks{i}.scoremask = rand(20,20,1);
-%     score_masks{i}.hogdet = zeros(20,20,1);
-%     score_masks{i}.hogw = zeros(20,20,1);
-%   end
-% end
-
-%show the parse in terms of exemplar associations
-
-%use colors where 'hot' aka red means high score, and 'cold' aka
-%blue means low score
-colors = jet(size(topboxes,1));
-colors = colors(end:-1:1,:);
+topboxes = topboxes(1:min(2,size(topboxes,1)),:);
 
 %if enabled, try to transfer objects too
 %add_one = 1;
 add_one = 0;
-
-% if isfield(exemplar_overlay,'friendbb') & ...
-%       size(exemplar_overlay.friendbb,1)>0
-%   %ha = tight_subplot(2, 2, 0, .1, .1);
-%   add_one = 1;
-  
-% elseif isfield(exemplar_overlay,'overlay2')
-%   add_one = 1;
-% end
   
 figure(1)
 clf
 if add_one == 1
   ha = tight_subplot(2, 2, .05, ...
                      .1, .01);
-  % hb = tight_subplot(4, 2, .05, ...
-  %                    .1, .01);
-  
-  % for q = 1:8
-  %   axes(hb(q));
-  %   imagesc(ones(100,100,3));
-  %   axis image
-  %   axis off
-  % end
-
-  % keyboard
   NR = [2 2];
 else
   ha = tight_subplot(1, 3, .05, ...
@@ -57,17 +22,8 @@ end
 
 PADDER = 100;
 Ipad = pad_image(I,PADDER);
-%imagesc(I)
-% for q = 1%size(topboxes,1):-1:1
-%   plot_bbox(topboxes(q,:),'',[1 0 0],[1 0 0]);%colors(q,:))
-% end
-%axis image
-%axis off
-%title('Input Image')
-%title(sprintf('%s Detection Window',models{topboxes(q,6)}.cls))
-%title(sprintf('Box Cluster size %d',size(topboxes,1)))
-exshows = cell(0,1);
 
+%Cut out detection chunks
 for q = size(topboxes,1):-1:1
   if q>size(topboxes,1)
     continue
@@ -75,9 +31,6 @@ for q = size(topboxes,1):-1:1
 
   bb = topboxes(q,1:4);
 
-  %titler=sprintf('E=%d S=%.3f',topboxes(q,6),topboxes(q,end));
-  %plot_bbox(bb+PADDER);%,titler);
-  %plot_bbox(bb);
   bb = bb + PADDER;
   r1 = [round(bb(2)) round(bb(4))];
   r2 = [round(bb(1)) round(bb(3))];
@@ -88,17 +41,7 @@ for q = size(topboxes,1):-1:1
   mask(r1(1):r1(2), r2(1):r2(2))=1;
   mask = logical(mask);
   chunks{q} = maskCropper(Ipad, mask);
-  exshows{q} = [];
-  %counter = counter+2;
 end
-
-%title(sprintf('Testing Images %s',curid))
-
-%sss = cellfun2(@(x)x.scoremask(:),score_masks);
-%sss = cat(1,sss{:});
-%bnd_a = min(sss)-.00001;
-%bnd_b = max(sss)+.00001;
-
 
 N = min(1,size(topboxes,1));
 for i = 1:N
@@ -106,7 +49,7 @@ for i = 1:N
   mid = topboxes(i,6);
   flip = topboxes(i,7);
   hogpic = HOGpicture(models{topboxes(i,6)}.model.w);
-  if flip == 1 %isfield(models{topboxes(i,6)},'FLIP_LR')
+  if flip == 1
     hogpic = flip_image(hogpic);
   end
   
@@ -145,11 +88,11 @@ for i = 1:N
     id_string = sprintf('%s@%s',models{abs(mid)}.models_name,models{abs(mid)}.cls);
   end
   lrstring='';
-  if flip == 1 %%isfield(models{abs(mid)},'FLIP_LR')
+  if flip == 1
     lrstring = '.LR';
   end
 
-  sprintf('Exemplar: %s%s',id_string,lrstring)%,'interpreter','none');
+  sprintf('Exemplar: %s%s',id_string,lrstring);
     
 end
 
@@ -159,22 +102,20 @@ axis image
 axis off
 title('Input Image')
 
-if exist('extraI','var')
-  %ha = tight_subplot(2, 2, 0, .1, .1);
-  axes(ha(3));
+axes(ha(3));
 
-  %subplot(2,2,3)
-  imagesc(extraI)
-  clipped_top = clip_to_image(topboxes(i,:),[1 1 size(extraI,2) ...
+extraI = overlays{1}.I;
+imagesc(extraI);
+clipped_top = clip_to_image(topboxes(1,:),[1 1 size(extraI,2) ...
                     size(extraI,1)]);
-  clipped_top([1 2]) = clipped_top([1 2])+2;
-  clipped_top([3 4]) = clipped_top([3 4])-2;
-  plot_bbox(clipped_top,'E',[0 1 0],[0 1 0],0,[2 1]);
-  axis image
-  axis off
-  title(sprintf('Exemplar Inpainting: %.3f',topboxes(i,end)))
-  
-  if add_one == 1
+clipped_top([1 2]) = clipped_top([1 2])+2;
+clipped_top([3 4]) = clipped_top([3 4])-2;
+plot_bbox(clipped_top,'E',[0 1 0],[0 1 0],0,[2 1]);
+axis image
+axis off
+title(sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
+
+if add_one == 1
   %transfer objects here
   
   is_complement = sum(ismember(models{1}.cls,{'bicycle', ...
@@ -198,10 +139,7 @@ if exist('extraI','var')
                               exemplar_overlay.friendclass{q}));
       curcolor = c(aa,:);
       %Yellow color always
-      %curcolor = [1 1 0];
       curbb = exemplar_overlay.friendbb(q,:);      
-      %curbb(1:2) = curbb(1:2)-1;
-      %curbb(3:4) = curbb(3:4)+1;
       curbb = clip_to_image(curbb,[1 1 size(I,2) size(I,1)]);
 
       plot_bbox(curbb,...
@@ -223,7 +161,7 @@ if exist('extraI','var')
 
     end
   elseif ~is_complement && isfield(exemplar_overlay,'overlay2')
-    
+    %% SHOW TRANSFERRED BUSES
     axes(ha(4));
     imagesc(exemplar_overlay ...
             .overlay2.segI);
@@ -231,6 +169,7 @@ if exist('extraI','var')
     axis image
     axis off
 
+    %Faces are for transferring geometry
     if isfield(exemplar_overlay.overlay2,'faces')
       faces = exemplar_overlay.overlay2.faces;
       for q = 1:length(faces)
@@ -240,13 +179,15 @@ if exist('extraI','var')
           source = topboxes(1,:);
           target = models{source(6)}.gt_box;
           
-          if topboxes(1,7) == 1 %% isfield(models{source(6)},'FLIP_LR')
+          if topboxes(1,7) == 1 
             target = flip_box(target,models{source(6)}.sizeI);
             f = flip_faces(f,models{source(6)}.sizeI);
             
             fprintf(1,'got here for a flip')
             %source = flip_box(source,size(I));
           end
+          
+          %%BUG: we should be using the new find_xform function...
           clear xs ys
           xs(:,1) = target([1 2])';
           xs(:,2) = target([3 2])';
@@ -280,6 +221,7 @@ if exist('extraI','var')
     end
     
   else
+    %% SHOW FRIENDS
     axes(ha(4))
     imagesc(I)
     axis image
@@ -306,4 +248,4 @@ if exist('extraI','var')
   end
 end  
 
-end
+

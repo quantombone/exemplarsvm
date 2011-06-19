@@ -1,9 +1,8 @@
-function voc_tvmonitor_scene(cls)
-
-if ~exist('cls','var')
-  %Choose the VOC category
-  cls = 'sofa';
+function voc_template_exemplar(cls,VOCYEAR)
+if ~exist('VOCYEAR','var')
+  VOCYEAR = 2007;
 end
+
 
 scenestring = 'exemplar';
 stream_f = @get_pascal_exemplar_stream;
@@ -61,7 +60,7 @@ test_params = get_default_param_f();
 dataset_params.NIMS_PER_CHUNK = NIMS_PER_CHUNK;
 
 %devkitroot is where we write all the result files
-dataset_params.dataset = 'VOC2007';
+dataset_params.dataset = VOCYEAR;
 dataset_params.testset = 'test';
 
 dataset_params.devkitroot = ['/nfs/baikal/tmalisie/summer11/' ...
