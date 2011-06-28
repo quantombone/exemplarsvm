@@ -55,7 +55,15 @@ if CACHE_FILE == 1
           
   if fileexists(cache_file)
     fprintf(1,'Loading CACHED file: %s\n', cache_file);
-    load(cache_file);
+    while 1
+      try
+        load(cache_file);
+        break;
+      catch
+        fprintf(1,'cannot load, sleeping for 5, trying again\n');
+        pause(5);
+      end
+    end
     return;
   end  
 end

@@ -1,7 +1,7 @@
 function voc_template_exemplar_seg(cls,VOCYEAR)
 %Choose only objects which have segmentations!
 if ~exist('VOCYEAR','var')
-  VOCYEAR = 2007;
+  VOCYEAR = 'VOC2007';
 end
 
 scenestring = 'exemplar';
@@ -17,7 +17,7 @@ init_params.hg_size = [8 8];
 init_params.goal_ncells = 100;
 
 stream_set_name = 'trainval';
-MAX_NUM_EX = 5;
+MAX_NUM_EX = 2000;
 
 training_function = @do_svm;
 
@@ -29,28 +29,28 @@ mining_params.dump_images = 0;
 mining_params.MAXSCALE = 0.5;
 mining_params.NMS_MINES_OS = 1.0;
 
-mining_params.MAX_WINDOWS_BEFORE_SVM = 100;
-mining_params.TOPK = 10;
-mining_params.MAX_TOTAL_MINED_IMAGES = 20;
+mining_params.MAX_WINDOWS_BEFORE_SVM = 1000;
+mining_params.TOPK = 50;
+mining_params.MAX_TOTAL_MINED_IMAGES = 2000;
 
 NIMS_PER_CHUNK = 4;
 
 trainset_name = 'train';
 trainset_name2 = ['-' cls];
-trainset_maxk = 5;
+trainset_maxk = 50000;
 
 valset_name = 'trainval';
 valset_name2 = cls;
-valset_maxk = 5;
+valset_maxk = 50000;
 
-val_gt_function = @get_pascal_anno_function;
-val_params = get_default_param_f();
+%val_gt_function = @get_pascal_anno_function;
+%val_params = get_default_param_f();
 
 testset_name = 'test';
 %% for 2010, we only have testset
-%testset_name2 = '';
-testset_name2 = cls;
-testset_maxk = 20;
+testset_name2 = '';
+%testset_name2 = cls;
+testset_maxk = 50000;
 test_gt_function = [];%
 %test_gt_function = @get_pascal_anno_function;
 test_params = get_default_param_f();
@@ -94,11 +94,16 @@ e_stream_set = stream_f(stream_set_name, cls, ...
 test_set = get_pascal_bg(testset_name,testset_name2,dataset_params);
 test_set = test_set(1:min(length(test_set),testset_maxk));
 
+if length(test_set) == 0
+  fprintf(1,'Warning, testset is empty\n');
+  return;
+end
+
 train_set = get_pascal_bg(trainset_name,trainset_name2,dataset_params);
 train_set = train_set(1:min(length(train_set),trainset_maxk));
 
-val_set = get_pascal_bg(valset_name,valset_name2,dataset_params);
-val_set = val_set(1:min(length(val_set),valset_maxk));
+%val_set = get_pascal_bg(valset_name,valset_name2,dataset_params);
+%val_set = val_set(1:min(length(val_set),valset_maxk));
 
 
 
@@ -164,10 +169,12 @@ teststruct = pool_results(dataset_params,models,test_grid);
 %Evaluation of Platt's calibration + M boosting + DISPLAY
 %teststruct = pool_results(dataset_params,models,test_grid,M);
 
-%% no evaluation for VOC2010 dataset.. need to do it online
-%[results] = evaluate_pascal_voc_grid(dataset_params, ...
-%                                     models, test_grid, ...
-%                                     testset_name, teststruct);
+if strcmp(VOCYEAR,'VOC2007')
+  %% no evaluation for VOC2010 dataset.. need to do it online
+  [results] = evaluate_pascal_voc_grid(dataset_params, ...
+                                       models, test_grid, ...
+                                       testset_name, teststruct);
+end
 show_top_dets(dataset_params, models, test_grid,...
               test_set, testset_name, ...
               teststruct);
