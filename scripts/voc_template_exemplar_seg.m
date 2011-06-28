@@ -95,7 +95,7 @@ val_files = apply_all_exemplars(dataset_params, models, val_set, ...
 val_grid = load_result_grid(dataset_params, models, valset_name, val_files);
 
 %perform calibration and M matrix estimation
-M = mmhtit(dataset_params, models, val_grid);
+M = calibrate_and_estimate_M(dataset_params, models, val_grid);
 
 %Apply exemplars on test set
 test_files = apply_all_exemplars(dataset_params, models, test_set, ...
