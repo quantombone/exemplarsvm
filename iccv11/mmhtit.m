@@ -1,4 +1,4 @@
-function M = mmhtit(models,grid,dataset_params)
+function M = mmhtit(dataset_params, models, grid)
 %% Learn a combination matrix M which multiplexes the detection
 %% results by compiling co-occurrence statistics on true positives
 %% Tomasz Malisiewicz (tomasz@cmu.edu)

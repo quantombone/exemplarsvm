@@ -1,4 +1,4 @@
-function [models] = load_all_models(cls, DET_TYPE, files, dataset_params, ...
+function [models] = load_all_models(dataset_params, cls, DET_TYPE, files, ...
                                     CACHE_FILE, STRIP_FILE)
 %Load all trained models of a specified class 'cls' and
 %type 'DET_TYPE' from a models directory.  If CACHE_FILE is enabled
@@ -26,7 +26,9 @@ function [models] = load_all_models(cls, DET_TYPE, files, dataset_params, ...
 %   FINAL_PREFIX = '100';
 % end
 
-wait_until_all_present(files,5);
+if exist('files','var') && ~isempty(files)
+  wait_until_all_present(files,5);
+end
 
 
 %if enabled, we cache result on disk to facilitate loading at a
@@ -68,7 +70,7 @@ if CACHE_FILE == 1
   end  
 end
 
-if isempty(files)
+if ~exist('files','var') || isempty(files)
   results_directory = ...
     sprintf('%s/models/%s-%s/',dataset_params.localdir,cls,DET_TYPE);
 

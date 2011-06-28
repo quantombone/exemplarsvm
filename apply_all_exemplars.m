@@ -1,5 +1,5 @@
 function allfiles = apply_all_exemplars(...
-    models,dataset_params,fg,setname,M,default_params,gt_function)
+    dataset_params,models,fg,setname,M,default_params,gt_function)
 % Apply a set of models (raw exemplars, trained exemplars, dalals,
 % poselets, components, etc) to a set of images.  Script can be ran in
 % parallel with no arguments.  After running script, use
@@ -41,21 +41,19 @@ if display == 1
 end
 
 if ~exist('default_params','var')
-  localizeparams = get_default_mining_params;
-else
-  localizeparams = default_params;
+  default_params = get_default_mining_params;
 end
-localizeparams.thresh = -1.05;
-%localizeparams.thresh = -.5;
-%localizeparams.MAXSCALE = .7;
-%localizeparams.MINSCALE = .3;
+default_params.thresh = -1.05;
+%default_params.thresh = -.5;
+%default_params.MAXSCALE = .7;
+%default_params.MINSCALE = .3;
 if length(strfind(models{1}.models_name,'-ncc'))
-  localizeparams.ADJUST_DISTANCES = 1;
+  default_params.ADJUST_DISTANCES = 1;
 end
 
 %if strcmp(models{1}.models_name,'dalal')
-%  localizeparams.TOPK = 100;
-%  localizeparams.thresher = -2.5;
+%  default_params.TOPK = 100;
+%  default_params.thresher = -2.5;
 %end
 
 % fprintf(1,'Loading default set of images\n');
@@ -141,7 +139,7 @@ for i = 1:length(ordering)
     I = Is{j};
        
     starter = tic;
-    [rs,t] = localizemeHOG(I,models,localizeparams);
+    [rs,t] = localizemeHOG(I, models, default_params);
     
     for q = 1:length(rs.bbs)
       if ~isempty(rs.bbs{q})
@@ -232,7 +230,6 @@ for i = 1:length(ordering)
     end 
   end
   
-
   % save results into file and remove lock file
   if display == 0
     save(filer,'res');

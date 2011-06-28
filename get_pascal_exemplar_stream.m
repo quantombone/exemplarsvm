@@ -1,5 +1,5 @@
-function fg = get_pascal_exemplar_stream(set_name, cls, ...
-                                                   VOCopts, MAXLENGTH, must_have_seg)
+function fg = get_pascal_exemplar_stream(VOCopts, set_name, cls, ...
+                                                  MAXLENGTH, must_have_seg)
 %Create an exemplar stream, such that each element fg{i} contains
 %these fields: (I, bbox, cls, curid, [objectid], [anno])
 %Make sure the exemplar has a segmentation associated with it if

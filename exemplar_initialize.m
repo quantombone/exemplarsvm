@@ -1,17 +1,20 @@
-function allfiles = exemplar_initialize(e_set, init_function, init_params, ...
-                                        dataset_params, models_name)
+function allfiles = exemplar_initialize(dataset_params, e_set, ...
+                                        models_name, init_function)
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
-% is parallelizable (and dalalizable!)  
-%
-% There are several different initialization modes
-% DalalMode:  Warp instances to mean frame from in-class exemplars
-% Globalmode: Warp instances to hardcoded [8 8] frame
-% new10mode:  Use a canonical 8x8 framing of each exemplar (this
-%             allows for negative sharing in the future)
-%
-% cls: VOC class to process
-% mode: mode name 
+% NOTE: this function is parallelizable (and dalalizable!)  
+% 
+% INPUTS:
+% dataset_params: the parameters of the current dataset
+% e_set: the exemplar stream set which contains
+%   e_set{i}.I, e_set{i}.cls, e_set{i}.objectid, e_set{i}.bbox
+% models_name: model name
+% init_function: a function which takes as input (I,bbox)
+%   and returns a model structure [if not specified, then just dump
+%   out names of resulting files]
+
+% OUTPUTS:
+% allfiles: The names of all files after initialization
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
@@ -66,24 +69,25 @@ for i = 1:length(e_set)
   objectid = e_set{i}.objectid;
   bbox = e_set{i}.bbox;
 
-  [tmp,curid,tmp] = fileparts(e_set{i}.I);
-  
-  fprintf(1,'.');
-    
+  [tmp,curid,tmp] = fileparts(e_set{i}.I);    
   filer = sprintf('%s/%s.%d.%s.mat',...
                   results_directory, curid, objectid, cls);
   
   allfiles{i} = filer;
+  if ~exist('init_function','var')
+    continue
+  end
   filerlock = [filer '.lock'];
   
   if fileexists(filer) || (mymkdir_dist(filerlock)==0)
     continue
   end
   gt_box = bbox;
-
+  fprintf(1,'.');
 
   %Call the init function which is a mapping from (I,bbox) to (model)
-  [model] = init_function(I,bbox,init_params);
+  [model] = init_function(I, bbox);
+  
   clear m
   m.model = model;    
 
@@ -111,8 +115,6 @@ for i = 1:length(e_set)
   fprintf(1,'Final hg_size is %d %d\n',...
           m.model.hg_size(1), m.model.hg_size(2));
 
-
-  
   if display == 1
     figure(1)
     clf
@@ -138,8 +140,8 @@ for i = 1:length(e_set)
     grid on
     title('Exemplar HOG features')
     drawnow
-
   end
 end  
 
-[allfiles,bb] = sort(allfiles);
+%sort files so they are in alphabetical order
+[allfiles, bb] = sort(allfiles);

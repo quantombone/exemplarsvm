@@ -1,4 +1,4 @@
-function grid = load_result_grid(models,dataset_params,setname,files,curthresh)
+function grid = load_result_grid(dataset_params,models,setname,files,curthresh)
 %Given a set of models, return a grid of results from those models' firings
 %on the subset of images (target_directory is 'trainval' or 'test')
 %[curthresh]: only keep detections above this number (-1.1 for

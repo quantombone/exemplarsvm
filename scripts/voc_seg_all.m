@@ -1,4 +1,4 @@
-classes = {'car'};
+classes = {'train'};
 % classes={...
 %     'aeroplane'
 %     'bicycle'
