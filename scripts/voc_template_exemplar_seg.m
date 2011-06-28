@@ -1,4 +1,4 @@
-function voc_template_exemplar_seg(cls, VOCYEAR)
+function voc_template_exemplar_seg(cls, VOCYEAR, must_have_seg)
 %In this script, we choose only objects which have segmentations!
 
 if ~exist('VOCYEAR','var')
@@ -9,13 +9,22 @@ end
 dataset_params = get_voc_dataset(VOCYEAR);
 dataset_params.display_machine = '';
 
+if ~exist('must_have_seg','var') || must_have_seg==0
+  must_have_seg = 0;
+  must_have_seg_string = '';
+elseif must_have_seg==1
+  must_have_seg_string = 'seg';
+else
+  fprintf(1,'invalid value for must_have_seg %d\n',must_have_seg);
+  error('invalid value');
+end
+
 %Choose a short string to indicate the type of training run we are doing
-models_name = ['fseg.exemplar'];
+models_name = ['f' must_have_seg_string '.exemplar'];
 
 %Initialize exemplar stream
 stream_set_name = 'trainval';
 stream_max_ex = 2000;
-must_have_seg = 1;
 e_stream_set = get_pascal_exemplar_stream(dataset_params, ...
                                           stream_set_name, ...
                                           cls, stream_max_ex,...
@@ -106,7 +115,7 @@ test_files = apply_all_exemplars(dataset_params, models, test_set, ...
 test_grid = load_result_grid(dataset_params, models, testset_name, test_files);
 
 %Evaluation of RAW SVM classifiers + DISPLAY
-teststruct = pool_results(dataset_params,models,test_grid);
+teststruct = pool_results(dataset_params, models, test_grid);
 % [results] = evaluate_pascal_voc_grid(dataset_params, ...
 %                                       models, test_grid, ...
 %                                       testset_name, teststruct);
