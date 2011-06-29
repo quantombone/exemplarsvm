@@ -51,8 +51,8 @@ if ~exist(results_directory,'dir')
   mkdir(results_directory);
 end
 
-fprintf(1,'Writing %d Exemplars to directory %s\n',length(e_set),...
-        results_directory);
+%fprintf(1,'Writing %d Exemplars to directory %s\n',length(e_set),...
+%        results_directory);
 
 %Randomize creation order
 myRandomize;

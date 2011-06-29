@@ -119,9 +119,7 @@ for i = 1:length(models)
 end
 
 model_ids = cellfun2(@(x)x.curid,models);
-
 targets = 1:length(models);
-
 cls = models{1}.cls;
 
 targetc = find(ismember(dataset_params.classes,models{1}.cls));
@@ -132,6 +130,12 @@ for i = 1:length(grid)
     fprintf(1,'.');
   end
   cur = grid{i};
+  
+  %do not process grids with no bboxes
+  if size(cur.bboxes,1) == 0
+    continue;
+  end
+  
   %cur.bboxes = cur.coarse_boxes;
   % Do image-OS pruning, BEFORE NMS
   % this is useful if we are in image detection mode, where we want
@@ -235,11 +239,7 @@ for exid = 1:length(models)
 
     [aa,bb] = sort(bad_scores,'descend');
     curlen = min(length(bb),10000*length(good_scores));
-    try
     bb = bb(round(linspace(1,length(bb),curlen)));
-    catch
-      keyboard
-    end
 
     bad_scores = bad_scores(bb);
     bad_os = bad_os(bb);

@@ -15,7 +15,7 @@ for i = 1:length(models)
   title(sprintf('Source exemplar %d',i))
   
   for q = 1:15
-    if aa(q) == 0
+    if aa(q) <= 1
       break
     end
     subplot(4,4,q+1)
@@ -31,7 +31,7 @@ for i = 1:length(models)
     imagesc(I)
     axis image
     axis off
-    title(sprintf('%d.%d %.3f',bb(q),flipper,aa(q)))
+    title(sprintf('%d F=%d %.2f',bb(q),flipper,aa(q)))
   end
   
   pause

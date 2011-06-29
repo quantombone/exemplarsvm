@@ -13,7 +13,7 @@ if ~exist('must_have_seg','var') || must_have_seg==0
   must_have_seg = 0;
   must_have_seg_string = '';
 elseif must_have_seg==1
-  must_have_seg_string = 'seg';
+  must_have_seg_string = '.seg';
 else
   fprintf(1,'invalid value for must_have_seg %d\n',must_have_seg);
   error('invalid value');
@@ -57,7 +57,7 @@ train_set = get_pascal_set(dataset_params, trainset_name, trainset_name2);
 train_set = train_set(1:min(length(train_set), trainset_maxk));
 
 valset_name = 'trainval';
-valset_name2 = 'train';
+valset_name2 = '';
 valset_maxk = 50000;
 val_set = get_pascal_set(dataset_params, valset_name, valset_name2);
 val_set = val_set(1:min(length(val_set),valset_maxk));
@@ -94,7 +94,8 @@ models = load_all_models(dataset_params, cls, models_name, efiles, 1);
                                             training_function);
 
 %Load the trained exemplars
-models = load_all_models(dataset_params, cls, models_name, tfiles, 1);
+models = load_all_models(dataset_params, cls, models_name, tfiles, ...
+                         1, 1);
 
 %Apply exemplars on validation set
 val_files = apply_all_exemplars(dataset_params, models, val_set, ...
@@ -114,37 +115,34 @@ test_files = apply_all_exemplars(dataset_params, models, test_set, ...
 %Load testset results
 test_grid = load_result_grid(dataset_params, models, testset_name, test_files);
 
+if 0
 %Evaluation of RAW SVM classifiers + DISPLAY
 teststruct = pool_results(dataset_params, models, test_grid);
-% [results] = evaluate_pascal_voc_grid(dataset_params, ...
-%                                       models, test_grid, ...
-%                                       testset_name, teststruct);
-% show_top_dets(dataset_params, models, test_grid,...
-%               test_set, testset_name, ...
-%               teststruct);
+[results] = evaluate_pascal_voc_grid(dataset_params, ...
+                                     models, test_grid, ...
+                                     testset_name, teststruct);
+show_top_dets(dataset_params, models, test_grid,...
+              test_set, testset_name, ...
+              teststruct);
 
 %Evaluation of just Platt's calibration + DISPLAY
-%M2.betas = M.betas;
-%teststruct = pool_results(dataset_params,models,test_grid,M2);
-% [results] = evaluate_pascal_voc_grid(dataset_params, ...
-%                                      models, test_grid, ...
-%                                      testset_name, teststruct);
-%show_top_dets(dataset_params, models, test_grid,...
-%              test_set, testset_name, ...
-%              teststruct);
-
-%Evaluation of Platt's calibration + M boosting + DISPLAY
-%teststruct = pool_results(dataset_params,models,test_grid,M);
-
-if strcmp(VOCYEAR,'VOC2007')
-  %% no evaluation for VOC2010 dataset.. need to do it online
-  [results] = evaluate_pascal_voc_grid(dataset_params, ...
-                                       models, test_grid, ...
-                                       testset_name, teststruct);
-else
-  fprintf(1,'Evaluation on performed on VOC2007, not on %s\n', ...
-          VOCYEAR);
+M2.betas = M.betas;
+teststruct = pool_results(dataset_params, models, test_grid, M2);
+[results] = evaluate_pascal_voc_grid(dataset_params, ...
+                                      models, test_grid, ...
+                                      testset_name, teststruct);
+show_top_dets(dataset_params, models, test_grid,...
+              test_set, testset_name, ...
+              teststruct);
 end
+%Evaluation of Platt's calibration + M boosting + DISPLAY
+teststruct = pool_results(dataset_params, models, test_grid, M);
+
+
+%% no evaluation for VOC2010 dataset.. need to do it online
+[results] = evaluate_pascal_voc_grid(dataset_params, ...
+                                     models, test_grid, ...
+                                     testset_name, teststruct);
 
 %Show top detections
 show_top_dets(dataset_params, models, test_grid,...

@@ -54,8 +54,13 @@ if CACHE_FILE == 1
   
   cache_file_stripped = ...
       sprintf('%s/%s-%s.mat',cache_dir,cls,[DET_TYPE '-stripped']);
-          
+            
   if fileexists(cache_file)
+    %strip_file can only be present if the cache_file is present
+    if STRIP_FILE == 1
+      cache_file = cache_file_stripped;
+    end
+
     fprintf(1,'Loading CACHED file: %s\n', cache_file);
     while 1
       try
@@ -84,7 +89,7 @@ if ~exist('files','var') || isempty(files)
   end
   files = newfiles;
 else
-  fprintf(1,'Already have %d files\n',length(files));
+  fprintf(1,'Load from a total of %d files:\n',length(files));
 end
 
 models = cell(1,length(files));

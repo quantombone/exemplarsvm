@@ -76,7 +76,6 @@ for i = 1:length(grid)
 end
 toc
 
-
 if 0
 %% clip boxes to image
 fprintf(1,'clipping boxes\n');
@@ -88,7 +87,6 @@ end
 lens = cellfun(@(x)size(x,1),bboxes);
 bboxes(lens==0) = [];
 maxos(lens==0) = [];
-
 
 %fprintf(1,'Applyio.mng betas\n');
 %bboxes = cellfun2(@(x)calibrate_boxes(x,betas),bboxes);

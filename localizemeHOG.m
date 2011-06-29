@@ -217,13 +217,18 @@ sizes2 = cellfun(@(x)x.model.hg_size(2),models);
 
 S = [max(sizes1(:)) max(sizes2(:))];
 templates = zeros(S(1),S(2),features,length(models));
+templates_x = zeros(S(1),S(2),features,length(models));
 template_masks = zeros(S(1),S(2),length(models));
 
 for i = 1:length(models)
   t = zeros(S(1),S(2),features);
   t(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
       models{i}.model.w;
+  %x = zeros(S(1),S(2),features);
+  %x(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
+  %    reshape(models{i}.model.x(:,1),models{i}.model.hg_size);
   templates(:,:,:,i) = t;
+  %templates_x(:,:,:,i) = x;
   template_masks(:,:,i) = double(sum(t.^2,3)>0);
 end
 
@@ -261,11 +266,13 @@ uus = cat(2,uus{:});
 vvs = cat(2,vvs{:});
 
 www = reshape(templates,[],size(templates,4));
+%www2 = reshape(templates_x,[],size(templates_x,4));
 
 %Do large matrix multiplication and subtract bias
 r = www'*finalf;
-r = bsxfun(@minus,r,bs);%cellfun(@(x)x.model.b,models)');
+r = bsxfun(@minus,r,bs);
 
+%r = -distSqr_fast(www2,finalf);
 
 resstruct.bbs = cell(N,1);
 resstruct.xs = cell(N,1);
