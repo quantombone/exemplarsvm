@@ -1,8 +1,10 @@
 function dataset_params = get_voc_dataset(VOCYEAR,suffix)
 %Get the dataset structure for a VOC dataset, given the VOCYEAR
 %string which is something like: VOC2007, VOC2010, ...
+
 if ~exist('suffix','var')
   suffix = '/nfs/baikal/tmalisie/summer11/';
+  fprintf(1,'Using default dataset directory: %s\n',suffix);
 end
 
 %%%% SETUP DATASET
