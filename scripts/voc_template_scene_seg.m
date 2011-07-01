@@ -1,4 +1,4 @@
-function voc_template_exemplar_seg(cls, VOCYEAR, must_have_seg)
+function voc_template_scene_seg(cls, VOCYEAR, must_have_seg)
 %In this script, we choose only objects which have segmentations!
 
 if ~exist('VOCYEAR','var')
@@ -20,15 +20,15 @@ else
 end
 
 %Choose a short string to indicate the type of training run we are doing
-models_name = ['f' must_have_seg_string '.exemplar'];
+models_name = ['f' must_have_seg_string '.scene'];
 
 %Initialize exemplar stream
 stream_set_name = 'trainval';
 stream_max_ex = 2000;
-e_stream_set = get_pascal_exemplar_stream(dataset_params, ...
-                                          stream_set_name, ...
-                                          cls, stream_max_ex,...
-                                          must_have_seg);
+e_stream_set = get_pascal_scene_stream(dataset_params, ...
+                                       stream_set_name, ...
+                                       cls, stream_max_ex,...
+                                       must_have_seg);
 
 %Initialize framing function
 init_params.sbin = 8;
@@ -148,3 +148,4 @@ teststruct = pool_results(dataset_params, models, test_grid, M);
 show_top_dets(dataset_params, models, test_grid,...
               test_set, testset_name, ...
               teststruct);
+
