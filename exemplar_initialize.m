@@ -1,5 +1,5 @@
 function allfiles = exemplar_initialize(dataset_params, e_set, ...
-                                        models_name, init_function)
+                                        models_name, init_params)
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
 % NOTE: this function is parallelizable (and dalalizable!)  
@@ -9,22 +9,24 @@ function allfiles = exemplar_initialize(dataset_params, e_set, ...
 % e_set: the exemplar stream set which contains
 %   e_set{i}.I, e_set{i}.cls, e_set{i}.objectid, e_set{i}.bbox
 % models_name: model name
-% init_function: a function which takes as input (I,bbox)
+% init_params: a structure of initialization parameters
+% init_params.init_function: a function which takes as input (I,bbox,params)
 %   and returns a model structure [if not specified, then just dump
 %   out names of resulting files]
 
 % OUTPUTS:
-% allfiles: The names of all files after initialization
+% allfiles: The names of all outputs (which are .mat model files
+%   containing the initialized exemplars)
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
-%Only allow display to be enabled on a machine with X
-[v,r] = unix('hostname');
-if strfind(r, dataset_params.display_machine)==1
-  display = 1;
-else
-  display = 0;
-end
+% %Only allow display to be enabled on a machine with X
+% [v,r] = unix('hostname');
+% if strfind(r, dataset_params.display_machine)==1
+%   display = 1;
+% else
+%   display = 0;
+% end
 
 % DTstring = '';
 % if dalalmode == 1
@@ -74,7 +76,7 @@ for i = 1:length(e_set)
                   results_directory, curid, objectid, cls);
   
   allfiles{i} = filer;
-  if ~exist('init_function','var')
+  if ~exist('init_params','var')
     continue
   end
   filerlock = [filer '.lock'];
@@ -86,7 +88,7 @@ for i = 1:length(e_set)
   fprintf(1,'.');
 
   %Call the init function which is a mapping from (I,bbox) to (model)
-  [model] = init_function(I, bbox);
+  [model] = init_params.init_function(I, bbox, init_params);
   
   clear m
   m.model = model;    
@@ -106,41 +108,18 @@ for i = 1:length(e_set)
     rmdir(filerlock);
   end
 
-  %Print the bounding box overlap between the initial window and
-  %the final window
-  finalos = getosmatrix_bb(m.gt_box, m.model.bb(1,:));
-  fprintf(1,'Final OS is %.3f\n', ...
-          finalos);
+  % %Print the bounding box overlap between the initial window and
+  % %the final window
+  % finalos = getosmatrix_bb(m.gt_box, m.model.bb(1,:));
+  % fprintf(1,'Final OS is %.3f\n', ...
+  %         finalos);
   
-  fprintf(1,'Final hg_size is %d %d\n',...
-          m.model.hg_size(1), m.model.hg_size(2));
+  % fprintf(1,'Final hg_size is %d %d\n',...
+  %         m.model.hg_size(1), m.model.hg_size(2));
 
-  if display == 1
-    figure(1)
-    clf
-    subplot(1,3,1)
-    imagesc(I)
-    plot_bbox(m.model.bb(1,:),'',[1 0 0],[0 1 0],0,[1 3],m.model.hg_size)
-    plot_bbox(m.gt_box,'',[0 0 1])
-    axis image
-    axis off
-    title(sprintf('Exemplar %s.%d %s',m.curid,m.objectid,cls))
-    
-    subplot(1,3,2)
-    imagesc(m.model.mask);
-    axis image
-    axis off
-    grid on
-    title(sprintf('%d x %d Mask',m.model.hg_size(1),m.model.hg_size(2)))
-    
-    subplot(1,3,3)      
-    imagesc(HOGpicture(repmat(m.model.mask,[1 1 features]).*m.model.w))
-    axis image
-    axis off
-    grid on
-    title('Exemplar HOG features')
-    drawnow
-  end
+  %if display == 1
+  %  show_initialized_exemplar(m);
+  %end
 end  
 
 %sort files so they are in alphabetical order
