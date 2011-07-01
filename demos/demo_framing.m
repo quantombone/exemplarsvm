@@ -2,7 +2,7 @@
 % In this example, we initialize some exemplars with different
 % framing strategies.
 
-% To generate this pdf, run publish('demo_framing','pdf');
+% To generate this pdf, run publish('demo_framing','pdf')
 cls = 'cow';
 VOCYEAR = 'VOC2007';
 
