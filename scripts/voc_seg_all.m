@@ -1,10 +1,10 @@
 %classes = {'train'};%'cow','train','bus','boat'};
  classes={...
-     'car'
-     'chair'
-     'diningtable'
-%     'person'
-     'pottedplant'
+%     'car'
+%     'chair'
+%     'diningtable'
+     'person'
+%     'pottedplant'
 };
 
 myRandomize;
