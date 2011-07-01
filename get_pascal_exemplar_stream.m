@@ -21,7 +21,8 @@ basedir = sprintf('%s/models/streams/',VOCopts.localdir);
 if ~exist(basedir,'dir')
   mkdir(basedir);
 end
-streamname = sprintf('%s/%s-%s-%d-exemplar%s.mat',basedir,set_name,cls,MAXLENGTH,...
+streamname = sprintf('%s/%s-%s-%d-exemplar%s.mat',...
+                     basedir,set_name,cls,MAXLENGTH,...
                      must_have_seg_string);
 if fileexists(streamname)
   fprintf(1,'Loading %s\n',streamname);

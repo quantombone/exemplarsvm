@@ -1,6 +1,14 @@
-function fg = get_pascal_scene_stream(set_name, cls, VOCopts, MAXLENGTH)
-%Create a scene stream, such that each element fg{i} contains
+function fg = get_pascal_scene_stream(VOCopts, set_name, cls, ...
+                                               MAXLENGTH, must_have_seg);
+%% Create a scene stream, such that each element fg{i} contains
 %these fields: (I, bbox, cls, curid, [objectid], [anno])
+
+must_have_seg_string = '';
+if ~exist('must_have_seg','var')
+  must_have_seg = 0;
+elseif must_have_seg == 1
+  must_have_seg_string = '-seg';
+end
 
 %The maximum number of scenes to process
 if ~exist('MAXLENGTH','var')
@@ -11,7 +19,10 @@ basedir = sprintf('%s/models/streams/',VOCopts.localdir);
 if ~exist(basedir,'dir')
   mkdir(basedir);
 end
-streamname = sprintf('%s/%s-%s-scene-%d.mat',basedir,set_name,cls,MAXLENGTH);
+streamname = sprintf('%s/%s-%s-%d-scene%s.mat',...
+                     basedir,set_name,cls,MAXLENGTH,...
+                     must_have_seg_string);
+
 if fileexists(streamname)
   fprintf(1,'Loading %s\n',streamname);
   load(streamname);
@@ -29,6 +40,10 @@ for i = 1:length(ids)
   curid = ids{i};
 
   recs = PASreadrecord(sprintf(VOCopts.annopath,curid));  
+  if must_have_seg && (recs.segmented == 0)
+    %SKip over unsegmented images
+    continue
+  end
   filename = sprintf(VOCopts.imgpath,curid);
   
   fprintf(1,'.');
