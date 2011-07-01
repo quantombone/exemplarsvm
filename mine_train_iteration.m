@@ -26,7 +26,9 @@ end
    
 m = update_the_model(m, mining_stats, training_function);
 
-%dump_figures(m);
+if m.dataset_params.display == 1
+  dump_figures(m);
+end
 
 function [m] = update_the_model(m, mining_stats, training_function)
 %% UPDATE the current SVM, keep max number of svs, and show the results
