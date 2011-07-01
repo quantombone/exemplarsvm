@@ -1,31 +1,44 @@
-function model = initialize_goalsize_model(I,bbox,init_params)
+function model = initialize_goalsize_model(I, bbox, init_params)
+%% Initialize the exemplar (or scene) such that the representation
+% which tries to choose a region which overlaps best with the given
+% bbox and contains roughly init_params.goal_ncells cells, with a
+% maximum dimension of init_params.MAXDIM
+% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-GOAL_NCELLS = init_params.goal_ncells;
-sbin = init_params.sbin;
-%Get an initial model by cutting out a segment of a size which
-%matches the bbox
+
+if ~exist('init_params','var')
+  init_params.sbin = 8;
+  init_params.hg_size = [8 8];
+  init_params.MAXDIM = 10;
+end
+
+if ~isfield(init_params,'MAXDIM')
+  init_params.MAXDIM = 10;
+  fprintf(1,'Default MAXDIM is %d\n',init_params.MAXDIM);
+end
 
 %Expand the bbox to have some minimum and maximum aspect ratio
 %constraints (if it it too horizontal, expand vertically, etc)
 bbox = expand_bbox(bbox,I);
 
-I2 = zeros(size(I,1),size(I,2));    
-I2(bbox(2):bbox(4),bbox(1):bbox(3)) = 1;
-%model.params.sbin = SBIN;
+%Create a blank image with the exemplar inside
+Ibox = zeros(size(I,1), size(I,2));    
+Ibox(bbox(2):bbox(4), bbox(1):bbox(3)) = 1;
 
 %% NOTE: why was I padding this at some point and now I'm not???
-ARTPAD = 0; %120;
-I_real_pad = pad_image(I,ARTPAD);
+%% ANSWER: doing the pad will create artifical gradients
+ARTPAD = 0;
+I_real_pad = pad_image(I, ARTPAD);
 
-%Get the hog features (+wiggles) from the ground-truth bounding box
+%Get the hog feature pyramid for the entire image
 params.lpo = 10;
 [f_real,scales] = featpyramid2(I_real_pad, init_params.sbin, params);
 
-%Extract the region from each level in the pyramid
-[masker,sizer] = get_matching_masks(f_real, I2);
+%Extract the regions most overlapping with Ibox from each level in the pyramid
+[masker,sizer] = get_matching_masks(f_real, Ibox);
 
 %Now choose the mask which is closest to N cells
-[targetlvl, mask] = get_ncell_mask(GOAL_NCELLS, masker, ...
+[targetlvl, mask] = get_ncell_mask(init_params, masker, ...
                                                 sizer);
 [uu,vv] = find(mask);
 curfeats = f_real{targetlvl}(min(uu):max(uu),min(vv):max(vv),:);
@@ -39,26 +52,20 @@ model.w = curfeats - mean(curfeats(:));
 model.b = 0;
 model.x = curfeats;
 
-[model.bb,model.x] = get_target_bb(model,I);
+%Fire inside self-image to get detection location
+[model.bb, model.x] = get_target_bb(model,I);
 
-model.w = reshape(model.x,size(model.w))-mean(model.x(:));
+%Normalized-HOG initialization
+model.w = reshape(model.x,size(model.w)) - mean(model.x(:));
 
-%figure(34)
-%imagesc(I)
-%plot_bbox(model.bb);
-%pause
-
-function [targetlvl,mask] = get_ncell_mask(GOAL_NCELLS, masker, ...
+function [targetlvl,mask] = get_ncell_mask(init_params, masker, ...
                                                         sizer)
 %Get a the mask and features, where mask is closest to NCELL cells
 %as possible
-
-MAXDIM = 10;
-fprintf(1,'maxdim is %d\n',MAXDIM);
 for i = 1:size(masker)
   [uu,vv] = find(masker{i});
-  if ((max(uu)-min(uu)+1) <= MAXDIM) && ...
-        ((max(vv)-min(vv)+1) <= MAXDIM)
+  if ((max(uu)-min(uu)+1) <= init_params.MAXDIM) && ...
+        ((max(vv)-min(vv)+1) <= init_params.MAXDIM)
     targetlvl = i;
     mask = masker{targetlvl};
     return;
@@ -67,11 +74,11 @@ end
 fprintf(1,'didnt find a match\n');
 %Default to older strategy
 ncells = prod(sizer,2);
-[aa,targetlvl] = min(abs(ncells-GOAL_NCELLS));
+[aa,targetlvl] = min(abs(ncells-init_params.goal_ncells));
 mask = masker{targetlvl};
 
-function [masker,sizer] = get_matching_masks(f_real, I2)
-%Given a feature pyramid, and a segmentation mask inside I2, find
+function [masker,sizer] = get_matching_masks(f_real, Ibox)
+%Given a feature pyramid, and a segmentation mask inside Ibox, find
 %the best matching region per level in the feature pyramid
 
 masker = cell(length(f_real),1);
@@ -80,7 +87,7 @@ sizer = zeros(length(f_real),2);
 for a = 1:length(f_real)
   goods = double(sum(f_real{a}.^2,3)>0);
   
-  masker{a} = max(0.0,min(1.0,imresize(I2,[size(f_real{a},1) size(f_real{a}, ...
+  masker{a} = max(0.0,min(1.0,imresize(Ibox,[size(f_real{a},1) size(f_real{a}, ...
                                                   2)])));
   [tmpval,ind] = max(masker{a}(:));
   masker{a} = (masker{a}>.1) & goods;
