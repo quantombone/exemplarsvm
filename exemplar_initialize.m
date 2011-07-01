@@ -65,8 +65,6 @@ e_set = e_set(rrr);
 allfiles = cell(length(e_set), 1);
 
 for i = 1:length(e_set)
- 
-  I = convert_to_I(e_set{i}.I);
   cls = e_set{i}.cls;
   objectid = e_set{i}.objectid;
   bbox = e_set{i}.bbox;
@@ -86,6 +84,8 @@ for i = 1:length(e_set)
   end
   gt_box = bbox;
   fprintf(1,'.');
+  
+  I = convert_to_I(e_set{i}.I);
 
   %Call the init function which is a mapping from (I,bbox) to (model)
   [model] = init_params.init_function(I, bbox, init_params);
@@ -117,9 +117,10 @@ for i = 1:length(e_set)
   % fprintf(1,'Final hg_size is %d %d\n',...
   %         m.model.hg_size(1), m.model.hg_size(2));
 
-  %if display == 1
-  %  show_initialized_exemplar(m);
-  %end
+  %Show the initialized exemplars
+  if dataset_params.display == 1
+    show_exemplar_frames({m}, 1, dataset_params);
+  end
 end  
 
 %sort files so they are in alphabetical order
