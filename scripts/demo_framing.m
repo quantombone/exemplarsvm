@@ -1,6 +1,8 @@
 %% Showcase of Exemplar Framings
 % In this example, we initialize some exemplars with different
 % framing strategies.
+
+% To generate this pdf, run publish('demo_framing','pdf');
 cls = 'cow';
 VOCYEAR = 'VOC2007';
 
@@ -22,6 +24,8 @@ e_scene_stream_set = get_pascal_scene_stream(dataset_params, ...
                                              cls, stream_max_ex);
 
 %% Scene: GoalSize goal_ncells = [100], MAXDIM=[10]
+% This mode will try create a framing which is made up of a target
+% number of cells, subject to one dimension being at most MAXDIM
 clear init_params;
 init_params.sbin = 8;
 init_params.goal_ncells = 100;
@@ -41,6 +45,9 @@ snapnow;
 
 
 %% Scene: GoalSize goal_ncells = [300], MAXDIM=[15]
+% Here is the above example, but allowing for a much finer scene
+% representation
+
 clear init_params;
 init_params.sbin = 8;
 init_params.goal_ncells = 300;
@@ -65,6 +72,7 @@ for i = 1:length(efiles)
 end
 
 %% Exemplars: GoalSize goal_ncells = [100], MAXDIM=[10]
+% Experiment repeated for exemplars
 clear init_params;
 init_params.sbin = 8;
 init_params.goal_ncells = 100;
@@ -88,8 +96,8 @@ for i = 1:length(efiles)
  delete(efiles{i});
 end
 
-
 %% Exemplar: FixedFrame hg_size = [8 8]
+% Experiment for fixed-size exemplars
 clear init_params;
 init_params.sbin = 8;  
 init_params.hg_size = [8 8];
