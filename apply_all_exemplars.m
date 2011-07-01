@@ -14,6 +14,11 @@ function allfiles = apply_all_exemplars(...
 
 %Save results every NIMS_PER_CHUNK images
 
+if length(fg) == 0
+  allfiles = {};
+  return;
+end
+
 NIMS_PER_CHUNK = dataset_params.NIMS_PER_CHUNK;
 
 %VOCinit;
@@ -29,12 +34,7 @@ NIMS_PER_CHUNK = dataset_params.NIMS_PER_CHUNK;
 %end
 
 %Only allow display to be enabled on a machine with X
-[v,r] = unix('hostname');
-if strfind(r,dataset_params.display_machine)==1
-  display = 1;
-else
-  display = 0;
-end
+display = dataset_params.display;
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
@@ -84,7 +84,7 @@ lrstring = '';
 baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,setname, ...
                 models{1}.models_name);
 
-if ~exist(baser,'dir') && (display == 0)
+if ~exist(baser,'dir')
   fprintf(1,'Making directory %s\n',baser);
   mkdir(baser);
 end
@@ -113,11 +113,11 @@ for i = 1:length(ordering)
   allfiles{i} = filer;
   filerlock = [filer '.lock'];
 
-  if display == 0
-    if fileexists(filer) || (mymkdir_dist(filerlock) == 0)
-      continue
-    end
+
+  if fileexists(filer) || (mymkdir_dist(filerlock) == 0)
+    continue
   end
+
   
   res = cell(0,1);
 
@@ -174,7 +174,7 @@ for i = 1:length(ordering)
 
     if display == 1       
       %extract detection box vectors from the localization results
-
+      saveboxes = boxes;
       if size(boxes,1)>=1
         boxes(:,5) = 1:size(boxes,1);
       end
@@ -205,14 +205,16 @@ for i = 1:length(ordering)
         % show_hits_figure_iccv(models,boxes,I,I,exemplar_overlay,I);
         show_hits_figure(models, boxes, I);
         drawnow
-        pause
+        pause(.1)
       else
         figure(1)
         clf
         imagesc(I)
         drawnow
         fprintf(1,'No detections in this Image\n');
+        pause(.1)
       end
+      boxes = saveboxes;
     end
 
     extras = [];
@@ -231,14 +233,13 @@ for i = 1:length(ordering)
   end
   
   % save results into file and remove lock file
-  if display == 0
-    save(filer,'res');
-    try
-      rmdir(filerlock);
-    catch
-      fprintf(1,'Directory %s already gone\n',filerlock);
-    end
-  end  
+  save(filer,'res');
+  try
+    rmdir(filerlock);
+  catch
+    fprintf(1,'Directory %s already gone\n',filerlock);
+  end
+  
 end
 
 [allfiles,bb] = sort(allfiles);
