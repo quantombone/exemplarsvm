@@ -1,27 +1,15 @@
-function fg = get_pascal_scene_stream(VOCopts, set_name, cls, ...
-                                               MAXLENGTH, must_have_seg);
+function fg = get_pascal_scene_stream(VOCopts, set_name, cls)
 %% Create a scene stream, such that each element fg{i} contains
 %these fields: (I, bbox, cls, curid, [objectid], [anno])
-
-must_have_seg_string = '';
-if ~exist('must_have_seg','var')
-  must_have_seg = 0;
-elseif must_have_seg == 1
-  must_have_seg_string = '-seg';
-end
-
-%The maximum number of scenes to process
-if ~exist('MAXLENGTH','var')
-  MAXLENGTH = 10000;
-end
 
 basedir = sprintf('%s/models/streams/',VOCopts.localdir);
 if ~exist(basedir,'dir')
   mkdir(basedir);
 end
-streamname = sprintf('%s/%s-%s-%d-scene%s.mat',...
-                     basedir,set_name,cls,MAXLENGTH,...
-                     must_have_seg_string);
+
+streamname = sprintf('%s/%s-%s-%d-%s%s.mat',...
+                     basedir,set_name,cls,VOCopts.stream_max_ex,...
+                     VOCopts.model_type,VOCopts.must_have_seg_string);
 
 if fileexists(streamname)
   fprintf(1,'Loading %s\n',streamname);
@@ -67,9 +55,8 @@ for i = 1:length(ids)
   
   if length(fg) == MAXLENGTH
     save(streamname,'fg');
-    return;
-    
+    return; 
   end
 end
 
-save(streamname,'fg');
+save(streamname, 'fg');
