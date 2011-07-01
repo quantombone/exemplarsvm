@@ -1,11 +1,15 @@
-function dataset_params = get_voc_dataset(VOCYEAR)
+function dataset_params = get_voc_dataset(VOCYEAR,suffix)
+%Get the dataset structure for a VOC dataset, given the VOCYEAR
+%string which is something like: VOC2007, VOC2010, ...
+if ~exist('suffix','var')
+  suffix = '/nfs/baikal/tmalisie/summer11/';
+end
 
 %%%% SETUP DATASET
 %CHOOSE HOW MANY IMAGES WE APPLY PER CHUNK
 dataset_params.NIMS_PER_CHUNK = 4;
 
-dataset_params.devkitroot = ['/nfs/baikal/tmalisie/summer11/' ...
-                    VOCYEAR];
+dataset_params.devkitroot = [suffix '/' VOCYEAR];
 
 % change this path to a writable local directory for the example code
 dataset_params.localdir = [dataset_params.devkitroot '/local/'];
@@ -28,4 +32,3 @@ end
 dataset_params.dataset = VOCYEAR;
 dataset_params.testset = 'test';
 dataset_params = VOCinit(dataset_params);
-
