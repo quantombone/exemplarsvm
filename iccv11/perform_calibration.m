@@ -6,6 +6,12 @@ function [betas,ALL_bboxes] = perform_calibration(models, grid, dataset_params)
 
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
+if length(grid) == 0
+  betas = [];
+  ALL_bboxes = [];
+  return;
+end
+
 %if enabled, do NMS, if disabled return raw detections
 DO_NMS = 0;
 
