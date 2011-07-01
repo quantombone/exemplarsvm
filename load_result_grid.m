@@ -88,13 +88,16 @@ grid = cellfun2(@(x)x.res,grid);
 grid2 = grid;
 grid = [grid2{:}];
 
-%sort grids by image index
-[aa,bb] = sort(cellfun(@(x)x.index,grid));
-grid = grid(bb);
-
-%only keep grids with at least one detection
-lens = cellfun(@(x)size(x.bboxes,1),grid);
-grid = grid(lens>0);
+if length(grid) > 0
+  
+  %sort grids by image index
+  [aa,bb] = sort(cellfun(@(x)x.index,grid));
+  grid = grid(bb);
+  
+  %only keep grids with at least one detection
+  lens = cellfun(@(x)size(x.bboxes,1),grid);
+  grid = grid(lens>0);
+end
 
 %if fileexists(final_file) || (mymkdir_dist(lockfile) == 0)
 %  wait_until_all_present({final_file},5);
