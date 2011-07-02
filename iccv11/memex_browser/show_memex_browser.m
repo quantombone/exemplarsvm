@@ -21,6 +21,7 @@ moses = cat(1,final_maxos{:});
 
 %% sort detections by score
 [aa,bb] = sort(bbs(:,end), 'descend');
+bbs = bbs(bb,:);
 
 wwwdir = sprintf('%s/memex/%s.%s-%s%s/', dataset_params.localdir,...
                  set_name, models{1}.cls, ...
@@ -41,7 +42,7 @@ fprintf(fid,['<html><head><title>memex browser</title>'...
              '</head><body>\n']);
 
 fprintf(fid,'<table border=1>\n');
-for i = 1:length(models)
+for i = 1:min(10,length(models))
   fprintf(fid,'<tr>\n');
   [a,curid,ext] = fileparts(models{i}.I);
   
