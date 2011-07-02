@@ -9,7 +9,10 @@ efiles = exemplar_initialize(dataset_params, e_stream_set, ...
                              models_name, dataset_params.init_params);
 
 %Load all of the initialized exemplars
-models = load_all_models(dataset_params, cls, models_name, efiles, 1);
+CACHE_FILE = 0;
+STRIP_FILE = 0;
+models = load_all_models(dataset_params, cls, models_name, ...
+                         efiles, CACHE_FILE, STRIP_FILE);
 
 %% Train each initialized exemplar 
 if (dataset_params.SKIP_TRAINING == 0)
@@ -18,19 +21,20 @@ if (dataset_params.SKIP_TRAINING == 0)
                              dataset_params.trainset_name2);
   train_set = train_set(1:min(length(train_set), ...
                               dataset_params.trainset_maxk));
-  
 
   [tfiles, models_name] = train_all_exemplars(dataset_params, models, ...
                                               train_set, ...
                                               dataset_params.mining_params, ...
-                                              dataset_params.training_function);
-  
+                                              dataset_params.training_function);  
   %Load the trained exemplars
-  models = load_all_models(dataset_params, cls, models_name, tfiles, ...
-                           1, 1);
+  CACHE_FILE = 1;
+  STRIP_FILE = 1;
+  models = load_all_models(dataset_params, cls, models_name, ...
+                           tfiles, CACHE_FILE, STRIP_FILE);
   
 end
 
+%% Apply trained exemplars on validation set
 if strcmp(dataset_params.model_type,'exemplar') && ...
       (dataset_params.SKIP_VAL == 0)
 
@@ -42,7 +46,7 @@ if strcmp(dataset_params.model_type,'exemplar') && ...
   val_gt_function = @get_pascal_anno_function;
   val_params = get_default_mining_params;
 
-  %% Apply trained exemplars on validation set
+  %Apply on validation set
   val_files = apply_all_exemplars(dataset_params, models, val_set, ...
                                   dataset_params.valset_name, ...
                                   [], val_params, val_gt_function);
@@ -53,10 +57,10 @@ if strcmp(dataset_params.model_type,'exemplar') && ...
   
   %% Perform l.a.b.o.o. calibration and M-matrix estimation
   M = calibrate_and_estimate_M(dataset_params, models, val_grid);
-  
 else
   M = [];
 end
+
 
 test_set = get_pascal_set(dataset_params, ...
                           dataset_params.testset_name,...
@@ -71,7 +75,7 @@ if length(test_set) == 0
   return;
 end
 
-%% Apply trained exemplars on test set
+%Apply trained exemplars on test set
 test_files = apply_all_exemplars(dataset_params, models, test_set, ...
                                  dataset_params.testset_name, ...
                                  [], test_params, ...
