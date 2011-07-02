@@ -2,14 +2,17 @@ datadir = "http://balaton.graphics.cs.cmu.edu/sdivvala/.all/Datasets/Pascal_VOC/
 
 function show_image(divid,im,bb,imdim,color) {
 
+document.writeln('Score = ' + bb[11]);
+document.writeln('<br/>');
 var paper = Raphael(divid, imdim[1], imdim[0]);
 srcim = datadir + '/' + im;
 var c = paper.image(srcim, 0, 0, imdim[1], imdim[0]);
 
 // flip the image which has flip turned on
-if (bb[6] == 1) {
-c.scale(-1,1); //.attr({opacity: .5});
-}
+//if (bb[6] == 1) {
+//c.scale(-1,1).attr({opacity: .5});
+//}
+
 
 var w = Math.round(bb[2] - bb[0] + 1);
 var h = Math.round(bb[3] - bb[1] + 1);
