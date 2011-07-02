@@ -7,7 +7,7 @@ function mining_params = get_default_mining_params
 mining_params.FLIP_LR = 1;
 
 %maximum number of mining iterations
-mining_params.MAXITER = 100;
+mining_params.MAX_MINE_ITERATIONS = 100;
 
 %ICCV11 constant
 mining_params.SVMC = .01;
