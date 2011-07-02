@@ -4,8 +4,7 @@ clear;
 VOCYEAR = 'VOC2007';
 suffix = '/nfs/baikal/tmalisie/demo11/';
 dataset_params = get_voc_dataset(VOCYEAR,suffix);
-dataset_params.display_machine = '';
-dataset_params.display = 1;
+dataset_params.display = 0;
 
 dataset_params.must_have_seg = 0;
 dataset_params.must_have_seg_string = '';
@@ -30,7 +29,6 @@ init_params.init_type = sprintf('nn-%d-f-%d-%d', ...
                                 init_params.hg_size(1), ...
                                 init_params.hg_size(2));
 
-
 %Choose the training function (do_svm, do_rank, ...)
 dataset_params.training_function = @do_svm;
 
@@ -49,7 +47,6 @@ dataset_params.testset_name = 'test';
 dataset_params.testset_maxk = 1000;
 
 dataset_params.mining_params = get_default_mining_params;
-
 
 %Choose a short string to indicate the type of training run we are doing
 dataset_params.models_name = ...

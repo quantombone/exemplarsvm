@@ -24,10 +24,8 @@ dataset_params.resdir = [dataset_params.devkitroot ['/' ...
 [v,r] = unix('hostname');
 if strfind(r,'airbone')==1
   dataset_params.datadir = '/projects/Pascal_VOC/';
-  dataset_params.display_machine = 'airbone';
 else
   dataset_params.datadir = '/nfs/hn38/users/sdivvala/Datasets/Pascal_VOC/';
-  dataset_params.display_machine = 'onega';
 end
 
 %Some VOC-specific dataset stats

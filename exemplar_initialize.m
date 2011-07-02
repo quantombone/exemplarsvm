@@ -20,13 +20,6 @@ function allfiles = exemplar_initialize(dataset_params, e_set, ...
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
-% %Only allow display to be enabled on a machine with X
-% [v,r] = unix('hostname');
-% if strfind(r, dataset_params.display_machine)==1
-%   display = 1;
-% else
-%   display = 0;
-% end
 
 % DTstring = '';
 % if dalalmode == 1

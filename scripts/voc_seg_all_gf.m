@@ -4,7 +4,6 @@ clear;
 VOCYEAR = 'VOC2007';
 suffix = '/nfs/baikal/tmalisie/demo11/';
 dataset_params = get_voc_dataset(VOCYEAR,suffix);
-dataset_params.display_machine = '';%'onega';
 dataset_params.display = 0;
 
 dataset_params.must_have_seg = 0;

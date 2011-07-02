@@ -1,5 +1,8 @@
 %clear
 
+error(['Function is deprecated: needs to be updated to new interface,' ...
+       ' see voc_template.m']);
+
 %Choose the VOC category
 cls = 'face';
 
@@ -21,16 +24,6 @@ dataset_params.dataset = 'video';
 
 dataset_params.devkitroot = ['/nfs/baikal/tmalisie/summer11/' dataset_params.dataset];;
 dataset_params.wwwdir = [dataset_params.devkitroot '/www/'];
-
-% %This is the directory where we dump visualizations into
-% [v,r] = unix('hostname');
-% if strfind(r,'airbone')==1
-%   dataset_params.datadir ='/projects/Pascal_VOC/';
-%   dataset_params.display_machine = 'airbone';
-% else
-%   dataset_params.datadir ='/nfs/hn38/users/sdivvala/Datasets/Pascal_VOC/';
-%   dataset_params.display_machine = 'onega';
-% end
 
 % change this path to a writable local directory for the example code
 dataset_params.localdir=[dataset_params.devkitroot '/local/'];
@@ -89,7 +82,7 @@ curset_name = 'trainval';
 val_set = get_pascal_bg(curset_name,cls,dataset_params);
 val_set = val_set(1:10);
 
-dataset_params.display_machine = '';
+
 
 %No calibration parameters yet
 
