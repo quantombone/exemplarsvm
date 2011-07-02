@@ -1,6 +1,6 @@
 function mining_params = get_default_mining_params
-%Return the default mining and SVM training parameters for the
-%exemplar svm and the visual memex network
+%% Return the default mining/training/detection parameters for the
+% ExemplarSVM runs
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 %Turn on detection on image flips
@@ -14,11 +14,6 @@ mining_params.SVMC = .01;
 
 %regularize more here
 %mining_params.SVMC = .0001;
-
-%if enabled, during mining we use every other image as validation
-%where we keep as many top detection from the validation set as are
-%considered in the SVM training cache
-mining_params.alternate_validation = 0;
 
 %maximum number of image-scans during training
 mining_params.MAX_TOTAL_MINED_IMAGES = 2500;
@@ -56,20 +51,14 @@ mining_params.MAX_IMAGES_BEFORE_SVM = 400;
 mining_params.beyond_nsv_multiplier = 3;
 mining_params.max_negatives = 2000;
 
-%%if less than 1.0, then we apply nms to detections so that we don't have
-%%too many redundant windows
+%if less than 1.0, then we apply nms to detections so that we don't have
+%too many redundant windows
 mining_params.NMS_MINES_OS = 1.0;
-
-%if non-zero, then skip detection at any objects
-%mining_params.SKIP_GTS_ABOVE_THIS_OS = 10.0;
-
-%if non-zero, add these detections as positives
-%mining_params.ASSIMILATE_GTS_ABOVE_THIS_OS = 10;
 
 %Queue mode can be one of: {'onepass','cycle-violators','front-violators'}
 mining_params.queue_mode = 'onepass';
 
-%% if non-zero, sets weight of positives such that positives and
+% if non-zero, sets weight of positives such that positives and
 %negatives are treated equally
 mining_params.BALANCE_POSITIVES = 0;
 
@@ -83,8 +72,7 @@ mining_params.A_FROM_POSITIVES = 0;
 %if enabled, we must extract training negatives from positives and
 %held-out positives
 mining_params.extract_negatives = 0;
-mining_params.GET_GT_OS = 0;
-mining_params.MINE_MODE = 0;
+%mining_params.GET_GT_OS = 0;
 
 %experimental flag to skip the mining process
 mining_params.skip_mine = 0;

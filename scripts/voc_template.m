@@ -53,6 +53,40 @@ models = load_all_models(dataset_params, cls, models_name, efiles, 1);
 models = load_all_models(dataset_params, cls, models_name, tfiles, ...
                          1, 1);
 
+%% Apply trained exemplars on test set
+test_files = apply_all_exemplars(dataset_params, models, test_set, ...
+                                 dataset_params.testset_name, ...
+                                 [], test_params, ...
+                                 test_gt_function);
+
+
+%Load testset results
+test_grid = load_result_grid(dataset_params, models, ...
+                             dataset_params.testset_name, test_files);
+
+%% Evaluation uncalibrated SVM classifiers
+teststruct = pool_results(dataset_params, models, test_grid);
+if strcmp(dataset_params.model_type,'exemplar') && ...
+      (dataset_params.SKIP_EVAL == 0)
+  [results] = evaluate_pascal_voc_grid(dataset_params, ...
+                                       models, test_grid, ...
+                                       dataset_params.testset_name, teststruct);
+end
+
+show_memex_browser(dataset_params, models, test_grid,...
+                   test_set, dataset_params.testset_name, ...
+                   teststruct);
+
+%%% Show top detections from uncalibrated SVM classifiers
+% show_top_dets(dataset_params, models, test_grid,...
+%               test_set, dataset_params.testset_name, ...
+%               teststruct);
+
+if dataset_params.SKIP_VALIDATION == 1
+  return;
+end
+
+
 if strcmp(dataset_params.model_type,'exemplar')
   %% Apply trained exemplars on validation set
   val_files = apply_all_exemplars(dataset_params, models, val_set, ...
@@ -70,29 +104,7 @@ else
   M = [];
 end
 
-%% Apply trained exemplars on test set
-test_files = apply_all_exemplars(dataset_params, models, test_set, ...
-                                 dataset_params.testset_name, [], test_params, ...
-                                 test_gt_function);
-
-%Load testset results
-test_grid = load_result_grid(dataset_params, models, ...
-                             dataset_params.testset_name, test_files);
-
-%% Evaluation uncalibrated SVM classifiers
-teststruct = pool_results(dataset_params, models, test_grid);
-if strcmp(dataset_params.model_type,'exemplar')
-  [results] = evaluate_pascal_voc_grid(dataset_params, ...
-                                       models, test_grid, ...
-                                       dataset_params.testset_name, teststruct);
-end
-
-%% Show top detections from uncalibrated SVM classifiers
-show_top_dets(dataset_params, models, test_grid,...
-              test_set, dataset_params.testset_name, ...
-              teststruct);
-
-if length(M) > 0
+if length(M) > 0 && (dataset_params.SKIP_EVAL == 0)
   %% Evaluation of l.a.b.o.o. afer training
   M2.betas = M.betas;
   teststruct = pool_results(dataset_params, models, test_grid, M2);
@@ -108,7 +120,8 @@ if length(M) > 0
   %% Evaluation of laboo + M matrix
   teststruct = pool_results(dataset_params, models, test_grid, M);
   
-  if strcmp(dataset_params.model_type,'exemplar')
+  if strcmp(dataset_params.model_type,'exemplar') && ...
+        (dataset_params.SKIP_EVAL == 0)
     [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                          models, test_grid, ...
                                          dataset_params.testset_name, ...
@@ -120,4 +133,3 @@ if length(M) > 0
                 test_set, dataset_params.testset_name, ...
                 teststruct);
 end
-  
