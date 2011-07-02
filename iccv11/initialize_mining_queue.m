@@ -9,6 +9,7 @@ if ~exist('rrr','var')
   %rrr = 1:length(bg);
 end
 
+mining_queue = cell(0,1);
 for zzz = 1:length(rrr)
   mining_queue{zzz}.index = rrr(zzz);
   mining_queue{zzz}.num_visited = 0;
