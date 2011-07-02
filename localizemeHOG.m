@@ -59,20 +59,12 @@ t{2} = t2;
 function [resstruct,t] = localizemeHOGdriver(I, models, ...
                                              localizeparams)
 
-if length(models)>20
+nnmode = getnnmode(models);
+
+if length(models)>20 || (nnmode>0)
   [resstruct,t] = localizemeHOGdriverBLOCK(I, models, ...
                                          localizeparams);
   return;
-end
-
-adjust = 0;
-if isfield(models{1},'models_name') ...
-      && ~isempty(strfind(models{1}.models_name,'-ncc'))
-  adjust = 1;
-end
-
-if adjust == 1
-  fprintf(1,'DISTANCE ADJUSTMENT TURNED ON\n');
 end
 
 N = length(models);
@@ -171,42 +163,11 @@ else
 end
 fprintf(1,'\n');
 
-
-if adjust == 1
-  %% Here we run an auxilliary distance metric for detections
-  for j = 1:length(resstruct.bbs)
-    if isempty(resstruct.bbs{j})
-      continue
-    end
-    xs = cat(2, ...
-             resstruct.xs{j}{:});
-    norms = sqrt(sum(xs.^2,1));
-    xs = xs ./ repmat(norms,size(xs,1),1);
-    newd =  xs'* ...
-            (models{j}.model.x)/norm(models{j}.model.x);
-    [aa,bb] = sort(newd, ...
-                   'descend');
-    resstruct.score_grid{j} = aa';
-    resstruct.bbs{j} = ...
-        resstruct.bbs{j}(bb);
-    resstruct.xs{j} = ...
-        resstruct.xs{j}(bb);
-  end
-end
-
-
 function [resstruct,t] = localizemeHOGdriverBLOCK(I, models, ...
                                              localizeparams)
 
 %%HERE is the chunk version of this
-adjust = 0;
-if isfield(models{1},'models_name') ...
-      && ~isempty(strfind(models{1}.models_name,'-ncc'))
-  adjust = 1;
-end
-
-%oldsave = localizeparams.SAVE_SVS;
-%localizeparams.SAVE_SVS = 1;
+nnmode = getnnmode(models);
 
 N = length(models);
 ws = cellfun2(@(x)x.model.w,models);
@@ -224,11 +185,11 @@ for i = 1:length(models)
   t = zeros(S(1),S(2),features);
   t(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
       models{i}.model.w;
-  %x = zeros(S(1),S(2),features);
-  %x(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
-  %    reshape(models{i}.model.x(:,1),models{i}.model.hg_size);
+  x = zeros(S(1),S(2),features);
+  x(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
+      reshape(models{i}.model.x(:,1),models{i}.model.hg_size);
   templates(:,:,:,i) = t;
-  %templates_x(:,:,:,i) = x;
+  templates_x(:,:,:,i) = x;
   template_masks(:,:,i) = double(sum(t.^2,3)>0);
 end
 
@@ -265,14 +226,23 @@ finalf = cat(2,finalf{:});
 uus = cat(2,uus{:});
 vvs = cat(2,vvs{:});
 
-www = reshape(templates,[],size(templates,4));
-%www2 = reshape(templates_x,[],size(templates_x,4));
+exemplar_matrix = reshape(templates,[],size(templates,4));
 
-%Do large matrix multiplication and subtract bias
-r = www'*finalf;
-r = bsxfun(@minus,r,bs);
-
-%r = -distSqr_fast(www2,finalf);
+if nnmode == 0
+  %nnmode 0: Apply linear classifiers by performing one large matrix
+  %multiplication and subtract bias
+  r = exemplar_matrix' * finalf;
+  r = bsxfun(@minus, r, bs);
+  
+elseif nnmode == 1
+  %nnmode 1: Apply linear classifiers by performing one large matrix
+  %multiplication and subtract bias
+  www2 = reshape(templates_x, [], size(templates_x,4));
+  r = slmetric_pw(www2,finalf,'nrmcorr');
+  
+else
+  error('invalid nnmode\n');
+end
 
 resstruct.bbs = cell(N,1);
 resstruct.xs = cell(N,1);
@@ -327,41 +297,6 @@ end
 fprintf(1,'\n');
 
 
-if adjust == 1
-  %% Here we run an auxilliary distance metric for detections
-  for j = 1:length(resstruct.bbs)
-    if isempty(resstruct.bbs{j})
-      continue
-    end
-    
-    curx = reshape(models{j}.model.x,...
-                   models{j}.model.hg_size);
-    
-    xs = cat(2, ...
-             resstruct.xs{j});
-    xs = reshape(xs,[size(templates,1) size(templates,2) size(templates,3) ...
-                     size(xs,2)]);
-    xs = xs(1:size(curx,1),1:size(curx,2),:);
-    xs = reshape(xs,[],size(resstruct.xs{j},2));
-    
-    norms = sqrt(sum(xs.^2,1));
-    xs = xs ./ repmat(norms,size(xs,1),1);
-
-    newd =  xs'* ...
-            (curx(:)/norm(curx(:)));
-
-    [aa,bb] = sort(newd, ...
-                   'descend');
-
-    resstruct.score_grid{j} = aa';
-    resstruct.bbs{j} = ...
-        resstruct.bbs{j}(bb);
-    resstruct.xs{j} = ...
-        resstruct.xs{j}(bb);
-  end
-
-end
-
 function rs = prune_nms(rs, params)
 %Prune via nms to eliminate redundant detections
 
@@ -412,8 +347,7 @@ if isnumeric(I)
   minsizes = cellfun(@(x)min([size(x,1) size(x,2)]), t.hog);
   t.hog = t.hog(minsizes >= t.padder*2);
   t.scales = t.scales(minsizes >= t.padder*2);
-  
-  
+    
   %if only_compute_pyramid == 1
   %  resstruct = t;
   %  return;
@@ -434,4 +368,11 @@ else
   
   fprintf(1,'Localizing %d in I=[%dx%d@%d]',N,...
         t.size(1),t.size(2),localizeparams.lpo);
+end
+
+function nnmode = getnnmode(models)
+nnmode = 0;
+if isfield(models{1}.model.init_params,'nnmode') && ...
+      (models{1}.model.init_params.nnmode>0)
+  nnmode = models{1}.model.init_params.nnmode;
 end
