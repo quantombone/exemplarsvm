@@ -1,31 +1,36 @@
 function allbbs = show_memex_browser(dataset_params, models, grid, ...
-                                     fg, set_name, ...
-                                     finalstruct, maxk)
+                                     fg, set_name, maxk)
 % Show the exemplar-view of the memex browser
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
+fprintf(1,'Starting memex browser\n');
 
 %maxk is the maximum number of top detections we display
 if ~exist('maxk','var')
   maxk = 5;
 end
 
-final_boxes = finalstruct.unclipped_boxes;
-final_maxos = finalstruct.final_maxos;
+bbs = cellfun2(@(x)x.bboxes,grid);
+bbs = cat(1,bbs{:});
+final_boxes = bbs;
+%final_boxes = finalstruct.unclipped_boxes;
+%final_maxos = finalstruct.final_maxos;
 
-bbs = cat(1,final_boxes{:});
+%bbs = cat(1,final_boxes{:});
 imids = bbs(:,11);
 exids = bbs(:,6);
 
-moses = cat(1,final_maxos{:});
+%moses = cat(1,final_maxos{:});
 
 %% sort detections by score
 [aa,bb] = sort(bbs(:,end), 'descend');
 bbs = bbs(bb,:);
+exids = exids(bb);
+imids = imids(bb);
 
 wwwdir = sprintf('%s/memex/%s.%s-%s%s/', dataset_params.localdir,...
                  set_name, models{1}.cls, ...
-                 models{1}.models_name, finalstruct.calib_string);
+                 models{1}.models_name, '');
 
 if ~exist(wwwdir,'dir')
   mkdir(wwwdir);
@@ -42,7 +47,7 @@ fprintf(fid,['<html><head><title>memex browser</title>'...
              '</head><body>\n']);
 
 fprintf(fid,'<table border=1>\n');
-for i = 1:min(10,length(models))
+for i = 1:length(models)
   fprintf(fid,'<tr>\n');
   [a,curid,ext] = fileparts(models{i}.I);
   
@@ -62,6 +67,7 @@ for i = 1:min(10,length(models))
                     divid, curid, ext, bbstring, Isize(1), Isize(2));
   
   goods = find(exids==i);
+
   for j = 1:maxk
     bb = bbs(goods(j),:);  
 

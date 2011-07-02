@@ -73,9 +73,11 @@ dataset_params.models_name = ...
      dataset_params.model_type];
 
 classes = {...
-    'bus'
+    'dog'
+    'cat'
+    'tvmonitor'
+    'bicycle'
     'cow'
-    'train'
     'motorbike'
     'dog'
     'sofa'
@@ -85,6 +87,9 @@ classes = {...
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
+
+dataset_params.SKIP_VALIDATION = 1;
+dataset_params.SKIP_EVAL = 1;
 
 for i = 1:length(classes)
   %Training set is negatives
