@@ -1,43 +1,57 @@
 function mining_params = get_default_mining_params
-%% Return the default mining/training/detection parameters for the
-% ExemplarSVM runs
+%% Return the default detection/training parameters
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Sliding window detection parameters 
+%(using during training and testing)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Turn on detection on image flips
 mining_params.FLIP_LR = 1;
-
-%maximum number of mining iterations
-mining_params.MAX_MINE_ITERATIONS = 100;
-
-%ICCV11 constant
-mining_params.SVMC = .01;
-
-%regularize more here
-%mining_params.SVMC = .0001;
-
-%maximum number of image-scans during training
-mining_params.MAX_TOTAL_MINED_IMAGES = 2500;
-
-%if enabled, we dump learning images into results directory
-mining_params.dump_images = 0;
-
-%if enabled, we dump the last image
-mining_params.dump_last_image = 1;
 
 %Levels-per-octave defines how many levels between 2x sizes in pyramid
 mining_params.lpo = 10;
 
-%By default dont save feature vectors of detections
+%By default dont save feature vectors of detections (training turns
+%this on automatically)
 mining_params.SAVE_SVS = 0;
 
-%default detection threshold
+%default detection threshold (negative margin makes most sense for
+%SVM-trained detectors)
 mining_params.thresh = -1;
 
-%maximum #windows per image (per exemplar) to mine
+%Maximum #windows per exemplar (per image) to keep
 mining_params.TOPK = 10;
+
+%if less than 1.0, then we apply nms to detections so that we don't have
+%too many redundant windows
+%%(BUG): this should not have the word 'mines' in it, since it is
+%used for detection not just mining
+mining_params.NMS_MINES_OS = 1.0;
 
 %How much we pad the pyramid (to let detections fall outside the image)
 mining_params.pyramid_padder = 5;
+
+%The maximum scale to consdider in the feature pyramid
+mining_params.MAXSCALE = 1.0;
+
+%The minimum scale to consider in the feature pyramid
+mining_params.MINSCALE = .01;
+
+%Only keep detections that roughly match the entire image
+%if greater than 0, then only keep dets that have this OS with the
+%entire testing image
+mining_params.MIN_SCENE_OS = 0.0;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Training/Mining parameters %%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%maximum number of mining iterations
+mining_params.MAX_MINE_ITERATIONS = 100;
+
+%maximum number of image-scans during training
+mining_params.MAX_TOTAL_MINED_IMAGES = 2500;
 
 %Maximum number of negatives to mine before SVM kicks in (this
 %defines one iteration)
@@ -46,14 +60,13 @@ mining_params.MAX_WINDOWS_BEFORE_SVM = 1000;
 %Maximum number of violating images before SVM is trained with current cache
 mining_params.MAX_IMAGES_BEFORE_SVM = 400;
 
+%ICCV11 constant
+mining_params.SVMC = .01; %% regularize more with .0001;
+
 %when mining, we keep the N negative support vectors as well as
 %some more beyond the -1 threshold (alpha*N), but no more than 1000
 mining_params.beyond_nsv_multiplier = 3;
 mining_params.max_negatives = 2000;
-
-%if less than 1.0, then we apply nms to detections so that we don't have
-%too many redundant windows
-mining_params.NMS_MINES_OS = 1.0;
 
 %Queue mode can be one of: {'onepass','cycle-violators','front-violators'}
 mining_params.queue_mode = 'onepass';
@@ -74,11 +87,11 @@ mining_params.A_FROM_POSITIVES = 0;
 mining_params.extract_negatives = 0;
 %mining_params.GET_GT_OS = 0;
 
+%if enabled, we dump learning images into results directory
+mining_params.dump_images = 0;
+
+%if enabled, we dump the last image
+mining_params.dump_last_image = 1;
+
 %experimental flag to skip the mining process
 mining_params.skip_mine = 0;
-
-%if greater than 0, then only keep dets that have this OS with the
-%entire test image
-mining_params.MIN_SCENE_OS = 0.0;
-mining_params.MAXSCALE = 1.0;
-mining_params.MINSCALE = .01;
