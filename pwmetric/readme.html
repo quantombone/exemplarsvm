@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>Readme on slmetric_pw</title>
+</head>
+<body>
+<h1>Readme on slmetric_pw (version 2.0)</h1>
+<p>
+Dahua Lin (<a href="mailto:dhlin@mit.edu">dhlin@mit.edu</a>)<br/>
+Massachusetts Institute of Technology<br/>
+August 16, 2007.<br/>
+<hr></hr>
+</p>
+<h2>Introduction</h2>
+<p>slmetric_pw.h is an m-function to compute metrics between two sets of vectors in pairwise way. 
+Compared to other metric computing functions, it has the following features:
+<ul>
+<li>It supports about 20 metric types, including 
+Euclidean distance (L2), Normalized Correlation, City-Block distance (L1),
+Quadratic distance, Minkowski distance, Hamming distance, Histogram Intersect, 
+Chi-square distance, and information theoretical divergences, etc.</li>
+<li>It is highly optimized by taking full advantage of vectorized computation. 
+For some distances that are difficult to be fully vectorized, like city-block distance, 
+C-mex implementation is offered.</li>
+<li>It is easy to use with simple syntax. </li>
+<li>It is sufficiently documented. You can type in "help slmetric_pw" to see the help on its usage. 
+Examples are available to show how to invoke the function.</li>
+</ul>
+</p>
+<h2>Installation</h2>
+<ol>
+<li>Please make sure that your MATLAB version is 2007a(7.4.0) or above. 
+The function cannot be used in lower versions.</li>
+<li>Extract the zipped package and add the path to MATLAB paths.</li>
+<li>The pre-compiled mex files (for win32) have been included in the package. 
+If necessary, you can re-compile them in your environment by running slmetric_pw_compile.</li>
+<li>Now it can be used. If you wish, you can first try the examples in the help.	</li>
+</ol>
+<h2>Background</h2>
+<p>slmetric_pw.h is an important function in the core module of sltoolbox, 
+which is a large set of functions for accomplishing many statistical learning tasks.</p>
+<p>I am now developing the second version of sltoolbox. 
+Considering that some of the core functions can be applied to a much wider domain in technical computing, 
+and that a long time is needed to make a new version of the whole toolbox ready.
+I would like to release some of these functions independently so that more fields can benefit from them.</p>
+<p>The function has been substantially rewritten based on new features of MATLAB 2007a with enhanced efficiency and stability.</p>
+</body>
+</html>
+
+
