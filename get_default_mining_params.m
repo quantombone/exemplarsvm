@@ -25,6 +25,7 @@ mining_params.TOPK = 10;
 
 %if less than 1.0, then we apply nms to detections so that we don't have
 %too many redundant windows [defaults to 0.5]
+%NOTE: mining is much faster if this is turned off!
 mining_params.NMS_OS = 0.5;
 
 %How much we pad the pyramid (to let detections fall outside the image)
