@@ -17,6 +17,9 @@ final_boxes = bbs;
 imids = bbs(:,11);
 exids = bbs(:,6);
 
+MAX_ROWS_INDEX = 3;
+MAX_ROWS_EXVIEW = 3;
+
 
 %% sort detections by score
 [aa,bb] = sort(bbs(:,end), 'descend');
@@ -62,7 +65,7 @@ for i = 1:length(models)
   fprintf(fid,'<td><div id="%s" style="position:relative"></div>',divid);
   fprintf(fid,'<script>show_image_href("%s","%s%s",%s,[%d,%d],"green","%05d.html");</script></td>',...
           divid, curid, ext, bbstring, Isize(1), Isize(2),i);
-  if mod(i,4) == 0
+  if mod(i,MAX_ROWS_INDEX) == 0
     fprintf(fid,'</tr>\n<tr>\n');
   end
 end
@@ -123,6 +126,9 @@ for i = 1:length(models)
     fprintf(fid,'<script>show_image("%s","%s%s",%s,[%d,%d],"red");</script></td>',...
             divid, curid, ext, bbstring, Isize(1), Isize(2));
 
+    if mod(j+1,MAX_ROWS_EXVIEW) == 0
+      fprintf(fid,'</tr>\n<tr>\n');
+    end
   end
   
   fprintf(fid,'</tr>\n');
