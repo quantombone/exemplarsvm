@@ -1,10 +1,10 @@
-function [allfiles,new_models_name] = train_all_exemplars(dataset_params, ...
-                                                  models, train_set, ...
-                                                  mining_params, ...
-                                                  training_function)
+function [allfiles, new_models_name] = train_all_exemplars(dataset_params, ...
+                                                  models, train_set)
 %% Train models with hard negatives for all exemplars written to
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
+
+mining_params = dataset_params.mining_params;
 
 models_name = models{1}.models_name;
 new_models_name = [models_name '-svm'];
@@ -82,7 +82,7 @@ for i = 1:length(models)
     %Get the name of the next chunk file to write
     filer2 = sprintf(filer2fill,num2str(m.iteration));
       
-    m = mine_train_iteration(m, training_function);
+    m = mine_train_iteration(m, mining_params.training_function);
 
     total_mines = sum(cellfun(@(x)x.total_mines,m.mining_stats));
     %total_mines = m.mining_stats{end}.total_mines;

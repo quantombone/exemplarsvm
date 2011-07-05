@@ -1,5 +1,4 @@
-function allfiles = apply_all_exemplars(...
-    dataset_params,models,fg,setname,M,default_params,gt_function)
+function allfiles = apply_all_exemplars(dataset_params,models,fg,setname,M)
 % Apply a set of models (raw exemplars, trained exemplars, dalals,
 % poselets, components, etc) to a set of images.  Script can be ran in
 % parallel with no arguments.  After running script, use
@@ -21,18 +20,6 @@ end
 
 NIMS_PER_CHUNK = dataset_params.NIMS_PER_CHUNK;
 
-%VOCinit;
-%if ~exist('curset','var')
-%  curset = 'both';
-%end
-%curset = 'trainval';
-
-%Load stripped exemplars for this class
-%if ~exist('models','var')
-%  [cls,DET_TYPE] = load_default_class;
-%  models = load_all_models(cls,[DET_TYPE '-stripped']);
-%end
-
 %Only allow display to be enabled on a machine with X
 display = dataset_params.display;
 
@@ -40,43 +27,16 @@ if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
 end
 
-if ~exist('default_params','var')
-  default_params = get_default_mining_params;
-end
-default_params.thresh = -1.05;
-%default_params.thresh = -.5;
-%default_params.MAXSCALE = .7;
-%default_params.MINSCALE = .3;
-if length(strfind(models{1}.models_name,'-ncc'))
-  default_params.ADJUST_DISTANCES = 1;
+if ~isfield(dataset_params,'params')
+  params = get_default_mining_params;
+else
+  params = dataset_params.params;
 end
 
 %if strcmp(models{1}.models_name,'dalal')
-%  default_params.TOPK = 100;
-%  default_params.thresher = -2.5;
+%  params.TOPK = 100;
+%  params.thresher = -2.5;
 %end
-
-% fprintf(1,'Loading default set of images\n');
-% if display == 1
-%   %If display is enabled, we must be on a machine running X, thus
-%   %we apply results on in-class images from trainval
-%   curset = 'test';%'trainval';
-%   curcls = models{1}.cls;  
-%   %curcls = '';
-
-%   %curcls = 'horse';
-%   %curcls = 'car';
-%   %curcls = 'bus';
-%   %curcls = 'tvmonitor';
-  
-%   bg = get_pascal_bg(curset,sprintf('%s',curcls));
-%   %even better yet, we apply on the images from where the models
-%   %came from
-%   %bg = cellfun2(@(x)sprintf(dataset_params.imgpath,x.curid),models);
-% else
-%   bg = get_pascal_bg(curset);
-%   fprintf(1,'bg length is %d\n',length(bg));
-% end
 
 setname = [setname '.' models{1}.cls];
 lrstring = '';
@@ -101,7 +61,7 @@ if display == 1
   ordering = 1:length(ordering);
 end
 
-[v,host_string]=unix('hostname');
+%[v,host_string]=unix('hostname');
 
 allfiles = cell(length(ordering), 1);
 
@@ -126,7 +86,6 @@ for i = 1:length(ordering)
   clear Is;
   for j = 1:length(inds{ordering(i)})
     Is{j} = convert_to_I(fg{inds{ordering(i)}(j)});
-    %Is{j} = max(0.0,min(1.0,imresize(Is{j},1.2)));
   end
   
   for j = 1:length(inds{ordering(i)})
@@ -139,14 +98,13 @@ for i = 1:length(ordering)
     I = Is{j};
        
     starter = tic;
-    [rs,t] = localizemeHOG(I, models, default_params);
+    [rs,t] = localizemeHOG(I, models, params);
     
     for q = 1:length(rs.bbs)
       if ~isempty(rs.bbs{q})
         rs.bbs{q}(:,11) = index;
-        if length(rs.bbs{q}(1,:))==11
-          fprintf(1,'keyboard at shorty\n');
-          keyboard
+        if length(rs.bbs{q}(1,:))~=12
+          error('BUG: Invalid length bb');
         end
       end
     end
@@ -164,9 +122,9 @@ for i = 1:length(ordering)
     % Transfer GT boxes from models onto the detection windows
     boxes = adjust_boxes(coarse_boxes,models);
     
-    if (default_params.MIN_SCENE_OS > 0.0)
+    if (params.MIN_SCENE_OS > 0.0)
       os = getosmatrix_bb(boxes,[1 1 size(I,2) size(I,1)]);
-      goods = find(os>=default_params.MIN_SCENE_OS);
+      goods = find(os >= params.MIN_SCENE_OS);
       boxes = boxes(goods,:);
       coarse_boxes = coarse_boxes(goods,:);
     end
@@ -226,9 +184,9 @@ for i = 1:length(ordering)
     res{j}.imbb = [1 1 size(I,2) size(I,1)];
     res{j}.curid = curid;
 
-    %%%NOTE: this is VOC specific stuff
-    if exist('gt_function','var') && ~isempty(gt_function)
-      res{j}.extras = gt_function(dataset_params,Iname,res{j}.bboxes);
+    %%%NOTE: the gt-function is well-defined for VOC-exemplars
+    if isfield(params,'gt_function') && ~isempty(params.gt_function)
+      res{j}.extras = params.gt_function(dataset_params, Iname, res{j}.bboxes);
     end 
   end
   

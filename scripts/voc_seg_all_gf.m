@@ -28,28 +28,31 @@ init_params.init_type = sprintf('g-%d-%d',...
 %                                 init_params.hg_size(1),...
 %                                 init_params.hg_size(2));
 
+dataset_params.init_params = init_params;
+
+dataset_params.mining_params = dataset_params.params;
 
 %Choose the training function (do_svm, do_rank, ...)
-training_function = @do_svm;
+dataset_params.mining_params.training_function = @do_svm;
 
-dataset_params.init_params = init_params;
-dataset_params.training_function = training_function;
+%Disable NMS for training
+dataset_params.mining_params.NMS_OS = 1.0;
+dataset_params.mining_params.MAXSCALE = 0.5;
+dataset_params.mining_params.MAX_WINDOWS_BEFORE_SVM = 1000;
+dataset_params.mining_params.TOPK = 50;
+dataset_params.mining_params.MAX_TOTAL_MINED_IMAGES = 2000;
 
 %Get the default mining parameters (plus some fixes for training)
 mining_params = get_default_mining_params;
-mining_params.SKIP_GTS_ABOVE_THIS_OS = 1.0;
-mining_params.dump_last_image = 1;
-mining_params.dump_images = 0;
-mining_params.MAXSCALE = 0.5;
-mining_params.NMS_MINES_OS = 1.0;
-mining_params.MAX_WINDOWS_BEFORE_SVM = 1000;
-mining_params.TOPK = 50;
-mining_params.MAX_TOTAL_MINED_IMAGES = 2000;
+
+dataset_params.mining_params = mining_params;
+dataset_params.val_params = dataset_params.params;
+dataset_params.test_params = dataset_params.params;
 
 if strcmp(dataset_params.model_type, 'scene')
-  mining_params.MIN_SCENE_OS = 0.5;
+  dataset_params.val_params.MIN_SCENE_OS = 0.5;
+  dataset_params.test_params.MIN_SCENE_OS = 0.5;
 end
-dataset_params.mining_params = mining_params;
 
 %Initialize exemplar stream
 dataset_params.stream_set_name = 'trainval';
@@ -71,6 +74,10 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
+dataset_params.SKIP_TRAINING = 0;
+dataset_params.SKIP_VAL = 0;
+dataset_params.SKIP_EVAL = 0;
+
 classes = {...
     'dog'
     'cat'
@@ -86,9 +93,6 @@ classes = {...
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
-
-dataset_params.SKIP_VALIDATION = 1;
-dataset_params.SKIP_EVAL = 1;
 
 for i = 1:length(classes)
   %Training set is negatives

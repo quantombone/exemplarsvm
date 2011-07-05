@@ -296,17 +296,17 @@ if localizeparams.SAVE_SVS == 0
 end
 fprintf(1,'\n');
 
-
 function rs = prune_nms(rs, params)
 %Prune via nms to eliminate redundant detections
 
 %If the field is missing, or it is set to 1, then we don't need to
-%process anything
-if ~isfield(params,'NMS_MINES_OS') || (params.NMS_MINES_OS >= 1)
+%process anything.  If it is zero, we also don't do NMS.
+if ~isfield(params,'NMS_OS') || (params.NMS_OS >= 1) ...
+      || (params.NMS_OS == 0)
   return;
 end
 
-rs.bbs = cellfun2(@(x)nms(x,params.NMS_MINES_OS),rs.bbs);
+rs.bbs = cellfun2(@(x)nms(x,params.NMS_OS),rs.bbs);
 
 if ~isempty(rs.xs)
   for i = 1:length(rs.bbs)

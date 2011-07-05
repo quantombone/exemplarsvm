@@ -24,10 +24,8 @@ mining_params.thresh = -1;
 mining_params.TOPK = 10;
 
 %if less than 1.0, then we apply nms to detections so that we don't have
-%too many redundant windows
-%%(BUG): this should not have the word 'mines' in it, since it is
-%used for detection not just mining
-mining_params.NMS_MINES_OS = 1.0;
+%too many redundant windows [defaults to 0.5]
+mining_params.NMS_OS = 0.5;
 
 %How much we pad the pyramid (to let detections fall outside the image)
 mining_params.pyramid_padder = 5;

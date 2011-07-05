@@ -13,14 +13,10 @@ end
 bbs = cellfun2(@(x)x.bboxes,grid);
 bbs = cat(1,bbs{:});
 final_boxes = bbs;
-%final_boxes = finalstruct.unclipped_boxes;
-%final_maxos = finalstruct.final_maxos;
 
-%bbs = cat(1,final_boxes{:});
 imids = bbs(:,11);
 exids = bbs(:,6);
 
-%moses = cat(1,final_maxos{:});
 
 %% sort detections by score
 [aa,bb] = sort(bbs(:,end), 'descend');
@@ -36,8 +32,8 @@ if ~exist(wwwdir,'dir')
   mkdir(wwwdir);
 end
 
-%% show the exemplar view
 
+%%% show the index
 filer = sprintf('%s/index.html', wwwdir);
 fid = fopen(filer,'w');
 fprintf(fid,['<html><head><title>memex browser</title>'...             
@@ -47,11 +43,53 @@ fprintf(fid,['<html><head><title>memex browser</title>'...
              '</head><body>\n']);
 
 fprintf(fid,'<table border=1>\n');
+fprintf(fid,'<tr>\n');
+
 for i = 1:length(models)
+  [a,curid,ext] = fileparts(models{i}.I);
+  bb = models{i}.model.bb;
+  bb(1:4) = models{i}.gt_box(1:4);
+
+  bbstring = sprintf(['[%.3f, %.3f, %.3f, %.3f, ',...
+                      '%d, %d, %d, %.3f, '...
+                      '%d, %d, %d, %.3f]'],...
+                     bb(1),bb(2),bb(3),bb(4),...
+                     bb(5),bb(6),bb(7),bb(8),...
+                     bb(9),bb(10),bb(11),bb(12));
+
+  Isize = models{i}.sizeI;
+  divid = sprintf('notepad%d.%d',i,0);
+  fprintf(fid,'<td><div id="%s" style="position:relative"></div>',divid);
+  fprintf(fid,'<script>show_image_href("%s","%s%s",%s,[%d,%d],"green","%05d.html");</script></td>',...
+          divid, curid, ext, bbstring, Isize(1), Isize(2),i);
+  if mod(i,4) == 0
+    fprintf(fid,'</tr>\n<tr>\n');
+  end
+end
+
+fprintf(fid,'</tr>\n');
+fprintf(fid,'</table>\n');
+
+fprintf(fid,'</body></html>\n');
+fclose(fid);
+
+
+%% show the exemplar view
+for i = 1:length(models)
+  filer = sprintf('%s/%05d.html', wwwdir, i);
+  fid = fopen(filer,'w');
+  fprintf(fid,['<html><head><title>memex browser</title>'...             
+               '<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>'...             
+               '<script src="http://balaton.graphics.cs.cmu.edu/tmalisie/raphael.js"></script>'...
+               '<script src="http://balaton.graphics.cs.cmu.edu/tmalisie/memex.js"></script>'...
+               '</head><body>\n']);
+  
+  fprintf(fid,'<table border=1>\n');
   fprintf(fid,'<tr>\n');
   [a,curid,ext] = fileparts(models{i}.I);
   
   bb = models{i}.model.bb;
+  bb(1:4) = models{i}.gt_box(1:4);
 
   bbstring = sprintf(['[%.3f, %.3f, %.3f, %.3f, ',...
                       '%d, %d, %d, %.3f, '...
@@ -88,11 +126,10 @@ for i = 1:length(models)
   end
   
   fprintf(fid,'</tr>\n');
-  
+  fprintf(fid,'</table>\n');
+
+  fprintf(fid,'</body></html>\n');
+  fclose(fid);
 end
 
-fprintf(fid,'</table>\n');
-
-fprintf(fid,'</body></html>\n');
-fclose(fid);
 
