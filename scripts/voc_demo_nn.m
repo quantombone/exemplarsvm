@@ -62,7 +62,7 @@ if 0
   %dataset_params.mining_params.set_maxk = 0;
 end
 
-if 0
+if 1
   dataset_params.val_params = dataset_params.params;
   dataset_params.val_params.NMS_OS = 0.5;
   dataset_params.val_params.set_name = 'trainval';

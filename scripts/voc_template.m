@@ -72,9 +72,14 @@ if isfield(dataset_params,'val_params')
   %Load validation results
   val_grid = load_result_grid(dataset_params, models, ...
                           curparams.set_name, val_files);
-  
+
+  %Show all raw detections on test-set as a "memex browser"
+  show_memex_browser(dataset_params, models, val_grid,...
+                     cur_set, curparams.set_name);
+
   %% Perform l.a.b.o.o. calibration and M-matrix estimation
   M = calibrate_and_estimate_M(dataset_params, models, val_grid);
+
 else
   fprintf(1,['Skipping validation becuase dataset_params.val_params not' ...
              ' present\n']);
@@ -102,15 +107,20 @@ if isfield(dataset_params,'test_params')
     return;
   end
 
-  %Apply on validation set
+  %Apply on test set
   dataset_params.params = curparams;
   dataset_params.params.gt_function = [];
   test_files = apply_all_exemplars(dataset_params, models, cur_set, ...
                                   curparams.set_name);
 
-  %Load validation results
+  %Load test results
   test_grid = load_result_grid(dataset_params, models, ...
                                curparams.set_name, test_files);
+  
+  %Show all raw detections on test-set as a "memex browser"
+  show_memex_browser(dataset_params, models, test_grid,...
+                     cur_set, curparams.set_name);
+
   
 else
   fprintf(1,['Skipping testing becuase dataset_params.test_params not' ...
@@ -121,11 +131,12 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%% EXEMPLAR EVALUATION %%%%%%%%%
+%%%%%% EXEMPLAR EVALUATION/DISPLAY %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Evaluation uncalibrated SVM classifiers
-teststruct = pool_results(dataset_params, models, test_grid);
+%% Evaluation of uncalibrated SVM classifiers
+M2 = [];
+teststruct = pool_results(dataset_params, models, test_grid, M2);
 if (dataset_params.SKIP_EVAL == 0)
   [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                        models, test_grid, ...
@@ -133,20 +144,20 @@ if (dataset_params.SKIP_EVAL == 0)
                                        teststruct);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%% EVALUATION DISPLAY %%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-show_memex_browser(dataset_params, models, test_grid,...
-                   cur_set, curparams.set_name);
-
 %%% Show top detections from uncalibrated SVM classifiers
 % show_top_dets(dataset_params, models, test_grid,...
 %               test_set, dataset_params.testset_name, ...
 %               teststruct);
 
-if length(M) > 0 && (dataset_params.SKIP_EVAL == 0)
+%If no calibration was performed, then we are done
+if length(M) == 0
+  return;
+end
+
+if (dataset_params.SKIP_EVAL == 0)
+
   %% Evaluation of l.a.b.o.o. afer training
+  M2 = [];
   M2.betas = M.betas;
   teststruct = pool_results(dataset_params, models, test_grid, M2);
   [results] = evaluate_pascal_voc_grid(dataset_params, ...
@@ -155,22 +166,20 @@ if length(M) > 0 && (dataset_params.SKIP_EVAL == 0)
                                        teststruct);
   
   %% Show top detections from l.a.b.o.o.
-  show_top_dets(dataset_params, models, test_grid,...
-                test_set, dataset_params.testset_name, ...
-                teststruct);
+  %show_top_dets(dataset_params, models, test_grid,...
+  %              test_set, dataset_params.testset_name, ...
+  %              teststruct);
   
   %% Evaluation of laboo + M matrix
   teststruct = pool_results(dataset_params, models, test_grid, M);
   
-  if (dataset_params.SKIP_EVAL == 0)
-    [results] = evaluate_pascal_voc_grid(dataset_params, ...
-                                         models, test_grid, ...
-                                         curparams.set_name, ...
-                                         teststruct);
-  end
+  [results] = evaluate_pascal_voc_grid(dataset_params, ...
+                                       models, test_grid, ...
+                                       curparams.set_name, ...
+                                       teststruct);
   
   %% Show top detections for laboo + M matrix
-  show_top_dets(dataset_params, models, test_grid,...
-                test_set, curparams.set_name, ...
-                teststruct);
+  %show_top_dets(dataset_params, models, test_grid,...
+  %              test_set, curparams.set_name, ...
+  %              teststruct);
 end

@@ -5,6 +5,11 @@ function [results] = evaluate_pascal_voc_grid(VOCopts,models,grid, ...
 %% firings grid, on the set target_directory which can be either
 %% 'trainval' or 'test'
 
+if VOCopts.SKIP_EVAL == 1
+  results = [];
+  return;
+end
+
 %In case we want to evaluate a subset of detectors
 % targets = [4 5];
 % for i = 1:length(grid)
