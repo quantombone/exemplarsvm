@@ -121,3 +121,4 @@ if exist('M','var') && length(M)>0 && isfield(M,'betas') && isfield(M,'w')
 end
 
 final.calib_string = calib_string;
+final.imbb = cellfun2(@(x)x.imbb,grid);

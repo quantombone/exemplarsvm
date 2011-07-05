@@ -1,5 +1,5 @@
-function allbbs = show_memex_browser(dataset_params, models, grid, ...
-                                     fg, set_name, maxk)
+function show_memex_browser(dataset_params, models, grid, ...
+                            fg, set_name, maxk)
 % Show the exemplar-view of the memex browser
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
@@ -10,22 +10,22 @@ if ~exist('maxk','var')
   maxk = 5;
 end
 
+MAX_ROWS_INDEX = 3;
+MAX_ROWS_EXVIEW = 3;
+
+%get all bbs
 bbs = cellfun2(@(x)x.bboxes,grid);
 bbs = cat(1,bbs{:});
 final_boxes = bbs;
 
-imids = bbs(:,11);
-exids = bbs(:,6);
-
-MAX_ROWS_INDEX = 3;
-MAX_ROWS_EXVIEW = 3;
-
-
-%% sort detections by score
+%% sort detections by score in descending order
 [aa,bb] = sort(bbs(:,end), 'descend');
 bbs = bbs(bb,:);
-exids = exids(bb);
-imids = imids(bb);
+exids = bbs(:,6);
+imids = bbs(:,11);
+sizers = cat(2,...
+             reshape(cellfun(@(x)x.imbb(4),grid),[],1),...
+             reshape(cellfun(@(x)x.imbb(3),grid),[],1));
 
 wwwdir = sprintf('%s/memex/%s.%s-%s%s/', dataset_params.localdir,...
                  set_name, models{1}.cls, ...
@@ -119,7 +119,7 @@ for i = 1:length(models)
                        bb(5),bb(6),bb(7),bb(8),...
                        bb(9),bb(10),bb(11),bb(12));
 
-    Isize = [grid{bb(11)}.imbb(4) grid{bb(11)}.imbb(3)];
+    Isize = sizers(bb(11),:);
     [a,curid,ext] = fileparts(fg{bb(11)});
     divid = sprintf('notepad%d.%d',i,j);
     fprintf(fid,'<td><div id="%s"/>',divid);

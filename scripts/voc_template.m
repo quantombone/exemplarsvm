@@ -71,10 +71,13 @@ if isfield(dataset_params,'val_params')
   val_grid = load_result_grid(dataset_params, models, ...
                           curparams.set_name, val_files);
 
+  val_struct = pool_results(dataset_params, models, val_grid);
+
   %Show all raw detections on test-set as a "memex browser"
   show_memex_browser(dataset_params, models, val_grid,...
                      cur_set, curparams.set_name);
 
+  return;
   %% Perform l.a.b.o.o. calibration and M-matrix estimation
   M = calibrate_and_estimate_M(dataset_params, models, val_grid);
 
@@ -133,18 +136,19 @@ end
 
 %% Evaluation of uncalibrated SVM classifiers
 M2 = [];
-teststruct = pool_results(dataset_params, models, test_grid, M2);
+test_struct = pool_results(dataset_params, models, test_grid, M2);
+keyboard
 if (dataset_params.SKIP_EVAL == 0)
   [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                        models, test_grid, ...
                                        curparams.set_name, ...
-                                       teststruct);
+                                       test_struct);
 end
 
 %%% Show top detections from uncalibrated SVM classifiers
 % show_top_dets(dataset_params, models, test_grid,...
 %               test_set, dataset_params.testset_name, ...
-%               teststruct);
+%               test_struct);
 
 %If no calibration was performed, then we are done
 if length(M) == 0
@@ -156,27 +160,27 @@ if (dataset_params.SKIP_EVAL == 0)
   %% Evaluation of l.a.b.o.o. afer training
   M2 = [];
   M2.betas = M.betas;
-  teststruct = pool_results(dataset_params, models, test_grid, M2);
+  test_struct = pool_results(dataset_params, models, test_grid, M2);
   [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                        models, test_grid, ...
                                        curparams.set_name,...
-                                       teststruct);
+                                       test_struct);
   
   %% Show top detections from l.a.b.o.o.
   %show_top_dets(dataset_params, models, test_grid,...
   %              test_set, dataset_params.testset_name, ...
-  %              teststruct);
+  %              test_struct);
   
   %% Evaluation of laboo + M matrix
-  teststruct = pool_results(dataset_params, models, test_grid, M);
+  test_struct = pool_results(dataset_params, models, test_grid, M);
   
   [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                        models, test_grid, ...
                                        curparams.set_name, ...
-                                       teststruct);
+                                       test_struct);
   
   %% Show top detections for laboo + M matrix
   %show_top_dets(dataset_params, models, test_grid,...
   %              test_set, curparams.set_name, ...
-  %              teststruct);
+  %              test_struct);
 end
