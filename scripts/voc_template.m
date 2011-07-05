@@ -12,6 +12,7 @@ e_stream_set = get_pascal_stream(dataset_params, cls);
 efiles = exemplar_initialize(dataset_params, e_stream_set, ...
                              models_name, dataset_params.init_params);
 
+
 %Load all of the initialized exemplars
 CACHE_FILE = 1;
 STRIP_FILE = 0;
@@ -22,14 +23,12 @@ models = load_all_models(dataset_params, cls, models_name, ...
 %%%%%% EXEMPLAR TRAINING %%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 %% Train each initialized exemplar 
 if isfield(dataset_params,'mining_params')
   curparams = dataset_params.mining_params;
 
   cur_set = get_pascal_set(dataset_params, ...
-                           curparams.set_name,...
-                           curparams.set_name2);
+                           curparams.set_name);
   
   if isfield(curparams,'set_maxk')
     cur_set = cur_set(1:min(length(cur_set), ...
@@ -57,8 +56,7 @@ end
 if isfield(dataset_params,'val_params')
   curparams = dataset_params.val_params;
   cur_set = get_pascal_set(dataset_params, ...
-                           curparams.set_name,...
-                           curparams.set_name2);
+                           curparams.set_name);
   if isfield(curparams,'set_maxk')
     cur_set = cur_set(1:min(length(cur_set), ...
                             curparams.set_maxk));
@@ -94,8 +92,7 @@ end
 if isfield(dataset_params,'test_params')
   curparams = dataset_params.test_params;
   cur_set = get_pascal_set(dataset_params, ...
-                           curparams.set_name,...
-                           curparams.set_name2);
+                           curparams.set_name);
 
   if isfield(curparams,'set_maxk')
     cur_set = cur_set(1:min(length(cur_set), ...

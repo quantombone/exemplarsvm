@@ -22,7 +22,16 @@ end
 if ~exist('CACHE_FILE','var')
   CACHE_FILE = 0;
 end
-VOCopts.testset = target_directory;
+
+has_marker = (target_directory=='+') + ...
+    (target_directory=='-');
+
+has_marker = find(has_marker);
+if length(has_marker) > 0
+  VOCopts.testset = target_directory(1:has_marker(1)-1);
+else
+  VOCopts.testset = target_directory;
+end
 
 resfile = sprintf('%s/%s.%s%s_%s_results.mat',VOCopts.resdir,...
                   models{1}.models_name,...

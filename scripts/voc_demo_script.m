@@ -1,3 +1,4 @@
+error('deprecated script.. needs to be udpated to voc_demo_nn');
 clear;
 
 %% Initialize dataset

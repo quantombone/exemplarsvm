@@ -29,10 +29,8 @@ init_params.sbin = 8;
 init_params.hg_size = [8 8];
 init_params.init_function = @initialize_fixedframe_model;
 init_params.init_string = 'f';
-init_params.nnmode = 1;
-init_params.nn_string = 'nn-1';
-init_params.init_type = sprintf('%s-%s-%d-%d', ...
-                                init_params.nn_string, ...
+
+init_params.init_type = sprintf('%s-%d-%d', ...
                                 init_params.init_string, ...
                                 init_params.hg_size(1), ...
                                 init_params.hg_size(2));
@@ -49,6 +47,7 @@ dataset_params.model_type = 'exemplar';
 
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
+dataset_params.params.nnmode = 'cosangle';
 
 if 0
   %Choose the training function (do_svm, do_rank, ...)
@@ -77,6 +76,7 @@ if 1
   %optional cap
   %dataset_params.test_params.set_maxk = 0;
 end
+
 %Choose a short string to indicate the type of training run we are doing
 dataset_params.models_name = ...
     [init_params.init_type ...
@@ -112,21 +112,22 @@ r = randperm(length(classes));
 classes = classes(r);
 
 for i = 1:length(classes)
-  %Training set is negatives
+  %Training set is images not containing in-class instances
   if isfield(dataset_params,'mining_params')
-    dataset_params.mining_params.set_name2 = ['-' classes{i}];
+    dataset_params.mining_params.set_name = ...
+        [dataset_params.mining_params.set_name '-' classes{i}];
   end
 
   if isfield(dataset_params,'val_params')
-    dataset_params.val_params.set_name2 = '';
     %Validate on in-class images only
-    dataset_params.val_params.set_name2 = classes{i};;
+    dataset_params.val_params.set_name = ...
+        [dataset_params.val_params.set_name '+' classes{i}];
   end
 
   if isfield(dataset_params,'test_params')
-    dataset_params.test_params.set_name2 = '';
     %Test on in-class images only
-    dataset_params.test_params.set_name2 = classes{i};;
+    dataset_params.test_params.set_name = ...
+        [dataset_params.test_params.set_name '+' classes{i}];
   end
     
   voc_template(dataset_params, classes{i});

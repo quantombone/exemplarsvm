@@ -94,3 +94,6 @@ mining_params.dump_last_image = 1;
 
 %experimental flag to skip the mining process
 mining_params.skip_mine = 0;
+
+%by default, NN mode is turned off
+mining_params.nnmode = '';

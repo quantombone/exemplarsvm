@@ -23,6 +23,10 @@ if ~exist('localizeparams','var')
   localizeparams = get_default_mining_params;
 end
 
+if ~isfield(localizeparams,'nnmode')
+ localizeparams.nnmode = '';
+end
+
 doflip = localizeparams.FLIP_LR;
 
 localizeparams.FLIP_LR = 0;
@@ -59,9 +63,7 @@ t{2} = t2;
 function [resstruct,t] = localizemeHOGdriver(I, models, ...
                                              localizeparams)
 
-nnmode = getnnmode(models);
-
-if length(models)>20 || (nnmode>0)
+if length(models)>20 || (localizeparams.nnmode>0)
   [resstruct,t] = localizemeHOGdriverBLOCK(I, models, ...
                                          localizeparams);
   return;
@@ -166,8 +168,7 @@ fprintf(1,'\n');
 function [resstruct,t] = localizemeHOGdriverBLOCK(I, models, ...
                                              localizeparams)
 
-%%HERE is the chunk version of this
-nnmode = getnnmode(models);
+%%HERE is the chunk version of exemplar localization
 
 N = length(models);
 ws = cellfun2(@(x)x.model.w,models);
@@ -228,20 +229,20 @@ vvs = cat(2,vvs{:});
 
 exemplar_matrix = reshape(templates,[],size(templates,4));
 
-if nnmode == 0
+if length(localizeparams.nnmode) == 0
   %nnmode 0: Apply linear classifiers by performing one large matrix
   %multiplication and subtract bias
   r = exemplar_matrix' * finalf;
   r = bsxfun(@minus, r, bs);
   
-elseif nnmode == 1
+elseif strcmp(localizeparams.nnmode,'cosangle') == 1
   %nnmode 1: Apply linear classifiers by performing one large matrix
   %multiplication and subtract bias
   www2 = reshape(templates_x, [], size(templates_x,4));
   r = slmetric_pw(www2,finalf,'nrmcorr');
   
 else
-  error('invalid nnmode\n');
+  error(sprintf('invalid nnmode=%s\n',localizeparams.nnmode));
 end
 
 resstruct.bbs = cell(N,1);
@@ -370,9 +371,3 @@ else
         t.size(1),t.size(2),localizeparams.lpo);
 end
 
-function nnmode = getnnmode(models)
-nnmode = 0;
-if isfield(models{1}.model.init_params,'nnmode') && ...
-      (models{1}.model.init_params.nnmode>0)
-  nnmode = models{1}.model.init_params.nnmode;
-end

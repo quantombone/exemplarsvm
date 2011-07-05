@@ -1,3 +1,4 @@
+error('deprecated, must reflect changes in voc_demo_nn');
 clear;
 
 %% Initialize dataset
