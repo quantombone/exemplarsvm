@@ -64,33 +64,33 @@ for i = 1:length(ids)
         return;
       end
     end
-    elseif strcmp(VOCopts.model_type,'scene')
-        fprintf(1,'.');
-  
-        res.I = filename;
-        
-        %Use the entire scene (remember VOC stores imgsize in a strange order)
-        res.bbox = [1 1 recs.imgsize(1) recs.imgsize(2)];
-        
-        res.cls = cls;
-        
-        %for scenes use a 1 for objectid
-        res.objectid = 1;
-        
-        %anno is the data-set-specific version
-        res.anno = recs.objects;
-        
-        res.filer = sprintf('%s.%d.%s.mat', curid, res.objectid, cls);
-        
-        fg{end+1} = res;
-        
-        if length(fg) == VOCopts.stream_max_ex
-          save(streamname,'fg');
-          return; 
-        end
-    else
-      error(sprintf('Invalid model_type %s\\n',VOCopts.model_type));
+  elseif strcmp(VOCopts.model_type,'scene')
+    fprintf(1,'.');
+    
+    res.I = filename;
+    
+    %Use the entire scene (remember VOC stores imgsize in a strange order)
+    res.bbox = [1 1 recs.imgsize(1) recs.imgsize(2)];
+    
+    res.cls = cls;
+    
+    %for scenes use a 1 for objectid
+    res.objectid = 1;
+    
+    %anno is the data-set-specific version
+    res.anno = recs.objects;
+    
+    res.filer = sprintf('%s.%d.%s.mat', curid, res.objectid, cls);
+    
+    fg{end+1} = res;
+    
+    if length(fg) == VOCopts.stream_max_ex
+      save(streamname,'fg');
+      return; 
     end
+  else
+    error(sprintf('Invalid model_type %s\\n',VOCopts.model_type));
   end
+end
 
 save(streamname,'fg');
