@@ -20,10 +20,14 @@ K1 = max(K1,5);
 K2 = max(K2,5);
 
 %% sort by score
-r = m.model.w(:)'*m.model.svxs - m.model.b;
-[aa,bb] = sort(r,'descend');
-m.model.svbbs = m.model.svbbs(bb, :);
-m.model.svxs = m.model.svxs(:, bb);
+if isfield(m.model,'svxs') && (numel(m.model.svxs)>0)
+  r = m.model.w(:)'*m.model.svxs - m.model.b;
+  [aa,bb] = sort(r,'descend');
+  m.model.svbbs = m.model.svbbs(bb, :);
+  m.model.svxs = m.model.svxs(:, bb);
+else
+  fprintf(1,'Not sorting in get_sv_stack\n');
+end
 
 %NO NMS
 %inds = nms_objid(m.model.svids);

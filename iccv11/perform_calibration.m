@@ -1,5 +1,6 @@
 function [betas] = perform_calibration(dataset_params,...
-                                       models, grid, CACHE_FILES)
+                                       models, grid, val_set, ...
+                                       CACHE_FILES)
 % Perform calibration by learning the sigmoid parameters (linear
 % transformation of svm scores) for each model independently. If we
 % perform an operation such as NMS, we will now have "comparable"
@@ -26,6 +27,7 @@ end
 
 % if enabled, display images
 display = 0;
+display = 1;
 
 % if display is enabled and dump_images is enabled, then dump images
 % into DUMPDIR
@@ -162,15 +164,10 @@ ALL_bboxes = cat(1,bboxes{:});
 ALL_coarse_boxes = cat(1,coarse_boxes{:});
 ALL_os = cat(1,os{:});
 
-% if nargout == 2
-%   betas = [];
-%   return;
-% end
-
 curids = cellfun2(@(x)x.curid,grid);
 
-%bg = cat(1,get_pascal_bg('trainval'),get_pascal_bg('test'));
-fprintf(1,'proessing models\n');
+
+fprintf(1,'Pre-processing models for calibration: \n');
 
 for exid = 1:length(models)
   fprintf(1,'.');
@@ -179,6 +176,7 @@ for exid = 1:length(models)
   if length(sourcegrid) == 0
     sourcegrid = -1;
   end
+  
   %REMOVE SOURCE IMAGE TOO
   %HACK removed
   hits = find((ALL_bboxes(:,6)==exid));%% & (ALL_bboxes(:,5) ~= sourcegrid));
@@ -194,7 +192,6 @@ for exid = 1:length(models)
   %add virtual sample at os=1.0, score=1.0
   %good_os = cat(1,good_os,1.0);
   %good_scores = cat(1,good_scores,1.0);
-
 
   if length(good_os) <= 1 || (length(bad_os) ==0)
     beta = [.1 100];
@@ -243,38 +240,37 @@ for exid = 1:length(models)
                   beta(2)))
     subplot(1,2,2)
     %subplot(2,2,1)
-    if isfield(models{exid},'I')
-      Iex = im2double(models{exid}.I);  
-    else
-      %try pascal VOC image
-      Iex = im2double(imread(sprintf(dataset_params.imgpath, ...
-                                     models{exid}.curid)));
-    end
+    Iex = convert_to_I(models{exid}.I);
+    % if isfield(models{exid},'I')
+    %   Iex = im2double(models{exid}.I);  
+    % else
+    %   %try pascal VOC image
+    %   Iex = im2double(imread(sprintf(dataset_params.imgpath, ...
+    %                                  models{exid}.curid)));
+    % end
     imagesc(Iex)
     plot_bbox(models{exid}.gt_box)
-    %[aa,bb] = max(all_scores);
-    %plot_bbox(ALL_bboxes(hits(bb),1:4),'',[0 1 0]);
     axis image
     axis off
 
     bbs=ALL_coarse_boxes(hits,:);
     bbs_os = ALL_os(hits,:);
-    %[aa,bb] = sort(bbs(:,end)+bbs_os*.2,'descend');
     [aa,bb] = sort(bbs(:,end),'descend');
-
     bbs_show = bbs(bb,:);
     
-    models{exid}.model.svids = {};
+    %models{exid}.model.svids = {};
     %m = try_reshape(models{exid},bbs_show,100);
 
-    [models{exid}.model.svids,models{exid}.model.nsv] = ...
-        extract_svs(bbs_show,100);%,'trainval','');
+    %[models{exid}.model.svids,models{exid}.model.nsv] = ...
+    %    extract_svs(bbs_show,100);%,'trainval','');
+
+    models{exid}.model.svbbs = bbs_show;
+    models{exid}.train_set = val_set;
+
 
     figure(445)
     clf
     imagesc(get_sv_stack(models{exid},8))
-  
-    pause
   end
   
 

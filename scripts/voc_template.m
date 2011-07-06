@@ -62,7 +62,7 @@ if isfield(dataset_params,'val_params')
                             curparams.set_maxk));
   end
 
-  dataset_params.params = curparams;;
+  dataset_params.params = curparams;
   dataset_params.params.gt_function = @get_pascal_anno_function;
   val_files = apply_all_exemplars(dataset_params, models, cur_set, ...
                                   curparams.set_name);
@@ -85,7 +85,7 @@ if isfield(dataset_params,'val_params')
   %% Perform l.a.b.o.o. calibration and M-matrix estimation
   CACHE_BETAS = 1;
   M = calibrate_and_estimate_M(dataset_params, models, ...
-                               val_grid, CACHE_BETAS);
+                               val_grid, cur_set, CACHE_BETAS);
 
 else
   fprintf(1,['Skipping validation becuase dataset_params.val_params not' ...

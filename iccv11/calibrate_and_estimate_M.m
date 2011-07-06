@@ -1,5 +1,5 @@
 function M = calibrate_and_estimate_M(dataset_params, models, grid, ...
-                                      CACHE_FILES)
+                                      cur_set, CACHE_FILES)
 %% 1. Perform LABOO calibration procedure and 2. Learn a combination
 %matrix M which multiplexes the detection results (by compiling
 %co-occurrence statistics on true positives) 
@@ -9,7 +9,8 @@ if ~exist('CACHE_FILES','var')
   CACHE_FILES = 0;
 end
 
-betas = perform_calibration(dataset_params, models, grid, CACHE_FILES);
+betas = perform_calibration(dataset_params, models, grid, ...
+                            cur_set, CACHE_FILES);
 
 neighbor_thresh = 0.5;
 count_thresh = 0.5;

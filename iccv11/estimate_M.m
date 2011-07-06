@@ -63,6 +63,7 @@ for i = 1:length(grid)
   boxes{i} = grid{i}.bboxes;
   
   calib_boxes = calibrate_boxes(boxes{i},betas);
+  
   %Threshold at .1
   oks = find(calib_boxes(:,end)>.1);
   boxes{i} = calib_boxes(oks,:);
@@ -96,8 +97,6 @@ end
 lens = cellfun(@(x)size(x,1),boxes);
 boxes(lens==0) = [];
 maxos(lens==0) = [];
-
-
 
 %already nms-ed within exemplars (but not within LR flips)
 if 1
