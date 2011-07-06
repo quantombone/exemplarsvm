@@ -63,7 +63,7 @@ t{2} = t2;
 function [resstruct,t] = localizemeHOGdriver(I, models, ...
                                              localizeparams)
 
-if length(models)>20 || (localizeparams.nnmode>0)
+if length(models)>20 || length(localizeparams.nnmode)>0
   [resstruct,t] = localizemeHOGdriverBLOCK(I, models, ...
                                          localizeparams);
   return;
@@ -194,6 +194,10 @@ for i = 1:length(models)
   template_masks(:,:,i) = double(sum(t.^2,3)>0);
 end
 
+%maskmat = repmat(template_masks,[1 1 1 features]);
+%maskmat = permute(maskmat,[1 2 4 3]);
+%templates_x  = templates_x .* maskmat;
+
 sbin = models{1}.model.init_params.sbin;
 t = get_pyramid(I, sbin, length(models), localizeparams);
 resstruct.padder = t.padder;
@@ -234,12 +238,43 @@ if length(localizeparams.nnmode) == 0
   %multiplication and subtract bias
   r = exemplar_matrix' * finalf;
   r = bsxfun(@minus, r, bs);
-  
+elseif strcmp(localizeparams.nnmode,'normalizedhog') == 1
+  r = exemplar_matrix' * finalf;
+
 elseif strcmp(localizeparams.nnmode,'cosangle') == 1
   %nnmode 1: Apply linear classifiers by performing one large matrix
   %multiplication and subtract bias
-  www2 = reshape(templates_x, [], size(templates_x,4));
-  r = slmetric_pw(www2,finalf,'nrmcorr');
+  
+  %mf = mean(finalf,1);
+  %finalf = finalf - repmat(mf,size(finalf,1),1);
+  
+  r = exemplar_matrix' * finalf;
+  
+  %exemplar_matrix = reshape(templates_x, [], size(templates_x,4));
+  %r = slmetric_pw(exemplar_matrix,finalf,'nrmcorr');
+
+  %% why am I not getting perfect hits for g-mode?
+  %% ANSWER: because there is a padding which we cannot enforce on
+  %test-windows efficiently...This will affect the normalization of
+  %the test windows
+  
+  % exemplar_x_matrix = reshape(templates_x,[],size(templates_x,4));
+  % res = sum(exemplar_matrix .* exemplar_x_matrix,1);
+  
+  % exemplar_matrix = exemplar_matrix ./ repmat(res+eps,size(exemplar_matrix,1),1);
+  
+  % r = exemplar_matrix' * finalf;
+
+  %keyboard
+  
+  % rrr = randperm(size(www2,2));
+  % rrr = rrr(1:10);
+  % r2 = slmetric_pw(www2(:,rrr),finalf,'chisq');
+  % r = zeros(size(www2,2),size(finalf,2));  
+  % r(rrr,:) = exp(-.001*r2);
+  
+  %r = exemplar_matrix' * finalf;
+  %r = bsxfun(@minus, r, bs);
   
 else
   error(sprintf('invalid nnmode=%s\n',localizeparams.nnmode));

@@ -38,10 +38,19 @@ resfile = sprintf('%s/%s.%s%s_%s_results.mat',VOCopts.resdir,...
                   models{1}.cls,final.calib_string,...
                   target_directory');
 
-if CACHE_FILE && fileexists(resfile) 
-  fprintf(1,'Pre loading %s\n',resfile);
-  load(resfile);
-  return;
+
+
+if CACHE_FILE == 1
+  reslock = [resfile '.lock'];
+  if fileexists(resfile) || mymkdir_dist(reslock)==0
+    %wait until lockfiles are gone
+    wait_until_all_present({reslock},5,1);
+    fprintf(1,'Pre loading %s\n',resfile);
+    res = load_keep_trying(resfile);
+    results = res.results;
+    final = res.final;
+    return;
+  end
 end
 
 cls = models{1}.cls;
@@ -60,7 +69,7 @@ end
 fprintf(1,'Writing File %s\n',filer);
 filerlock = [filer '.lock'];
 if fileexists(filer) || (mymkdir_dist(filerlock)==0)
-  
+  wait_until_all_present({filerlock},5,1);
 else
   
   fid = fopen(filer,'w');
@@ -73,7 +82,6 @@ else
     end
   end
   fclose(fid);
-  rmdir(filerlock);
 end
 
 %make sure filer is present in order to continue here
@@ -86,6 +94,10 @@ figure(2)
 clf
 VOCopts.filename = filer;
 [results.recall,results.prec,results.ap,results.apold,results.fp,results.tp,results.npos,results.corr] = VOCevaldet(VOCopts,'comp3',cls,true);
+
+if exist(filerlock,'dir')
+  rmdir(filerlock);
+end
 
 set(gca,'FontSize',16)
 set(get(gca,'Title'),'FontSize',16)
@@ -113,5 +125,11 @@ fprintf(1,'Just Wrote %s\n',filer);
 results.cls = models{1}.cls;
 drawnow
 
-%TODO: we are saving really large files for exemplarNN
-save(resfile,'results','final');
+
+if CACHE_FILE == 1
+  %TODO: we are saving really large files for exemplarNN
+  save(resfile,'results','final');
+  if exist(reslock,'dir')
+    rmdir(reslock);
+  end
+end

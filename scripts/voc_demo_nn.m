@@ -2,39 +2,39 @@ clear;
 
 %% Initialize dataset
 VOCYEAR = 'VOC2007';
-suffix = '/nfs/baikal/tmalisie/nn11/';
+suffix = '/nfs/baikal/tmalisie/nn211/';
 dataset_params = get_voc_dataset(VOCYEAR,suffix);
 dataset_params.display = 0;
 
-%SKIP_TRAINING = 1;
-%SKIP_VAL = 0;
-
+%Do not skip evaluation, unless it is VOC2010
 dataset_params.SKIP_EVAL = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SET SOURCETRAIN/VAL/TEST PARAMS %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%Initialize framing function
-% init_params.sbin = 8;
-% init_params.goal_ncells = 100;
-% init_params.MAXDIM = 12;
-% init_params.init_function = @initialize_goalsize_model;
-% init_params.init_type = sprintf('nng-%d-%d',...
-%                                 init_params.goal_ncells,...
-%                                 init_params.MAXDIM);
-
-%Initialize exemplar framing function
-init_params.sbin = 8;
-init_params.hg_size = [8 8];
-init_params.init_function = @initialize_fixedframe_model;
-init_params.init_string = 'f';
-
-init_params.init_type = sprintf('%s-%d-%d', ...
-                                init_params.init_string, ...
-                                init_params.hg_size(1), ...
-                                init_params.hg_size(2));
-
+if 1
+  %Initialize framing function
+  init_params.sbin = 8;
+  init_params.goal_ncells = 100;
+  init_params.MAXDIM = 12;
+  init_params.init_function = @initialize_goalsize_model;
+  init_params.init_string = 'g';
+  init_params.init_type = sprintf('%s-%d-%d',...
+                                  init_params.init_string,...
+                                  init_params.goal_ncells,...
+                                  init_params.MAXDIM);
+else
+  %Initialize exemplar framing function
+  init_params.sbin = 8;
+  init_params.hg_size = [8 8];
+  init_params.init_function = @initialize_fixedframe_model;
+  init_params.init_string = 'f';
+  init_params.init_type = sprintf('%s-%d-%d', ...
+                                  init_params.init_string, ...
+                                  init_params.hg_size(1), ...
+                                  init_params.hg_size(2));
+end
 dataset_params.init_params = init_params;
 
 %Initialize exemplar stream
@@ -84,26 +84,25 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
-classes = {'bus'};
-% classes = {...
-%     'aeroplane'
-%     'bicycle'
-%     'bird'
-%     'boat'
-%     'bottle'
-%     'bus'
-%     'cat'
-%     'cow'
-%     'diningtable'
-%     'dog'
-%     'horse'
-%     'motorbike'
-%     'pottedplant'
-%     'sheep'
-%     'sofa'
-%     'train'
-%     'tvmonitor'
-% };
+classes = {...
+    'aeroplane'
+    'bicycle'
+    'bird'
+    'boat'
+    'bottle'
+    'bus'
+    'cat'
+    'cow'
+    'diningtable'
+    'dog'
+    'horse'
+    'motorbike'
+    'pottedplant'
+    'sheep'
+    'sofa'
+    'train'
+    'tvmonitor'
+};
 
 myRandomize;
 r = randperm(length(classes));
