@@ -16,7 +16,7 @@ MAX_ROWS_EXVIEW = 3;
 %get all bbs
 bbs = cellfun2(@(x)x.bboxes,grid);
 bbs = cat(1,bbs{:});
-final_boxes = bbs;
+
 
 %% sort detections by score in descending order
 [aa,bb] = sort(bbs(:,end), 'descend');
