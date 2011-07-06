@@ -84,34 +84,43 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
-classes = {'bus'};
-% classes = {...
-%     'aeroplane'
-%     'bicycle'
-%     'bird'
-%     'boat'
-%     'bottle'
-%     'bus'
-%     'car'
-%     'cat'
-%     'chair'
-%     'cow'
-%     'diningtable'
-%     'dog'
-%     'horse'
-%     'motorbike'
-%     'pottedplant'
-%     'sheep'
-%     'sofa'
-%     'train'
-%     'tvmonitor'
-% };
+%classes = {'bus'};
+classes = {...
+    'aeroplane'
+    'bicycle'
+    'bird'
+    'boat'
+    'bottle'
+    'bus'
+    'cat'
+    'cow'
+    'diningtable'
+    'dog'
+    'horse'
+    'motorbike'
+    'pottedplant'
+    'sheep'
+    'sofa'
+    'train'
+    'tvmonitor'
+};
+
+% for i = 1:length(classes)
+%   classes{i}
+%   fg=get_pascal_set(dataset_params,'trainval',['-' classes{i}]);
+%   fg=get_pascal_set(dataset_params,'trainval',['+' classes{i}]);
+%   fg=get_pascal_set(dataset_params,'test',['-' classes{i}]);
+%   fg=get_pascal_set(dataset_params,'test',['+' classes{i}]);
+% end
+
 
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
 
+save_dataset_params = dataset_params;
 for i = 1:length(classes)
+  dataset_params = save_dataset_params;
   %Training set is images not containing in-class instances
   if isfield(dataset_params,'mining_params')
     dataset_params.mining_params.set_name = ...
@@ -129,6 +138,6 @@ for i = 1:length(classes)
     dataset_params.test_params.set_name = ...
         [dataset_params.test_params.set_name '+' classes{i}];
   end
-    
+  
   voc_template(dataset_params, classes{i});
 end

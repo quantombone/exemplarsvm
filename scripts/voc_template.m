@@ -76,8 +76,12 @@ if isfield(dataset_params,'val_params')
   %Show all raw detections on test-set as a "memex browser"
   show_memex_browser(dataset_params, models, val_grid,...
                      cur_set, curparams.set_name);
+  
 
-  return;
+  show_memex_browser2(dataset_params, models, val_struct,...
+                     cur_set, curparams.set_name);
+
+
   %% Perform l.a.b.o.o. calibration and M-matrix estimation
   M = calibrate_and_estimate_M(dataset_params, models, val_grid);
 
@@ -137,7 +141,11 @@ end
 %% Evaluation of uncalibrated SVM classifiers
 M2 = [];
 test_struct = pool_results(dataset_params, models, test_grid, M2);
-keyboard
+
+show_memex_browser2(dataset_params, models, test_struct,...
+                    cur_set, curparams.set_name);
+
+
 if (dataset_params.SKIP_EVAL == 0)
   [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                        models, test_grid, ...
@@ -160,7 +168,12 @@ if (dataset_params.SKIP_EVAL == 0)
   %% Evaluation of l.a.b.o.o. afer training
   M2 = [];
   M2.betas = M.betas;
-  test_struct = pool_results(dataset_params, models, test_grid, M2);
+  test_struct = pool_results(dataset_params, models, test_grid, ...
+                             M2);
+  
+  show_memex_browser2(dataset_params, models, test_struct,...
+                      cur_set, curparams.set_name);
+
   [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                        models, test_grid, ...
                                        curparams.set_name,...
@@ -173,7 +186,9 @@ if (dataset_params.SKIP_EVAL == 0)
   
   %% Evaluation of laboo + M matrix
   test_struct = pool_results(dataset_params, models, test_grid, M);
-  
+  show_memex_browser2(dataset_params, models, test_struct,...
+                      cur_set, curparams.set_name);
+
   [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                        models, test_grid, ...
                                        curparams.set_name, ...
