@@ -22,10 +22,12 @@ final_file = sprintf('%s/applied/%s-%s.mat',dataset_params.localdir,setname, ...
 lockfile = [final_file '.lock'];
 
 if fileexists(final_file) || (mymkdir_dist(lockfile)==0)
+  %wait until lockfile is gone
   wait_until_all_present({lockfile},5,1);
   fprintf(1,'Loading final file %s\n',final_file);
   res = load_keep_trying(final_file,5);
   grid = res.grid;
+  return;
 end
 
 %if we got here, then the final file isn't there, and we were able
