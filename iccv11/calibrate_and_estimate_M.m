@@ -9,13 +9,14 @@ if ~exist('CACHE_FILES','var')
   CACHE_FILES = 0;
 end
 
+%% Perform calibration
 betas = perform_calibration(dataset_params, models, grid, ...
                             cur_set, CACHE_FILES);
 
 neighbor_thresh = 0.5;
 count_thresh = 0.5;
 
-%estimate the co-occurrence matrix M
+%% Estimate the co-occurrence matrix M
 [M] = estimate_M(dataset_params, models, grid, betas, ...
                  neighbor_thresh, ...
                  count_thresh, CACHE_FILES);

@@ -27,7 +27,6 @@ end
 
 % if enabled, display images
 display = 0;
-display = 1;
 
 % if display is enabled and dump_images is enabled, then dump images
 % into DUMPDIR
