@@ -83,7 +83,9 @@ if isfield(dataset_params,'val_params')
 
 
   %% Perform l.a.b.o.o. calibration and M-matrix estimation
-  M = calibrate_and_estimate_M(dataset_params, models, val_grid);
+  CACHE_BETAS = 1;
+  M = calibrate_and_estimate_M(dataset_params, models, ...
+                               val_grid, CACHE_BETAS);
 
 else
   fprintf(1,['Skipping validation becuase dataset_params.val_params not' ...

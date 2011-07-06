@@ -3,7 +3,7 @@ function show_memex_browser(dataset_params, models, grid, ...
 % Show the exemplar-view of the memex browser
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
-fprintf(1,'Starting memex browser\n');
+
 
 %maxk is the maximum number of top detections we display
 if ~exist('maxk','var')
@@ -27,9 +27,14 @@ sizers = cat(2,...
              reshape(cellfun(@(x)x.imbb(4),grid),[],1),...
              reshape(cellfun(@(x)x.imbb(3),grid),[],1));
 
-wwwdir = sprintf('%s/memex/%s.%s-%s%s/', dataset_params.localdir,...
-                 set_name, models{1}.cls, ...
-                 models{1}.models_name, '');
+basedir = sprintf('%s/memex/',dataset_params.localdir);
+finaldir = sprintf('/%s.%s-%s%s/',...
+                   set_name, models{1}.cls, ...
+                   models{1}.models_name, '');
+
+wwwdir = sprintf('%s/%s/',basedir,finaldir);
+
+fprintf(1,'Starting memex browser: %s\n',finaldir);
 
 if ~exist(wwwdir,'dir')
   mkdir(wwwdir);

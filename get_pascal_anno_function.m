@@ -1,5 +1,8 @@
 function extras = get_pascal_anno_function(dataset_params, Iname, boxes)
+%Compute the "extra" information regarding the overlaps with the
+%boxes inside this image
 
+%extract image id from the filename (this can be done for VOC images)
 [tmp,curid,tmp] = fileparts(Iname);
 
 % get GT objects for this image
