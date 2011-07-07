@@ -186,12 +186,16 @@ for i = 1:length(models)
   t = zeros(S(1),S(2),features);
   t(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
       models{i}.model.w;
-  x = zeros(S(1),S(2),features);
-  x(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
-      reshape(models{i}.model.x(:,1),models{i}.model.hg_size);
+
   templates(:,:,:,i) = t;
-  templates_x(:,:,:,i) = x;
   template_masks(:,:,i) = double(sum(t.^2,3)>0);
+
+  if length(localizeparams.nnmode) > 0
+    x = zeros(S(1),S(2),features);
+    x(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
+        reshape(models{i}.model.x(:,1),models{i}.model.hg_size);
+    templates_x(:,:,:,i) = x;
+  end
 end
 
 %maskmat = repmat(template_masks,[1 1 1 features]);
@@ -248,10 +252,10 @@ elseif strcmp(localizeparams.nnmode,'cosangle') == 1
   %mf = mean(finalf,1);
   %finalf = finalf - repmat(mf,size(finalf,1),1);
   
-  r = exemplar_matrix' * finalf;
+  %r = exemplar_matrix' * finalf;
   
-  %exemplar_matrix = reshape(templates_x, [], size(templates_x,4));
-  %r = slmetric_pw(exemplar_matrix,finalf,'nrmcorr');
+  exemplar_matrix = reshape(templates_x, [], size(templates_x,4));
+  r = slmetric_pw(exemplar_matrix,finalf,'nrmcorr');
 
   %% why am I not getting perfect hits for g-mode?
   %% ANSWER: because there is a padding which we cannot enforce on

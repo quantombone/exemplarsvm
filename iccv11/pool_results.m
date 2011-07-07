@@ -81,7 +81,7 @@ if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
     fprintf(1,'.');
     [xraw] = get_box_features(bboxes{i},length(models),M.neighbor_thresh);
     r2 = apply_boost_M(xraw,bboxes{i},M);
-    bboxes{i}(:,end) = r2;
+    bboxes{i}(:,end) = bboxes{i}(:,end).*(r2');
   end
   toc
 end

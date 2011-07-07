@@ -23,9 +23,9 @@ bbs = cat(1,bbs{:});
 bbs = bbs(bb,:);
 exids = bbs(:,6);
 imids = bbs(:,11);
-sizers = cat(2,...
-             reshape(cellfun(@(x)x.imbb(4),grid),[],1),...
-             reshape(cellfun(@(x)x.imbb(3),grid),[],1));
+%sizers = cat(2,...
+%             reshape(cellfun(@(x)x.imbb(4),grid),[],1),...
+%             reshape(cellfun(@(x)x.imbb(3),grid),[],1));
 
 basedir = sprintf('%s/memex/',dataset_params.localdir);
 finaldir = sprintf('/%s.%s-%s%s/',...
@@ -37,6 +37,7 @@ wwwdir = sprintf('%s/%s/',basedir,finaldir);
 fprintf(1,'Starting memex browser: %s\n',finaldir);
 
 if ~exist(wwwdir,'dir')
+  fprintf(1,'making %s\n',wwwdir);
   mkdir(wwwdir);
 end
 
@@ -124,8 +125,10 @@ for i = 1:length(models)
                        bb(5),bb(6),bb(7),bb(8),...
                        bb(9),bb(10),bb(11),bb(12));
 
-    Isize = sizers(bb(11),:);
     [a,curid,ext] = fileparts(fg{bb(11)});
+    curinfo = imfinfo(fg{bb(11)});
+    Isize = [curinfo.Height curinfo.Width];
+    
     divid = sprintf('notepad%d.%d',i,j);
     fprintf(fid,'<td><div id="%s"/>',divid);
     fprintf(fid,'<script>show_image("%s","%s%s",%s,[%d,%d],"red");</script></td>',...

@@ -2,7 +2,7 @@ clear;
 
 %% Initialize dataset
 VOCYEAR = 'VOC2007';
-suffix = '/nfs/baikal/tmalisie/nn211/';
+suffix = '/nfs/baikal/tmalisie/nn311/';
 dataset_params = get_voc_dataset(VOCYEAR,suffix);
 dataset_params.display = 0;
 
@@ -47,7 +47,7 @@ dataset_params.model_type = 'exemplar';
 
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
-dataset_params.params.nnmode = 'cosangle';
+dataset_params.params.nnmode = 'normalizedhog';
 
 if 0
   %Choose the training function (do_svm, do_rank, ...)
@@ -83,26 +83,28 @@ dataset_params.models_name = ...
      dataset_params.must_have_seg_string ...
      '.' ...
      dataset_params.model_type];
+classes = {'motorbike','cow','tvmonitor','bottle'};
+classes = {'bottle'};
 
-classes = {...
-    'aeroplane'
-    'bicycle'
-    'bird'
-    'boat'
-    'bottle'
-    'bus'
-    'cat'
-    'cow'
-    'diningtable'
-    'dog'
-    'horse'
-    'motorbike'
-    'pottedplant'
-    'sheep'
-    'sofa'
-    'train'
-    'tvmonitor'
-};
+% classes = {...
+%     'aeroplane'
+%     'bicycle'
+%     'bird'
+%     'boat'
+%     'bottle'
+%     'bus'
+%     'cat'
+%     'cow'
+%     'diningtable'
+%     'dog'
+%     'horse'
+%     'motorbike'
+%     'pottedplant'
+%     'sheep'
+%     'sofa'
+%     'train'
+%     'tvmonitor'
+% };
 
 myRandomize;
 r = randperm(length(classes));
@@ -111,23 +113,25 @@ classes = classes(r);
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
   dataset_params = save_dataset_params;
-  %Training set is images not containing in-class instances
-  if isfield(dataset_params,'mining_params')
-    dataset_params.mining_params.set_name = ...
-        [dataset_params.mining_params.set_name '-' classes{i}];
-  end
+  
+  
+  % if isfield(dataset_params,'mining_params')
+  %   %Training set is images not containing in-class instances
+  %   dataset_params.mining_params.set_name = ...
+  %       [dataset_params.mining_params.set_name '-' classes{i}];
+  % end
 
-  if isfield(dataset_params,'val_params')
-    %Validate on in-class images only
-    dataset_params.val_params.set_name = ...
-        [dataset_params.val_params.set_name '+' classes{i}];
-  end
+  % if isfield(dataset_params,'val_params')
+  %   %Validate on in-class images only
+  %   dataset_params.val_params.set_name = ...
+  %       [dataset_params.val_params.set_name '+' classes{i}];
+  % end
 
-  if isfield(dataset_params,'test_params')
-    %Test on in-class images only
-    dataset_params.test_params.set_name = ...
-        [dataset_params.test_params.set_name '+' classes{i}];
-  end
+  % if isfield(dataset_params,'test_params')
+  %   %Test on in-class images only
+  %   dataset_params.test_params.set_name = ...
+  %       [dataset_params.test_params.set_name '+' classes{i}];
+  % end
   
   voc_template(dataset_params, classes{i});
 end

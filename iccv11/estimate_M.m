@@ -196,9 +196,9 @@ C = zeros(K,K);
 %C2 = zeros(K,K);
 for i = 1:N
   cur = find(x(:,i)>0);  
-  % C(cur,exids(i)) = C(cur,exids(i)) + os(i)*(os(i) >= count_thresh) / ...
-  %     length(cur)*sum(x(:,i));
-  
+  C(cur,exids(i)) = C(cur,exids(i)) + os(i)*(os(i) >= count_thresh) / ...
+       length(cur)*sum(x(:,i));
+  continue
   % C2(cur,exids(i)) = C(cur,exids(i)) + (os(i) < count_thresh) / ...
   %     length(cur)*sum(x(:,i));
   coeffs = x(cur,i).*x(exids(i),i);
@@ -209,7 +209,7 @@ end
 %C = C ./(C2+eps);
 
 for i = 1:K
-  M.w{i} = .1 + C(:,i);
+  M.w{i} = C(:,i);
   M.b{i} = 0;
 end
 

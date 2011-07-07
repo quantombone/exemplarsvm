@@ -44,7 +44,7 @@ if isfield(dataset_params,'mining_params')
                            tfiles, CACHE_FILE, STRIP_FILE);
   
 else
-  fprintf(1,['Skipping training becuase dataset_params.mining_params not' ...
+  fprintf(1,['Skipping training because dataset_params.mining_params not' ...
              ' present\n']);
 end
 
@@ -72,6 +72,7 @@ if isfield(dataset_params,'val_params')
                           curparams.set_name, val_files);
 
   val_struct = pool_results(dataset_params, models, val_grid);
+
 
   %Show all raw detections on test-set as a "memex browser"
   show_memex_browser(dataset_params, models, val_grid,...
@@ -140,6 +141,45 @@ end
 %%%%%% EXEMPLAR EVALUATION/DISPLAY %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%If no calibration was performed, then we dont do calibrated rounds
+if (dataset_params.SKIP_EVAL == 0) && length(M)>0
+  
+  %% Evaluation of laboo + M matrix
+  test_struct = pool_results(dataset_params, models, test_grid, M);
+  show_memex_browser2(dataset_params, models, test_struct,...
+                      cur_set, curparams.set_name);
+
+  [results] = evaluate_pascal_voc_grid(dataset_params, ...
+                                       models, test_grid, ...
+                                       curparams.set_name, ...
+                                       test_struct);
+  
+  %% Show top detections for laboo + M matrix
+  %show_top_dets(dataset_params, models, test_grid,...
+  %              test_set, curparams.set_name, ...
+  %              test_struct);
+  
+  %% Evaluation of l.a.b.o.o. afer training
+  M2 = [];
+  M2.betas = M.betas;
+  test_struct = pool_results(dataset_params, models, test_grid, ...
+                             M2);
+  
+  show_memex_browser2(dataset_params, models, test_struct,...
+                      cur_set, curparams.set_name);
+
+  [results] = evaluate_pascal_voc_grid(dataset_params, ...
+                                       models, test_grid, ...
+                                       curparams.set_name,...
+                                       test_struct);
+  
+  %% Show top detections from l.a.b.o.o.
+  %show_top_dets(dataset_params, models, test_grid,...
+  %              test_set, dataset_params.testset_name, ...
+  %              test_struct);
+
+end
+
 %% Evaluation of uncalibrated SVM classifiers
 M2 = [];
 test_struct = pool_results(dataset_params, models, test_grid, M2);
@@ -159,45 +199,3 @@ end
 % show_top_dets(dataset_params, models, test_grid,...
 %               test_set, dataset_params.testset_name, ...
 %               test_struct);
-
-%If no calibration was performed, then we are done
-if length(M) == 0
-  return;
-end
-
-if (dataset_params.SKIP_EVAL == 0)
-
-  %% Evaluation of l.a.b.o.o. afer training
-  M2 = [];
-  M2.betas = M.betas;
-  test_struct = pool_results(dataset_params, models, test_grid, ...
-                             M2);
-  
-  show_memex_browser2(dataset_params, models, test_struct,...
-                      cur_set, curparams.set_name);
-
-  [results] = evaluate_pascal_voc_grid(dataset_params, ...
-                                       models, test_grid, ...
-                                       curparams.set_name,...
-                                       test_struct);
-  
-  %% Show top detections from l.a.b.o.o.
-  %show_top_dets(dataset_params, models, test_grid,...
-  %              test_set, dataset_params.testset_name, ...
-  %              test_struct);
-  
-  %% Evaluation of laboo + M matrix
-  test_struct = pool_results(dataset_params, models, test_grid, M);
-  show_memex_browser2(dataset_params, models, test_struct,...
-                      cur_set, curparams.set_name);
-
-  [results] = evaluate_pascal_voc_grid(dataset_params, ...
-                                       models, test_grid, ...
-                                       curparams.set_name, ...
-                                       test_struct);
-  
-  %% Show top detections for laboo + M matrix
-  %show_top_dets(dataset_params, models, test_grid,...
-  %              test_set, curparams.set_name, ...
-  %              test_struct);
-end

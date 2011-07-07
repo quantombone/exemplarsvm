@@ -79,7 +79,7 @@ for i = 1:length(mining_queue)
   total = sum(cellfun(@(x)x.num_visited,mining_queue));
   fprintf(1,'Found %d/%d windows, image:%05d (#seen=%d/%05d%s)\n',...
           supersize, sum(cellfun(@(x)sum(x>=-1),scores)), index, ...
-          mining_queue{i}.num_visited, total, addon);
+          length(bg)-length(mining_queue)+i, length(bg), addon);
 
   %increment how many times we processed this image
   mining_queue{i}.num_visited = mining_queue{i}.num_visited + 1;

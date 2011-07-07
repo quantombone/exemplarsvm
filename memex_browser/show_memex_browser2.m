@@ -78,8 +78,13 @@ for i = 1:maxk
                        bb(5),bb(6),bb(7),bb(8),...
                        bb(9),bb(10),bb(11),bb(12));
 
-    Isize = sizers(bb(11),:);
+    
     [a,curid,ext] = fileparts(fg{bb(11)});
+    
+    curinfo = imfinfo(fg{bb(11)});
+    Isize = [curinfo.Height curinfo.Width];
+    
+    
     divid = sprintf('notepad%d.%d',i,1);
     fprintf(fid,'<td><div id="%s"/>',divid);
     fprintf(fid,'<script>show_image("%s","%s%s",%s,[%d,%d],"red");</script></td>',...

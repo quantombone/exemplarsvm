@@ -20,7 +20,7 @@ end
 % end
 
 if ~exist('CACHE_FILE','var')
-  CACHE_FILE = 0;
+  CACHE_FILE = 1;
 end
 
 has_marker = (target_directory=='+') + ...
@@ -71,7 +71,6 @@ filerlock = [filer '.lock'];
 if fileexists(filer) || (mymkdir_dist(filerlock)==0)
   wait_until_all_present({filerlock},5,1);
 else
-  
   fid = fopen(filer,'w');
   for i = 1:length(final.final_boxes)
     curid = grid{i}.curid;
