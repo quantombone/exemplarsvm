@@ -134,6 +134,7 @@ for i = 1:length(classes)
   %   dataset_params.test_params.set_name = ...
   %       [dataset_params.test_params.set_name '+' classes{i}];
   % end
-  
+
+  dataset_params.JUST_TRAIN = 1;
   voc_template(dataset_params, classes{i});
 end

@@ -37,7 +37,14 @@ if isfield(dataset_params,'mining_params')
     
   [tfiles, models_name] = train_all_exemplars(dataset_params, ...
                                               models, cur_set);  
-  %Load the trained exemplars
+  
+  if isfield(dataset_params, 'JUST_TRAIN') && ...
+        (dataset_params.JUST_TRAIN==1)
+    fprintf(1,'only training because JUST_TRAIN is enabled\n');
+    return;
+  end
+  %Load the trained exemplars (this will hold script until all
+  %exemplars have been trained)
   CACHE_FILE = 1;
   STRIP_FILE = 1;
   models = load_all_models(dataset_params, cls, models_name, ...
