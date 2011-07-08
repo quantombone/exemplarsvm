@@ -39,7 +39,7 @@ dataset_params.init_params = init_params;
 
 %Initialize exemplar stream
 dataset_params.stream_set_name = 'trainval';
-dataset_params.stream_max_ex = 5000;
+dataset_params.stream_max_ex = 2000;
 
 dataset_params.must_have_seg = 0;
 dataset_params.must_have_seg_string = '';
@@ -85,33 +85,32 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 %classes = {'motorbike','cow','tvmonitor','bottle'};
-classes = {'person'};
-% classes = {...
-%     'aeroplane'
-%     'bicycle'
-%     'bird'
-%     'boat'
-%     'bottle'
-%     'bus'
-%     'cat'
-%     'car'
-%     'chair'
-%     'cow'
-%     'diningtable'
-%     'dog'
-%     'horse'
-%     'motorbike'
-%     'person'
-%     'pottedplant'
-%     'sheep'
-%     'sofa'
-%     'train'
-%     'tvmonitor'
-% };
+%classes = {'bottle'};
+classes = {...
+    'aeroplane'
+    'bicycle'
+    'bird'
+    'boat'
+    'bottle'
+    'bus'
+    'cat'
+    'car'
+    'chair'
+    'cow'
+    'diningtable'
+    'dog'
+    'horse'
+    'motorbike'
+    'pottedplant'
+    'sheep'
+    'sofa'
+    'train'
+    'tvmonitor'
+};
 
-%myRandomize;
-%r = randperm(length(classes));
-%classes = classes(r);
+myRandomize;
+r = randperm(length(classes));
+classes = classes(r);
 
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
