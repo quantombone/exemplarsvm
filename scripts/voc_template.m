@@ -50,6 +50,12 @@ if isfield(dataset_params,'mining_params')
   models = load_all_models(dataset_params, cls, models_name, ...
                            tfiles, CACHE_FILE, STRIP_FILE);
   
+  if isfield(dataset_params, 'JUST_TRAIN_AND_LOAD') && ...
+        (dataset_params.JUST_TRAIN_AND_LOAD ==1 )
+    fprintf(1,'only train+load because JUST_TRAIN_AND_LOAD is enabled\n');
+    return;
+  end
+  
 else
   fprintf(1,['Skipping training because dataset_params.mining_params not' ...
              ' present\n']);
