@@ -84,8 +84,7 @@ dataset_params.models_name = ...
      dataset_params.must_have_seg_string ...
      '.' ...
      dataset_params.model_type];
-%classes = {'motorbike','cow','tvmonitor','bottle'};
-%classes = {'bottle'};
+
 classes = {...
     'aeroplane'
     'bicycle'
@@ -136,7 +135,7 @@ for i = 1:length(classes)
   %       [dataset_params.test_params.set_name '+' classes{i}];
   % end
 
-  dataset_params.JUST_TRAIN = 1;
+  %dataset_params.JUST_TRAIN = 1;
   %dataset_params.JUST_TRAIN_AND_LOAD = 1;
   voc_template(dataset_params, classes{i});
 end
