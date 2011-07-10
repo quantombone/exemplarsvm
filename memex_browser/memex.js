@@ -1,4 +1,5 @@
-datadir = "http://balaton.graphics.cs.cmu.edu/sdivvala/.all/Datasets/Pascal_VOC/VOC2010/JPEGImages/";
+// need a way to plug in either VOC2007 or VOC2010 here...
+
 
 function flip_bb(bb,imdim) {
   W = bb[2] - bb[0] + 1;

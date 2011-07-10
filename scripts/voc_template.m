@@ -75,16 +75,16 @@ end
 %% Apply trained exemplars on validation set
 if isfield(dataset_params,'val_params')
   curparams = dataset_params.val_params;
-  cur_set = get_pascal_set(dataset_params, ...
+  val_set = get_pascal_set(dataset_params, ...
                            curparams.set_name);
   if isfield(curparams,'set_maxk')
-    cur_set = cur_set(1:min(length(cur_set), ...
+    val_set = val_set(1:min(length(val_set), ...
                             curparams.set_maxk));
   end
 
   dataset_params.params = curparams;
   dataset_params.params.gt_function = @get_pascal_anno_function;
-  val_files = apply_all_exemplars(dataset_params, models, cur_set, ...
+  val_files = apply_all_exemplars(dataset_params, models, val_set, ...
                                   curparams.set_name);
 
   %Load validation results
@@ -93,21 +93,11 @@ if isfield(dataset_params,'val_params')
 
   val_struct = pool_results(dataset_params, models, val_grid);
 
-
-  %Show all raw detections on test-set as a "memex browser"
-  show_memex_browser(dataset_params, models, val_grid,...
-                     cur_set, curparams.set_name);
-  
-
-  show_memex_browser2(dataset_params, models, val_struct,...
-                     cur_set, curparams.set_name);
-
-
   %% Perform l.a.b.o.o. calibration and M-matrix estimation
   CACHE_BETAS = 1;
   M = calibrate_and_estimate_M(dataset_params, models, ...
                                val_grid, cur_set, CACHE_BETAS);
-
+  
 else
   fprintf(1,['Skipping validation becuase dataset_params.val_params not' ...
              ' present\n']);
@@ -121,15 +111,15 @@ end
 %% Apply trained exemplars on test set
 if isfield(dataset_params,'test_params')
   curparams = dataset_params.test_params;
-  cur_set = get_pascal_set(dataset_params, ...
+  test_set = get_pascal_set(dataset_params, ...
                            curparams.set_name);
 
   if isfield(curparams,'set_maxk')
-    cur_set = cur_set(1:min(length(cur_set), ...
+    test_set = test_set(1:min(length(test_set), ...
                             curparams.set_maxk));
   end
   
-  if length(cur_set) == 0
+  if length(test_set) == 0
     fprintf(1,'Warning, testset is empty\n');
     return;
   end
@@ -137,7 +127,7 @@ if isfield(dataset_params,'test_params')
   %Apply on test set
   dataset_params.params = curparams;
   dataset_params.params.gt_function = [];
-  test_files = apply_all_exemplars(dataset_params, models, cur_set, ...
+  test_files = apply_all_exemplars(dataset_params, models, test_set, ...
                                   curparams.set_name);
 
   %Load test results
@@ -145,8 +135,8 @@ if isfield(dataset_params,'test_params')
                                curparams.set_name, test_files);
   
   %Show all raw detections on test-set as a "memex browser"
-  show_memex_browser(dataset_params, models, test_grid,...
-                     cur_set, curparams.set_name);
+  %show_memex_browser(dataset_params, models, test_grid,...
+  %                   test_set, curparams.set_name);
 
   
 else
@@ -160,6 +150,16 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% EXEMPLAR EVALUATION/DISPLAY %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Show all raw detections on test-set as a "memex browser"
+show_memex_browser(dataset_params, models, val_grid,...
+                   val_set, test_grid, test_set, M);
+
+%show_memex_browser2(dataset_params, models, val_struct,...
+%                   cur_set, curparams.set_name);
+return;
+
+
 
 %If no calibration was performed, then we dont do calibrated rounds
 if length(M) > 0

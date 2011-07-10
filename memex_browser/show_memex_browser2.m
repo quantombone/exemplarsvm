@@ -47,6 +47,10 @@ fprintf(fid,['<html><head><title>memex browser</title>'...
              '<script src="http://balaton.graphics.cs.cmu.edu/tmalisie/memex.js"></script>'...
              '</head><body>\n']);
 
+dstring = sprintf('datadir = "http://balaton.graphics.cs.cmu.edu/tmalisie/%s/JPEGImages/";',...
+                  dataset_params.dataset);
+fprintf(fid,'<script>%s</script>\n',dstring);
+
 fprintf(fid,'<table border=1>\n');
 
 for i = 1:maxk
