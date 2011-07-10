@@ -12,6 +12,10 @@ e_stream_set = get_pascal_stream(dataset_params, cls);
 efiles = exemplar_initialize(dataset_params, e_stream_set, ...
                              models_name, dataset_params.init_params);
 
+%Append the nn-type if we are in nn mode
+if length(dataset_params.params.nnmode) > 0
+  models_name = [models_name '-' dataset_params.params.nnmode];
+end
 
 %Load all of the initialized exemplars
 CACHE_FILE = 1;
@@ -60,6 +64,9 @@ else
   fprintf(1,['Skipping training because dataset_params.mining_params not' ...
              ' present\n']);
 end
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% EXEMPLAR CROSS VALIDATION %%%
@@ -155,18 +162,23 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %If no calibration was performed, then we dont do calibrated rounds
-if (dataset_params.SKIP_EVAL == 0) && length(M)>0
+if length(M) > 0
   
   %% Evaluation of laboo + M matrix
   test_struct = pool_results(dataset_params, models, test_grid, M);
   show_memex_browser2(dataset_params, models, test_struct,...
                       cur_set, curparams.set_name);
-
-  [results] = evaluate_pascal_voc_grid(dataset_params, ...
-                                       models, test_grid, ...
-                                       curparams.set_name, ...
-                                       test_struct);
   
+
+  if (dataset_params.SKIP_EVAL == 0) %%&& length(M)>0
+    
+    [results] = evaluate_pascal_voc_grid(dataset_params, ...
+                                         models, test_grid, ...
+                                         curparams.set_name, ...
+                                         test_struct);
+  end
+  
+    
   %% Show top detections for laboo + M matrix
   %show_top_dets(dataset_params, models, test_grid,...
   %              test_set, curparams.set_name, ...
@@ -181,16 +193,18 @@ if (dataset_params.SKIP_EVAL == 0) && length(M)>0
   show_memex_browser2(dataset_params, models, test_struct,...
                       cur_set, curparams.set_name);
 
-  [results] = evaluate_pascal_voc_grid(dataset_params, ...
-                                       models, test_grid, ...
-                                       curparams.set_name,...
-                                       test_struct);
   
-  %% Show top detections from l.a.b.o.o.
-  %show_top_dets(dataset_params, models, test_grid,...
-  %              test_set, dataset_params.testset_name, ...
-  %              test_struct);
-
+  if (dataset_params.SKIP_EVAL == 0) %%&& length(M)>0
+    [results] = evaluate_pascal_voc_grid(dataset_params, ...
+                                         models, test_grid, ...
+                                         curparams.set_name,...
+                                         test_struct);
+    
+    %% Show top detections from l.a.b.o.o.
+    %show_top_dets(dataset_params, models, test_grid,...
+    %              test_set, dataset_params.testset_name, ...
+    %              test_struct);
+  end  
 end
 
 %% Evaluation of uncalibrated SVM classifiers
