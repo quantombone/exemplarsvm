@@ -108,6 +108,7 @@ classes = {...
     'tvmonitor'
 };
 
+classes = {'bus'};
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
