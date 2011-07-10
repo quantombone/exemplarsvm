@@ -39,7 +39,7 @@ dataset_params.init_params = init_params;
 
 %Initialize exemplar stream
 dataset_params.stream_set_name = 'trainval';
-dataset_params.stream_max_ex = 2000;
+dataset_params.stream_max_ex = 5000;
 
 dataset_params.must_have_seg = 0;
 dataset_params.must_have_seg_string = '';
@@ -83,8 +83,10 @@ dataset_params.models_name = ...
      dataset_params.must_have_seg_string ...
      '.' ...
      dataset_params.model_type];
-classes = {'motorbike','cow','tvmonitor','bottle'};
-classes = {'bottle'};
+
+classes = {'bus'};
+%classes = {'motorbike','cow','tvmonitor','bottle'};
+%classes = {'bottle'};
 
 % classes = {...
 %     'aeroplane'
@@ -114,24 +116,23 @@ save_dataset_params = dataset_params;
 for i = 1:length(classes)
   dataset_params = save_dataset_params;
   
-  
   % if isfield(dataset_params,'mining_params')
   %   %Training set is images not containing in-class instances
   %   dataset_params.mining_params.set_name = ...
   %       [dataset_params.mining_params.set_name '-' classes{i}];
   % end
 
-  % if isfield(dataset_params,'val_params')
-  %   %Validate on in-class images only
-  %   dataset_params.val_params.set_name = ...
-  %       [dataset_params.val_params.set_name '+' classes{i}];
-  % end
-
-  % if isfield(dataset_params,'test_params')
-  %   %Test on in-class images only
-  %   dataset_params.test_params.set_name = ...
-  %       [dataset_params.test_params.set_name '+' classes{i}];
-  % end
+  if isfield(dataset_params,'val_params')
+    %Validate on in-class images only
+    dataset_params.val_params.set_name = ...
+        [dataset_params.val_params.set_name '+' classes{i}];
+  end
+  
+  if isfield(dataset_params,'test_params')
+    %Test on in-class images only
+    dataset_params.test_params.set_name = ...
+        [dataset_params.test_params.set_name '+' classes{i}];
+  end
   
   voc_template(dataset_params, classes{i});
 end
