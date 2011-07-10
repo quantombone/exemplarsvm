@@ -12,10 +12,6 @@ if ~exist('curthresh','var')
 end
 
 setname = [setname '.' models{1}.cls];
-if isfield(dataset_params.params,'nnmode') && ...
-      length(dataset_params.params.nnmode) > 0
-  setname = [setname '-nn-' dataset_params.params.nnmode];
-end
 
 final_file = sprintf('%s/applied/%s-%s.mat',dataset_params.localdir,setname, ...
                      models{1}.models_name);

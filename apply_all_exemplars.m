@@ -40,11 +40,6 @@ end
 
 setname = [setname '.' models{1}.cls];
 
-if isfield(dataset_params.params,'nnmode') && ...
-      length(dataset_params.params.nnmode) > 0
-  setname = [setname '-nn-' dataset_params.params.nnmode];
-end
-
 baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,setname, ...
                 models{1}.models_name);
 
