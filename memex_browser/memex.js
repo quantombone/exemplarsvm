@@ -1,4 +1,4 @@
-datadir = "http://balaton.graphics.cs.cmu.edu/sdivvala/.all/Datasets/Pascal_VOC/VOC2007/JPEGImages/";
+datadir = "http://balaton.graphics.cs.cmu.edu/sdivvala/.all/Datasets/Pascal_VOC/VOC2010/JPEGImages/";
 
 function show_image(divid,im,bb,imdim,color) {
 
