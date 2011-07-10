@@ -1,22 +1,36 @@
 datadir = "http://balaton.graphics.cs.cmu.edu/sdivvala/.all/Datasets/Pascal_VOC/VOC2010/JPEGImages/";
 
-function show_image(divid,im,bb,imdim,color) {
+function flip_bb(bb,imdim) {
+  W = bb[2] - bb[0] + 1;
+  H = bb[3] - bb[1] + 1;
 
-// flip the image which has flip turned on
-if (bb[6] == 1) {
-  flipstring = " FLIP";
-//c.scale(-1,1).attr({opacity: .5});
-} else {
-  flipstring = "";
+  
+  bb[2] = imdim[1]-bb[0];
+  bb[0] = bb[2]-W+1;
+  return bb;
 }
 
 
-document.writeln('Score = ' + bb[11] + flipstring);
-document.writeln('<br/>');
+function show_image(divid,im,bb,imdim,color) {
+
+
+
+
 var paper = Raphael(divid, imdim[1], imdim[0]);
 srcim = datadir + '/' + im;
 var c = paper.image(srcim, 0, 0, imdim[1], imdim[0]);
 
+// flip the image which has flip turned on
+if (bb[6] == 1) {
+  flipstring = " FLIP";
+  c.scale(-1,1);//.attr({opacity: .5});
+  bb = flip_bb(bb,imdim);
+} else {
+  flipstring = "";
+}
+
+document.writeln('Score = ' + bb[11] + flipstring);
+document.writeln('<br/>');
 
 var w = Math.round(bb[2] - bb[0] + 1);
 var h = Math.round(bb[3] - bb[1] + 1);

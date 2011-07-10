@@ -4,10 +4,9 @@ function show_memex_browser(dataset_params, models, grid, ...
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
-
 %maxk is the maximum number of top detections we display
 if ~exist('maxk','var')
-  maxk = 5;
+  maxk = 30;
 end
 
 MAX_ROWS_INDEX = 3;
@@ -32,7 +31,7 @@ finaldir = sprintf('/%s.%s-%s%s/',...
                    set_name, models{1}.cls, ...
                    models{1}.models_name, '');
 
-wwwdir = sprintf('%s/%s/',basedir,finaldir);
+wwwdir = sprintf('%s/%s',basedir,finaldir);
 
 fprintf(1,'Starting memex browser: %s\n',finaldir);
 
@@ -40,7 +39,6 @@ if ~exist(wwwdir,'dir')
   fprintf(1,'making %s\n',wwwdir);
   mkdir(wwwdir);
 end
-
 
 %%% show the index
 filer = sprintf('%s/index.html', wwwdir);
@@ -51,6 +49,7 @@ fprintf(fid,['<html><head><title>memex browser</title>'...
              '<script src="http://balaton.graphics.cs.cmu.edu/tmalisie/memex.js"></script>'...
              '</head><body>\n']);
 
+fprintf(fid,'<h1>Exemplars cls="%s"</h1>\n', models{1}.cls);
 fprintf(fid,'<table border=1>\n');
 fprintf(fid,'<tr>\n');
 
