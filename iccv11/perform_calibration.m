@@ -6,6 +6,7 @@ function [betas] = perform_calibration(dataset_params,...
 % perform an operation such as NMS, we will now have "comparable"
 % scores.  This is performed on the 'trainval' set for PASCAL VOC.
 
+
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if length(grid) == 0
@@ -19,7 +20,7 @@ if ~exist('CACHE_FILES','var')
 end
 
 %if enabled, do NMS, if disabled return raw detections
-DO_NMS = 0;
+DO_NMS = 1;
 
 if DO_NMS == 0
   fprintf(1,'Inside calibration: disabled NMS!\n');
@@ -228,6 +229,9 @@ for exid = 1:length(models)
     plot(all_scores,all_os,'r.')
     xs = linspace(min(all_scores),max(all_scores),1000);
     fx = @(x)(1./(1+exp(-beta(1)*(x-beta(2)))));
+    
+    %[aaa,bbb] = sort(fx(all_scores),'descend');
+    %aaa(aaa>=.5)
     
     hold on
     plot(xs,fx(xs),'b','LineWidth',2)

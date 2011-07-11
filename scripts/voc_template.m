@@ -31,16 +31,16 @@ models = load_all_models(dataset_params, cls, models_name, ...
 if isfield(dataset_params,'mining_params')
   curparams = dataset_params.mining_params;
 
-  cur_set = get_pascal_set(dataset_params, ...
+  train_set = get_pascal_set(dataset_params, ...
                            curparams.set_name);
   
   if isfield(curparams,'set_maxk')
-    cur_set = cur_set(1:min(length(cur_set), ...
-                            curparams.set_maxk));
+    train_set = train_set(1:min(length(train_set), ...
+                                curparams.set_maxk));
   end
     
   [tfiles, models_name] = train_all_exemplars(dataset_params, ...
-                                              models, cur_set);  
+                                              models, train_set);  
   
   if isfield(dataset_params, 'JUST_TRAIN') && ...
         (dataset_params.JUST_TRAIN==1)
@@ -93,11 +93,13 @@ if isfield(dataset_params,'val_params')
 
   val_struct = pool_results(dataset_params, models, val_grid);
 
+
   %% Perform l.a.b.o.o. calibration and M-matrix estimation
   CACHE_BETAS = 1;
   M = calibrate_and_estimate_M(dataset_params, models, ...
-                               val_grid, cur_set, CACHE_BETAS);
+                               val_grid, val_set, CACHE_BETAS);
   
+
 else
   fprintf(1,['Skipping validation becuase dataset_params.val_params not' ...
              ' present\n']);
@@ -152,14 +154,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Show all raw detections on test-set as a "memex browser"
-show_memex_browser(dataset_params, models, val_grid,...
-                   val_set, test_grid, test_set, M);
+%show_memex_browser(dataset_params, models, val_grid,...
+%                   val_set, test_grid, test_set, M);
 
 %show_memex_browser2(dataset_params, models, val_struct,...
 %                   cur_set, curparams.set_name);
-return;
-
-
 
 %If no calibration was performed, then we dont do calibrated rounds
 if length(M) > 0
@@ -167,7 +166,7 @@ if length(M) > 0
   %% Evaluation of laboo + M matrix
   test_struct = pool_results(dataset_params, models, test_grid, M);
   show_memex_browser2(dataset_params, models, test_struct,...
-                      cur_set, curparams.set_name);
+                      test_set, curparams.set_name);
   
 
   if (dataset_params.SKIP_EVAL == 0) %%&& length(M)>0
@@ -191,7 +190,7 @@ if length(M) > 0
                              M2);
   
   show_memex_browser2(dataset_params, models, test_struct,...
-                      cur_set, curparams.set_name);
+                      test_set, curparams.set_name);
 
   
   if (dataset_params.SKIP_EVAL == 0) %%&& length(M)>0
@@ -212,7 +211,7 @@ M2 = [];
 test_struct = pool_results(dataset_params, models, test_grid, M2);
 
 show_memex_browser2(dataset_params, models, test_struct,...
-                    cur_set, curparams.set_name);
+                    test_set, curparams.set_name);
 
 
 if (dataset_params.SKIP_EVAL == 0)

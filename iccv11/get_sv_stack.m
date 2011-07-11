@@ -58,6 +58,7 @@ svims = cell(N,1);
 
 %VOCinit;
 for i = 1:length(ucurids)
+
   Ibase = convert_to_I(m.train_set{ucurids(i)});
   
   hits = find(svbbs(:,11)==ucurids(i));
@@ -107,8 +108,10 @@ indicator = ones(length(svims), 1);
 %   test = find(indicator==4);
 % end
 
+NSHIFT_BASE = 3;
+
 svimstack = cat(4,svims{:});
-NMS = K2-4;
+NMS = K2-NSHIFT_BASE;
 if NMS == 1
   cuts(1) = size(svimstack,4);
 else
@@ -145,23 +148,25 @@ for j = (N+1):(K1*K2)
                    newsize(2)+PADSIZE*2,3);
 end
 
-mx = mean(m.model.x,2);
+%mx = mean(m.model.x,2);
+mx = m.model.w(:)*0;
 raw_picture = HOGpicture(reshape(mx-mean(mx(:)),m.model.hg_size));
 pos_picture = HOGpicture(m.model.w);
 neg_picture = HOGpicture(-m.model.w);
-spatial_picture = sum(m.model.w.*reshape(mean(m.model.x,2), ...
-                                         size(m.model.w)),3);
+%spatial_picture = sum(m.model.w.*reshape(mean(m.model.x,2), ...
+%                                         size(m.model.w)),3);
 
-spatial_picture = imresize(jettify(spatial_picture),[size(pos_picture,1) ...
-                    size(pos_picture,2)],'nearest');
+%spatial_picture = imresize(jettify(spatial_picture),[size(pos_picture,1) ...
+%                    size(pos_picture,2)],'nearest');
 
 raw_picture = jettify(imresize(raw_picture,newsize,'nearest'));
 pos_picture = jettify(imresize(pos_picture,newsize,'nearest'));
 neg_picture = jettify(imresize(neg_picture,newsize,'nearest'));
-spatial_picture = imresize(spatial_picture,newsize,'nearest');
+%spatial_picture = imresize(spatial_picture,newsize,'nearest');
 
 %first four slots are reserved for the image
-NSHIFT = length(mss) + 4;
+
+NSHIFT = length(mss) + NSHIFT_BASE;
 
 svims((NSHIFT+1):end) = svims(1:end-NSHIFT);
 
@@ -170,10 +175,10 @@ svims{1} = max(0.0,min(1.0,imresize(Ibase,[size(pos_picture,1),size(pos_picture,
                                                   2)])));
 svims{2} = pos_picture;
 svims{3} = neg_picture;
-svims{4} = spatial_picture;
-svims(4+(1:length(mss))) = mss;
 
-for q = 1:(4+length(mss))
+svims(NSHIFT_BASE+(1:length(mss))) = mss;
+
+for q = 1:(NSHIFT_BASE+length(mss))
   svims{q} = pad_image(svims{q},PADSIZE,[1 1 1]);
 end
 

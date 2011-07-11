@@ -6,7 +6,7 @@ function final = pool_results(dataset_params,models,grid,M)
 REMOVE_SELF = 1;
 
 if REMOVE_SELF == 1
-  curids=cellfun2(@(x)x.curid,models);
+  curids = cellfun2(@(x)x.curid,models);
 end
 
 cls = models{1}.cls;
@@ -48,7 +48,7 @@ end
 %raw_boxes = bboxes;
 
 %%%NOTE: the LRs haven't been consolidated
-if 0 %turned off for nn baseline, since it is done already
+if 1 %turned off for nn baseline, since it is done already
   fprintf(1,'applying exemplar nms\n');
   for i = 1:length(bboxes)
     if size(bboxes{i},1) > 0

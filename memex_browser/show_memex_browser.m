@@ -65,7 +65,7 @@ for i = 1:length(models)
   fprintf(fid,'<td><div id="%s" style="position:relative"></div>',divid);
   fprintf(fid,'<script>show_image_href("%s","%s%s",%s,[%d,%d],"green","%s.%d.html");</script></td>',...
           divid, curid, ext, bbstring, Isize(1), Isize(2),models{i}.curid, ...
-          models{i}.objectid);
+          models{i}.objectid)
   if mod(i,MAX_ROWS_INDEX) == 0
     fprintf(fid,'</tr>\n<tr>\n');
   end
