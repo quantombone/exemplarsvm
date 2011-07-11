@@ -5,7 +5,6 @@ function model = initialize_goalsize_model(I, bbox, init_params)
 % maximum dimension of init_params.MAXDIM
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
-
 if ~exist('init_params','var')
   init_params.sbin = 8;
   init_params.hg_size = [8 8];
@@ -53,10 +52,17 @@ model.b = 0;
 model.x = curfeats;
 
 %Fire inside self-image to get detection location
-[model.bb, model.x] = get_target_bb(model,I);
+[model.bb, model.x] = get_target_bb(model, I);
 
 %Normalized-HOG initialization
 model.w = reshape(model.x,size(model.w)) - mean(model.x(:));
+
+if isfield(init_params,'wiggle_number') && ...
+      (init_params.wiggle_number > 1)
+  savemodel = model;
+  model = populate_wiggles(I, model, init_params.wiggle_number);
+end
+
 
 function [targetlvl,mask] = get_ncell_mask(init_params, masker, ...
                                                         sizer)
