@@ -137,10 +137,10 @@ if isfield(dataset_params,'test_params')
                                curparams.set_name, test_files);
   
   %Show all raw detections on test-set as a "memex browser"
-  %show_memex_browser(dataset_params, models, test_grid,...
-  %                   test_set, curparams.set_name);
+  show_memex_browser(dataset_params, models, test_grid,...
+                     test_set, curparams.set_name);
 
-  
+
 else
   fprintf(1,['Skipping testing becuase dataset_params.test_params not' ...
              ' present\n']);
