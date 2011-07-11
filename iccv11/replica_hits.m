@@ -1,30 +1,34 @@
-function xxx = replica_hits(I, sbin, target_id, hg_size, NNN)
+function xxx = replica_hits(I, sbin, bb, hg_size, N_WIGGLES, savemodel)
 %% Given an image, an sbin, and the location of the detection window
-%% inside target_id, create NNN wiggles by perturbing image content
+%% encoded as bb, create N_WIGGLES wiggles by perturbing image content
 %% inside the frame
 
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-if ~exist('NNN','var')
-  NNN = 100;
+if ~exist('N_WIGGLES','var')
+  N_WIGGLES = 100;
 end
 
 I = im2double(I);
+ 
+NEWPAD = 5; %ceil(max(hg_size(1),hg_size(2))/2);
 
-NEWPAD = ceil(max(hg_size(1),hg_size(2))/2);
+u = bb(9);
+v = bb(10);
 
-u = target_id.offset(1)+NEWPAD;
-v = target_id.offset(2)+NEWPAD;
+if bb(7) == 1
+  I = flip_image(I);
+end
 
-lilI = resize(I,target_id.scale);
+lilI = resize(I,bb(8));
 f = features(lilI,sbin);
 f = padarray(f,[NEWPAD NEWPAD 0]);
 xxx_base = f(u-2+(1:hg_size(1)),v-2+(1:hg_size(2)),:);
 
 %%% NOW DO WIGGLES WITHOUT A SLIDE!
-xxx = zeros(prod(hg_size),NNN);
+xxx = zeros(prod(hg_size),N_WIGGLES);
 xxx(:,1) = xxx_base(:);
-for iii = 2:NNN
+for iii = 2:N_WIGGLES
   %fprintf(1,'$');
 
   %Add random noise
