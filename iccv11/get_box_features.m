@@ -1,4 +1,4 @@
-function [x] = get_box_features(boxes, N, neighbor_thresh)
+function [x,nbrids] = get_box_features(boxes, N, neighbor_thresh)
 %Get the box features for this particular set of boxes from a
 %single image (boxes are the boxes, N is the # of exemplars) and
 %the neighbor list (which are the box ids contributing to this
@@ -20,7 +20,7 @@ function [x] = get_box_features(boxes, N, neighbor_thresh)
 %K is the number of boxes
 K = size(boxes,1);
 x = sparse(N*2, K);
-%nbrids = cell(1,K);
+nbrids = cell(1,K);
 
 if K == 0
   return;
@@ -46,9 +46,14 @@ osmat = osmat - diag(diag(osmat));
 for j = 1:K
   friends = find(osmat(:,j) > neighbor_thresh);
   x(exid(j),j) = scorerow(j);
+  
+  nbrids{j} = [j; friends];
   if length(friends) == 0
     continue
   end
+  
+  %NOTE: try to blend in osmat?
+  %.*osmat(friends,j);
   x(exid(friends),j) = scorerow(friends);
 end
 

@@ -1,15 +1,18 @@
 function M = estimate_M(dataset_params, models, grid, betas, ...
-                         neighbor_thresh, count_thresh, CACHE_FILES)
+                        CACHE_FILES)
 %Given a bunch of detections, learn the M boosting matrix, which
 %makes the final scores multiplexed
 
-if ~exist('neighbor_thresh','var')
-  neighbor_thresh = 0.5;
-end
+%if ~isfield('neighbor_thresh','var')
+%neighbor_thresh = 0.5;
+%end
 
-if ~exist('count_thresh','var')
-  count_thresh = 0.5;
-end
+%if ~exist('count_thresh','var')
+%  count_thresh = 0.5;
+%end
+
+neighbor_thresh = dataset_params.params.calibration_neighbor_thresh;
+count_thresh    = dataset_params.params.calibration_count_thresh;
 
 if ~exist('CACHE_FILES','var')
   CACHE_FILES = 0;
@@ -64,8 +67,8 @@ for i = 1:length(grid)
   
   calib_boxes = calibrate_boxes(boxes{i},betas);
   
-  %Threshold at .1
-  oks = find(calib_boxes(:,end)>.1);
+  %Threshold at the target value specified in parameters
+  oks = find(calib_boxes(:,end) >= dataset_params.params.calibration_threshold);
   boxes{i} = calib_boxes(oks,:);
   if length(grid{i}.extras)>0
     maxos{i} = grid{i}.extras.maxos;
@@ -99,6 +102,7 @@ boxes(lens==0) = [];
 maxos(lens==0) = [];
 
 %already nms-ed within exemplars (but not within LR flips)
+%%NOTE: should this be turned on?
 if 1
   for i = 1:length(boxes)
     boxes{i}(:,5) = 1:size(boxes{i},1);

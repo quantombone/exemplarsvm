@@ -1,6 +1,14 @@
 function voc_template(dataset_params, cls)
 %% This is the main VOC driver script for both scenes and exemplars
 
+
+if ~exist(dataset_params.devkitroot,'dir')
+  mkdir(dataset_params.devkitroot);
+end
+%Save the parameters so we know later how we generated this run
+save([dataset_params.devkitroot '/dataset_params.mat'], ...
+     'dataset_params')
+
 models_name = dataset_params.models_name;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -137,8 +145,8 @@ if isfield(dataset_params,'test_params')
                                curparams.set_name, test_files);
   
   %Show all raw detections on test-set as a "memex browser"
-  show_memex_browser(dataset_params, models, test_grid,...
-                     test_set, curparams.set_name);
+  %show_memex_browser2(dataset_params, models, test_grid,...
+  %                   test_set, curparams.set_name);
 
 
 else
@@ -154,29 +162,30 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Show all raw detections on test-set as a "memex browser"
-%show_memex_browser(dataset_params, models, val_grid,...
-%                   val_set, test_grid, test_set, M);
-
-%show_memex_browser2(dataset_params, models, val_struct,...
-%                   cur_set, curparams.set_name);
-
+show_exemplar_browser(dataset_params, models, ...
+                      val_grid, val_set, ...
+                      test_grid, test_set, M);
+%fprintf(1,'quitting after memex display\n');
+%return;
 %If no calibration was performed, then we dont do calibrated rounds
 if length(M) > 0
   
   %% Evaluation of laboo + M matrix
   test_struct = pool_results(dataset_params, models, test_grid, M);
-  show_memex_browser2(dataset_params, models, test_struct,...
-                      test_set, curparams.set_name);
   
-
+  rc = [];
   if (dataset_params.SKIP_EVAL == 0) %%&& length(M)>0
     
     [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                          models, test_grid, ...
                                          curparams.set_name, ...
                                          test_struct);
+    rc = results.corr;
   end
   
+  show_memex_browser2(dataset_params, models, test_struct,...
+                      test_set, curparams.set_name, rc);
+
     
   %% Show top detections for laboo + M matrix
   %show_top_dets(dataset_params, models, test_grid,...
@@ -189,37 +198,44 @@ if length(M) > 0
   test_struct = pool_results(dataset_params, models, test_grid, ...
                              M2);
   
-  show_memex_browser2(dataset_params, models, test_struct,...
-                      test_set, curparams.set_name);
-
-  
+  rc = [];
   if (dataset_params.SKIP_EVAL == 0) %%&& length(M)>0
     [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                          models, test_grid, ...
                                          curparams.set_name,...
-                                         test_struct);
+                                         test_struct, rc);
     
     %% Show top detections from l.a.b.o.o.
     %show_top_dets(dataset_params, models, test_grid,...
     %              test_set, dataset_params.testset_name, ...
     %              test_struct);
+    rc = results.corr;
   end  
+  
+  show_memex_browser2(dataset_params, models, test_struct,...
+                      test_set, curparams.set_name, rc);
+
+  
 end
 
 %% Evaluation of uncalibrated SVM classifiers
 M2 = [];
 test_struct = pool_results(dataset_params, models, test_grid, M2);
 
-show_memex_browser2(dataset_params, models, test_struct,...
-                    test_set, curparams.set_name);
 
 
+rc = [];
 if (dataset_params.SKIP_EVAL == 0)
   [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                        models, test_grid, ...
                                        curparams.set_name, ...
                                        test_struct);
+  rc = results.corr;
 end
+
+show_memex_browser2(dataset_params, models, test_struct,...
+                    test_set, curparams.set_name, rc);
+
 
 %%% Show top detections from uncalibrated SVM classifiers
 % show_top_dets(dataset_params, models, test_grid,...

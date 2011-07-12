@@ -37,7 +37,7 @@ for iii = 2:N_WIGGLES
   %Perform random gaussian smoothing
   randsigma = .1+rand;
   curI = (imfilter(curI,fspecial('gaussian',[9 9],randsigma)));
-  
+
   %Perform random shift
   cx = floor(3*rand)-1;
   cy = floor(3*rand)-1;
@@ -67,7 +67,7 @@ for iii = 2:N_WIGGLES
     clf
     imagesc(max(0.0,min(1.0,curI)))
     drawnow
-    pause(.2)
+    pause
   end
 end
 

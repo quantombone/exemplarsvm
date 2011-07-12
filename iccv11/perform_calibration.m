@@ -20,7 +20,7 @@ if ~exist('CACHE_FILES','var')
 end
 
 %if enabled, do NMS, if disabled return raw detections
-DO_NMS = 1;
+DO_NMS = 0;
 
 if DO_NMS == 0
   fprintf(1,'Inside calibration: disabled NMS!\n');

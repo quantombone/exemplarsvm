@@ -3,7 +3,7 @@ function final = pool_results(dataset_params,models,grid,M)
 %to go into the PASCAL evaluation code)
 
 %REMOVE FIRINGS ON SELF-IMAGE (these create artificially high scores)
-REMOVE_SELF = 1;
+REMOVE_SELF = 0;
 
 if REMOVE_SELF == 1
   curids = cellfun2(@(x)x.curid,models);
@@ -48,7 +48,8 @@ end
 %raw_boxes = bboxes;
 
 %%%NOTE: the LRs haven't been consolidated
-if 1 %turned off for nn baseline, since it is done already
+%%NOTE: seems better turned off
+if 0 %turned off for nn baseline, since it is done already
   fprintf(1,'applying exemplar nms\n');
   for i = 1:length(bboxes)
     if size(bboxes{i},1) > 0
@@ -67,8 +68,7 @@ if exist('M','var') && length(M)>0 && isfield(M,'betas')
   for i = 1:length(bboxes)
     calib_boxes = calibrate_boxes(bboxes{i},M.betas);
 
-    %Threshold at .1
-    oks = find(calib_boxes(:,end) > .1);
+    oks = find(calib_boxes(:,end) > dataset_params.params.calibration_threshold);
     calib_boxes = calib_boxes(oks,:);
     bboxes{i} = calib_boxes;
   end
@@ -79,9 +79,10 @@ if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
   tic
   for i = 1:length(bboxes)
     fprintf(1,'.');
-    [xraw] = get_box_features(bboxes{i},length(models),M.neighbor_thresh);
+    [xraw,nbrs] = get_box_features(bboxes{i},length(models),M.neighbor_thresh);
     r2 = apply_boost_M(xraw,bboxes{i},M);
-    bboxes{i}(:,end) = bboxes{i}(:,end).*(r2');
+    bboxes{i}(:,end) = r2;
+    %bboxes{i}(:,end) = bboxes{i}(:,end).*(r2');
   end
   toc
 end

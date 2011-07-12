@@ -85,33 +85,33 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
-classes = {'bus'};
-% classes = {...
-%     'aeroplane'
-%     'bicycle'
-%     'bird'
-%     'boat'
-%     'bottle'
-%     'bus'
-%     'cat'
-%     'car'
-%     'chair'
-%     'cow'
-%     'diningtable'
-%     'dog'
-%     'horse'
-%     'motorbike'
-%     'person'
-%     'pottedplant'
-%     'sheep'
-%     'sofa'
-%     'train'
-%     'tvmonitor'
-% };
-
-%myRandomize;
-%r = randperm(length(classes));
-%classes = classes(r);
+%classes = {'bus'};
+classes = {...
+    'aeroplane'
+    'bicycle'
+    'bird'
+    'boat'
+    'bottle'
+    'bus'
+    'cat'
+    'car'
+    'chair'
+    'cow'
+    'diningtable'
+    'dog'
+    'horse'
+    'motorbike'
+    'person'
+    'pottedplant'
+    'sheep'
+    'sofa'
+    'train'
+    'tvmonitor'
+};
+classes = {'person'};
+myRandomize;
+r = randperm(length(classes));
+classes = classes(r);
 
 %plot_voc_results(dataset_params);
 %return;

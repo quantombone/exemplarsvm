@@ -13,12 +13,7 @@ end
 betas = perform_calibration(dataset_params, models, grid, ...
                             cur_set, CACHE_FILES);
 
-neighbor_thresh = 0.5;
-count_thresh = 0.5;
-
 %% Estimate the co-occurrence matrix M
-[M] = estimate_M(dataset_params, models, grid, betas, ...
-                 neighbor_thresh, ...
-                 count_thresh, CACHE_FILES);
+[M] = estimate_M(dataset_params, models, grid, betas, CACHE_FILES);
 
 M.betas = betas;

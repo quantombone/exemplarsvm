@@ -97,3 +97,11 @@ mining_params.skip_mine = 0;
 
 %by default, NN mode is turned off
 mining_params.nnmode = '';
+
+%The default calibration threshold (will prune away all windows
+%that score below this number)
+mining_params.calibration_threshold = 0;%.01;
+
+%The M-estimation parameters
+mining_params.calibration_count_thresh = .5;
+mining_params.calibration_neighbor_thresh = .5;
