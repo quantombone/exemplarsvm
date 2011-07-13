@@ -59,7 +59,7 @@ if 1
   dataset_params.mining_params.TOPK = 100;
   dataset_params.mining_params.set_name = 'train';
   dataset_params.mining_params.SVMC = .01;
-  dataset_params.mining_params.MAX_TOTAL_MINED_IMAGES = 200;
+  %dataset_params.mining_params.MAX_TOTAL_MINED_IMAGES = 200;
   %optional cap
   %dataset_params.mining_params.set_maxk = 0;
 end
