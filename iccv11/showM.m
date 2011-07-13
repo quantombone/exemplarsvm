@@ -15,9 +15,9 @@ for i = 1:length(models)
   title(sprintf('Source exemplar %d',i))
   
   for q = 1:15
-    if aa(q) <= 1
-      break
-    end
+    %if aa(q) <= 1
+    %  break
+    %end
     subplot(4,4,q+1)
 
     flipper = 0;
@@ -35,5 +35,4 @@ for i = 1:length(models)
   end
   
   pause
-  
 end
