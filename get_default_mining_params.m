@@ -100,7 +100,7 @@ mining_params.nnmode = '';
 
 %The default calibration threshold (will prune away all windows
 %that score below this number)
-mining_params.calibration_threshold = 0;%.01;
+mining_params.calibration_threshold = -1;%.01;
 
 %The M-estimation parameters
 mining_params.calibration_count_thresh = .5;
