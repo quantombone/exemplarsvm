@@ -99,8 +99,8 @@ if isfield(dataset_params,'val_params')
   val_grid = load_result_grid(dataset_params, models, ...
                           curparams.set_name, val_files);
 
-  val_struct = pool_results(dataset_params, models, val_grid);
-
+  %val_struct is not used
+  %val_struct = pool_results(dataset_params, models, val_grid);
 
   %% Perform l.a.b.o.o. calibration and M-matrix estimation
   CACHE_BETAS = 1;
@@ -186,7 +186,6 @@ if length(M) > 0
   show_memex_browser2(dataset_params, models, test_struct,...
                       test_set, curparams.set_name, rc);
 
-    
   %% Show top detections for laboo + M matrix
   %show_top_dets(dataset_params, models, test_grid,...
   %              test_set, curparams.set_name, ...
@@ -217,6 +216,7 @@ if length(M) > 0
 
   
 end
+
 
 %% Evaluation of uncalibrated SVM classifiers
 M2 = [];
