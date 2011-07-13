@@ -72,12 +72,12 @@ for i = 1:maxk
                      bb(9),bb(10),bb(11),bb(12));
 
   Isize = models{exid}.sizeI;
-  divid = sprintf('notepad%d.%d',i,0);
- 
-  fprintf(fid,'<tr><td><div id="%s" style="position:relative"></div>',divid);
-  fprintf(fid,'<script>show_image("%s","%s%s",%s,[%d,%d],"green");</script></td>',...
-          divid, curid, ext, bbstring, Isize(1), Isize(2));
 
+  divid = sprintf('exemplar.%d.0',i);
+  divid2 = sprintf('exemplartitle.%d.0',i);
+  fprintf(fid,'<td><table border=0>\n<tr><td><div id="%s" style="position:relative"></div></td></tr>\n<tr><td><div id="%s" style="position:relative"></div></td></tr></table>',divid,divid2);
+  fprintf(fid,'<script>show_image("%s","%s","%s","%s","%d",%s,[%d,%d],"green");</script></td>',...
+          divid, divid2, curid, ext, models{i}.objectid, bbstring, Isize(1), Isize(2));
   
   bb = bbs(i,:);  
   
@@ -100,12 +100,14 @@ for i = 1:maxk
   else
     col = 'red';
   end
-  fprintf(1,'rc is %d\n',rc(i));
   
-  divid = sprintf('notepad%d.%d',i,1);
-  fprintf(fid,'<td><div id="%s"/>',divid);
-  fprintf(fid,'<script>show_image("%s","%s%s",%s,[%d,%d],"%s");</script></td>',...
-          divid, curid, ext, bbstring, Isize(1), Isize(2),col);
+  
+  divid = sprintf('res.%d',i);
+  divid2 = sprintf('restitle.%d',i);
+  fprintf(fid,'<td><table border=0>\n<tr><td><div id="%s" style="position:relative"></div></td></tr>\n<tr><td><div id="%s" style="position:relative"></div></td></tr></table>',divid,divid2);
+  fprintf(fid,'<script>show_image("%s","%s","%s","%s","%d",%s,[%d,%d],"%s");</script></td>',...
+          divid, divid2, curid, ext, 0, bbstring, Isize(1), Isize(2),col);
+  
   
   fprintf(fid,'</tr>\n');
   
