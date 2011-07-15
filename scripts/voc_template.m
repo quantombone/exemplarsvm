@@ -95,19 +95,25 @@ if isfield(dataset_params,'val_params')
   val_files = apply_all_exemplars(dataset_params, models, val_set, ...
                                   curparams.set_name);
 
-  %Load validation results
-  val_grid = load_result_grid(dataset_params, models, ...
-                          curparams.set_name, val_files);
-
-  %val_struct is not used
-  %val_struct = pool_results(dataset_params, models, val_grid);
-
-  %% Perform l.a.b.o.o. calibration and M-matrix estimation
-  CACHE_BETAS = 1;
-  M = calibrate_and_estimate_M(dataset_params, models, ...
-                               val_grid, val_set, CACHE_BETAS);
+  if isfield(dataset_params, 'JUST_APPLY') && ...
+        (dataset_params.JUST_APPLY==1)
+    fprintf(1,'only applying because JUST_APPLY is enabled\n');
+    %do nothing
+  else
   
-
+    %Load validation results
+    val_grid = load_result_grid(dataset_params, models, ...
+                                curparams.set_name, val_files);
+    
+    %val_struct is not used
+    %val_struct = pool_results(dataset_params, models, val_grid);
+    
+    %% Perform l.a.b.o.o. calibration and M-matrix estimation
+    CACHE_BETAS = 1;
+    M = calibrate_and_estimate_M(dataset_params, models, ...
+                                 val_grid, val_set, CACHE_BETAS);
+    
+  end
 else
   fprintf(1,['Skipping validation becuase dataset_params.val_params not' ...
              ' present\n']);
@@ -139,6 +145,12 @@ if isfield(dataset_params,'test_params')
   dataset_params.params.gt_function = [];
   test_files = apply_all_exemplars(dataset_params, models, test_set, ...
                                   curparams.set_name);
+  
+  if isfield(dataset_params, 'JUST_APPLY') && ...
+        (dataset_params.JUST_APPLY==1)
+    fprintf(1,'only applying because JUST_APPLY is enabled\n');
+    return;
+  end
 
   %Load test results
   test_grid = load_result_grid(dataset_params, models, ...
@@ -162,19 +174,19 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Show all raw detections on test-set as a "memex browser"
-show_exemplar_browser(dataset_params, models, ...
-                      val_grid, val_set, ...
-                      test_grid, test_set, M);
+%show_exemplar_browser(dataset_params, models, ...
+%                      val_grid, val_set, ...
+%                      test_grid, test_set, M);
 %fprintf(1,'quitting after memex display\n');
 %return;
 %If no calibration was performed, then we dont do calibrated rounds
 if length(M) > 0
   
-  %% Evaluation of laboo + M matrix
+  % %% Evaluation of laboo + M matrix
   test_struct = pool_results(dataset_params, models, test_grid, M);
   
   rc = [];
-  if (dataset_params.SKIP_EVAL == 0) %%&& length(M)>0
+  if (dataset_params.SKIP_EVAL == 0)
     
     [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                          models, test_grid, ...
@@ -186,6 +198,7 @@ if length(M) > 0
   show_memex_browser2(dataset_params, models, test_struct,...
                       test_set, curparams.set_name, rc);
 
+  
   %% Show top detections for laboo + M matrix
   %show_top_dets(dataset_params, models, test_grid,...
   %              test_set, curparams.set_name, ...
@@ -198,11 +211,11 @@ if length(M) > 0
                              M2);
   
   rc = [];
-  if (dataset_params.SKIP_EVAL == 0) %%&& length(M)>0
+  if (dataset_params.SKIP_EVAL == 0)
     [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                          models, test_grid, ...
                                          curparams.set_name,...
-                                         test_struct, rc);
+                                         test_struct);
     
     %% Show top detections from l.a.b.o.o.
     %show_top_dets(dataset_params, models, test_grid,...
@@ -210,19 +223,15 @@ if length(M) > 0
     %              test_struct);
     rc = results.corr;
   end  
-  
+
   show_memex_browser2(dataset_params, models, test_struct,...
                       test_set, curparams.set_name, rc);
 
-  
 end
-
 
 %% Evaluation of uncalibrated SVM classifiers
 M2 = [];
 test_struct = pool_results(dataset_params, models, test_grid, M2);
-
-
 
 rc = [];
 if (dataset_params.SKIP_EVAL == 0)
@@ -235,7 +244,6 @@ end
 
 show_memex_browser2(dataset_params, models, test_struct,...
                     test_set, curparams.set_name, rc);
-
 
 %%% Show top detections from uncalibrated SVM classifiers
 % show_top_dets(dataset_params, models, test_grid,...
