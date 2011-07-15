@@ -13,7 +13,7 @@ r = zeros(1,size(boxes,1));
 for i = 1:size(boxes,1)
   % if isfield(M,'C1')
   %   r(i) = (x(:,i)'*M.C1*x(:,i));
-  r(i) = (M.w{exids(i)}'*x(:,i) + sum(x(:,i)));%-M.b{exids(i)};
+  r(i) = (M.w{exids(i)}'*x(:,i) + sum(x(:,i)))-M.b{exids(i)};
   %r(i) = (M.w{exids(i)}'*x(:,i))-M.b{exids(i)};
   %   r(i) = x(:,i)'*M.C*x(:,i) + x(exids(i),i);
   %  end
