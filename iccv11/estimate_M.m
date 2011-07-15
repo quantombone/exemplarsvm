@@ -3,14 +3,6 @@ function M = estimate_M(dataset_params, models, grid, betas, ...
 %Given a bunch of detections, learn the M boosting matrix, which
 %makes the final scores multiplexed
 
-%if ~isfield('neighbor_thresh','var')
-%neighbor_thresh = 0.5;
-%end
-
-%if ~exist('count_thresh','var')
-%  count_thresh = 0.5;
-%end
-
 neighbor_thresh = dataset_params.params.calibration_neighbor_thresh;
 count_thresh    = dataset_params.params.calibration_count_thresh;
 
@@ -43,12 +35,6 @@ REMOVE_SELF = 1;
 
 cls = models{1}.cls;
 
-% for i = 1:length(models)
-%   if ~isfield(models{i},'curid')
-%     models{i}.curid = '-1';
-%   end
-% end
-
 excurids = cellfun2(@(x)x.curid,models);
 boxes = cell(1,length(grid));
 maxos = cell(1,length(grid));
@@ -64,8 +50,13 @@ for i = 1:length(grid)
   
   curid = grid{i}.curid;
   boxes{i} = grid{i}.bboxes;
-  
-  calib_boxes = calibrate_boxes(boxes{i},betas);
+
+  %new-method: use calibrated scores (doesn't work too well)
+  %calib_boxes = calibrate_boxes(boxes{i},betas);
+
+  %old-method: use raw SVM scores + 1
+  calib_boxes = boxes{i};
+  calib_boxes(:,end) = calib_boxes(:,end)+1;
   
   %Threshold at the target value specified in parameters
   oks = find(calib_boxes(:,end) >= dataset_params.params.calibration_threshold);
@@ -103,7 +94,7 @@ maxos(lens==0) = [];
 
 %already nms-ed within exemplars (but not within LR flips)
 %%NOTE: should this be turned on?
-if 1
+if 0
   for i = 1:length(boxes)
     boxes{i}(:,5) = 1:size(boxes{i},1);
     boxes{i} = nms_within_exemplars(boxes{i},.5);
@@ -195,22 +186,19 @@ function M = learn_M_counting(x, exids, os, count_thresh)
 %Learn the matrix by counting activations on positives
 N = size(x,2);
 K = size(x,1);
-
 C = zeros(K,K);
-%C2 = zeros(K,K);
+
 for i = 1:N
   cur = find(x(:,i)>0);  
-  C(cur,exids(i)) = C(cur,exids(i)) + os(i)*(os(i) >= count_thresh) / ...
-       length(cur)*sum(x(:,i));
-  continue
-  % C2(cur,exids(i)) = C(cur,exids(i)) + (os(i) < count_thresh) / ...
-  %     length(cur)*sum(x(:,i));
-  coeffs = x(cur,i).*x(exids(i),i);
-  C(cur,exids(i)) = C(cur,exids(i)) + coeffs.*double(os(i) >= count_thresh);
-  %C2(cur,exids(i)) = C(cur,exids(i)) + coeffs.*double(os(i) < count_thresh);
-end
 
-%C = C ./(C2+eps);
+  %old way: works better!
+  C(cur,exids(i)) = C(cur,exids(i)) + os(i)*(os(i) >= count_thresh) / ...
+       length(cur);
+
+  %new way: not so well
+  %C(cur,exids(i)) = C(cur,exids(i)) + os(i)*(os(i) >= count_thresh) / ...
+  %    length(cur)/sum(x(:,i);
+end
 
 for i = 1:K
   M.w{i} = C(:,i);
