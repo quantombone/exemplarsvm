@@ -8,6 +8,7 @@ files{2} = dir([dataset_params.resdir '/' m1 '*calibrated' ...
 files{3} = dir([dataset_params.resdir '/' m1 '*calibrated-' ...
                     'M_test_results.mat']);
 
+
 files{1} = cellfun2(@(x)sprintf('%s/%s',dataset_params.resdir,x), ...
                    {files{1}.name});
 files{2} = cellfun2(@(x)sprintf('%s/%s',dataset_params.resdir,x), ...
@@ -18,10 +19,19 @@ files{3} = cellfun2(@(x)sprintf('%s/%s',dataset_params.resdir,x), ...
 files{1} = setdiff(files{1},files{2});
 files{1} = setdiff(files{1},files{3});
 
+
+
 figure(1)
 clf
+ha = tight_subplot(5, 4, .05, ...
+                   .1, .01);
+
+
+
 for i = 1:length(files{1})
-  subplot(2,10,i)
+  %subplot(2,10,i)
+
+  axes(ha(i));
   tic
   f1 = load(files{1}{i});
   f2 = load(files{2}{i});
@@ -40,17 +50,30 @@ for i = 1:length(files{1})
   xlabel 'recall'
   ylabel 'precision'
   cls = dataset_params.classes{i};
-  title(sprintf('class: %s, subset: %s',...
-                cls,dataset_params.testset));
+  %title(sprintf('class: %s, subset: %s',...
+  %              cls,dataset_params.testset));
   
-  s1 = sprintf('AP = %.3f APold=%.3f',...
-               f1.results.ap,f1.results.apold);
+  title(sprintf('%s',...
+                cls))
 
-  s2 = sprintf('AP = %.3f APold=%.3f',...
-               f2.results.ap,f2.results.apold);
+  s1 = sprintf('ESVM: AP=%.3f',...
+               f1.results.apold);
+
+  s2 = sprintf('ESVM+B: AP=%.3f',...
+               f2.results.apold);
   
-  s3 = sprintf('AP = %.3f APold=%.3f',...
-               f3.results.ap,f3.results.apold);
+  s3 = sprintf('ESVM+B+M:+AP=%.3f',...
+               f3.results.apold);
+
+  
+  % s1 = sprintf('AP = %.3f APold=%.3f',...
+  %              f1.results.ap,f1.results.apold);
+
+  % s2 = sprintf('AP = %.3f APold=%.3f',...
+  %              f2.results.ap,f2.results.apold);
+  
+  % s3 = sprintf('AP = %.3f APold=%.3f',...
+  %              f3.results.ap,f3.results.apold);
 
   %title(sprintf('class: %s, subset: %s, AP = %.3f, APold=%.3f',...
   %             cls,dataset_params.testset,f.results.ap,f.results.apold));
@@ -68,7 +91,7 @@ for i = 1:length(files{1})
   drawnow
 end
 
-set(gcf,'PaperPosition',[0 0 40 8])
-set(gcf,'PaperSize',[40 8]);
+set(gcf,'PaperPosition',[0 0 20 40])
+set(gcf,'PaperSize',[20 40]);
 imfiler = sprintf(['%s/newall.pdf'],dataset_params.localdir);
 print(gcf,imfiler,'-dpdf');
