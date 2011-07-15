@@ -1,8 +1,9 @@
 function [m] = mine_train_iteration(m, training_function)
-% ONE ITERATION OF: Mine negatives until cache is full and update the current
+%% ONE ITERATION OF: Mine negatives until cache is full and update the current
 % classifier using training_function (do_svm, do_rank, ...). m must
-% contain the field m.train_set, which indicates the current model
-% Returns the updated model the updated mining_queue
+% contain the field m.train_set, which indicates the current
+% training set of negative images
+% Returns the updated model (where m.mining_queue is updated mining_queue)
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
