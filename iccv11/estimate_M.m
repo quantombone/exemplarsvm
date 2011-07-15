@@ -54,7 +54,7 @@ for i = 1:length(grid)
   %new-method: use calibrated scores (doesn't work too well)
   %calib_boxes = calibrate_boxes(boxes{i},betas);
 
-  %old-method: use raw SVM scores + 1
+  %old-method: use raw SVM scores + 1 (works better!)
   calib_boxes = boxes{i};
   calib_boxes(:,end) = calib_boxes(:,end)+1;
   
