@@ -3,7 +3,7 @@ function allbbs = show_top_dets(dataset_params, models, grid, fg, set_name, ...
 % Show the top detections for [models] where [grid] is the set of
 % detections from the set [fg] with name [set_name] ('test' or 'trainval')
 % finalstruct (which contains final boxes) is obtained from
-% the function pool_results
+% the function pool_exemplar_detections
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 

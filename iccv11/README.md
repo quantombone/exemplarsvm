@@ -10,7 +10,7 @@ Perform Non-Maximum Suppression:
 
 Collect detections so they are ready for VOC evaluation:
 
-    function final = pool_results(dataset_params,models,grid,M)
+    function final = pool_exemplar_detections(dataset_params,models,grid,M)
 
 Show the top detections as pdf files:
 
