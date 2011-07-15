@@ -1,23 +1,21 @@
 function [x,nbrids] = get_box_features(boxes, N, neighbor_thresh)
-%Get the box features for this particular set of boxes from a
-%single image (boxes are the boxes, N is the # of exemplars) and
-%the neighbor list (which are the box ids contributing to this
-%context feature)
+%% Get the contextual "box features" for a set of detection boxes
+% Turns a detection box into a contextual feature by stacking the
+% scores of nearby (highly overlapping) detections.
+%
+% INPUTS:
+% boxes: K detections from a single image "[K x 12] matrix"
+% N: raw number of exemplars (unflipped) "scalar"
+% neighbor_thresh: the OS threshold which two boxes must meet
+%   to be considered neighbors "scalar"
+%
+% OUTPUTS:
+% x: a [2*N x K]
+% nbrids: [1 x K] cell array indicating the raw box ids belonging
+%   to each context feature
+%
+% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-%The features aggregate information from other exemplar firings,
-%such as their overlap score and their scores
-
-% f(b) = [s1 s2 ... sN] where we aggregate features from
-% neighboring boxes
-
-%Tomasz Malisiewicz (tomasz@cmu.edu)
-
-% old attempts:
-% f(b) = [o1*s1 o2*s2 ... oN*sN]
-% f(b) = [o1 o2 ... oN s1 s2 ... sN]
-
-%N is the number of exemplars
-%K is the number of boxes
 K = size(boxes,1);
 x = sparse(N*2, K);
 nbrids = cell(1,K);
@@ -29,64 +27,29 @@ end
 %Get overlaps between all boxes in the set
 osmat = getosmatrix_bb(boxes, boxes);
 
-%tdm = getaspectmatrix_bb(boxes, boxes);
- 
+%We count flipped exemplar detections as originating from a new
+%exemplar id, thus the flipped boxes get a new exemplar id (EID')
+%as follows:
+%  EID' = EID + #exemplars
 exid = boxes(:,6)';
-exid(boxes(:,7)==1) = exid(boxes(:,7)==1) + N;
-uc = unique(exid);
+isflip = boxes(:,7)==1;
+exid(isflip) = exid(isflip) + N;
 
 %by adding one to the scores, we effectively get a positive score
-%scorerow = boxes(:,end)+1;
+%NOTE: this is now done before getting box features
+%box_scores = boxes(:,end)+1;
 
 %scores already calibrated
-scorerow = boxes(:,end);
-
-osmat = osmat - diag(diag(osmat));
+box_scores = boxes(:,end);
 
 for j = 1:K
-  friends = find(osmat(:,j) > neighbor_thresh);
-  x(exid(j),j) = scorerow(j);
+  friends = (osmat(:,j) >= neighbor_thresh);
+  friend_scores = box_scores .* friends;
   
-  nbrids{j} = [j; friends];
-  if length(friends) == 0
+  nbrids{j} = find(friends);
+  if sum(friends) == 0
     continue
   end
   
-  %NOTE: try to blend in osmat?
-  %.*osmat(friends,j);
-  x(exid(friends),j) = scorerow(friends);
+  x(exid(friends),j) = friend_scores(friends);
 end
-
-%nbrids = [];
-return;
-
-tic
-for j = 1:K
-  neighbors = (osmat(:,j) >= neighbor_thresh);% & (tdm(:,j) < .1);
-  friend_scores = scorerow.*neighbors;
-  friend_os = osmat(:,j).*neighbors;
-
-  nbrids{j} = zeros(length(uc),1);
-  counter = 1;
-  
-  for q = 1:length(uc)
-    oks = find(exid==uc(q));
-    [aa,bb] = max(friend_scores(oks));
-    
-    if aa > 0
-      nbrids{j}(counter) = oks(bb);
-      counter = counter + 1;
-      x(uc(q),j) = aa;
-    end
-    %curos = friend_os(bb);
-    
-    %curos = exp(-20*(curos-1).^2);
-    %x(uc(q),j) = friend_scores(oks(bb))*friend_os(oks(bb));
-    
-  end  
-  nbrids{j} = nbrids{j}(1:(counter-1));
-
-end
-toc
-
-keyboard
