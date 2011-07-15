@@ -1,8 +1,14 @@
 function final = pool_results(dataset_params, models, grid, M)
 %% Perform detection box post-processing and pool detection boxes
 %(which will then be ready to go into the PASCAL evaluation code)
+% If there are overlap scores associated with boxes, then they are
+% also kept track of propertly, even after NMS.
+%
+% Tomasz Malisiewicz (tomasz@cmu.edu)
 
-%REMOVE FIRINGS ON SELF-IMAGE (these create artificially high scores)
+%REMOVE FIRINGS ON SELF-IMAGE (these create artificially high
+%scores when evaluating on the training set, but no need to set
+%this on the testing set as we don't train on testing data)
 REMOVE_SELF = 0;
 
 if REMOVE_SELF == 1
@@ -31,7 +37,6 @@ for i = 1:length(grid)
   end
   
   if REMOVE_SELF == 1
-    %% remove self from this detection image!!! LOO stuff!
     exes = bboxes{i}(:,6);
     excurids = curids(exes);
     badex = find(ismember(excurids,{curid}));
@@ -45,11 +50,9 @@ for i = 1:length(grid)
   end
 end
 
-%raw_boxes = bboxes;
-
-%%%NOTE: the LRs haven't been consolidated
-%%NOTE: seems better turned off
-if 0 %turned off for nn baseline, since it is done already
+% perform within-exemplar NMS
+% NOTE: this is already done during detection time
+if 0 
   fprintf(1,'applying exemplar nms\n');
   for i = 1:length(bboxes)
     if size(bboxes{i},1) > 0
@@ -62,13 +65,14 @@ if 0 %turned off for nn baseline, since it is done already
   end
 end
 
-if exist('M','var') && length(M)>0 && isfield(M,'betas')
-  fprintf(1,'Propagating scores onto raw detections\n');
-  %% propagate scores onto raw boxes
-  for i = 1:length(bboxes)
-    %HACK: turn off calibration here
-    %ob{i} = bboxes{i};
+%Perform score rescaling
+%1. no scaling
+%2. platt's calibration (sigmoid scaling)
+%3. raw score + 1
 
+if exist('M','var') && length(M)>0 && isfield(M,'betas')
+  for i = 1:length(bboxes)
+    %if neighbor thresh is defined, then we are in M-mode boosting
     if isfield(M,'neighbor_thresh')
       calib_boxes = bboxes{i};
       calib_boxes(:,end) = calib_boxes(:,end)+1;
@@ -82,19 +86,18 @@ if exist('M','var') && length(M)>0 && isfield(M,'betas')
 end
 
 if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
-  fprintf(1,'Applying M\n');
+  fprintf(1,'Applying M-boosting:\n');
   tic
   for i = 1:length(bboxes)
     fprintf(1,'.');
     [xraw,nbrs] = get_box_features(bboxes{i},length(models),M.neighbor_thresh);
     r2 = apply_boost_M(xraw,bboxes{i},M);
     bboxes{i}(:,end) = r2;
-    %bboxes{i}(:,end) = bboxes{i}(:,end).*(r2');
   end
   toc
 end
 
-fprintf(1,'applying competitive NMS\n');
+fprintf(1,'Applying Competitive NMS\n');
 for i = 1:length(bboxes)
   if size(bboxes{i},1) > 0
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
@@ -106,7 +109,8 @@ for i = 1:length(bboxes)
   end
 end
 
-%% clip boxes to image dimensions
+% Clip boxes to image dimensions since VOC testing annotation
+% always fall within the image
 unclipped_boxes = bboxes;
 for i = 1:length(bboxes)
   bboxes{i} = clip_to_image(bboxes{i},grid{i}.imbb);
@@ -114,11 +118,12 @@ end
 
 final_boxes = bboxes;
 
-%% return unclipped boxes for transfers
+% return unclipped boxes for transfers
+final.unclipped_boxes = unclipped_boxes;
 final.final_boxes = final_boxes;
 final.final_maxos = maxos;
-final.unclipped_boxes = unclipped_boxes;
 
+%Create a string which summarizes the pooling type
 calib_string = '';
 if exist('M','var') && length(M)>0 && isfield(M,'betas')
    calib_string = '-calibrated';
@@ -129,4 +134,6 @@ if exist('M','var') && length(M)>0 && isfield(M,'betas') && isfield(M,'w')
 end
 
 final.calib_string = calib_string;
+
+%NOTE: is this necessary anymore?
 final.imbb = cellfun2(@(x)x.imbb,grid);
