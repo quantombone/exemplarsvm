@@ -48,6 +48,7 @@ dataset_params.model_type = 'exemplar';
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
 dataset_params.params.nnmode = 'normalizedhog';
+dataset_params.params.TOPK = 1;
 
 if 0
   %Choose the training function (do_svm, do_rank, ...)
@@ -84,8 +85,7 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
-classes = {'bus'};
-%classes = {'motorbike','cow','tvmonitor','bottle'};
+classes = {'bus','motorbike','cow','tvmonitor','bottle'};
 %classes = {'bottle'};
 
 % classes = {...
@@ -108,9 +108,9 @@ classes = {'bus'};
 %     'tvmonitor'
 % };
 
-myRandomize;
-r = randperm(length(classes));
-classes = classes(r);
+%myRandomize;
+%r = randperm(length(classes));
+%classes = classes(r);
 
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
@@ -122,17 +122,18 @@ for i = 1:length(classes)
   %       [dataset_params.mining_params.set_name '-' classes{i}];
   % end
 
-  if isfield(dataset_params,'val_params')
-    %Validate on in-class images only
-    dataset_params.val_params.set_name = ...
-        [dataset_params.val_params.set_name '+' classes{i}];
-  end
+  % if isfield(dataset_params,'val_params')
+  %   %Validate on in-class images only
+  %   dataset_params.val_params.set_name = ...
+  %       [dataset_params.val_params.set_name '+' classes{i}];
+  % end
   
-  if isfield(dataset_params,'test_params')
-    %Test on in-class images only
-    dataset_params.test_params.set_name = ...
-        [dataset_params.test_params.set_name '+' classes{i}];
-  end
-  
+  % if isfield(dataset_params,'test_params')
+  %   %Test on in-class images only
+  %   dataset_params.test_params.set_name = ...
+  %       [dataset_params.test_params.set_name '+' classes{i}];
+  % end
+
+  dataset_params.JUST_APPLY = 1;
   voc_template(dataset_params, classes{i});
 end
