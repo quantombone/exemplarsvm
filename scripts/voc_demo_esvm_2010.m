@@ -86,23 +86,26 @@ dataset_params.models_name = ...
      dataset_params.model_type];
 
 classes = {...
-    'bicycle'
-    'train'
-    'tvmonitor'
-    'bird'
-    'boat'
-    'bottle'
-    'aeroplane'
-    'bus'
-    'cat'
-    'cow'
-    'diningtable'
-    'horse'
-    'motorbike'
-    'sheep'
-    'sofa'
-    'dog'
-};
+    % 'bicycle'
+    % 'train'
+    % 'tvmonitor'
+    % 'bird'
+    % 'boat'
+    % 'bottle'
+    % 'aeroplane'
+    % 'bus'
+    % 'cat'
+    % 'cow'
+    % 'diningtable'
+    % 'horse'
+    % 'motorbike'
+    % 'sheep'
+    % 'sofa'
+    % 'dog'
+    % 'pottedplant'
+    'car'
+    'chair'
+    'person'};
 
 %myRandomize;
 %r = randperm(length(classes));

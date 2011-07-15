@@ -108,13 +108,14 @@ classes = {...
     'train'
     'tvmonitor'
 };
-classes = {'person'};
+%classes = {'person'};
+%classes = {'train'};
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
 
-%plot_voc_results(dataset_params);
-%return;
+plot_voc_results(dataset_params);
+return;
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
   dataset_params = save_dataset_params;
