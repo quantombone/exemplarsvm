@@ -106,7 +106,7 @@ if isfield(dataset_params,'val_params')
                                 curparams.set_name, val_files);
     
     %val_struct is not used
-    %val_struct = pool_results(dataset_params, models, val_grid);
+    %val_struct = pool_exemplar_detections(dataset_params, models, val_grid);
     
     %% Perform l.a.b.o.o. calibration and M-matrix estimation
     CACHE_BETAS = 1;
@@ -183,7 +183,7 @@ end
 if length(M) > 0
   
   % %% Evaluation of laboo + M matrix
-  test_struct = pool_results(dataset_params, models, test_grid, M);
+  test_struct = pool_exemplar_detections(dataset_params, models, test_grid, M);
   
   rc = [];
   if (dataset_params.SKIP_EVAL == 0)
@@ -207,7 +207,7 @@ if length(M) > 0
   %% Evaluation of l.a.b.o.o. afer training
   M2 = [];
   M2.betas = M.betas;
-  test_struct = pool_results(dataset_params, models, test_grid, ...
+  test_struct = pool_exemplar_detections(dataset_params, models, test_grid, ...
                              M2);
   
   rc = [];
@@ -231,7 +231,7 @@ end
 
 %% Evaluation of uncalibrated SVM classifiers
 M2 = [];
-test_struct = pool_results(dataset_params, models, test_grid, M2);
+test_struct = pool_exemplar_detections(dataset_params, models, test_grid, M2);
 
 rc = [];
 if (dataset_params.SKIP_EVAL == 0)

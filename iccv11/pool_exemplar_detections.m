@@ -1,4 +1,4 @@
-function final = pool_results(dataset_params, models, grid, M)
+function final = pool_exemplar_detections(dataset_params, models, grid, M)
 %% Perform detection box post-processing and pool detection boxes
 %(which will then be ready to go into the PASCAL evaluation code)
 % If there are overlap scores associated with boxes, then they are
