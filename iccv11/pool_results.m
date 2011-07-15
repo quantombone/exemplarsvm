@@ -1,6 +1,6 @@
-function final = pool_results(dataset_params,models,grid,M)
-%% Perform pos-processing and pool final results (which are ready
-%to go into the PASCAL evaluation code)
+function final = pool_results(dataset_params, models, grid, M)
+%% Perform detection box post-processing and pool detection boxes
+%(which will then be ready to go into the PASCAL evaluation code)
 
 %REMOVE FIRINGS ON SELF-IMAGE (these create artificially high scores)
 REMOVE_SELF = 0;
@@ -66,8 +66,15 @@ if exist('M','var') && length(M)>0 && isfield(M,'betas')
   fprintf(1,'Propagating scores onto raw detections\n');
   %% propagate scores onto raw boxes
   for i = 1:length(bboxes)
-    calib_boxes = calibrate_boxes(bboxes{i},M.betas);
+    %HACK: turn off calibration here
+    %ob{i} = bboxes{i};
 
+    if isfield(M,'neighbor_thresh')
+      calib_boxes = bboxes{i};
+      calib_boxes(:,end) = calib_boxes(:,end)+1;
+    else
+      calib_boxes = calibrate_boxes(bboxes{i},M.betas); 
+    end
     oks = find(calib_boxes(:,end) > dataset_params.params.calibration_threshold);
     calib_boxes = calib_boxes(oks,:);
     bboxes{i} = calib_boxes;
