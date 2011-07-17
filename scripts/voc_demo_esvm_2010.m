@@ -39,7 +39,7 @@ dataset_params.init_params = init_params;
 
 %Initialize exemplar stream
 dataset_params.stream_set_name = 'trainval';
-dataset_params.stream_max_ex = 5000;
+dataset_params.stream_max_ex = 10000;
 
 dataset_params.must_have_seg = 0;
 dataset_params.must_have_seg_string = '';
@@ -103,7 +103,7 @@ classes = {...
     % 'sofa'
     % 'dog'
     % 'pottedplant'
-    'car'
+    % 'car'
     'chair'
     'person'};
 

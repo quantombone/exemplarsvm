@@ -87,24 +87,36 @@ dataset_params.models_name = ...
 
 %classes = {'bus','motorbike','cow','tvmonitor','bottle'};
 
-
-classes = {...
-    'aeroplane'
-    'bicycle'
-    'bird'
-    'boat'
+classes={...
+    % 'aeroplane'
+    % 'bicycle'
+    % 'bird'
+    % 'boat'
+    % 'bottle'
+    % 'bus'
+    'car'
     'cat'
+    'chair'
+    'cow'
     'diningtable'
     'dog'
     'horse'
+    'motorbike'
     'pottedplant'
     'sheep'
     'sofa'
     'train'
-    'chair'
-    'car'
-};
+    'tvmonitor'};
 
+% classes = {...
+%     'sheep'
+%     'sofa'
+%     'train'
+%     'chair'
+%     'car'
+% };
+
+classes = {'person'};
 %myRandomize;
 %r = randperm(length(classes));
 %classes = classes(r);
@@ -131,6 +143,6 @@ for i = 1:length(classes)
   %       [dataset_params.test_params.set_name '+' classes{i}];
   % end
 
-  dataset_params.JUST_APPLY = 1;
+  %dataset_params.JUST_APPLY = 1;
   voc_template(dataset_params, classes{i});
 end
