@@ -198,6 +198,7 @@ for i = 1:length(models)
   end
 end
 
+
 %maskmat = repmat(template_masks,[1 1 1 features]);
 %maskmat = permute(maskmat,[1 2 4 3]);
 %templates_x  = templates_x .* maskmat;
@@ -206,31 +207,39 @@ sbin = models{1}.model.init_params.sbin;
 t = get_pyramid(I, sbin, length(models), localizeparams);
 resstruct.padder = t.padder;
 
-finalf  = cell(length(t.hog), 1);
+pyr_N = cellfun(@(x)prod([size(x,1) size(x,2)]-S+1),t.hog);
+sumN = sum(pyr_N);
+
+finalf = zeros(S(1)*S(2)*features,sumN);
+%finalf  = cell(length(t.hog), 1);
 offsets = cell(length(t.hog), 1);
 uus = cell(length(t.hog),1);
 vvs = cell(length(t.hog),1);
 
+counter = 1;
 for i = 1:length(t.hog)
   s = size(t.hog{i});
   NW = s(1)*s(2);
   ppp = reshape(1:NW,s(1),s(2));
   curf = reshape(t.hog{i},[],features);
   b = im2col(ppp,[S(1) S(2)]);
+
   offsets{i} = b(1,:);
   offsets{i}(end+1,:) = i;
   
-  finalf{i} = zeros(size(b,1)*features,size(b,2));
+  %finalf{i} = zeros(size(b,1)*features,size(b,2));
 
   for j = 1:size(b,2)
-    finalf{i}(:,j) = reshape(curf(b(:,j),:),[],1);
+    %finalf{i}(:,j) = reshape(curf(b(:,j),:),[],1);
+    finalf(:,counter) = reshape(curf(b(:,j),:),[],1);
+    counter = counter + 1;
   end
   
   [uus{i},vvs{i}] = ind2sub(s,offsets{i}(1,:));
 end
 
 offsets = cat(2,offsets{:});
-finalf = cat(2,finalf{:});
+%finalf = cat(2,finalf{:});
 
 uus = cat(2,uus{:});
 vvs = cat(2,vvs{:});
@@ -255,6 +264,28 @@ elseif strcmp(localizeparams.nnmode,'cosangle') == 1
   %r = exemplar_matrix' * finalf;
   
   exemplar_matrix = reshape(templates_x, [], size(templates_x,4));
+  
+  % %% do normalization for each window
+  % tm = template_masks;
+  % tm = reshape(tm,[],length(models));
+  % ut = unique(tm','rows');
+  % [tmp,utids] = ismember(tm',ut,'rows');
+  
+  % r = zeros(length(models),size(finalf,2));
+  % for j = 1:size(ut,1)
+  %   fprintf(1,'!');
+  %   curmask = repmat(reshape(ut(j,:),...
+  %                     [size(templates_x,1) size(templates_x,2)]),...
+  %                    [1 1 features]);
+  %   hits = find(utids == j);
+    
+  %   curf = finalf;
+  %   curf = curf.*repmat(curmask(:),1,size(curf,2));
+  %   curr = slmetric_pw(exemplar_matrix(:,hits),curf,'nrmcorr');
+
+  %   r(hits,:) = curr;
+  % end
+  
   r = slmetric_pw(exemplar_matrix,finalf,'nrmcorr');
 
   %% why am I not getting perfect hits for g-mode?
@@ -264,9 +295,7 @@ elseif strcmp(localizeparams.nnmode,'cosangle') == 1
   
   % exemplar_x_matrix = reshape(templates_x,[],size(templates_x,4));
   % res = sum(exemplar_matrix .* exemplar_x_matrix,1);
-  
   % exemplar_matrix = exemplar_matrix ./ repmat(res+eps,size(exemplar_matrix,1),1);
-  
   % r = exemplar_matrix' * finalf;
 
   %keyboard
