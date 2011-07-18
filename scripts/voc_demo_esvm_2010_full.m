@@ -89,14 +89,14 @@ dataset_params.models_name = ...
      dataset_params.model_type];
 
 classes = {...
-    'bicycle'
-    'train'
-    'tvmonitor'
-    'bird'
-    'boat'
-    'bottle'
+    % 'bus'
+    % 'bicycle'
+    % 'train'
+    % 'tvmonitor'
+    % 'bird'
+    % 'boat'
+    % 'bottle'
     'aeroplane'
-    'bus'
     'cat'
     'cow'
     'diningtable'
@@ -104,11 +104,12 @@ classes = {...
     'motorbike'
     'sheep'
     'sofa'
-    'dog'
-    'car'
-    'pottedplant'
-    'chair'
-    'person'};
+    % 'dog'
+    % 'car'
+    % 'pottedplant'
+    % 'chair'
+    % 'person'
+          };
 
 %myRandomize;
 %r = randperm(length(classes));
@@ -119,7 +120,6 @@ classes = {...
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
   dataset_params = save_dataset_params;
-  
   
    if isfield(dataset_params,'mining_params')
      %Training set is images not containing in-class instances
