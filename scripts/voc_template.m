@@ -4,9 +4,13 @@ function voc_template(dataset_params, cls)
 if ~exist(dataset_params.devkitroot,'dir')
   mkdir(dataset_params.devkitroot);
 end
-%Save the parameters so we know later how we generated this run
-save([dataset_params.devkitroot '/dataset_params.mat'], ...
-     'dataset_params')
+
+resfile = [dataset_params.devkitroot '/dataset_params.mat'];
+if ~fileexists(resfile)
+  %Save the parameters so we know later how we generated this run
+  save([dataset_params.devkitroot '/dataset_params.mat'], ...
+       'dataset_params');
+end
 
 models_name = dataset_params.models_name;
 
