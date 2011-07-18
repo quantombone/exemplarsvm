@@ -1,7 +1,6 @@
 function voc_template(dataset_params, cls)
 %% This is the main VOC driver script for both scenes and exemplars
 
-
 if ~exist(dataset_params.devkitroot,'dir')
   mkdir(dataset_params.devkitroot);
 end
@@ -72,9 +71,6 @@ else
   fprintf(1,['Skipping training because dataset_params.mining_params not' ...
              ' present\n']);
 end
-
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% EXEMPLAR CROSS VALIDATION %%%
