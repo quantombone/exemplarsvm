@@ -3,7 +3,6 @@ function [I]=make_memex_graph(A, other)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
 %% NOTE: A should be symmetric and have 1 largest component
 
-
 if ~exist('other','var') || numel(other)==0
   other.is_silly = 1;
 end
@@ -24,6 +23,7 @@ if isfield(other,'evec_coloring')
   A = A - diag(diag(A));
   degs = sum(A,1);
   L = normalized_laplacian(A);
+
   [V,D] = eig(full(L));
   D = D.*(D>0);
   [aa,bb] = sort(diag(D));
@@ -37,7 +37,7 @@ if isfield(other,'evec_coloring')
   dists = sqrt(volG)*diag(degs.^-.5)*V(:,other.Kevec);  
  
   end
-  dists = other.V(other.Kevec,:);
+  %dists = other.V(other.Kevec,:);
   %[aa,bb] = ct_embedding(A, size(A,1));
   %dists2 = other.V(other.Kevec,:);
 %keyboard
