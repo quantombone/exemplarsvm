@@ -70,6 +70,10 @@ mining_params.max_negatives = 2000;
 %Queue mode can be one of: {'onepass','cycle-violators','front-violators'}
 mining_params.queue_mode = 'onepass';
 
+%The constant which tells us the weight in front of the positives
+%during SVM learning
+mining_params.POSITIVE_CONSTANT = 50;
+
 % if non-zero, sets weight of positives such that positives and
 %negatives are treated equally
 mining_params.BALANCE_POSITIVES = 0;
