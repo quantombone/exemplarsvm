@@ -6,6 +6,13 @@ function [m] = do_svm(m)
 
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
+%if no inputs are specified, just return the suffix of current method
+if nargin==0
+  m = '-svm';
+  return;
+end
+
+
 if ~isfield(m.model,'mask') | length(m.model.mask)==0
   m.model.mask = logical(ones(numel(m.model.w),1));
 end
@@ -56,7 +63,7 @@ if 1
   spos = sum(supery==1);
   sneg = sum(supery==-1);
 
-  wpos = 50;
+  wpos = mining_params.POSITIVE_CONSTANT;
   wneg = 1;
 
   if mining_params.BALANCE_POSITIVES == 1
