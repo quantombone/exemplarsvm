@@ -104,10 +104,10 @@ classes = {...
     'motorbike'
     'sheep'
     'sofa'
-    % 'dog'
-    % 'car'
-    % 'pottedplant'
-    % 'chair'
+    'dog'
+    'car'
+    'pottedplant'
+    'chair'
     % 'person'
           };
 
