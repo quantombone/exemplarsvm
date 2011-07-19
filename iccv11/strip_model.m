@@ -11,6 +11,7 @@ for i = 1:length(models)
   m.model.hg_size = cur.model.hg_size;
   m.model.mask = cur.model.mask;
   m.model.w = cur.model.w;
+  m.model.x = cur.model.x(:,1);
   m.model.b = cur.model.b;
   m.model.bb = cur.model.bb;
   m.I = cur.I;
