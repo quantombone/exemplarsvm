@@ -151,3 +151,6 @@ mining_params.skip_mine = 0;
 %default, NN mode is turned off and we assume per-exemplar learned
 %W's.
 mining_params.nnmode = '';
+
+%Be default, we use an SVM
+mining_params.dfun = 0;
