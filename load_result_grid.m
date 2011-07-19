@@ -75,9 +75,9 @@ for i = 1:length(files)
   end
 end
 
-%NOTE: I'm not sure that pruning here isn't going to hurt me later
-%since we no longer have a direct mapping between detections and
-%the test-set ids
+%BUG: I'm not sure that pruning here isn't going to hurt me later
+%since we no longer have a direct mapping between detections and the
+%test-set ids
 
 %Prune away files which didn't load
 lens = cellfun(@(x)length(x),grid);
