@@ -72,6 +72,7 @@ for i = 1:length(ucurids)
     d4 = max(0,cb(4) - size(Ibase,1));
     mypad = max([d1,d2,d3,d4]);
     PADDER = round(mypad)+2;
+
     I = pad_image(Ibase,PADDER);
     
     %bb = round(svids(hits(j)).bb + PADDER);
