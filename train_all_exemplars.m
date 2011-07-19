@@ -7,7 +7,7 @@ function [allfiles, new_models_name] = train_all_exemplars(dataset_params, ...
 mining_params = dataset_params.mining_params;
 
 models_name = models{1}.models_name;
-new_models_name = [models_name '-svm'];
+new_models_name = [models_name mining_params.training_function()];
 
 %initial_directory = ...
 %    sprintf('%s/%s/',dataset_params.localdir,models_name);
