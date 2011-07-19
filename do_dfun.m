@@ -1,4 +1,4 @@
-function [m,other] = do_edf(m)
+function [m,other] = do_dfun(m)
 %% Perform Distance Function learning for a single exemplar model.  We
 % assume that the exemplar has a set of detections loaded in
 % m.model.svxs and m.model.svbbs. 

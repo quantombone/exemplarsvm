@@ -54,7 +54,7 @@ if 1
  
   %Choose the training function (do_svm, do_rank, ...)
   %dataset_params.mining_params.training_function = @do_svm;
-  dataset_params.mining_params.training_function = @do_edf;
+  dataset_params.mining_params.training_function = @do_dfun;
  
   %Disable NMS in training params
   dataset_params.mining_params.NMS_OS = 1.0;
