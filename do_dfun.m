@@ -3,14 +3,14 @@ function [m,other] = do_dfun(m)
 % assume that the exemplar has a set of detections loaded in
 % m.model.svxs and m.model.svbbs. 
 % Returns: model [m] with updated classifier
-% If no arguments are given returns the suffix '-edf' and
+% If no arguments are given returns the suffix '-dfun' and
 % classifier type 'dfun'
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 other = 'dfun';
 %if no inputs are specified, just return the suffix of current method
 if nargin==0
-  m = '-edf';
+  m = '-dfun';
   return;
 end
 
@@ -138,3 +138,5 @@ svs = beta(1:min(length(beta),mining_params.max_negatives));
 m.model.svxs = m.model.svxs(:,svs);
 m.model.svbbs = m.model.svbbs(svs,:);
 
+s = length(svs);
+fprintf(1,' ---length of kept svs in dfun is: %d\n',s);
