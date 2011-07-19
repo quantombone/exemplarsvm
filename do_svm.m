@@ -1,4 +1,4 @@
-function [m] = do_svm(m)
+function [m,other] = do_svm(m)
 %Perform SVM learning for a single exemplar model, we assume that
 %the exemplar has a set of detections loaded in m.model.svxs and m.model.svbbs
 %Durning Learning, we can apply some pre-processing such as PCA or
@@ -6,12 +6,12 @@ function [m] = do_svm(m)
 
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
+other = 'svm';
 %if no inputs are specified, just return the suffix of current method
 if nargin==0
   m = '-svm';
   return;
 end
-
 
 if ~isfield(m.model,'mask') | length(m.model.mask)==0
   m.model.mask = logical(ones(numel(m.model.w),1));
@@ -154,7 +154,6 @@ if 1
   
   fprintf(1,'took %.3f sec\n',toc(starttime));
 end %end old method
-
 
 m.model.w = reshape(wex, size(m.model.w));
 m.model.b = b;
