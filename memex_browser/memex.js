@@ -4,7 +4,6 @@
 function flip_bb(bb,imdim) {
   W = bb[2] - bb[0] + 1;
   H = bb[3] - bb[1] + 1;
-
   
   bb[2] = imdim[1]-bb[0];
   bb[0] = bb[2]-W+1;
@@ -22,6 +21,9 @@ elem = document.getElementById(divid);
 var paper = Raphael(divid2, imdim[1], imdim[0]);
 srcim = datadir + '/' + im;
 var c = paper.image(srcim, 0, 0, imdim[1], imdim[0]);
+
+// if we want to clip it
+//c.attr({"clip-rect": "1,1,50,50"});
 
 // flip the image which has flip turned on
 if (bb[6] == 1) {
