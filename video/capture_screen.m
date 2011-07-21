@@ -1,4 +1,5 @@
 function [Is,xs,scores,bbs] = capture_screen(NITER,models,TOPK,M)
+error('deprecated, using old localizemeHOG interface')
 % Capture NITER frames from the screen (run initialize_screenshot first!)
 % Show detections from models and keep top TOPK images with those
 % detections
