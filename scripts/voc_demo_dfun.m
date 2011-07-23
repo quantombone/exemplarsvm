@@ -4,7 +4,7 @@ clear;
 VOCYEAR = 'VOC2007';
 suffix = '/nfs/baikal/tmalisie/nn311/';
 dataset_params = get_voc_dataset(VOCYEAR,suffix);
-dataset_params.display = 1;
+dataset_params.display = 0;
 
 %Do not skip evaluation, unless it is VOC2010
 dataset_params.SKIP_EVAL = 0;
@@ -55,7 +55,7 @@ if 1
   %Choose the training function (do_svm, do_rank, ...)
   %dataset_params.mining_params.training_function = @do_svm;
   dataset_params.mining_params.training_function = @do_dfun;
- 
+  
   %Disable NMS in training params
   dataset_params.mining_params.NMS_OS = 1.0;
   dataset_params.mining_params.MAXSCALE = 0.5;
@@ -88,29 +88,32 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
-classes = {'bus'};
-% classes = {...
-%     'aeroplane'
-%     'bicycle'
-%     'bird'
-%     'boat'
-%     'bottle'
-%     'bus'
-%     'cat'
-%     'car'
-%     'chair'
-%     'cow'
-%     'diningtable'
-%     'dog'
-%     'horse'
-%     'motorbike'
-%     'person'
-%     'pottedplant'
-%     'sheep'
-%     'sofa'
-%     'train'
-%     'tvmonitor'
-% };
+
+
+classes = {...
+    % 'bicycle'
+    % 'tvmonitor'
+    % 'train'
+    % 'cow'
+    % 'aeroplane'
+    % 'bird'
+    % 'boat'
+    % 'bottle'
+    % 'bus'
+    % 'cat'
+    % 'diningtable'
+    % 'dog'
+    % 'horse'
+    % 'motorbike'
+    % 'sheep'
+    % 'sofa'
+    %'car'
+    %'pottedplant'
+    'chair'
+    %'person'
+ };
+
+%classes = {'bus'};
 
 %classes = {'person'};
 %classes = {'train'};
@@ -144,5 +147,6 @@ for i = 1:length(classes)
 
   %dataset_params.JUST_TRAIN = 1;
   %dataset_params.JUST_TRAIN_AND_LOAD = 1;
+  %dataset_params.JUST_APPLY = 1;
   voc_template(dataset_params, classes{i});
 end
