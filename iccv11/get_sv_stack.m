@@ -21,7 +21,12 @@ K2 = max(K2,5);
 
 %% sort by score
 if isfield(m.model,'svxs') && (numel(m.model.svxs)>0)
-  r = m.model.w(:)'*m.model.svxs - m.model.b;
+  if (m.mining_params.dfun == 1)
+    r = m.model.w(:)'*bsxfun(@minus,m.model.svxs,m.model.x(:,1)).^2 ...
+        - m.model.b;
+  else
+    r = m.model.w(:)'*m.model.svxs - m.model.b;
+  end
   [aa,bb] = sort(r,'descend');
   m.model.svbbs = m.model.svbbs(bb, :);
   m.model.svxs = m.model.svxs(:, bb);
