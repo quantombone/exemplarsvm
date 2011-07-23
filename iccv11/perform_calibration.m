@@ -27,7 +27,8 @@ if DO_NMS == 0
 end
 
 % if enabled, display images
-display = 0;
+display = dataset_params.display;
+%display = 0;
 
 % if display is enabled and dump_images is enabled, then dump images
 % into DUMPDIR
@@ -223,6 +224,9 @@ for exid = 1:length(models)
   end
   
   if display == 1
+    %figure(222)
+    %show_calibration_rank(m,ALL_bboxes(hits,:), 
+    
     figure(1)
     clf
     subplot(1,2,1)  
