@@ -43,16 +43,16 @@ for i = 1:length(mining_queue)
   %I = imrotate(I,180);
 
   %starter = tic;
-  if isfield(mining_params,'wtype') && strcmp(mining_params.wtype, ...
-                                               'dfun')
+  % if isfield(mining_params,'wtype') && strcmp(mining_params.wtype, ...
+  %                                              'dfun')
 
-    [rs,t] = localizemeHOG_dfun(I, models, mining_params);
+  %   [rs,t] = localizemeHOG_dfun(I, models, mining_params);
   
-    %plot(rs.bbs{1}(:,end))
-    %keyboard
-  else
-    [rs,t] = localizemeHOG(I, models, mining_params);
-  end
+  %   %plot(rs.bbs{1}(:,end))
+  %   %keyboard
+  % else
+  [rs,t] = localizemeHOG(I, models, mining_params);
+  %end
 
   numpassed = numpassed + 1;
 
