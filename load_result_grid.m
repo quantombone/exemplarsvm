@@ -102,6 +102,13 @@ end
 %  return;
 %else
 save(final_file,'grid');
+
 if exist(lockfile,'dir')
   rmdir(lockfile);
+end
+
+f = dir(final_file);
+if (f.bytes < 1000)
+  fprintf(1,'warning file too small, not saved\n');
+  delete(final_file);
 end
