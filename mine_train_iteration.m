@@ -28,7 +28,9 @@ end
 m = update_the_model(m, mining_stats, training_function);
 
 if m.dataset_params.display == 1
+
   dump_figures(m);
+
 end
 
 function [m] = update_the_model(m, mining_stats, training_function)
@@ -41,13 +43,17 @@ else
 end
 
 m = training_function(m);
-%m = do_svm(m);
-%m = do_rank(m);
 
-r = m.model.w(:)'*m.model.svxs - m.model.b;
+if (m.mining_params.dfun == 1)
+  r = m.model.w(:)'*bsxfun(@minus,m.model.svxs,m.model.x(:,1)).^2 - ...
+      m.model.b;
+else
+  r = m.model.w(:)'*m.model.svxs - m.model.b;
+end
 m.model.svbbs(:,end) = r;
 
 if strmatch(m.models_name,'dalal')
+  error('deprecated: must address...');
   %% here we take the best exemplars
   allscores = m.model.w(:)'*m.model.x - m.model.b;
   [aa,bb] = sort(allscores,'descend');
@@ -59,6 +65,11 @@ if strmatch(m.models_name,'dalal')
 end
 
 svs = find(r >= -1.0000);
+
+if length(svs) == 0
+  length(svs)
+  keyboard
+end
 
 %KEEP 3#SV vectors (but at most max_negatives of them)
 total_length = ceil(m.mining_params.beyond_nsv_multiplier*length(svs));
@@ -92,6 +103,7 @@ function dump_figures(m)
 figure(2)
 clf
 Isv1 = get_sv_stack(m,7);
+
 imagesc(Isv1)
 axis image
 axis off
