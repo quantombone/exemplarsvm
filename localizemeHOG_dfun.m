@@ -101,7 +101,7 @@ for level = length(t.hog):-1:1
   %Use blas-based fast convolution code
   rootmatch1 = fconvblas(featr_squared, ws, 1, N);
   rootmatch2 = fconvblas(featr, ws2, 1, N);
-  
+    
   for z = 1:length(rootmatch1)
     rootmatch{z} = rootmatch1{z} + rootmatch2{z} + special_offset(z);
   end
