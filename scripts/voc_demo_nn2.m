@@ -47,7 +47,7 @@ dataset_params.model_type = 'exemplar';
 
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
-dataset_params.params.nnmode = 'cosangle';
+dataset_params.params.nnmode = 'nndfun';
 dataset_params.params.TOPK = 1;
 
 if 0
@@ -131,11 +131,11 @@ for i = 1:length(classes)
   %       [dataset_params.mining_params.set_name '-' classes{i}];
   % end
 
-  % if isfield(dataset_params,'val_params')
-  %   %Validate on in-class images only
-  %   dataset_params.val_params.set_name = ...
-  %       [dataset_params.val_params.set_name '+' classes{i}];
-  % end
+  if isfield(dataset_params,'val_params')
+    %Validate on in-class images only
+    dataset_params.val_params.set_name = ...
+        [dataset_params.val_params.set_name '+' classes{i}];
+  end
   
   % if isfield(dataset_params,'test_params')
   %   %Test on in-class images only
