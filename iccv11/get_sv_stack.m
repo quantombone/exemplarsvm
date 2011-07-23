@@ -1,4 +1,4 @@
-function Isv = get_sv_stack(m, K1, K2)
+function Isv = get_sv_stack(m, K2, K1)
 % Create a K1xK2 image which visualizes the detection windows, as
 % well as information about the trained exemplar m
 % The first shows shows [exemplar image, w+, w-, sum(w.*x,3),
@@ -7,13 +7,19 @@ function Isv = get_sv_stack(m, K1, K2)
 % indicating the set they belong to
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
-if ~exist('K1','var')
+if (sum(m.model.w(:)<0) == 0) || ...
+      (sum(m.model.w(:)>0) == 0)
+  %%NOTE: square it
+  m.model.w = (abs(m.model.w)).^2;
+end
+
+if ~exist('K2','var')
   K1 = 5;
   K2 = 5;
 end
 
-if ~exist('K2','var')
-  K2 = K1;
+if ~exist('K1','var')
+  K1 = K2;
 end
 
 K1 = max(K1,5);
@@ -134,7 +140,7 @@ PADSIZE = 5;
 for i = 1:numel(svims)
   %% find membership here
   if indicator(i) == 1 %%sum(i == negatives)  %train- red
-    svims{i} = pad_image(svims{i},PADSIZE,[1 0 0]);
+    svims{i} = pad_image(svims{i},PADSIZE,[1 1 1]);
   elseif indicator(i) == 2 %%sum(i == pos) %trainval+ green
     svims{i} = pad_image(svims{i},PADSIZE,[0 1 0]);
   elseif indicator(i) == 3 %% sum(i == vals) %val- blue
