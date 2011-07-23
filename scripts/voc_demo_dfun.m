@@ -49,6 +49,7 @@ dataset_params.model_type = 'exemplar';
 dataset_params.params = get_default_mining_params;
 dataset_params.params.wtype = 'dfun';
 
+
 if 1
   dataset_params.mining_params = dataset_params.params;
  
@@ -91,23 +92,23 @@ dataset_params.models_name = ...
 
 
 classes = {...
-    % 'bicycle'
-    % 'tvmonitor'
+     'bicycle'
+     'tvmonitor'
     % 'train'
-    % 'cow'
+     'cow'
     % 'aeroplane'
     % 'bird'
     % 'boat'
     % 'bottle'
-    % 'bus'
+     'bus'
     % 'cat'
     % 'diningtable'
     % 'dog'
-    % 'horse'
-    % 'motorbike'
+     'horse'
+     'motorbike'
     % 'sheep'
-    % 'sofa'
-    %'car'
+     'sofa'
+    'car'
     %'pottedplant'
     'chair'
     %'person'
