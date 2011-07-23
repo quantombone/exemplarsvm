@@ -73,6 +73,14 @@ for i = 1:length(models)
   % Append '-svm' to the mode to create the models name
   m.models_name = new_models_name;
   m.iteration = 1;
+  
+  %if we are a distance function, initialize to uniform weights
+  if isfield(dataset_params.params,'wtype') && ...
+        strcmp(dataset_params.params.wtype,'dfun')==1
+    m.model.w = m.model.w*0-1;
+    m.model.b = -1000;
+
+  end
 
   % The mining queue is the ordering in which we process new images  
   keep_going = 1;
