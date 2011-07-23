@@ -90,34 +90,24 @@ dataset_params.models_name = ...
 
 %classes = {'bus'};
 classes = {...
-    'aeroplane'
-    'bicycle'
-    'bird'
-    'boat'
-    'bottle'
-    'bus'
-    'cat'
+    %'horse'
+    %'boat'
+    %'sofa'
+    %'diningtable'
+    %'bottle'
+    %'chair'
     'car'
-    'chair'
-    'cow'
-    'diningtable'
-    'dog'
-    'horse'
-    'motorbike'
-    'person'
     'pottedplant'
-    'sheep'
-    'sofa'
-    'train'
-    'tvmonitor'
+    %'bird'
+    %'cat'
 };
 %classes = {'person'};
 %classes = {'train'};
 
-classes = {'bicycle','tvmonitor','dog','aeroplane'};
-myRandomize;
-r = randperm(length(classes));
-classes = classes(r);
+%classes = {'bicycle','tvmonitor','dog','aeroplane'};
+%myRandomize;
+%r = randperm(length(classes));
+%classes = classes(r);
 
 %plot_voc_results(dataset_params);
 %return;
