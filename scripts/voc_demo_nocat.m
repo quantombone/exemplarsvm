@@ -96,18 +96,20 @@ classes = {...
     %'diningtable'
     %'bottle'
     %'chair'
-    'car'
-    'pottedplant'
+    %'car'
+    %'pottedplant'
     %'bird'
     %'cat'
+    %'chair'
+    'person'
 };
 %classes = {'person'};
 %classes = {'train'};
 
 %classes = {'bicycle','tvmonitor','dog','aeroplane'};
-%myRandomize;
-%r = randperm(length(classes));
-%classes = classes(r);
+myRandomize;
+r = randperm(length(classes));
+classes = classes(r);
 
 %plot_voc_results(dataset_params);
 %return;
