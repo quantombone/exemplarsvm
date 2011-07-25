@@ -3,6 +3,7 @@ clear;
 %% Initialize dataset
 VOCYEAR = 'VOC2007';
 suffix = '/nfs/baikal/tmalisie/nn311/';
+%suffix = '/nfs/baikal/tmalisie/CF311/';
 dataset_params = get_voc_dataset(VOCYEAR,suffix);
 dataset_params.display = 0;
 
@@ -48,7 +49,7 @@ dataset_params.model_type = 'exemplar';
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
 
-moder = 1;
+moder = 3;
 if moder == 1
   %do svm
 elseif moder == 2
@@ -127,9 +128,12 @@ classes = {...
 };
 %classes = {'person'};
 %classes = {'train'};
-%myRandomize;
-%r = randperm(length(classes));
-%classes = classes(r);
+
+classes = dataset_params.classes;
+classes = setdiff(classes,'person');
+myRandomize;
+r = randperm(length(classes));
+classes = classes(r);
 
 %plot_voc_results(dataset_params);
 %return;
