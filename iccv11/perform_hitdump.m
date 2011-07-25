@@ -1,9 +1,10 @@
 function [betas] = perform_hitdump(dataset_params, models, grid, ...
                                    val_set, CACHE_FILES, cursetname)
 
-% Perform hitdump for exemplar model evaluation
+% Perform hitdump for exemplar model evaluation.. this dumps out
+% resulting icons which show the exemplar, its learned weights, and
+% top 20 detections
 % Tomasz Malisiewicz (tomasz@cmu.edu)
-
 
 if length(grid) == 0
   betas = [];
@@ -169,23 +170,21 @@ ALL_os = cat(1,os{:});
 
 curids = cellfun2(@(x)x.curid,grid);
 
-
 fprintf(1,'Pre-processing models for calibration: \n');
 
 SKIPPER = 50;
+%SKIPPER = 1;
 for exid = 1:SKIPPER:length(models)
   %filer = sprintf('%s/icon.%s.%s.%d.png', DUMPDIR, cursetname, ...
   %                models{exid}.curid, models{exid}.objectid);
   
   filer = sprintf('%s/%s.%s.%05d.png', DUMPDIR, cursetname, ...
                   models{exid}.cls,exid);
-
-
+  
   if (dump_images == 1) && fileexists(filer)
     continue
   end
   
-%for exid = 1:length(models)
   fprintf(1,'.');
   
   sourcegrid = find(ismember(curids,models{exid}.curid));
@@ -247,7 +246,7 @@ for exid = 1:SKIPPER:length(models)
     %subplot(1,2,1)  
     %plot(all_scores,all_os,'r.')
     
-    SHOWTOP = 50;
+    SHOWTOP = min(length(all_scores),50);
     [aaa,bbb] = sort(all_scores,'descend');
     [aaa2,bbb2] = sort(bbb);
     plot(bbb(bbb2(1:SHOWTOP)),all_os(bbb(1:SHOWTOP)),'r.')
@@ -256,7 +255,9 @@ for exid = 1:SKIPPER:length(models)
     hold on;
     vals = fx(all_scores);
     plot(1:SHOWTOP,vals(bbb(1:SHOWTOP)),'b.')
-    
+    axis([1 SHOWTOP+eps 0 1])
+    hold on;
+    plot([1 SHOWTOP],[.5 .5],'g--')
     %xs = linspace(min(all_scores),max(all_scores),1000);
     
     
