@@ -27,7 +27,7 @@ K2 = max(K2,5);
 
 %% sort by score
 if isfield(m.model,'svxs') && (numel(m.model.svxs)>0)
-  if (m.mining_params.dfun == 1)
+  if isfield(m.mining_params,'dfun') && (m.mining_params.dfun == 1)
     r = m.model.w(:)'*bsxfun(@minus,m.model.svxs,m.model.x(:,1)).^2 ...
         - m.model.b;
   else
