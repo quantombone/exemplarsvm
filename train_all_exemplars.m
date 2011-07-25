@@ -9,6 +9,13 @@ mining_params = dataset_params.mining_params;
 models_name = models{1}.models_name;
 new_models_name = [models_name mining_params.training_function()];
 
+DUMPDIR = sprintf('%s/www/svs/%s/',dataset_params.localdir, ...
+                  new_models_name);
+
+if dataset_params.display ==1 && ~exist(DUMPDIR,'dir')
+  mkdir(DUMPDIR);
+end
+
 %initial_directory = ...
 %    sprintf('%s/%s/',dataset_params.localdir,models_name);
 
@@ -31,6 +38,11 @@ mining_params.final_directory = final_directory;
 % randomize chunk orderings
 myRandomize;
 ordering = randperm(length(models));
+
+if dataset_params.display == 1
+  %ordering = 1:length(ordering);
+  ordering = 1:50:length(ordering);
+end
 models = models(ordering);
 
 allfiles = cell(length(models), 1);
@@ -58,7 +70,32 @@ for i = 1:length(models)
   % Check if we are ready for an update
   filerlock = [filer2final '.mining.lock'];
   
+  if fileexists(filer2final) && dataset_params.display == 1
+    m = load(filer2final);
+    
+        
+    exid = ordering(i);
+    filer = sprintf('%s/%s.%s.%05d.png', DUMPDIR, 'train', ...
+                  m.m.cls,exid);
+    
+    if fileexists(filer)
+      continue
+    end
+
+    
+    figure(445)
+    clf
+    showI = get_sv_stack(m.m,5,5);
+    imagesc(showI)
+    drawnow
+    
+    set(gcf,'PaperPosition',[0 0 20 20]);
+    imwrite(showI,filer);
+
+  end
+  
   if fileexists(filer2final) || (mymkdir_dist(filerlock) == 0)
+
     continue
   end
   
