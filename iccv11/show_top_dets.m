@@ -79,8 +79,9 @@ for k = 1:maxk
     curb = bb(counter);
     curid = grid{imids(curb)}.curid;
 
-    I = convert_to_I(fg{grid{imids(curb)}.index});
-
+    %I = convert_to_I(fg{grid{imids(curb)}.index});
+    I = (convert_to_I(fg{bbs(bb(counter),11)}));
+    
     TARGET_BUS = -1;
 
     if TARGET_BUS > 0
