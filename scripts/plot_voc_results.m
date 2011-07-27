@@ -29,37 +29,43 @@ for i = 1:length(c)
   fprintf(1,'.');
 end
 
+cz = [.262 .409 -.01 -.01 -.01 .393 .432 -.01 -.01 -.01 -.01 -.01 ...
+      -01 .375 -.01 -.01 -.01 -.01 .334 -.01];
+
 dt = [.127 .253 .005, .015, .107 .205 .23 .005 .021 .128 .014 .004 ...
       .122 .103 .101 .022 .056 .05 .12 .248];
+
 ldpm = [.287 .51 .006 .145 .265 .397 .502 .163 .165 .166 .245 .05 ...
         .452 .383 .362 .09 .174 .228 .341 .384]
 
+aps(:,end+1) = cz;
 aps(:,end+1) = dt(1:length(c));
 aps(:,end+1) = ldpm(1:length(c));
 
 imfiler = sprintf(['%s/res_table2.tex'],dataset_params.localdir);
 fid = fopen(imfiler,'w');
 fprintf(fid,['\\footnotesize\n\\begin{table}\n\\begin{center}\n\\begin{tabular}{|l||' ...
-             'c|c|c|c|c|c|c|c|c|}\n\\hline\n']);
-fprintf(fid,'& \\multicolumn{7}{|c|}{Per-Exemplar Methods} & \\multicolumn{2}{|c|}{Global}\\\\\n');
+             'c|c|c|c|c|c|c|c|c|c|}\n\\hline\n']);
+fprintf(fid,'& \\multicolumn{8}{|c|}{Exemplar Methods} & \\multicolumn{2}{|c|}{Global}\\\\\n');
 fprintf(fid,'\\hline\n');
-fprintf(fid,'Type & NNHOG & NNHOG+B & DFUN & DFUN+B & ESVM & ESVM+B & ESVM+M & DT & LDPM\\\\\n');
+fprintf(fid,['Type & NHOG & NHOG+B & DFUN & DFUN+B & ESVM & ESVM+B' ...
+             ' & ESVM+M & CZ & DT & LDPM\\\\\n']);
 fprintf(fid,'\\hline\n');
 
 aps2 = aps;
 aps2(aps2<0) = nan;
 aps(aps<0) = -.00000001;
 
-means = nanmean(aps,1);
+means = nanmean(aps2,1);
 %c = dataset_params.classes;
 for i = 1:length(c)
-  fprintf(fid,'%s & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f\\\\\n',...
-          c{i},aps(i,1),aps(i,2),aps(i,3),aps(i,4),aps(i,5),aps(i,6),aps(i,7),aps(i,8),aps(i,9));
+  fprintf(fid,'%s & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f\\\\\n',...
+          c{i},aps(i,1),aps(i,2),aps(i,3),aps(i,4),aps(i,5),aps(i,6),aps(i,7),aps(i,8),aps(i,9),aps(i,10));
 end
 fprintf(fid,'\\hline\n');
-fprintf(fid,'mAP & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f\\\\\n',...
+fprintf(fid,'mAP & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f & %.3f\\\\\n',...
         means(1), means(2), means(3), means(4), means(5), means(6), ...
-        means(7), means(8), means(9));
+        means(7), means(8), means(9), means(10));
         
         % mean(aps(:,1)),mean(aps(:,2)),mean(aps(:,3)),mean(aps(:, ...
         %                                           4)),mean(aps(:,5)),mean(aps(:,6)),...
