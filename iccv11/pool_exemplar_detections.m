@@ -70,6 +70,8 @@ end
 %2. platt's calibration (sigmoid scaling)
 %3. raw score + 1
 
+raw_boxes = bboxes;
+
 if exist('M','var') && length(M)>0 && isfield(M,'betas')
   for i = 1:length(bboxes)
     %if neighbor thresh is defined, then we are in M-mode boosting
@@ -90,23 +92,56 @@ if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
   tic
   for i = 1:length(bboxes)
     fprintf(1,'.');
-    [xraw,nbrs] = get_box_features(bboxes{i},length(models),M.neighbor_thresh);
+    [xraw,nbrlist{i}] = get_box_features(bboxes{i},length(models), ...
+                                                M.neighbor_thresh);
     r2 = apply_boost_M(xraw,bboxes{i},M);
     bboxes{i}(:,end) = r2;
   end
   toc
 end
 
-fprintf(1,'Applying Competitive NMS\n');
+os_thresh = .3;
+fprintf(1, 'Applying Competitive NMS OS threshold=%.3f\n',os_thresh);
 for i = 1:length(bboxes)
   if size(bboxes{i},1) > 0
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
-    bboxes{i} = nms(bboxes{i},.5);
+    bboxes{i} = nms(bboxes{i},os_thresh);
     if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
       maxos{i} = maxos{i}(bboxes{i}(:,5));
     end
+    if exist('nbrlist','var')
+      nbrlist{i} = nbrlist{i}(bboxes{i}(:,5));
+    end
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
   end
+end
+
+if 0
+if exist('M','var') && length(M)>0 && isfield(M,'betas')
+
+  fprintf(1,'Propagating scores onto raw detections\n');
+  %% propagate scores onto raw boxes
+  for i = 1:length(bboxes)
+    calib_boxes = calibrate_boxes(raw_boxes{i},M.betas);
+    beta_scores = calib_boxes(:,end);
+    
+    osmat = getosmatrix_bb(bboxes{i},raw_boxes{i});
+    for j = 1:size(osmat,1)
+      curscores = (osmat(j,:)>.5) .* beta_scores';
+      [aa,bb] = max(curscores);
+      bboxes{i}(j,:) = raw_boxes{i}(bb,:);
+      bboxes{i}(j,end) = aa;
+    end
+    
+    % new_scores = beta_scores;
+    % for j = 1:length(nbrlist{i})
+    %   new_scores(nbrlist{i}{j}) = max(new_scores(nbrlist{i}{j}),...
+    %                                   beta_scores(nbrlist{i}{j}).*...
+    %                                   bboxes{i}(nbrlist{i}{j},end));
+    % end
+    % bboxes{i}(:,end) = new_scores;
+  end
+end
 end
 
 % Clip boxes to image dimensions since VOC testing annotation
