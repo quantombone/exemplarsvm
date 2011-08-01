@@ -1,4 +1,4 @@
-function NR = show_hits_figure_iccv(I,models,topboxes,overlays)
+function NR = show_hits_figure_iccv(I,models,topboxes,overlays, current_rank)
 %Show a figure with the detections of the exemplar svm model
 %Tomasz Malisiewicz(tomasz@cmu.edu)
 
@@ -49,31 +49,38 @@ for i = 1:N
   mid = topboxes(i,6);
   flip = topboxes(i,7);
   hogpic = HOGpicture(models{topboxes(i,6)}.model.w);
+  hogpic = jettify(hogpic);
   if flip == 1
     hogpic = flip_image(hogpic);
   end
   
   Iex = get_exemplar_icon(models, mid, topboxes(i,7));
 
-  Iex1 = imresize(chunks{i},[size(Iex,1) size(Iex,2)]);
+  Iex1 = imresize(chunks{i},[size(Iex,1) size(Iex,2)],'nearest');
+  Iex1 = max(0.0,min(1.0,Iex1));
+  
+  Iex1 = imresize(hogpic,[size(Iex1,1) size(Iex,2)]);
   Iex1 = max(0.0,min(1.0,Iex1));
   PPP = round(size(Iex,1)*.3);
   Iex2 = Iex1(1:PPP,:,:)*0+1;
   Ishow = cat(1,Iex1,Iex2,Iex);
+  %Ishow = cat(1,Iex,Iex2,Iex1);
   bb1 = [1 1 size(Iex,2) size(Iex,1)];
   bb2 = bb1;
   bb2([2 4]) = bb2([2 4]) + size(Iex,1)+PPP;
   
-  axes(ha(2));
+  axes(ha(1));
   imagesc(Ishow)
 
   axis image
   axis off
 
-  plot_bbox(bb1,'',[1 1 0],[1 1 0],0,[2 1])
-  plot_bbox(bb2,'Exemplar',[0 1 0],[0 1 0],0,[2 1])
+  %plot_bbox(bb1, '', [1 1 0], [1 1 0], 0, [2 1])
+  %sprintf('Exemplar.%d',mid)
+  plot_bbox(bb2, '', [0 1 0], [0 1 0], 0, [2 1])
+
   
-  title('Association')
+  title(sprintf('w_{%d}',mid))
 
   id_string = '';
   if isfield(models{abs(mid)},'curid')
@@ -96,24 +103,29 @@ for i = 1:N
     
 end
 
-axes(ha(1));
-imagesc(I)
-axis image
-axis off
-title('Input Image')
-
-axes(ha(3));
-
 extraI = overlays{1}.I;
-imagesc(extraI);
+
 clipped_top = clip_to_image(topboxes(1,:),[1 1 size(extraI,2) ...
                     size(extraI,1)]);
 clipped_top([1 2]) = clipped_top([1 2])+2;
 clipped_top([3 4]) = clipped_top([3 4])-2;
-plot_bbox(clipped_top,'E',[0 1 0],[0 1 0],0,[2 1]);
+
+axes(ha(2));
+imagesc(I)
 axis image
 axis off
-title(sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
+title(sprintf('Detection (Rank=%d, Score=%.3f)',current_rank,topboxes(1,end)))
+plot_bbox(clipped_top,'',[1 1 0],[1 1 0],0,[2 1]);
+
+axes(ha(3));
+imagesc(extraI);
+
+%sprintf('Exemplar.%d',mid)
+plot_bbox(clipped_top,'',[0 1 0],[0 1 0],0,[2 1]);
+axis image
+axis off
+title('Interpretation')%sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
+%title(sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
 
 if add_one == 1
   %transfer objects here
@@ -126,7 +138,6 @@ if add_one == 1
 
     axes(ha(4));
   
-
     imagesc(I)
     axis image
     axis off
