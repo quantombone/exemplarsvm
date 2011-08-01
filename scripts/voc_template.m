@@ -182,6 +182,7 @@ end
 %If no calibration was performed, then we dont do calibrated rounds
 if length(M) > 0
   
+  if 0
   % %% Evaluation of laboo + M matrix
   test_struct = pool_exemplar_detections(dataset_params, models, test_grid, M);
   
@@ -198,11 +199,14 @@ if length(M) > 0
   show_memex_browser2(dataset_params, models, test_struct,...
                       test_set, curparams.set_name, rc);
 
+
   
   %% Show top detections for laboo + M matrix
   %show_top_dets(dataset_params, models, test_grid,...
   %              test_set, curparams.set_name, ...
   %              test_struct);
+
+  end
   
   %% Evaluation of l.a.b.o.o. afer training
   M2 = [];
@@ -218,14 +222,17 @@ if length(M) > 0
                                          test_struct);
     
     %% Show top detections from l.a.b.o.o.
-    %show_top_dets(dataset_params, models, test_grid,...
-    %              test_set, dataset_params.testset_name, ...
-    %              test_struct);
+    show_top_dets(dataset_params, models, test_grid,...
+                  test_set, curparams.set_name, ...
+                  test_struct);
     rc = results.corr;
   end  
 
+
   show_memex_browser2(dataset_params, models, test_struct,...
                       test_set, curparams.set_name, rc);
+  
+  return;
 
 end
 
