@@ -172,8 +172,8 @@ curids = cellfun2(@(x)x.curid,grid);
 
 fprintf(1,'Pre-processing models for calibration: \n');
 
-SKIPPER = 50;
-%SKIPPER = 1;
+%SKIPPER = 50;
+SKIPPER = 1;
 for exid = 1:SKIPPER:length(models)
   %filer = sprintf('%s/icon.%s.%s.%d.png', DUMPDIR, cursetname, ...
   %                models{exid}.curid, models{exid}.objectid);
