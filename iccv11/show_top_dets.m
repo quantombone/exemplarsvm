@@ -67,7 +67,7 @@ for k = 1:maxk
     
     filer = sprintf('%s/%05d.pdf',wwwdir,k);
     filerlock = [filer '.lock'];
-    if fileexists(filer) || (mymkdir_dist(filerlock) == 0)
+    if 0 %fileexists(filer) || (mymkdir_dist(filerlock) == 0)
       counter = counter + 1;
       continue
     end
@@ -180,15 +180,18 @@ for k = 1:maxk
     figure(1)
     clf
 
+    current_rank = k;
     NR = show_hits_figure_iccv(I,models,allbb, ...
-                               overlays);
+                               overlays,current_rank);
 
     drawnow
     set(gcf,'PaperPosition',[0 0 2*NR(1) 2*NR(2)],...
             'PaperSize',[2*NR(1) 2*NR(2)]);
     
     print(gcf,'-dpdf',filer);
-    rmdir(filerlock);
+    if exist(filerlock,'dir')
+      rmdir(filerlock);
+    end
     filer2 = filer;
     filer2(end-2:end) = 'png';
     print(gcf,'-dpng',filer2);
