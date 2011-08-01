@@ -33,6 +33,9 @@ STRIP_FILE = 0;
 models = load_all_models(dataset_params, cls, models_name, ...
                          efiles, CACHE_FILE, STRIP_FILE);
 
+%dump icons
+dump_memex_icons(dataset_params,models);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% EXEMPLAR TRAINING %%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -111,7 +114,10 @@ if isfield(dataset_params,'val_params')
     CACHE_BETAS = 1;
     M = calibrate_and_estimate_M(dataset_params, models, ...
                                  val_grid, val_set, CACHE_BETAS);
-    keyboard
+    
+    %% draw the memex graph
+    draw_memex(dataset_params,models,val_grid,val_set,M);
+    return;
   end
 else
   fprintf(1,['Skipping validation becuase dataset_params.val_params not' ...
@@ -155,7 +161,7 @@ if isfield(dataset_params,'test_params')
   test_grid = load_result_grid(dataset_params, models, ...
                                curparams.set_name, test_files);
   
-  %Show all raw detections on test-set as a "memex browser"
+  %Show all raw detections on test-set as a "meme browser"
   %show_memex_browser2(dataset_params, models, test_grid,...
   %                   test_set, curparams.set_name);
 
