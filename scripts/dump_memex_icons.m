@@ -12,9 +12,9 @@ for i = 1:length(models)
                     models{i}.curid,models{i}.objectid);
   mstring1 = sprintf('%s/%s.%d.1.png',basedir,...
                     models{i}.curid,models{i}.objectid);
-  %if fileexists(mstring)
-  %  continue
-  %end
+  if fileexists(mstring0) && fileexists(mstring1)
+    continue
+  end
   
   I = get_exemplar_icon(models,i);
   ms = max(size(I,1),size(I,2));
