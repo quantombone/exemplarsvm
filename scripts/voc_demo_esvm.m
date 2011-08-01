@@ -108,19 +108,22 @@ classes = {...
     'train'
     'tvmonitor'
 };
+
+%classes = {'bicycle'};
 %classes = {'person'};
 %classes = {'train'};
+%classes = {'bicycle'};
+%classes = {'motorbike'};
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
 
-plot_voc_results(dataset_params);
+%plot_voc_results(dataset_params);
 
-return;
+%return;
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
   dataset_params = save_dataset_params;
-  
   
    if isfield(dataset_params,'mining_params')
      %Training set is images not containing in-class instances
