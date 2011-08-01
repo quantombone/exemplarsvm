@@ -49,7 +49,7 @@ dataset_params.model_type = 'exemplar';
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
 
-moder = 3;
+moder = 1;
 if moder == 1
   %do svm
 elseif moder == 2
@@ -127,10 +127,10 @@ classes = {...
     'tvmonitor'
 };
 %classes = {'person'};
-%classes = {'train'};
+classes = {'train'};
 
-classes = dataset_params.classes;
-classes = setdiff(classes,'person');
+%classes = dataset_params.classes;
+%classes = setdiff(classes,'person');
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
