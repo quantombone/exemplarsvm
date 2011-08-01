@@ -147,7 +147,7 @@ end
 
 
 %% if this is turned on, then we do two step coloring
-DO_COLORS = 1;
+DO_COLORS = 0;
 %A = A>0;
 %A = (A+A')>0;
 
@@ -162,13 +162,16 @@ DO_COLORS = 1;
 %A = curA(inds,inds);
 %fprintf(1,'Largest CC has %d nodes\n',length(inds));
 
-gv_file = '/nfs/hn22/tmalisie/ddip/memex.gv';
-plain_file = '/nfs/hn22/tmalisie/ddip/memex.plain';
-nodes_file = '/nfs/hn22/tmalisie/ddip/memex.nodes';
+%gv_file = '/nfs/hn22/tmalisie/ddip/memex.gv';
+%plain_file = '/nfs/hn22/tmalisie/ddip/memex.plain';
+%nodes_file = '/nfs/hn22/tmalisie/ddip/memex.nodes';
 
-gv2_file = '/nfs/hn22/tmalisie/ddip/memex.2.gv';
-ps_file = '/nfs/hn22/tmalisie/ddip/memex.ps';
-png_file = '/nfs/hn22/tmalisie/ddip/memex.png';
+%gv2_file = '/nfs/hn22/tmalisie/ddip/memex.2.gv';
+%ps_file = '/nfs/hn22/tmalisie/ddip/memex.ps';
+%png_file = '/nfs/hn22/tmalisie/ddip/memex.png';
+svg_file = other.svg_file;
+gv_file = other.gv_file;
+
 if isfield(other,'pdf_file')
   pdf_file = other.pdf_file;
 else
@@ -202,7 +205,6 @@ if DO_COLORS == 1
   [aa,bb] = sort(ids);
   positions = positions(bb,:);
 
-
   fprintf(1,'Dumping graph with colors\n');
   show_graph(A, gv2_file, positions,other);
 else
@@ -210,10 +212,12 @@ else
 end
 
 if nargout == 0
-  fprintf(1,'creating pdf file %s\n', pdf_file);
-  unix(sprintf('dot -Ksfdp -Tps2 %s > %s', ...
-               gv2_file, ps_file));
-  unix(sprintf('ps2pdf %s %s',ps_file,pdf_file));
+  fprintf(1,'creating svg file %s\n', svg_file);
+  [basedir,tmp,tmp] = fileparts(svg_file);
+  unix(sprintf('cd %s && dot -Ksfdp -Tpdf %s > %s', ...
+               basedir,gv2_file, svg_file));
+  
+  %unix(sprintf('ps2pdf %s %s',ps_file,pdf_file));
 else
   fprintf(1,'creating png file and loading\n');
   unix(sprintf('dot -Ksfdp -Tpng %s > %s', ...
