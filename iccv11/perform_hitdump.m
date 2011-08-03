@@ -34,7 +34,7 @@ dump_images = 1;
 %DUMPDIR = sprintf('%s/www/calib/%s-%s/',dataset_params.localdir,...
 %                  dataset_params.dataset,models{1}.cls,models{1}.models_name);
 
-DUMPDIR = sprintf('%s/www/calib/%s/',dataset_params.localdir, ...
+DUMPDIR = sprintf('%s/www/calib2/%s/',dataset_params.localdir, ...
                   models{1}.models_name);
 
 
@@ -303,7 +303,9 @@ for exid = 1:SKIPPER:length(models)
 
     figure(445)
     clf
-    showI = get_sv_stack(models{exid},5,5);
+    %showI = get_sv_stack(models{exid},5,5);
+    %showI = get_sv_row(models{exid},13);
+    showI = get_sv_row(models{exid},9);
     imagesc(showI)
   end
   
