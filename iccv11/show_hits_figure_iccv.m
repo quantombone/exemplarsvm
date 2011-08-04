@@ -1,4 +1,5 @@
-function NR = show_hits_figure_iccv(I,models,topboxes,overlays, current_rank)
+function NR = show_hits_figure_iccv(I,models,topboxes,overlays, ...
+                                    current_rank, corr)
 %Show a figure with the detections of the exemplar svm model
 %Tomasz Malisiewicz(tomasz@cmu.edu)
 
@@ -15,9 +16,12 @@ if add_one == 1
                      .1, .01);
   NR = [2 2];
 else
-  ha = tight_subplot(1, 3, .05, ...
-                     .1, .01);
-  NR = [3 1];
+  ha = tight_subplot(1, 2, .05, ...
+                     .01, .01);
+  %hb = tight_subplot(1, 2, .05, ...
+  %                   .1, .01);
+  NR = [2 2];
+  
 end
 
 PADDER = 100;
@@ -56,15 +60,15 @@ for i = 1:N
   
   Iex = get_exemplar_icon(models, mid, topboxes(i,7));
 
-  Iex1 = imresize(chunks{i},[size(Iex,1) size(Iex,2)],'nearest');
+  Iex1 = imresize(chunks{i},[size(Iex,1) size(Iex,2)]);
   Iex1 = max(0.0,min(1.0,Iex1));
   
-  Iex1 = imresize(hogpic,[size(Iex1,1) size(Iex,2)]);
+  Iex1 = imresize(hogpic,[size(Iex1,1) size(Iex,2)], 'nearest');
   Iex1 = max(0.0,min(1.0,Iex1));
-  PPP = round(size(Iex,1)*.3);
+  
+  PPP = round(size(Iex,1)*.2);
   Iex2 = Iex1(1:PPP,:,:)*0+1;
   Ishow = cat(1,Iex1,Iex2,Iex);
-  %Ishow = cat(1,Iex,Iex2,Iex1);
   bb1 = [1 1 size(Iex,2) size(Iex,1)];
   bb2 = bb1;
   bb2([2 4]) = bb2([2 4]) + size(Iex,1)+PPP;
@@ -75,12 +79,26 @@ for i = 1:N
   axis image
   axis off
 
-  %plot_bbox(bb1, '', [1 1 0], [1 1 0], 0, [2 1])
+  bouter = [1 1 size(Ishow,2) size(Ishow,1)];
+  bouter(1) = bouter(1) - round(size(Ishow,2)*.05);
+  bouter(2) = bouter(2) - round(size(Ishow,1)*.05);
+  bouter(3) = bouter(3) + round(size(Ishow,2)*.05);
+  bouter(4) = bouter(4) + round(size(Ishow,1)*.05);
+  plot_bbox(bouter,'',[0 0 0], [0 0 0],0,[2 1])
+  axis image
+  curcolor = [0 1 0];
+  if corr == 0
+    curcolor = [1 0 0 ];
+  end
+
+  plot_bbox(bb1, sprintf('w %d',mid), ...
+            curcolor, curcolor, 0, [2 1])
   %sprintf('Exemplar.%d',mid)
-  plot_bbox(bb2, '', [0 1 0], [0 1 0], 0, [2 1])
+  %original green
+  plot_bbox(bb2, sprintf('I %d',mid), [1 1 0], [1 1 0], 0, [2 1])
 
   
-  title(sprintf('w_{%d}',mid))
+  %title(sprintf('{\\bf w}_{%d}',mid));
 
   id_string = '';
   if isfield(models{abs(mid)},'curid')
@@ -111,20 +129,34 @@ clipped_top([1 2]) = clipped_top([1 2])+2;
 clipped_top([3 4]) = clipped_top([3 4])-2;
 
 axes(ha(2));
-imagesc(I)
+
+PPP = round(size(I,1)*.05);
+I2 = I(1:PPP,:,:)*0+1;
+Ishow = cat(1,I,I2,extraI);
+
+imagesc(Ishow)%imagesc(I)
 axis image
 axis off
-title(sprintf('Detection (Rank=%d, Score=%.3f)',current_rank,topboxes(1,end)))
-plot_bbox(clipped_top,'',[1 1 0],[1 1 0],0,[2 1]);
+%title(sprintf('Detection (Rank=%d, Score=%.3f)',current_rank, ...
+%              topboxes(1,end)))
 
-axes(ha(3));
-imagesc(extraI);
+curcolor = [0 1 0];
+if corr == 0
+  curcolor = [1 0 0 ];
+end
+
+plot_bbox(clipped_top,'',curcolor, curcolor,0,[2 1]);
+
+%axes(ha(3));
+%imagesc(extraI);
 
 %sprintf('Exemplar.%d',mid)
-plot_bbox(clipped_top,'',[0 1 0],[0 1 0],0,[2 1]);
+%orig green
+clipped_top([2 4]) = clipped_top([2 4]) + size(I,1)+size(I2,1);
+plot_bbox(clipped_top,'',[1 1 0],[1 1 0],0,[2 1]);
 axis image
 axis off
-title('Interpretation')%sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
+%title('Appearance Transfer')%sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
 %title(sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
 
 if add_one == 1
@@ -161,6 +193,10 @@ if add_one == 1
                               models{1}.cls));
       curcolor = c(aa,:);
       curcolor = [1 1 0];
+      curcolor = [0 1 0];
+      if corr == 0
+        curcolor = [1 0 0 ];
+      end
 
       curbb = clip_to_image(topboxes(1,:),[1 1 size(I,2) size(I, ...
                                                   1)]);
