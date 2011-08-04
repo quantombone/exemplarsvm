@@ -53,19 +53,20 @@ counter = 1;
 
 for k = 1:maxk
 
+  corr = finalstruct.rc(k);
   if 1 
     if counter > length(bb)
       break;
     end
     
-    wwwdir = sprintf('%s/www/%s.%s-%s%s/',dataset_params.localdir,...
-                     set_name, models{1}.cls, ...
+    wwwdir = sprintf('%s/www/%s.%s%s/',dataset_params.localdir,...
+                     set_name, ...
                      models{1}.models_name,finalstruct.calib_string);
     if ~exist(wwwdir,'dir')
       mkdir(wwwdir);
     end
     
-    filer = sprintf('%s/%05d.pdf',wwwdir,k);
+    filer = sprintf('%s/%s.%05d.eps',wwwdir,models{1}.cls,k);
     filerlock = [filer '.lock'];
     if 0 %fileexists(filer) || (mymkdir_dist(filerlock) == 0)
       counter = counter + 1;
@@ -182,21 +183,23 @@ for k = 1:maxk
 
     current_rank = k;
     NR = show_hits_figure_iccv(I,models,allbb, ...
-                               overlays,current_rank);
-
+                               overlays,current_rank, corr);
+    axis image
     drawnow
-    set(gcf,'PaperPosition',[0 0 2*NR(1) 2*NR(2)],...
-            'PaperSize',[2*NR(1) 2*NR(2)]);
     
-    print(gcf,'-dpdf',filer);
+    print(gcf,'-depsc2',filer);
+    unix(sprintf('ps2pdf -dEPSCrop -dPDFSETTINGS=/prepress %s %s',...
+                 filer,strrep(filer,'.eps','.pdf')));
+
+    unix(sprintf('rm %s',filer));
+    
     if exist(filerlock,'dir')
       rmdir(filerlock);
     end
-    filer2 = filer;
-    filer2(end-2:end) = 'png';
-    print(gcf,'-dpng',filer2);
+    %filer2 = filer;
+    %filer2(end-2:end) = 'png';
+    %print(gcf,'-dpng',filer2);
        
-    counter = counter+1;
-    
+    counter = counter+1;    
   end
 end
