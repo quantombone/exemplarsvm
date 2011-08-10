@@ -49,7 +49,7 @@ dataset_params.model_type = 'exemplar';
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
 
-moder = 1;
+moder = 2;
 if moder == 1
   %do svm
 elseif moder == 2
@@ -127,7 +127,9 @@ classes = {...
     'tvmonitor'
 };
 %classes = {'person'};
-classes = {'train'};
+%classes = {'train'};
+classes = {'motorbike','bicycle','sheep','train','cow','bus'};
+
 
 %classes = dataset_params.classes;
 %classes = setdiff(classes,'person');
