@@ -7,9 +7,23 @@ function allbbs = show_top_dets(dataset_params, models, grid, fg, set_name, ...
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
+%Default exemplar-inpainting show mode
+%SHOW_MODE = 1;
+
+%Default segmentation show mode
+%SHOW_MODE = 2;
+
+%Mode to show 
+%SHOW_MODE = 3;
+
+suffix = '';
+
 %maxk is the maximum number of top detections we display
 if ~exist('maxk','var')
   maxk = 20;
+  if strcmp(models{1}.cls,'bus')
+    maxk = 100;
+  end
 end
 
 final_boxes = finalstruct.unclipped_boxes;
@@ -25,15 +39,17 @@ moses = cat(1,final_maxos{:});
 %% only good ones now!
 %bb = bb(moses(bb)>.5);
 
-if 0
+if 1
   fprintf(1,'Only segmentation ones here\n');
   %% get ones with segmentation only
   ids = cellfun2(@(x)x.curid,models(bbs(bb,6)));
-  VOCinit
+  %VOCinit
   has_seg = cellfun(@(x)fileexists(sprintf('%s/%s/SegmentationObject/%s.png',...
-                                           VOCopts.datadir, ...
-                                           VOCopts.dataset,x)),ids);
+                                           dataset_params.datadir, ...
+                                           dataset_params.dataset,x)),ids);
   bb = bb(find(has_seg));
+  finalstruct.rc = finalstruct.rc(find(has_seg));
+  suffix = '.seg';
 end
 
 if 0
@@ -66,7 +82,7 @@ for k = 1:maxk
       mkdir(wwwdir);
     end
     
-    filer = sprintf('%s/%s.%05d.eps',wwwdir,models{1}.cls,k);
+    filer = sprintf('%s/%s.%05d%s.eps',wwwdir,models{1}.cls,k,suffix);
     filerlock = [filer '.lock'];
     if 0 %fileexists(filer) || (mymkdir_dist(filerlock) == 0)
       counter = counter + 1;
@@ -74,19 +90,17 @@ for k = 1:maxk
     end
 
     fprintf(1,'Top det %d\n', k);
-    
     allbbs(k,:) = bbs(bb(counter),:);
     
     curb = bb(counter);
     curid = grid{imids(curb)}.curid;
 
-    %I = convert_to_I(fg{grid{imids(curb)}.index});
     I = (convert_to_I(fg{bbs(bb(counter),11)}));
     
     TARGET_BUS = -1;
 
     if TARGET_BUS > 0
-      gtrecs = PASreadrecord(sprintf(VOCopts.annopath,curid));
+      gtrecs = PASreadrecord(sprintf(dataset_params.annopath,curid));
       businds = find(ismember({gtrecs.objects.class},{'bus'}) & ~[gtrecs.objects.difficult]);
       gtbbs = cat(1,gtrecs.objects.bbox);
       gtbbs = gtbbs(businds,:);
@@ -156,6 +170,8 @@ for k = 1:maxk
                                        models{allbb(zzz,6)}, ...
                                        stuff);
     end
+
+
     %sumI = sumI ./ repmat(countI,[1 1 3]);
     
     if TARGET_BUS > -1
