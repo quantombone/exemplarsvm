@@ -220,12 +220,13 @@ if length(M) > 0
                                          models, test_grid, ...
                                          curparams.set_name,...
                                          test_struct);
-    
+    rc = results.corr;    
+    test_struct.rc = rc;
     %% Show top detections from l.a.b.o.o.
     show_top_dets(dataset_params, models, test_grid,...
                   test_set, curparams.set_name, ...
                   test_struct);
-    rc = results.corr;
+
   end  
 
 

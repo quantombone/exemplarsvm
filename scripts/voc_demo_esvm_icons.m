@@ -109,13 +109,13 @@ classes = {...
     'tvmonitor'
 };
 %classes = {'person'};
-%classes = {'train'};
+classes = {'chair'};
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
 
 
-classes = {'bicycle'};
+%classes = {'bicycle'};
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
   cls = classes{i};
