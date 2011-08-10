@@ -1,11 +1,12 @@
 function exemplar_overlay = exemplar_inpaint(detection_box, model, ...
                                              stuff)
-%paint the exemplar into the image I 
+%Paint the exemplar into the image I 
 
+%DISABLED
 %% show gt bb with os in [.5, 1] as correct
 %% show gt bb with os in [MAXOS_THRESH,.5) as incorrect
 %% do not even show gt bb if os is in [0,MAXOS_THRESH)
-MAXOS_THRESH = .2;
+%MAXOS_THRESH = .2;
 
 SHOW_TITLES = 0;
 
@@ -45,10 +46,22 @@ xform_cd = find_xform(g, detection_box(1:4));
 % else
 %   extra_3d = [];
 % end
+loadseg = 1;
 
-loadseg = 0;
-[mini_overlay.I, mini_overlay.alphamask] = ...
-    get_exemplar_icon({model},1,0,1,loadseg,stuff.dataset_params);
+if strcmp(model.cls,'bus')
+  [mini_overlay.I,mini_overlay.alphamask,mini_overlay.faces] = ...
+      get_geometry_icon({model}, 1, detection_box(7));
+  
+  % gtbb = model.gt_box;
+  % mini_overlay.I = (mini_overlay.I(gtbb(2):gtbb(4),gtbb(1):gtbb(3), ...
+  %                                  :));
+  % mini_overlay.alphamask = (mini_overlay.alphamask(gtbb(2): ...
+  %                                                 gtbb(4),gtbb(1):gtbb(3),:));
+else
+  [mini_overlay.I, mini_overlay.alphamask] = ...
+      get_exemplar_icon({model},1,detection_box(7),1,...
+                                loadseg,stuff.dataset_params);
+end
 
 %[mini_overlay.I, mini_overlay.alphamask] = ...
 %    get_seg_icon({model},1,stuff.dataset_params);
@@ -56,9 +69,13 @@ loadseg = 0;
 [exemplar_overlay.I, exemplar_overlay.alphamask] = ...
     insert_exemplar(I, mini_overlay, detection_box);
 
+exemplar_overlay.mini_overlay = mini_overlay;
+
 % if strcmp(model.cls,'bus')
 %   [Iex2,alphamask2,faces] = get_geometry_icon({model},1);
 
+%   %keyboard
+  
 %   [exemplar_overlay2,Iex2] = ...
 %       load_exemplar_overlay(model, Iex2, alphamask2, detection_box(7));
 
@@ -86,7 +103,6 @@ loadseg = 0;
 %     exemplar_overlay.overlay2 = exemplar_overlay2;  
 %   end
 % end
-
 
 if SHOW_FRIENDS == 1
   fprintf(1,'transferring friends\n');
@@ -143,11 +159,11 @@ function [I2,mask] = insert_exemplar(I,overlay,d)
 %Given a target image, an overlay, and the transform, place it
 %inside the new image
 
+% if d(7) == 1
+%   overlay.I = flip_image(overlay.I);
+%   overlay.alphamask = flip_image(overlay.alphamask);
+% end
 
-if d(7) == 1
-  overlay.I = flip_image(overlay.I);
-  overlay.alphamask = flip_image(overlay.alphamask);
-end
 target = round(d);
 
 newsize = [target(4)-target(2)+1 target(3)- ...
@@ -164,6 +180,7 @@ I2 = pad_image(I2,PAD);
 mask = zeros(size(I2,1),size(I2,2));
 %%% HACK making black images
 %I2 = I2*0;
+Iblack = I2*0;
 
 target = target+PAD;
 
@@ -179,13 +196,34 @@ I2(targetx,targety,:) = ...
     I2(targetx,targety,:).*(1-newalpha(goodsx,goodsy,:)) + ...
     newI(goodsx,goodsy,:).*(newalpha(goodsx,goodsy,:));
 
-mask(targetx,targety,:) = 1;
+Iblack(targetx,targety,:) = ...
+    Iblack(targetx,targety,:).*(1-newalpha(goodsx,goodsy,:)) + ...
+    newI(goodsx,goodsy,:).*(newalpha(goodsx,goodsy,:));
+
+
+%mask(targetx,targety,:) = 1;
+
+mask(targetx,targety,:) = newalpha(goodsx,goodsy);
 
 I2 = pad_image(I2,-PAD);
 I2 = max(0.0,min(1.0,I2));
 
+Iblack = pad_image(Iblack,-PAD);
+Iblack = max(0.0,min(1.0,Iblack));
+
 mask = pad_image(mask,-PAD);
 mask = max(0.0,min(1.0,mask));
+
+%% do this blending only for segmentations
+Ia = Iblack;
+Ib = I;
+alphamap = mask;
+alphamap(alphamap>0) = .5;
+alphamap(alphamap==0) = .7;
+alphamap = repmat(alphamap,[1 1 3]);
+Itotal = Ia.*alphamap + Ib.*(1-alphamap);
+
+I2 = Itotal;
 
 function save_me_as_pdf(stuff,index)
 fprintf(1,'saving disabled temporarily\n');
