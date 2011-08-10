@@ -10,8 +10,8 @@ function [Iex,Iexmask,Icb,Icbmask] = get_exemplar_icon(models, ...
 %Subind indicates which window to show (defaults to the base)
 if ~exist('subind','var')
   subind = 1;
-else
-  flip = models{index}.model.bb(subind,7);
+%else
+%  flip = models{index}.model.bb(subind,7);
 end
 
 if ~exist('flip','var')
@@ -41,6 +41,7 @@ if loadseg == 1 && exist('VOCopts','var')
     I = I2;
     mask = mask2;
   end
+  
 end
 
 cb = models{index}.gt_box;    
@@ -76,8 +77,8 @@ filer_class = sprintf('%s/%s/SegmentationClass/%s.png',VOCopts.datadir, ...
 cmap=VOClabelcolormap;
 
 if ~fileexists(filer)
-  Iex = [];
-  Iexmask = [];
+  I = [];
+  mask = [];
   return;
 end
   
