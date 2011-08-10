@@ -37,14 +37,23 @@ numpassed = 0;
 for i = 1:length(mining_queue)
   index = mining_queue{i}.index;
   I = convert_to_I(bg{index});
-  
+
   %HACK ROTATE UPSIDE DOWN
   %fprintf(1,'HACK: rotate upside down negatives\n');
   %I = imrotate(I,180);
 
-  %starter = tic;   
+  %starter = tic;
+  % if isfield(mining_params,'wtype') && strcmp(mining_params.wtype, ...
+  %                                              'dfun')
+
+  %   [rs,t] = localizemeHOG_dfun(I, models, mining_params);
+  
+  %   %plot(rs.bbs{1}(:,end))
+  %   %keyboard
+  % else
   [rs,t] = localizemeHOG(I, models, mining_params);
-    
+  %end
+
   numpassed = numpassed + 1;
 
   curid_integer = index;  

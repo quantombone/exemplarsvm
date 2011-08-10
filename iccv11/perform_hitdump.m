@@ -1,12 +1,9 @@
-function [betas] = perform_calibration(dataset_params,...
-                                       models, grid, val_set, ...
-                                       CACHE_FILES)
-% Perform calibration by learning the sigmoid parameters (linear
-% transformation of svm scores) for each model independently. If we
-% perform an operation such as NMS, we will now have "comparable"
-% scores.  This is performed on the 'trainval' set for PASCAL VOC.
+function [betas] = perform_hitdump(dataset_params, models, grid, ...
+                                   val_set, CACHE_FILES, cursetname)
 
-
+% Perform hitdump for exemplar model evaluation.. this dumps out
+% resulting icons which show the exemplar, its learned weights, and
+% top 20 detections
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if length(grid) == 0
@@ -32,11 +29,14 @@ display = dataset_params.display;
 
 % if display is enabled and dump_images is enabled, then dump images
 % into DUMPDIR
-dump_images = 0;
+dump_images = 1;
 
+%DUMPDIR = sprintf('%s/www/calib/%s-%s/',dataset_params.localdir,...
+%                  dataset_params.dataset,models{1}.cls,models{1}.models_name);
 
-DUMPDIR = sprintf('%s/www/calib/%s-%s/',dataset_params.localdir,...
-                  dataset_params.dataset,models{1}.cls,models{1}.models_name);
+DUMPDIR = sprintf('%s/www/calib2/%s/',dataset_params.localdir, ...
+                  models{1}.models_name);
+
 
 if dump_images==1 && ~exist(DUMPDIR,'dir')
   mkdir(DUMPDIR);
@@ -52,8 +52,10 @@ end
 setname = 'voc';
 
 if strcmp(setname,'voc')
-  target_directory = 'trainval';
+  %target_directory = 'trainval';
   %target_directory = 'train';
+  
+  target_directory = cursetname;
   fprintf(1,'Using VOC set so performing calibration with set: %s\n',target_directory);
   
   %% prune grid to contain only images from target_directory
@@ -108,7 +110,7 @@ for i = 1:length(grid)
     fprintf(1,'.');
   end
   cur = grid{i};
-  
+
   %do not process grids with no bboxes
   if size(cur.bboxes,1) == 0
     continue;
@@ -136,6 +138,7 @@ for i = 1:length(grid)
   coarse_boxes{i} = cur.coarse_boxes;
   bboxes{i} = cur.bboxes;
    
+
   %if we have overlaps, collect them
   if length(cur.extras) > 0
     
@@ -158,7 +161,7 @@ for i = 1:length(grid)
     os{i} = zeros(size(bboxes{i},1),1);    
   end
   
-  scores{i} = cur.bboxes(:,7)';
+  %scores{i} = cur.bboxes(:,7)';
 end
   
 ALL_bboxes = cat(1,bboxes{:});
@@ -167,10 +170,21 @@ ALL_os = cat(1,os{:});
 
 curids = cellfun2(@(x)x.curid,grid);
 
-
 fprintf(1,'Pre-processing models for calibration: \n');
 
-for exid = 1:length(models)
+%SKIPPER = 50;
+SKIPPER = 1;
+for exid = 1:SKIPPER:length(models)
+  %filer = sprintf('%s/icon.%s.%s.%d.png', DUMPDIR, cursetname, ...
+  %                models{exid}.curid, models{exid}.objectid);
+  
+  filer = sprintf('%s/%s.%s.%05d.png', DUMPDIR, cursetname, ...
+                  models{exid}.cls,exid);
+  
+  if (dump_images == 1) && fileexists(filer)
+    continue
+  end
+  
   fprintf(1,'.');
   
   sourcegrid = find(ismember(curids,models{exid}.curid));
@@ -229,38 +243,51 @@ for exid = 1:length(models)
     
     figure(1)
     clf
-    subplot(1,2,1)  
-    plot(all_scores,all_os,'r.')
-    xs = linspace(min(all_scores),max(all_scores),1000);
+    %subplot(1,2,1)  
+    %plot(all_scores,all_os,'r.')
+    
+    SHOWTOP = min(length(all_scores),50);
+    [aaa,bbb] = sort(all_scores,'descend');
+    [aaa2,bbb2] = sort(bbb);
+    plot(bbb(bbb2(1:SHOWTOP)),all_os(bbb(1:SHOWTOP)),'r.')
+
     fx = @(x)(1./(1+exp(-beta(1)*(x-beta(2)))));
+    hold on;
+    vals = fx(all_scores);
+    plot(1:SHOWTOP,vals(bbb(1:SHOWTOP)),'b.')
+    axis([1 SHOWTOP+eps 0 1])
+    hold on;
+    plot([1 SHOWTOP],[.5 .5],'g--')
+    %xs = linspace(min(all_scores),max(all_scores),1000);
+    
     
     %[aaa,bbb] = sort(fx(all_scores),'descend');
     %aaa(aaa>=.5)
     
-    hold on
-    plot(xs,fx(xs),'b','LineWidth',2)
-    axis([min(xs) max(xs) 0 1])
-    xlabel('SVM score')
-    ylabel(sprintf('Max Overlap Score with %s',models{exid}.cls))
+    %hold on
+    %plot(xs,fx(xs),'b','LineWidth',2)
+    
+    %axis([min(xs) max(xs) 0 1])
+    xlabel('Detection Rank')
+    ylabel(sprintf('Max OS with cls=%s',models{exid}.cls))
     
     title(sprintf('Learned Sigmoid \\beta=[%.3f %.3f]',beta(1), ...
                   beta(2)))
-    subplot(1,2,2)
-    %subplot(2,2,1)
-    Iex = convert_to_I(models{exid}.I);
-    % if isfield(models{exid},'I')
-    %   Iex = im2double(models{exid}.I);  
-    % else
-    %   %try pascal VOC image
-    %   Iex = im2double(imread(sprintf(dataset_params.imgpath, ...
-    %                                  models{exid}.curid)));
-    % end
-    imagesc(Iex)
-    plot_bbox(models{exid}.gt_box)
-    axis image
-    axis off
+    % subplot(1,2,2)
+    % Iex = convert_to_I(models{exid}.I);
+    % % if isfield(models{exid},'I')
+    % %   Iex = im2double(models{exid}.I);  
+    % % else
+    % %   %try pascal VOC image
+    % %   Iex = im2double(imread(sprintf(dataset_params.imgpath, ...
+    % %                                  models{exid}.curid)));
+    % % end
+    % imagesc(Iex)
+    % plot_bbox(models{exid}.gt_box)
+    % axis image
+    % axis off
 
-    bbs=ALL_coarse_boxes(hits,:);
+    bbs = ALL_coarse_boxes(hits,:);
     bbs_os = ALL_os(hits,:);
     [aa,bb] = sort(bbs(:,end),'descend');
     bbs_show = bbs(bb,:);
@@ -274,10 +301,12 @@ for exid = 1:length(models)
     models{exid}.model.svbbs = bbs_show;
     models{exid}.train_set = val_set;
 
-
     figure(445)
     clf
-    imagesc(get_sv_stack(models{exid},8))
+    %showI = get_sv_stack(models{exid},5,5);
+    %showI = get_sv_row(models{exid},13);
+    showI = get_sv_row(models{exid},9);
+    imagesc(showI)
   end
   
 
@@ -286,11 +315,13 @@ for exid = 1:length(models)
   end
     
   if dump_images == 1
-    figure(2)
-    filer = sprintf('%s/result.%d.%s.%s.png', DUMPDIR, ...
-                    exid,models{exid}.cls,models{exid}.models_name);
+    %figure(2)
+
+    %filer = sprintf('%s/result.%d.%s.%s.png', DUMPDIR, ...
+    %                exid,models{exid}.cls,models{exid}.models_name);
     set(gcf,'PaperPosition',[0 0 20 20]);
-    print(gcf,filer,'-dpng');
+    imwrite(showI,filer);
+    %print(gcf,filer,'-dpng');
     
   else
     pause

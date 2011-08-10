@@ -1,4 +1,4 @@
-function voc_template(dataset_params, cls)
+%function voc_template_dumpfigs(dataset_params, cls)
 %% This is the main VOC driver script for both scenes and exemplars
 
 if ~exist(dataset_params.devkitroot,'dir')

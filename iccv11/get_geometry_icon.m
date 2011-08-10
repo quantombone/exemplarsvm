@@ -1,9 +1,17 @@
-function [Iex,alphamask,faces] = get_geometry_icon(models,index)
+function [Iex,alphamask,faces] = get_geometry_icon(models,index,flip)
+%Given a cell array of models and the appropriate index, extract
+%the qualitative geometry for the object
+%NOTE: only defined for buses
+
+if ~exist('flip','var')
+  flip = 0;
+end
 
 model = models{index};
 if ~strcmp(models{index}.cls,'bus')
   Iex = [];
   alphamask = [];
+  faces = [];
   return;
 end
 
@@ -56,7 +64,7 @@ Iex = seg2;
 faces = res.res.faces;
 
 
-return;
+%return;
 %Iex = flip_image(Iex);
 %alphamask = flip_image(alphamask);
 %end
@@ -72,3 +80,19 @@ Iex = Iex(cb(2):cb(4),cb(1):cb(3),:);
 alphamask = pad_image(alphamask, PADDER);
 cb = round(cb + PADDER);
 alphamask = alphamask(cb(2):cb(4),cb(1):cb(3),:);
+
+faces = cellfun2(@(y)bsxfun(@minus,y,[cb(1) ...
+                    cb(2)]),faces);
+  
+%allow some transparency
+alphamask = alphamask*.8;
+
+if flip == 1
+  Iex = flip_image(Iex);
+  alphamask = flip_image(alphamask);
+  
+  faces = ...
+      cellfun2(@(x)flip_faces(x,size(Iex)),faces);
+
+end
+

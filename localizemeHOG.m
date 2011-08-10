@@ -86,12 +86,36 @@ for q = 1:N
   maxers{q} = -inf;
 end
 
+if localizeparams.dfun == 1
+  wxs = cellfun2(@(x)reshape(x.model.x(:,1),size(x.model.w)), ...
+                 models);
+  ws2 = ws;
+  for q = 1:length(ws2)
+    ws2{q} = -2*ws{q}.*wxs{q};
+    special_offset(q) = ws{q}(:)'*(models{q}.model.x(:,1).^2);
+  end
+end
+
 %start with smallest level first
 for level = length(t.hog):-1:1
   featr = t.hog{level};
   
-  %Use blas-based fast convolution code
-  rootmatch = fconvblas(featr, ws, 1, N);
+  if localizeparams.dfun == 1
+    featr_squared = featr.^2;
+    
+    %Use blas-based fast convolution code
+    rootmatch1 = fconvblas(featr_squared, ws, 1, N);
+    rootmatch2 = fconvblas(featr, ws2, 1, N);
+     
+    for z = 1:length(rootmatch1)
+      rootmatch{z} = rootmatch1{z} + rootmatch2{z} + special_offset(z);
+    end
+    
+  else  
+    %Use blas-based fast convolution code
+    rootmatch = fconvblas(featr, ws, 1, N);
+  end
+  
   rmsizes = cellfun2(@(x)size(x), ...
                      rootmatch);
   
@@ -180,7 +204,7 @@ sizes2 = cellfun(@(x)x.model.hg_size(2),models);
 S = [max(sizes1(:)) max(sizes2(:))];
 templates = zeros(S(1),S(2),features,length(models));
 templates_x = zeros(S(1),S(2),features,length(models));
-template_masks = zeros(S(1),S(2),length(models));
+template_masks = zeros(S(1),S(2),features,length(models));
 
 for i = 1:length(models)
   t = zeros(S(1),S(2),features);
@@ -188,9 +212,11 @@ for i = 1:length(models)
       models{i}.model.w;
 
   templates(:,:,:,i) = t;
-  template_masks(:,:,i) = double(sum(t.^2,3)>0);
+  template_masks(:,:,:,i) = repmat(double(sum(t.^2,3)>0),[1 1 features]);
 
-  if length(localizeparams.nnmode) > 0
+  if (length(localizeparams.nnmode) > 0) || ...
+        (isfield(localizeparams,'wtype') && ...
+         strcmp(localizeparams.wtype,'dfun')==1)
     x = zeros(S(1),S(2),features);
     x(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
         reshape(models{i}.model.x(:,1),models{i}.model.hg_size);
@@ -206,56 +232,95 @@ sbin = models{1}.model.init_params.sbin;
 t = get_pyramid(I, sbin, length(models), localizeparams);
 resstruct.padder = t.padder;
 
-finalf  = cell(length(t.hog), 1);
+pyr_N = cellfun(@(x)prod([size(x,1) size(x,2)]-S+1),t.hog);
+sumN = sum(pyr_N);
+
+X = zeros(S(1)*S(2)*features,sumN);
 offsets = cell(length(t.hog), 1);
 uus = cell(length(t.hog),1);
 vvs = cell(length(t.hog),1);
 
+counter = 1;
 for i = 1:length(t.hog)
   s = size(t.hog{i});
   NW = s(1)*s(2);
   ppp = reshape(1:NW,s(1),s(2));
   curf = reshape(t.hog{i},[],features);
   b = im2col(ppp,[S(1) S(2)]);
+
   offsets{i} = b(1,:);
   offsets{i}(end+1,:) = i;
   
-  finalf{i} = zeros(size(b,1)*features,size(b,2));
-
   for j = 1:size(b,2)
-    finalf{i}(:,j) = reshape(curf(b(:,j),:),[],1);
+    X(:,counter) = reshape(curf(b(:,j),:),[],1);
+    counter = counter + 1;
   end
   
   [uus{i},vvs{i}] = ind2sub(s,offsets{i}(1,:));
 end
 
 offsets = cat(2,offsets{:});
-finalf = cat(2,finalf{:});
 
 uus = cat(2,uus{:});
 vvs = cat(2,vvs{:});
 
 exemplar_matrix = reshape(templates,[],size(templates,4));
 
-if length(localizeparams.nnmode) == 0
+if isfield(localizeparams,'wtype') && ...
+      strcmp(localizeparams.wtype,'dfun')==1
+  
+  W = exemplar_matrix;
+  U = reshape(templates_x,[],length(models));
+  r2 = repmat(sum(W.*(U.^2),1)',1,size(X,2));
+  r =  (W'*(X.^2) - 2*(W.*U)'*X + r2);
+  r = bsxfun(@minus, r, bs);
+elseif length(localizeparams.nnmode) == 0
   %nnmode 0: Apply linear classifiers by performing one large matrix
   %multiplication and subtract bias
-  r = exemplar_matrix' * finalf;
+  r = exemplar_matrix' * X;
   r = bsxfun(@minus, r, bs);
 elseif strcmp(localizeparams.nnmode,'normalizedhog') == 1
-  r = exemplar_matrix' * finalf;
-
+  r = exemplar_matrix' * X;
+elseif strcmp(localizeparams.nnmode,'nndfun') == 1
+  %Do euclidean distance (but only over the regions corresponding
+  %to the in-mask (non-padded) regions
+  W = reshape(template_masks,[],length(models));
+  W = W / 100;
+  U = reshape(templates_x,[],length(models));
+  r2 = repmat(sum(W.*(U.^2),1)',1,size(X,2));
+  r = - (W'*(X.^2) - 2*(W.*U)'*X + r2);
 elseif strcmp(localizeparams.nnmode,'cosangle') == 1
   %nnmode 1: Apply linear classifiers by performing one large matrix
   %multiplication and subtract bias
   
-  %mf = mean(finalf,1);
-  %finalf = finalf - repmat(mf,size(finalf,1),1);
-  
-  %r = exemplar_matrix' * finalf;
+  %mf = mean(X,1);
+  %X = X - repmat(mf,size(X,1),1);
+  %r = exemplar_matrix' * X;
   
   exemplar_matrix = reshape(templates_x, [], size(templates_x,4));
-  r = slmetric_pw(exemplar_matrix,finalf,'nrmcorr');
+  
+  % %% do normalization for each window
+  % tm = template_masks;
+  % tm = reshape(tm,[],length(models));
+  % ut = unique(tm','rows');
+  % [tmp,utids] = ismember(tm',ut,'rows');
+  
+  % r = zeros(length(models),size(finalf,2));
+  % for j = 1:size(ut,1)
+  %   fprintf(1,'!');
+  %   curmask = repmat(reshape(ut(j,:),...
+  %                     [size(templates_x,1) size(templates_x,2)]),...
+  %                    [1 1 features]);
+  %   hits = find(utids == j);
+    
+  %   curf = finalf;
+  %   curf = curf.*repmat(curmask(:),1,size(curf,2));
+  %   curr = slmetric_pw(exemplar_matrix(:,hits),curf,'nrmcorr');
+
+  %   r(hits,:) = curr;
+  % end
+  
+  r = slmetric_pw(exemplar_matrix, X, 'nrmcorr');
 
   %% why am I not getting perfect hits for g-mode?
   %% ANSWER: because there is a padding which we cannot enforce on
@@ -264,9 +329,7 @@ elseif strcmp(localizeparams.nnmode,'cosangle') == 1
   
   % exemplar_x_matrix = reshape(templates_x,[],size(templates_x,4));
   % res = sum(exemplar_matrix .* exemplar_x_matrix,1);
-  
   % exemplar_matrix = exemplar_matrix ./ repmat(res+eps,size(exemplar_matrix,1),1);
-  
   % r = exemplar_matrix' * finalf;
 
   %keyboard
@@ -302,7 +365,7 @@ for exid = 1:N
 
   sorted_scores = -sorted_scores';
 
-  resstruct.xs{exid} = finalf(:,bb);
+  resstruct.xs{exid} = X(:,bb);
   
   levels = offsets(2,bb);
   scales = t.scales(levels);

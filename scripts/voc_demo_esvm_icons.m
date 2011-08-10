@@ -47,16 +47,16 @@ dataset_params.model_type = 'exemplar';
 
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
-dataset_params.params.nnmode = 'normalizedhog';
-dataset_params.params.TOPK = 1;
+%dataset_params.params.nnmode = 'normalizedhog';
 
-if 0
+if 1
   %Choose the training function (do_svm, do_rank, ...)
   %Disable NMS in training params
   dataset_params.mining_params = dataset_params.params;
   dataset_params.mining_params.training_function = @do_svm;
   dataset_params.mining_params.NMS_OS = 1.0;
   dataset_params.mining_params.MAXSCALE = 0.5;
+  dataset_params.mining_params.TOPK = 100;
   dataset_params.mining_params.set_name = 'train';
   %optional cap
   %dataset_params.mining_params.set_maxk = 0;
@@ -85,65 +85,80 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
-%classes = {'bus','motorbike','cow','tvmonitor','bottle'};
-
-classes={...
-    % 'aeroplane'
-    % 'bicycle'
-    % 'bird'
-    % 'boat'
-    % 'bottle'
-    % 'bus'
-    'car'
+%classes = {'bus'};
+classes = {...
+    'aeroplane'
+    'bicycle'
+    'bird'
+    'boat'
+    'bottle'
+    'bus'
     'cat'
+    'car'
     'chair'
     'cow'
     'diningtable'
     'dog'
     'horse'
     'motorbike'
+    'person'
     'pottedplant'
     'sheep'
     'sofa'
     'train'
-    'tvmonitor'};
+    'tvmonitor'
+};
+%classes = {'person'};
+classes = {'chair'};
+myRandomize;
+r = randperm(length(classes));
+classes = classes(r);
 
-% classes = {...
-%     'sheep'
-%     'sofa'
-%     'train'
-%     'chair'
-%     'car'
-% };
 
-classes = {'person'};
-%myRandomize;
-%r = randperm(length(classes));
-%classes = classes(r);
-
+%classes = {'bicycle'};
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
+  cls = classes{i};
   dataset_params = save_dataset_params;
+  models_name = dataset_params.models_name;
   
-  % if isfield(dataset_params,'mining_params')
-  %   %Training set is images not containing in-class instances
-  %   dataset_params.mining_params.set_name = ...
-  %       [dataset_params.mining_params.set_name '-' classes{i}];
-  % end
+   if isfield(dataset_params,'mining_params')
+     %Training set is images not containing in-class instances
+     dataset_params.mining_params.set_name = ...
+         [dataset_params.mining_params.set_name '-' classes{i}];
+   end
 
   % if isfield(dataset_params,'val_params')
   %   %Validate on in-class images only
   %   dataset_params.val_params.set_name = ...
   %       [dataset_params.val_params.set_name '+' classes{i}];
   % end
-  
+
   % if isfield(dataset_params,'test_params')
   %   %Test on in-class images only
   %   dataset_params.test_params.set_name = ...
   %       [dataset_params.test_params.set_name '+' classes{i}];
   % end
 
-  dataset_params.JUST_APPLY = 1;
-  dataset_params.SKIP_M = 1;
-  voc_template(dataset_params, classes{i});
+  %dataset_params.JUST_TRAIN = 1;
+  %dataset_params.JUST_TRAIN_AND_LOAD = 1;
+  %voc_template(dataset_params, classes{i});
+  
+  %% Initialize exemplars with the exemplar stream
+e_stream_set = get_pascal_stream(dataset_params, cls);
+efiles = exemplar_initialize(dataset_params, e_stream_set, ...
+                             models_name, dataset_params.init_params);
+
+%Append the nn-type if we are in nn mode
+if length(dataset_params.params.nnmode) > 0
+  models_name = [models_name '-' dataset_params.params.nnmode];
+end
+
+%Load all of the initialized exemplars
+CACHE_FILE = 1;
+STRIP_FILE = 0;
+models = load_all_models(dataset_params, cls, models_name, ...
+                         efiles, CACHE_FILE, STRIP_FILE);
+
+dump_memex_icons(dataset_params,models);
 end

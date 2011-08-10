@@ -1,4 +1,5 @@
-function NR = show_hits_figure_iccv(I,models,topboxes,overlays)
+function NR = show_hits_figure_iccv(I,models,topboxes,overlays, ...
+                                    current_rank, corr)
 %Show a figure with the detections of the exemplar svm model
 %Tomasz Malisiewicz(tomasz@cmu.edu)
 
@@ -15,9 +16,12 @@ if add_one == 1
                      .1, .01);
   NR = [2 2];
 else
-  ha = tight_subplot(1, 3, .05, ...
-                     .1, .01);
-  NR = [3 1];
+  ha = tight_subplot(1, 2, .05, ...
+                     .01, .01);
+  %hb = tight_subplot(1, 2, .05, ...
+  %                   .1, .01);
+  NR = [2 2];
+  
 end
 
 PADDER = 100;
@@ -43,37 +47,103 @@ for q = size(topboxes,1):-1:1
   chunks{q} = maskCropper(Ipad, mask);
 end
 
+%%NOTE: below is a loop, but we only process the first element
+%since we only show the top association
 N = min(1,size(topboxes,1));
 for i = 1:N
 
   mid = topboxes(i,6);
   flip = topboxes(i,7);
   hogpic = HOGpicture(models{topboxes(i,6)}.model.w);
+  hogpic = jettify(hogpic);
   if flip == 1
     hogpic = flip_image(hogpic);
   end
   
   Iex = get_exemplar_icon(models, mid, topboxes(i,7));
-
+  
   Iex1 = imresize(chunks{i},[size(Iex,1) size(Iex,2)]);
   Iex1 = max(0.0,min(1.0,Iex1));
-  PPP = round(size(Iex,1)*.3);
+  
+  Iex1 = imresize(hogpic,[size(Iex1,1) size(Iex,2)], 'nearest');
+  Iex1 = max(0.0,min(1.0,Iex1));
+  
+  PPP = round(size(Iex,1)*.2);
   Iex2 = Iex1(1:PPP,:,:)*0+1;
   Ishow = cat(1,Iex1,Iex2,Iex);
+
+  
+  SHOW_SEG = 1;
+  if SHOW_SEG == 1
+    
+    Ia = (overlays{1}.mini_overlay.I.* ...
+              repmat(overlays{1}.mini_overlay.alphamask,[1 1 3]));
+    Ib = Iex;
+    alphamap = overlays{1}.mini_overlay.alphamask;
+    alphamap(alphamap>0) = .5;
+    alphamap(alphamap==0) = .7;
+    alphamap = repmat(alphamap,[1 1 3]);
+    Itotal = Ia.*alphamap + Ib.*(1-alphamap);
+    
+    Imeta = Itotal;
+    offset = [0 size(Ishow,1)+size(Iex2,1)]
+ 
+    Ishow = cat(1,Ishow,Iex2,Imeta);
+  
+  elseif strcmp(models{mid}.cls,'bus')
+    m1 = repmat(double(overlays{1}.mini_overlay.alphamask>0)*.8,[1 ...
+                    1 3]);
+    m2 = repmat(double(overlays{1}.mini_overlay.alphamask>0)*.2,[1 ...
+                    1 3]);
+    m2(m2(:)==0) = 1;
+
+    Imeta = overlays{1}.mini_overlay.I.*m1 +...
+            Iex.*m2;
+    offset = [0 size(Ishow,1)+size(Iex2,1)]
+    overlays{1}.mini_overlay.faces = ...
+        cellfun2(@ ...
+                 (x)bsxfun(@plus,x,offset),overlays{1}.mini_overlay.faces);
+ 
+    Ishow = cat(1,Ishow,Iex2,Imeta);
+  end
+ 
   bb1 = [1 1 size(Iex,2) size(Iex,1)];
   bb2 = bb1;
-  bb2([2 4]) = bb2([2 4]) + size(Iex,1)+PPP;
   
-  axes(ha(2));
+  bb2([2 4]) = bb2([2 4]) + size(Iex,1) + PPP;
+   
+  axes(ha(1));
   imagesc(Ishow)
 
   axis image
   axis off
 
-  plot_bbox(bb1,'',[1 1 0],[1 1 0],0,[2 1])
-  plot_bbox(bb2,'Exemplar',[0 1 0],[0 1 0],0,[2 1])
+  bouter = [1 1 size(Ishow,2) size(Ishow,1)];
+  bouter(1) = bouter(1) - round(size(Ishow,2)*.05);
+  bouter(2) = bouter(2) - round(size(Ishow,1)*.05);
+  bouter(3) = bouter(3) + round(size(Ishow,2)*.05);
+  bouter(4) = bouter(4) + round(size(Ishow,1)*.05);
+  plot_bbox(bouter, '', [0 0 0], [0 0 0], 0, [2 1])
+
+  if isfield(overlays{1}.mini_overlay,'faces')
+    plot_faces(overlays{1}.mini_overlay.faces);
+  end
   
-  title('Association')
+  axis image
+  curcolor = [0 1 0];
+  if corr == 0
+    curcolor = [1 0 0 ];
+  end
+
+  plot_bbox(bb1, sprintf('w %d',mid), ...
+            curcolor, curcolor, 0, [2 1])
+  
+  %sprintf('Exemplar.%d',mid)
+
+  
+  plot_bbox(bb2, sprintf('I %d',mid), [1 1 0], [1 1 0], 0, [2 1])
+
+  
 
   id_string = '';
   if isfield(models{abs(mid)},'curid')
@@ -96,24 +166,65 @@ for i = 1:N
     
 end
 
-axes(ha(1));
-imagesc(I)
-axis image
-axis off
-title('Input Image')
-
-axes(ha(3));
-
 extraI = overlays{1}.I;
-imagesc(extraI);
+
 clipped_top = clip_to_image(topboxes(1,:),[1 1 size(extraI,2) ...
                     size(extraI,1)]);
 clipped_top([1 2]) = clipped_top([1 2])+2;
 clipped_top([3 4]) = clipped_top([3 4])-2;
-plot_bbox(clipped_top,'E',[0 1 0],[0 1 0],0,[2 1]);
+
+axes(ha(2));
+
+PPP = round(size(I,1)*.05);
+I2 = I(1:PPP,:,:)*0+1;
+Ishow = cat(1,I,I2,extraI);
+%Ishow = extraI;
+
+imagesc(Ishow)
 axis image
 axis off
-title(sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
+%title(sprintf('Detection (Rank=%d, Score=%.3f)',current_rank, ...
+%              topboxes(1,end)))
+
+curcolor = [0 1 0];
+if corr == 0
+  curcolor = [1 0 0 ];
+end
+
+plot_bbox(clipped_top,'',curcolor, curcolor,0,[2 1]);
+
+if 0
+  %%NOTE: not sure why this is not working?
+%% find xform from exemplar onto new detection
+start_box = [1 1 size(Iex,2) size(Iex,1)];
+end_box = topboxes(1,1:4);
+xform = find_xform(start_box,end_box);
+
+faces2 = cellfun2(@(x)apply_xform(x,xform), ...
+                  overlays{1}.mini_overlay.faces);
+
+offset = [0 size(I,1)+size(I2,1)];
+offset = [0 0];
+faces2 = cellfun2(@ ...
+                  (x)bsxfun(@plus,x,offset),faces2);
+end
+%plot_faces(faces2);
+
+%axes(ha(3));
+%imagesc(extraI);
+
+%sprintf('Exemplar.%d',mid)
+%orig green
+clipped_top([2 4]) = clipped_top([2 4]) + size(I,1)+size(I2,1);
+
+%dont do yellow box for segmentation
+if 0 %%~strcmp(models{mid}.cls,'bus')
+  plot_bbox(clipped_top,'',[1 1 0],[1 1 0],0,[2 1]);
+end
+axis image
+axis off
+%title('Appearance Transfer')%sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
+%title(sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
 
 if add_one == 1
   %transfer objects here
@@ -126,7 +237,6 @@ if add_one == 1
 
     axes(ha(4));
   
-
     imagesc(I)
     axis image
     axis off
@@ -150,6 +260,10 @@ if add_one == 1
                               models{1}.cls));
       curcolor = c(aa,:);
       curcolor = [1 1 0];
+      curcolor = [0 1 0];
+      if corr == 0
+        curcolor = [1 0 0 ];
+      end
 
       curbb = clip_to_image(topboxes(1,:),[1 1 size(I,2) size(I, ...
                                                   1)]);

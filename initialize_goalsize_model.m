@@ -144,6 +144,9 @@ localizeparams.lpo = 10;
 localizeparams.SAVE_SVS = 1;
 localizeparams.FLIP_LR = 0;
 localizeparams.pyramid_padder = 5;
+localizeparams.dfun = 0;
+
+
 [rs,t] = localizemeHOG(I,mmm,localizeparams);
 target_bb = rs.bbs{1}(1,:);
 target_x = rs.xs{1}{1};

@@ -1,10 +1,9 @@
-function voc_template(dataset_params, cls)
+%function voc_template(dataset_params, cls)
 %% This is the main VOC driver script for both scenes and exemplars
 
 if ~exist(dataset_params.devkitroot,'dir')
   mkdir(dataset_params.devkitroot);
 end
-
 resfile = [dataset_params.devkitroot '/dataset_params.mat'];
 if ~fileexists(resfile)
   %Save the parameters so we know later how we generated this run
@@ -33,6 +32,9 @@ CACHE_FILE = 1;
 STRIP_FILE = 0;
 models = load_all_models(dataset_params, cls, models_name, ...
                          efiles, CACHE_FILE, STRIP_FILE);
+
+%dump icons
+dump_memex_icons(dataset_params,models);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% EXEMPLAR TRAINING %%%%%%%%%%%
@@ -113,6 +115,9 @@ if isfield(dataset_params,'val_params')
     M = calibrate_and_estimate_M(dataset_params, models, ...
                                  val_grid, val_set, CACHE_BETAS);
     
+    %% draw the memex graph
+    draw_memex(dataset_params,models,val_grid,val_set,M);
+    return;
   end
 else
   fprintf(1,['Skipping validation becuase dataset_params.val_params not' ...
@@ -156,7 +161,7 @@ if isfield(dataset_params,'test_params')
   test_grid = load_result_grid(dataset_params, models, ...
                                curparams.set_name, test_files);
   
-  %Show all raw detections on test-set as a "memex browser"
+  %Show all raw detections on test-set as a "meme browser"
   %show_memex_browser2(dataset_params, models, test_grid,...
   %                   test_set, curparams.set_name);
 
@@ -182,7 +187,6 @@ end
 %If no calibration was performed, then we dont do calibrated rounds
 if length(M) > 0
   
-  if 0
   % %% Evaluation of laboo + M matrix
   test_struct = pool_exemplar_detections(dataset_params, models, test_grid, M);
   
@@ -199,14 +203,11 @@ if length(M) > 0
   show_memex_browser2(dataset_params, models, test_struct,...
                       test_set, curparams.set_name, rc);
 
-
   
   %% Show top detections for laboo + M matrix
   %show_top_dets(dataset_params, models, test_grid,...
   %              test_set, curparams.set_name, ...
   %              test_struct);
-
-  end
   
   %% Evaluation of l.a.b.o.o. afer training
   M2 = [];
@@ -220,20 +221,16 @@ if length(M) > 0
                                          models, test_grid, ...
                                          curparams.set_name,...
                                          test_struct);
-    rc = results.corr;    
-    test_struct.rc = rc;
+    
     %% Show top detections from l.a.b.o.o.
-    show_top_dets(dataset_params, models, test_grid,...
-                  test_set, curparams.set_name, ...
-                  test_struct);
-
+    %show_top_dets(dataset_params, models, test_grid,...
+    %              test_set, dataset_params.testset_name, ...
+    %              test_struct);
+    rc = results.corr;
   end  
-
 
   show_memex_browser2(dataset_params, models, test_struct,...
                       test_set, curparams.set_name, rc);
-  
-  return;
 
 end
 

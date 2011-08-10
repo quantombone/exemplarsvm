@@ -2,7 +2,7 @@ clear;
 
 %% Initialize dataset
 VOCYEAR = 'VOC2007';
-suffix = '/nfs/baikal/tmalisie/nn311-wiggles/';
+suffix = '/nfs/baikal/tmalisie/nn311/';
 dataset_params = get_voc_dataset(VOCYEAR,suffix);
 dataset_params.display = 0;
 
@@ -16,8 +16,6 @@ dataset_params.SKIP_EVAL = 0;
 if 1
   %Initialize framing function
   init_params.sbin = 8;
-  init_params.wiggle_type = 1;
-  init_params.wiggle_number = 100;
   init_params.goal_ncells = 100;
   init_params.MAXDIM = 12;
   init_params.init_function = @initialize_goalsize_model;
@@ -87,33 +85,35 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
-classes = {'bus'};
-% classes = {...
-%     'aeroplane'
-%     'bicycle'
-%     'bird'
-%     'boat'
-%     'bottle'
-%     'bus'
-%     'cat'
-%     'car'
-%     'chair'
-%     'cow'
-%     'diningtable'
-%     'dog'
-%     'horse'
-%     'motorbike'
-%     'person'
-%     'pottedplant'
-%     'sheep'
-%     'sofa'
-%     'train'
-%     'tvmonitor'
-% };
-
-%myRandomize;
-%r = randperm(length(classes));
-%classes = classes(r);
+%classes = {'bus'};
+classes = {...
+    'aeroplane'
+    'bicycle'
+    'bird'
+    'boat'
+    'bottle'
+    'bus'
+    'cat'
+ %   'car'
+    'chair'
+    'cow'
+    'diningtable'
+    'dog'
+    'horse'
+    'motorbike'
+%    'person'
+    'pottedplant'
+    'sheep'
+    'sofa'
+    'train'
+    'tvmonitor'
+};
+%classes = {'person'};
+%classes = {'train'};
+%classes = {'bicycle','train','car','dog','cat'};
+myRandomize;
+r = randperm(length(classes));
+classes = classes(r);
 
 %plot_voc_results(dataset_params);
 %return;
@@ -142,5 +142,6 @@ for i = 1:length(classes)
 
   %dataset_params.JUST_TRAIN = 1;
   %dataset_params.JUST_TRAIN_AND_LOAD = 1;
-  voc_template(dataset_params, classes{i});
+  cls = classes{i};
+  voc_template_memex;
 end

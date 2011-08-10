@@ -42,7 +42,7 @@ dataset_params.init_params = init_params;
 
 %Initialize exemplar stream
 dataset_params.stream_set_name = 'trainval';
-dataset_params.stream_max_ex = 5000;
+dataset_params.stream_max_ex = 10000;
 
 dataset_params.must_have_seg = 0;
 dataset_params.must_have_seg_string = '';
@@ -89,26 +89,27 @@ dataset_params.models_name = ...
      dataset_params.model_type];
 
 classes = {...
-    'bicycle'
-    'train'
-    'tvmonitor'
-    'bird'
-    'boat'
-    'bottle'
-    'aeroplane'
-    'bus'
-    'cat'
-    'cow'
-    'diningtable'
-    'horse'
-    'motorbike'
-    'sheep'
-    'sofa'
-    'dog'
-    'car'
+    % 'bus'
+    % 'bicycle'
+    % 'train'
+    % 'tvmonitor'
+    % 'bird'
+    % 'boat'
+    % 'bottle'
+    % 'aeroplane'
+    % 'cat'
+    % 'cow'
+    % 'diningtable'
+    % 'horse'
+    % 'motorbike'
+    % 'sheep'
+    % 'sofa'
+    % 'dog'
+    %'car'
     'pottedplant'
     'chair'
-    'person'};
+    % 'person'
+          };
 
 %myRandomize;
 %r = randperm(length(classes));
@@ -119,7 +120,6 @@ classes = {...
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
   dataset_params = save_dataset_params;
-  
   
    if isfield(dataset_params,'mining_params')
      %Training set is images not containing in-class instances
@@ -141,5 +141,6 @@ for i = 1:length(classes)
 
   %dataset_params.JUST_TRAIN = 1;
   %dataset_params.JUST_TRAIN_AND_LOAD = 1;
+  dataset_params.JUST_APPLY = 1;
   voc_template(dataset_params, classes{i});
 end

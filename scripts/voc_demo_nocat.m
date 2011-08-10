@@ -2,7 +2,7 @@ clear;
 
 %% Initialize dataset
 VOCYEAR = 'VOC2007';
-suffix = '/nfs/baikal/tmalisie/nn311/';
+suffix = '/nfs/baikal/tmalisie/CF311/';
 dataset_params = get_voc_dataset(VOCYEAR,suffix);
 dataset_params.display = 0;
 
@@ -47,16 +47,19 @@ dataset_params.model_type = 'exemplar';
 
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
-dataset_params.params.nnmode = 'normalizedhog';
-dataset_params.params.TOPK = 1;
+dataset_params.params.wtype = 'w';
+dataset_params.params.dfun = 0;
+%dataset_params.params.nnmode = 'normalizedhog';
 
-if 0
+
+if 1
   %Choose the training function (do_svm, do_rank, ...)
   %Disable NMS in training params
   dataset_params.mining_params = dataset_params.params;
   dataset_params.mining_params.training_function = @do_svm;
   dataset_params.mining_params.NMS_OS = 1.0;
   dataset_params.mining_params.MAXSCALE = 0.5;
+  dataset_params.mining_params.TOPK = 100;
   dataset_params.mining_params.set_name = 'train';
   %optional cap
   %dataset_params.mining_params.set_maxk = 0;
@@ -85,65 +88,55 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
-%classes = {'bus','motorbike','cow','tvmonitor','bottle'};
+%classes = {'bus'};
+classes = {...
+    %'horse'
+    %'boat'
+    %'sofa'
+    %'diningtable'
+    %'bottle'
+    %'chair'
+    %'car'
+    %'pottedplant'
+    %'bird'
+    %'cat'
+    %'chair'
+    'person'
+};
+%classes = {'person'};
+%classes = {'train'};
 
-classes={...
-    % 'aeroplane'
-    % 'bicycle'
-    % 'bird'
-    % 'boat'
-    % 'bottle'
-    % 'bus'
-    'car'
-    'cat'
-    'chair'
-    'cow'
-    'diningtable'
-    'dog'
-    'horse'
-    'motorbike'
-    'pottedplant'
-    'sheep'
-    'sofa'
-    'train'
-    'tvmonitor'};
+%classes = {'bicycle','tvmonitor','dog','aeroplane'};
+myRandomize;
+r = randperm(length(classes));
+classes = classes(r);
 
-% classes = {...
-%     'sheep'
-%     'sofa'
-%     'train'
-%     'chair'
-%     'car'
-% };
-
-classes = {'person'};
-%myRandomize;
-%r = randperm(length(classes));
-%classes = classes(r);
-
+%plot_voc_results(dataset_params);
+%return;
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
   dataset_params = save_dataset_params;
   
-  % if isfield(dataset_params,'mining_params')
-  %   %Training set is images not containing in-class instances
-  %   dataset_params.mining_params.set_name = ...
-  %       [dataset_params.mining_params.set_name '-' classes{i}];
-  % end
+  
+  %if isfield(dataset_params,'mining_params')
+  %  %Training set is images not containing in-class instances
+  %  dataset_params.mining_params.set_name = ...
+  %      [dataset_params.mining_params.set_name '-' classes{i}];
+  %end
 
   % if isfield(dataset_params,'val_params')
   %   %Validate on in-class images only
   %   dataset_params.val_params.set_name = ...
   %       [dataset_params.val_params.set_name '+' classes{i}];
   % end
-  
+
   % if isfield(dataset_params,'test_params')
   %   %Test on in-class images only
   %   dataset_params.test_params.set_name = ...
   %       [dataset_params.test_params.set_name '+' classes{i}];
   % end
 
-  dataset_params.JUST_APPLY = 1;
-  dataset_params.SKIP_M = 1;
+  %dataset_params.JUST_TRAIN = 1;
+  %dataset_params.JUST_TRAIN_AND_LOAD = 1;
   voc_template(dataset_params, classes{i});
 end

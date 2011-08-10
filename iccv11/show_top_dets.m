@@ -7,9 +7,23 @@ function allbbs = show_top_dets(dataset_params, models, grid, fg, set_name, ...
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
+%Default exemplar-inpainting show mode
+%SHOW_MODE = 1;
+
+%Default segmentation show mode
+%SHOW_MODE = 2;
+
+%Mode to show 
+%SHOW_MODE = 3;
+
+suffix = '';
+
 %maxk is the maximum number of top detections we display
 if ~exist('maxk','var')
   maxk = 20;
+  if strcmp(models{1}.cls,'bus')
+    maxk = 100;
+  end
 end
 
 final_boxes = finalstruct.unclipped_boxes;
@@ -25,15 +39,17 @@ moses = cat(1,final_maxos{:});
 %% only good ones now!
 %bb = bb(moses(bb)>.5);
 
-if 0
+if 1
   fprintf(1,'Only segmentation ones here\n');
   %% get ones with segmentation only
   ids = cellfun2(@(x)x.curid,models(bbs(bb,6)));
-  VOCinit
+  %VOCinit
   has_seg = cellfun(@(x)fileexists(sprintf('%s/%s/SegmentationObject/%s.png',...
-                                           VOCopts.datadir, ...
-                                           VOCopts.dataset,x)),ids);
+                                           dataset_params.datadir, ...
+                                           dataset_params.dataset,x)),ids);
   bb = bb(find(has_seg));
+  finalstruct.rc = finalstruct.rc(find(has_seg));
+  suffix = '.seg';
 end
 
 if 0
@@ -53,38 +69,38 @@ counter = 1;
 
 for k = 1:maxk
 
+  corr = finalstruct.rc(k);
   if 1 
     if counter > length(bb)
       break;
     end
     
-    wwwdir = sprintf('%s/www/%s.%s-%s%s/',dataset_params.localdir,...
-                     set_name, models{1}.cls, ...
+    wwwdir = sprintf('%s/www/%s.%s%s/',dataset_params.localdir,...
+                     set_name, ...
                      models{1}.models_name,finalstruct.calib_string);
     if ~exist(wwwdir,'dir')
       mkdir(wwwdir);
     end
     
-    filer = sprintf('%s/%05d.pdf',wwwdir,k);
+    filer = sprintf('%s/%s.%05d%s.eps',wwwdir,models{1}.cls,k,suffix);
     filerlock = [filer '.lock'];
-    if fileexists(filer) || (mymkdir_dist(filerlock) == 0)
+    if 0 %fileexists(filer) || (mymkdir_dist(filerlock) == 0)
       counter = counter + 1;
       continue
     end
 
     fprintf(1,'Top det %d\n', k);
-    
     allbbs(k,:) = bbs(bb(counter),:);
     
     curb = bb(counter);
     curid = grid{imids(curb)}.curid;
 
-    I = convert_to_I(fg{grid{imids(curb)}.index});
-
+    I = (convert_to_I(fg{bbs(bb(counter),11)}));
+    
     TARGET_BUS = -1;
 
     if TARGET_BUS > 0
-      gtrecs = PASreadrecord(sprintf(VOCopts.annopath,curid));
+      gtrecs = PASreadrecord(sprintf(dataset_params.annopath,curid));
       businds = find(ismember({gtrecs.objects.class},{'bus'}) & ~[gtrecs.objects.difficult]);
       gtbbs = cat(1,gtrecs.objects.bbox);
       gtbbs = gtbbs(businds,:);
@@ -154,6 +170,8 @@ for k = 1:maxk
                                        models{allbb(zzz,6)}, ...
                                        stuff);
     end
+
+
     %sumI = sumI ./ repmat(countI,[1 1 3]);
     
     if TARGET_BUS > -1
@@ -179,20 +197,25 @@ for k = 1:maxk
     figure(1)
     clf
 
+    current_rank = k;
     NR = show_hits_figure_iccv(I,models,allbb, ...
-                               overlays);
-
+                               overlays,current_rank, corr);
+    axis image
     drawnow
-    set(gcf,'PaperPosition',[0 0 2*NR(1) 2*NR(2)],...
-            'PaperSize',[2*NR(1) 2*NR(2)]);
     
-    print(gcf,'-dpdf',filer);
-    rmdir(filerlock);
-    filer2 = filer;
-    filer2(end-2:end) = 'png';
-    print(gcf,'-dpng',filer2);
+    print(gcf,'-depsc2',filer);
+    unix(sprintf('ps2pdf -dEPSCrop -dPDFSETTINGS=/prepress %s %s',...
+                 filer,strrep(filer,'.eps','.pdf')));
+
+    unix(sprintf('rm %s',filer));
+    
+    if exist(filerlock,'dir')
+      rmdir(filerlock);
+    end
+    %filer2 = filer;
+    %filer2(end-2:end) = 'png';
+    %print(gcf,'-dpng',filer2);
        
-    counter = counter+1;
-    
+    counter = counter+1;    
   end
 end

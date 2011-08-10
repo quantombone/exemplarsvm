@@ -1,10 +1,9 @@
-function voc_template(dataset_params, cls)
+%function voc_template(dataset_params, cls)
 %% This is the main VOC driver script for both scenes and exemplars
 
 if ~exist(dataset_params.devkitroot,'dir')
   mkdir(dataset_params.devkitroot);
 end
-
 resfile = [dataset_params.devkitroot '/dataset_params.mat'];
 if ~fileexists(resfile)
   %Save the parameters so we know later how we generated this run
@@ -49,7 +48,8 @@ if isfield(dataset_params,'mining_params')
     train_set = train_set(1:min(length(train_set), ...
                                 curparams.set_maxk));
   end
-    
+
+  %NOTE: here we dump support vector images
   [tfiles, models_name] = train_all_exemplars(dataset_params, ...
                                               models, train_set);  
   
@@ -61,6 +61,8 @@ if isfield(dataset_params,'mining_params')
   %Load the trained exemplars (this will hold script until all
   %exemplars have been trained)
   CACHE_FILE = 1;
+  
+  %%NOTE: load full thingy
   STRIP_FILE = 1;
   models = load_all_models(dataset_params, cls, models_name, ...
                            tfiles, CACHE_FILE, STRIP_FILE);
@@ -80,45 +82,48 @@ end
 %%%%%% EXEMPLAR CROSS VALIDATION %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Apply trained exemplars on validation set
-if isfield(dataset_params,'val_params')
-  curparams = dataset_params.val_params;
-  val_set = get_pascal_set(dataset_params, ...
-                           curparams.set_name);
-  if isfield(curparams,'set_maxk')
-    val_set = val_set(1:min(length(val_set), ...
-                            curparams.set_maxk));
-  end
+% %% Apply trained exemplars on validation set
+% if isfield(dataset_params,'val_params')
+%   curparams = dataset_params.val_params;
+%   val_set = get_pascal_set(dataset_params, ...
+%                            curparams.set_name);
+%   if isfield(curparams,'set_maxk')
+%     val_set = val_set(1:min(length(val_set), ...
+%                             curparams.set_maxk));
+%   end
 
-  dataset_params.params = curparams;
-  dataset_params.params.gt_function = @get_pascal_anno_function;
-  val_files = apply_all_exemplars(dataset_params, models, val_set, ...
-                                  curparams.set_name);
+%   dataset_params.params = curparams;
+%   dataset_params.params.gt_function = @get_pascal_anno_function;
+%   val_files = apply_all_exemplars(dataset_params, models, val_set, ...
+%                                   curparams.set_name);
 
-  if isfield(dataset_params, 'JUST_APPLY') && ...
-        (dataset_params.JUST_APPLY==1)
-    fprintf(1,'only applying because JUST_APPLY is enabled\n');
-    %do nothing
-  else
+%   if isfield(dataset_params, 'JUST_APPLY') && ...
+%         (dataset_params.JUST_APPLY==1)
+%     fprintf(1,'only applying because JUST_APPLY is enabled\n');
+%     %do nothing
+%   else
   
-    %Load validation results
-    val_grid = load_result_grid(dataset_params, models, ...
-                                curparams.set_name, val_files);
+%     %Load validation results
+%     val_grid = load_result_grid(dataset_params, models, ...
+%                                 curparams.set_name, val_files);
     
-    %val_struct is not used
-    %val_struct = pool_exemplar_detections(dataset_params, models, val_grid);
+%     %val_struct is not used
+%     %val_struct = pool_exemplar_detections(dataset_params, models, val_grid);
     
-    %% Perform l.a.b.o.o. calibration and M-matrix estimation
-    CACHE_BETAS = 1;
-    M = calibrate_and_estimate_M(dataset_params, models, ...
-                                 val_grid, val_set, CACHE_BETAS);
+%     %% Perform l.a.b.o.o. calibration and M-matrix estimation
+%     CACHE_BETAS = 0;
+%     dataset_params.display = 1;
+%     perform_hitdump(dataset_params, models, val_grid, val_set, ...
+%                     CACHE_BETAS,curparams.set_name);
     
-  end
-else
-  fprintf(1,['Skipping validation becuase dataset_params.val_params not' ...
-             ' present\n']);
-  M = [];
-end
+%     %M = calibrate_and_estimate_M(dataset_params, models, ...
+%     %                             val_grid, val_set, CACHE_BETAS);
+%   end
+% else
+%   fprintf(1,['Skipping validation becuase dataset_params.val_params not' ...
+%              ' present\n']);
+%   M = [];
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% EXEMPLAR TESTING %%%%%%%%%%%%
@@ -159,7 +164,14 @@ if isfield(dataset_params,'test_params')
   %Show all raw detections on test-set as a "memex browser"
   %show_memex_browser2(dataset_params, models, test_grid,...
   %                   test_set, curparams.set_name);
+  
+  CACHE_BETAS = 0;
+  dataset_params.display = 1;
+  perform_hitdump(dataset_params, models, test_grid, test_set, ...
+                  CACHE_BETAS,curparams.set_name);
 
+  
+  return;
 
 else
   fprintf(1,['Skipping testing becuase dataset_params.test_params not' ...
@@ -182,7 +194,6 @@ end
 %If no calibration was performed, then we dont do calibrated rounds
 if length(M) > 0
   
-  if 0
   % %% Evaluation of laboo + M matrix
   test_struct = pool_exemplar_detections(dataset_params, models, test_grid, M);
   
@@ -199,14 +210,11 @@ if length(M) > 0
   show_memex_browser2(dataset_params, models, test_struct,...
                       test_set, curparams.set_name, rc);
 
-
   
   %% Show top detections for laboo + M matrix
   %show_top_dets(dataset_params, models, test_grid,...
   %              test_set, curparams.set_name, ...
   %              test_struct);
-
-  end
   
   %% Evaluation of l.a.b.o.o. afer training
   M2 = [];
@@ -220,20 +228,16 @@ if length(M) > 0
                                          models, test_grid, ...
                                          curparams.set_name,...
                                          test_struct);
-    rc = results.corr;    
-    test_struct.rc = rc;
+    
     %% Show top detections from l.a.b.o.o.
-    show_top_dets(dataset_params, models, test_grid,...
-                  test_set, curparams.set_name, ...
-                  test_struct);
-
+    %show_top_dets(dataset_params, models, test_grid,...
+    %              test_set, dataset_params.testset_name, ...
+    %              test_struct);
+    rc = results.corr;
   end  
-
 
   show_memex_browser2(dataset_params, models, test_struct,...
                       test_set, curparams.set_name, rc);
-  
-  return;
 
 end
 

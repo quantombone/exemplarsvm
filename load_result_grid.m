@@ -75,9 +75,11 @@ for i = 1:length(files)
   end
 end
 
-%NOTE: I'm not sure that pruning here isn't going to hurt me later
-%since we no longer have a direct mapping between detections and
-%the test-set ids
+if 0
+  
+%BUG: I'm not sure that pruning here isn't going to hurt me later
+%since we no longer have a direct mapping between detections and the
+%test-set ids
 
 %Prune away files which didn't load
 lens = cellfun(@(x)length(x),grid);
@@ -85,6 +87,9 @@ grid = grid(lens>0);
 grid = cellfun2(@(x)x.res,grid);
 grid2 = grid;
 grid = [grid2{:}];
+else
+  fprintf(1,'warning skipping pruning\n');
+end
 
 if length(grid) > 0
   
@@ -102,6 +107,13 @@ end
 %  return;
 %else
 save(final_file,'grid');
+
 if exist(lockfile,'dir')
   rmdir(lockfile);
+end
+
+f = dir(final_file);
+if (f.bytes < 1000)
+  fprintf(1,'warning file too small, not saved\n');
+  delete(final_file);
 end

@@ -4,7 +4,7 @@ clear;
 VOCYEAR = 'VOC2007';
 suffix = '/nfs/baikal/tmalisie/nn311/';
 dataset_params = get_voc_dataset(VOCYEAR,suffix);
-dataset_params.display = 0;
+dataset_params.display = 1;
 
 %Do not skip evaluation, unless it is VOC2010
 dataset_params.SKIP_EVAL = 0;
@@ -47,7 +47,7 @@ dataset_params.model_type = 'exemplar';
 
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
-dataset_params.params.nnmode = 'normalizedhog';
+dataset_params.params.nnmode = 'nndfun';
 dataset_params.params.TOPK = 1;
 
 if 0
@@ -116,7 +116,7 @@ classes={...
 %     'car'
 % };
 
-classes = {'person'};
+classes = {'bus'};
 %myRandomize;
 %r = randperm(length(classes));
 %classes = classes(r);
@@ -131,11 +131,11 @@ for i = 1:length(classes)
   %       [dataset_params.mining_params.set_name '-' classes{i}];
   % end
 
-  % if isfield(dataset_params,'val_params')
-  %   %Validate on in-class images only
-  %   dataset_params.val_params.set_name = ...
-  %       [dataset_params.val_params.set_name '+' classes{i}];
-  % end
+  if isfield(dataset_params,'val_params')
+    %Validate on in-class images only
+    dataset_params.val_params.set_name = ...
+        [dataset_params.val_params.set_name '+' classes{i}];
+  end
   
   % if isfield(dataset_params,'test_params')
   %   %Test on in-class images only
@@ -143,7 +143,6 @@ for i = 1:length(classes)
   %       [dataset_params.test_params.set_name '+' classes{i}];
   % end
 
-  dataset_params.JUST_APPLY = 1;
-  dataset_params.SKIP_M = 1;
+  %dataset_params.JUST_APPLY = 1;
   voc_template(dataset_params, classes{i});
 end

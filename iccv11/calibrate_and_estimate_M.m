@@ -13,7 +13,10 @@ end
 betas = perform_calibration(dataset_params, models, grid, ...
                             cur_set, CACHE_FILES);
 
-%% Estimate the co-occurrence matrix M
-[M] = estimate_M(dataset_params, models, grid, betas, CACHE_FILES);
+if ~(isfield(dataset_params,'SKIP_M') && dataset_params.SKIP_M==1)
+  %% Estimate the co-occurrence matrix M
+  [M] = estimate_M(dataset_params, models, grid, betas, ...
+                   CACHE_FILES);
+end
 
 M.betas = betas;

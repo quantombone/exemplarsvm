@@ -1,4 +1,5 @@
-function plot_voc_results(dataset_params)
+function plot_voc_results_horiz(dataset_params)
+%Horizontal plotting of results
 
 c = dataset_params.classes;
 
@@ -42,7 +43,22 @@ aps(:,end+1) = cz;
 aps(:,end+1) = dt(1:length(c));
 aps(:,end+1) = ldpm(1:length(c));
 
-imfiler = sprintf(['%s/res_table2.tex'],dataset_params.localdir);
+imfiler = sprintf(['%s/res_table_horiz.tex'], ...
+                  dataset_params.localdir);
+fid = fopen(imfiler,'w');
+for i = 1:size(aps,2)
+  fprintf(fid,'%.3f',aps(1,i));
+  for j = 2:size(aps,1)
+    fprintf(fid,'& %.3f',aps(j,i));
+  end
+  fprintf(fid,'\\\\\n');
+end
+
+fclose(fid);
+
+imfiler = sprintf(['%s/res_table_old.tex'], ...
+                  dataset_params.localdir);
+
 fid = fopen(imfiler,'w');
 fprintf(fid,['\\footnotesize\n\\begin{table}\n\\begin{center}\n\\begin{tabular}{|l||' ...
              'c|c|c|c|c|c|c|c|c|c|}\n\\hline\n']);
@@ -74,8 +90,9 @@ fprintf(fid,'\\hline\n');
 fprintf(fid,'\\end{tabular}\n\\end{center}\n\\caption{hi}\n\\end{table}');
 fclose(fid);
 
-fprintf(1,'keyboard in plot results\n');
-keyboard
+fprintf(1,'return in plot results\n');
+return;
+
 
 files{1} = dir([dataset_params.resdir '/' m1 '*test_results.mat']);
 files{2} = dir([dataset_params.resdir '/' m1 '*calibrated' ...

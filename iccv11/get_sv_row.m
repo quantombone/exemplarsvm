@@ -1,5 +1,5 @@
-function Isv = get_sv_stack(m, K2, K1)
-% Create a K1xK2 image which visualizes the detection windows, as
+function Isv = get_sv_row(m, K)
+% Create a 1 x (K+3) image which visualizes the detection windows, as
 % well as information about the trained exemplar m
 % The first shows shows [exemplar image, w+, w-, sum(w.*x,3),
 % mean0, mean 1, ... ,mean N]
@@ -13,17 +13,6 @@ if (sum(m.model.w(:)<0) == 0) || ...
   m.model.w = (abs(m.model.w)).^2;
 end
 
-if ~exist('K2','var')
-  K1 = 5;
-  K2 = 5;
-end
-
-if ~exist('K1','var')
-  K1 = K2;
-end
-
-K1 = max(K1,5);
-K2 = max(K2,5);
 
 %% sort by score
 if isfield(m.model,'svxs') && (numel(m.model.svxs)>0)
@@ -53,8 +42,9 @@ if exist('m','var')
   hogpic = jettify(hogpic);
 end
 
+
 N = size(m.model.svbbs,1);
-N = min(N,K1*K2);
+N = min(N,K);
 
 svbbs = m.model.svbbs(1:N,:);
 
@@ -123,17 +113,18 @@ indicator = ones(length(svims), 1);
 NSHIFT_BASE = 3;
 
 svimstack = cat(4,svims{:});
-NMS = K2-NSHIFT_BASE;
-if NMS == 1
-  cuts(1) = size(svimstack,4);
-else
-  cuts = round(linspace(1,size(svimstack,4),NMS+1));
-  cuts = cuts(2:end);
-end
+mss = mean(svimstack(:,:,:,1:(K-3)),4);
+% NMS = K2-NSHIFT_BASE;
+% if NMS == 1
+%   cuts(1) = size(svimstack,4);
+% else
+%   cuts = round(linspace(1,size(svimstack,4),NMS+1));
+%   cuts = cuts(2:end);
+% end
 
-for i = 1:length(cuts)
-  mss{i} = mean(svimstack(:,:,:,1:cuts(i)),4);
-end
+% for i = 1:length(cuts)
+%   mss{i} = mean(svimstack(:,:,:,1:cuts(i)),4);
+% end
 
 PADSIZE = 5;
 
@@ -150,19 +141,19 @@ for i = 1:numel(svims)
   end
 end
 
-if length(svims)<K1*K2
-  svims{K1*K2} = zeros(newsize(1)+PADSIZE*2,...
-                       newsize(2)+PADSIZE*2,3);
+if length(svims)<K
+  svims{K} = zeros(newsize(1)+PADSIZE*2,...
+                   newsize(2)+PADSIZE*2,3);
 end
 
-for j = (N+1):(K1*K2)
+for j = (N+1):(K)
   svims{j} = zeros(newsize(1)+PADSIZE*2,...
                    newsize(2)+PADSIZE*2,3);
 end
 
 %mx = mean(m.model.x,2);
 mx = m.model.w(:)*0;
-raw_picture = HOGpicture(reshape(mx-mean(mx(:)),m.model.hg_size));
+%raw_picture = HOGpicture(reshape(mx-mean(mx(:)),m.model.hg_size));
 pos_picture = HOGpicture(m.model.w);
 neg_picture = HOGpicture(-m.model.w);
 %spatial_picture = sum(m.model.w.*reshape(mean(m.model.x,2), ...
@@ -171,32 +162,36 @@ neg_picture = HOGpicture(-m.model.w);
 %spatial_picture = imresize(jettify(spatial_picture),[size(pos_picture,1) ...
 %                    size(pos_picture,2)],'nearest');
 
-raw_picture = jettify(imresize(raw_picture,newsize,'nearest'));
+%raw_picture = jettify(imresize(raw_picture,newsize,'nearest'));
 pos_picture = jettify(imresize(pos_picture,newsize,'nearest'));
-neg_picture = jettify(imresize(neg_picture,newsize,'nearest'));
-%spatial_picture = imresize(spatial_picture,newsize,'nearest');
-
+%neg_picture = jettify(imresize(neg_picture,newsize,'nearest'));
 %first four slots are reserved for the image
 
-NSHIFT = length(mss) + NSHIFT_BASE;
+%NSHIFT = length(mss) + NSHIFT_BASE;
+%NSHIFT = 2;
 
-svims((NSHIFT+1):end) = svims(1:end-NSHIFT);
+
+svims(3:end) = svims(1:end-2);
 
 %ex goes in slot 1
-svims{1} = max(0.0,min(1.0,imresize(Ibase,[size(pos_picture,1),size(pos_picture, ...
-                                                  2)])));
+svims{1} = max(0.0, min(1.0, imresize(Ibase,[size(pos_picture,1), ...
+                    size(pos_picture, 2)])));
+
+%HOG pic goes in slot 2
 svims{2} = pos_picture;
-svims{3} = neg_picture;
+%svims{3} = neg_picture;
 
-svims(NSHIFT_BASE+(1:length(mss))) = mss;
+%last one is MEAN pic
+svims{end} = mss;
 
-for q = 1:(NSHIFT_BASE+length(mss))
-  svims{q} = pad_image(svims{q},PADSIZE,[1 1 1]);
-end
 
-svims = reshape(svims,K1,K2)';
-for j = 1:K2
-  svrows{j} = cat(2,svims{j,:});
-end
+% svims = reshape(svims,K1,K2)';
+% for j = 1:K2
+%   svrows{j} = cat(2,svims{j,:});
+% end
 
-Isv = cat(1,svrows{:});
+svims{1} = pad_image(svims{1},PADSIZE,[1 0 0]);
+svims{2} = pad_image(svims{2},PADSIZE,[1 1 1]);
+svims{end} = pad_image(svims{end},PADSIZE,[0 0 1]);
+
+Isv = cat(2,svims{:});
