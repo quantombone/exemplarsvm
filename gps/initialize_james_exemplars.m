@@ -1,4 +1,5 @@
 function initialize_james_exemplars;
+error('deprecated: using old initialize code')
 % Initialize exemplars from James Hays' SIGGRAPH scene completion paper
 
 % Tomasz Malisiewicz (tomasz@cmu.edu)
