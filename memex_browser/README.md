@@ -1,4 +1,4 @@
-The <b>memex browser</b> is a javascript/html based visualization of
+The <b>memex browser</b> is an <b>experimental</b> javascript/html based visualization of
 all of the exemplar detection results.
 
 It provides a sort of graph-based traversal of a large collection of
