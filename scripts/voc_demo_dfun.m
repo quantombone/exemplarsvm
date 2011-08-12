@@ -39,7 +39,7 @@ dataset_params.init_params = init_params;
 
 %Initialize exemplar stream
 dataset_params.stream_set_name = 'trainval';
-dataset_params.stream_max_ex = 5000;
+dataset_params.stream_max_ex = 5000; %1250;
 
 dataset_params.must_have_seg = 0;
 dataset_params.must_have_seg_string = '';
@@ -48,6 +48,7 @@ dataset_params.model_type = 'exemplar';
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
 dataset_params.params.wtype = 'dfun';
+dataset_params.params.dfun = 1;
 
 
 if 1
@@ -89,8 +90,6 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
-
-
 classes = {...
      'bicycle'
      'tvmonitor'
@@ -117,6 +116,7 @@ classes = {...
 %classes = {'bus'};
 
 classes = {'person'};
+
 %classes = {'train'};
 %myRandomize;
 %r = randperm(length(classes));
@@ -146,8 +146,8 @@ for i = 1:length(classes)
   %       [dataset_params.test_params.set_name '+' classes{i}];
   % end
 
-  dataset_params.JUST_TRAIN = 1;
+  %dataset_params.JUST_TRAIN = 1;
   %dataset_params.JUST_TRAIN_AND_LOAD = 1;
-  %dataset_params.JUST_APPLY = 1;
+  dataset_params.JUST_APPLY = 1;
   voc_template(dataset_params, classes{i});
 end
