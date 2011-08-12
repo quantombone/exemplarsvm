@@ -46,6 +46,9 @@ for i = 1:length(files)
   %                baser,files(i).name);
   filer = files{i};
   stuff = load(filer);
+  
+
+  
   grid{i} = stuff;
   
   for j = 1:length(grid{i}.res)
@@ -56,7 +59,11 @@ for i = 1:length(files)
       grid{i}.res{j}.bboxes(:,11) = index;
       grid{i}.res{j}.coarse_boxes(:,11) = index;
     
-      goods = find(grid{i}.res{j}.bboxes(:,end) >= curthresh);
+      %curids = 1:1250;
+      %iscurid = (ismember(grid{i}.res{j}.bboxes(:,6),curids));
+      
+      
+      goods = find(grid{i}.res{j}.bboxes(:,end) >= curthresh);% & iscurid);
       grid{i}.res{j}.bboxes = grid{i}.res{j}.bboxes(goods,:);
       grid{i}.res{j}.coarse_boxes = ...
           grid{i}.res{j}.coarse_boxes(goods,:);
@@ -75,7 +82,7 @@ for i = 1:length(files)
   end
 end
 
-if 0
+if 1
   
 %BUG: I'm not sure that pruning here isn't going to hurt me later
 %since we no longer have a direct mapping between detections and the

@@ -86,6 +86,7 @@ for q = 1:N
   maxers{q} = -inf;
 end
 
+
 if localizeparams.dfun == 1
   wxs = cellfun2(@(x)reshape(x.model.x(:,1),size(x.model.w)), ...
                  models);
@@ -221,6 +222,7 @@ for i = 1:length(models)
     x(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
         reshape(models{i}.model.x(:,1),models{i}.model.hg_size);
     templates_x(:,:,:,i) = x;
+
   end
 end
 
@@ -268,7 +270,6 @@ exemplar_matrix = reshape(templates,[],size(templates,4));
 
 if isfield(localizeparams,'wtype') && ...
       strcmp(localizeparams.wtype,'dfun')==1
-  
   W = exemplar_matrix;
   U = reshape(templates_x,[],length(models));
   r2 = repmat(sum(W.*(U.^2),1)',1,size(X,2));

@@ -199,7 +199,6 @@ if length(M) > 0
   show_memex_browser2(dataset_params, models, test_struct,...
                       test_set, curparams.set_name, rc);
 
-
   
   %% Show top detections for laboo + M matrix
   %show_top_dets(dataset_params, models, test_grid,...
@@ -223,17 +222,17 @@ if length(M) > 0
     rc = results.corr;    
     test_struct.rc = rc;
     %% Show top detections from l.a.b.o.o.
-    show_top_dets(dataset_params, models, test_grid,...
-                  test_set, curparams.set_name, ...
-                  test_struct);
+    % show_top_dets(dataset_params, models, test_grid,...
+    %               test_set, curparams.set_name, ...
+    %               test_struct);
 
   end  
 
 
-  show_memex_browser2(dataset_params, models, test_struct,...
-                      test_set, curparams.set_name, rc);
+  % show_memex_browser2(dataset_params, models, test_struct,...
+  %                     test_set, curparams.set_name, rc);
   
-  return;
+  % return;
 
 end
 
