@@ -1,6 +1,6 @@
 ---
 ExemplarSVM readme
-![](https://github.com/quantombone/exemplarsvm/raw/master/images/mono.png)
+![](https://github.com/quantombone/exemplarsvm/raw/master/images/exemplar_classifiers-small_n.png)
 ---- 
 Author: Tomasz Malisiewicz (tomasz@cmu.edu)
 
