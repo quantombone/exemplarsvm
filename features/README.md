@@ -9,3 +9,7 @@ http://people.cs.uchicago.edu/~pff/latent-release3/
 P. Felzenszwalb, R. Girshick, D. McAllester, D. Ramanan. Object Detection with Discriminatively Trained Part Based Models. PAMI 2010.
 
 features_raw.cc are the same features but without the contrast normalization.  They are definitely worse than when using normalization, but the effect has not been fully studied.
+
+fconvblas.cc comes from voc-release-4
+
+http://people.cs.uchicago.edu/~pff/latent-release4/
