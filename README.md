@@ -3,9 +3,11 @@ ExemplarSVM readme
 ![](https://github.com/quantombone/exemplarsvm/raw/master/images/exemplar_classifiers-small_n.png)
 ---- 
 Author + Executive Exemplar-SVM Developer: Tomasz Malisiewicz http://www.cs.cmu.edu/~tmalisie/
+
 Exemplar-SVM Fellow Developer: Abhinav Shrivastava http://www.abhinav-shrivastava.info/
 
 Exemplar-SVM Visionary: Alexei A. Efros http://www.cs.cmu.edu/~efros
+
 Exemplar-SVM Visionary: Abhinav Gupta http://www.cs.cmu.edu/~abhinavg
 
 
