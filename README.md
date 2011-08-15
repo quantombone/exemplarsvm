@@ -29,3 +29,5 @@ localization within a pyramid code (my variant of pedro's code from voc-release-
 ---
 Installation of PASCAL VOC Object Recognition Dataset
 Go to http://pascallin.ecs.soton.ac.uk/challenges/VOC/ for more information
+
+This is the experimental branch.
