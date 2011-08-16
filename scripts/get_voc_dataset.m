@@ -13,7 +13,7 @@ if nargin ~= 3
 end
 
 if ~exist('result_dir','var')
-  result_dir = '/nfs/baikal/tmalisie/summer11/';
+  result_dir = '/nfs/baikal/tmalisie/nn311/';
   fprintf(1,'Using default dataset directory: %s\n', result_dir);
 end
 
