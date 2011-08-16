@@ -33,12 +33,9 @@ else
   VOCopts.testset = target_directory;
 end
 
-resfile = sprintf('%s/%s.%s%s_%s_results.mat',VOCopts.resdir,...
-                  models{1}.models_name,...
-                  models{1}.cls,final.calib_string,...
-                  target_directory');
-
-
+resfile = sprintf('%s/%s.%s.%s%s_%s_results.mat',VOCopts.resdir, ...
+                  VOCopts.subname, models{1}.models_name, ...
+                  models{1}.cls,final.calib_string, target_directory');
 
 if CACHE_FILE == 1
   reslock = [resfile '.lock'];
@@ -56,8 +53,8 @@ end
 cls = models{1}.cls;
 
 mname = sprintf('%s%s',models{1}.models_name,final.calib_string);
-filer = sprintf('%s/%s/comp3_det_%s_%s.txt',...
-                VOCopts.resdir,mname,...
+filer = sprintf('%s/%s/%s/comp3_det_%s_%s.txt',...
+                VOCopts.resdir,VOCopts.subname,mname,...
                 target_directory,cls);
 
 %Create directory if it is not present
@@ -92,6 +89,8 @@ wait_until_all_present({filer});
 figure(2)
 clf
 VOCopts.filename = filer;
+
+VOCopts.detrespath = [VOCopts.detrespath '/' VOCopts.subname];
 [results.recall,results.prec,results.ap,results.apold,results.fp,results.tp,results.npos,results.corr] = VOCevaldet(VOCopts,'comp3',cls,true);
 
 if exist(filerlock,'dir')
@@ -104,18 +103,23 @@ set(get(gca,'YLabel'),'FontSize',16)
 set(get(gca,'XLabel'),'FontSize',16)
 axis([0 1 0 1]);
 
-filer = sprintf(['%s/www/%s-%s%s-on-%s.pdf'], ...
+filer = sprintf(['%s/www/%s-%s%s-on-%s-%s.pdf'], ...
                 VOCopts.localdir, ...
-                models{1}.cls,...
-                models{1}.models_name,...
+                models{1}.cls, ...
+                models{1}.models_name, ...
                 final.calib_string, ...
-                target_directory);
+                target_directory, ...
+                VOCopts.subname);
+
 [basedir,tmp,tmp] = fileparts(filer);
+
 if ~exist(basedir,'dir')
   mkdir(basedir);
 end
+
 set(gcf,'PaperPosition',[0 0 8 8])
 print(gcf,'-dpdf',filer);
+
 filer2 = strrep(filer,'.pdf','.png');
 print(gcf,'-dpng',filer2);
 
@@ -123,7 +127,6 @@ fprintf(1,'Just Wrote %s\n',filer);
 
 results.cls = models{1}.cls;
 drawnow
-
 
 if CACHE_FILE == 1
   %TODO: we are saving really large files for exemplarNN

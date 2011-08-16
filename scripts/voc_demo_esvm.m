@@ -1,4 +1,4 @@
-clear;
+%clear;
 
 %% Initialize dataset
 VOCYEAR = 'VOC2007';
@@ -116,8 +116,10 @@ classes = {...
 %classes = {'motorbike'};
 %classes = {'sheep'};
 %classes = {'person'};
-classes = {'bus'};
+%classes = {'bus'};
 
+%classes = {'motorbike'};
+classes = {'sheep','cow'};
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
@@ -149,5 +151,7 @@ for i = 1:length(classes)
 
   %dataset_params.JUST_TRAIN = 1;
   %dataset_params.JUST_TRAIN_AND_LOAD = 1;
-  voc_template(dataset_params, classes{i});
+  dataset_params.SKIP_M = 1;
+  NNN = 20;
+  voc_template(dataset_params, classes{i}, NNN);
 end

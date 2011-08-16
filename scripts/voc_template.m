@@ -1,5 +1,11 @@
-function voc_template(dataset_params, cls)
+function voc_template(dataset_params, cls, NNN)
 %% This is the main VOC driver script for both scenes and exemplars
+
+dataset_params.subname = 'rand20';
+
+if ~exist('NNN','var')
+  NNN = 20;
+end
 
 if ~exist(dataset_params.devkitroot,'dir')
   mkdir(dataset_params.devkitroot);
@@ -104,6 +110,30 @@ if isfield(dataset_params,'val_params')
     %Load validation results
     val_grid = load_result_grid(dataset_params, models, ...
                                 curparams.set_name, val_files);
+
+    %Define the exemplar subset to use
+    %exemplar_subset = 1:20;
+    rrr = randperm(length(models));
+    exemplar_subset = rrr(1:NNN);
+    
+    stringer =  'abcdefghijklmnopqrstuvwxyz';
+    %stringer(1:5);
+
+    rrr2 = randperm(length(stringer));
+    dataset_params.subname = sprintf('%s_N=%d', ...
+                                     stringer(rrr2(1:5)),...
+                                     NNN);
+
+    %dataset_params.subname = sprintf('%d+',exemplar_subset);
+    %exemplar_subset = 1:length(models);
+
+    
+    models = models(exemplar_subset);
+    
+    val_grid = prune_grid(val_grid, exemplar_subset);
+    
+    % need to prune to subset here
+    %keyboard
     
     %val_struct is not used
     %val_struct = pool_exemplar_detections(dataset_params, models, val_grid);
@@ -155,7 +185,7 @@ if isfield(dataset_params,'test_params')
   %Load test results
   test_grid = load_result_grid(dataset_params, models, ...
                                curparams.set_name, test_files);
-  
+  test_grid = prune_grid(test_grid,exemplar_subset);
   %Show all raw detections on test-set as a "memex browser"
   %show_memex_browser2(dataset_params, models, test_grid,...
   %                   test_set, curparams.set_name);
@@ -166,7 +196,7 @@ else
              ' present\n']);
   
   %If testing is not performed, there is nothing left to do
-  return;
+  %return;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -182,7 +212,7 @@ end
 %If no calibration was performed, then we dont do calibrated rounds
 if length(M) > 0
   
-  if 0
+  if 1
   % %% Evaluation of laboo + M matrix
   test_struct = pool_exemplar_detections(dataset_params, models, test_grid, M);
   
@@ -196,8 +226,8 @@ if length(M) > 0
     rc = results.corr;
   end
   
-  show_memex_browser2(dataset_params, models, test_struct,...
-                      test_set, curparams.set_name, rc);
+  %show_memex_browser2(dataset_params, models, test_struct,...
+  %                    test_set, curparams.set_name, rc);
 
   
   %% Show top detections for laboo + M matrix
@@ -249,8 +279,8 @@ if (dataset_params.SKIP_EVAL == 0)
   rc = results.corr;
 end
 
-show_memex_browser2(dataset_params, models, test_struct,...
-                    test_set, curparams.set_name, rc);
+%show_memex_browser2(dataset_params, models, test_struct,...
+%                    test_set, curparams.set_name, rc);
 
 %%% Show top detections from uncalibrated SVM classifiers
 % show_top_dets(dataset_params, models, test_grid,...
