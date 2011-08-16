@@ -127,9 +127,7 @@ if isfield(dataset_params,'val_params')
     %dataset_params.subname = sprintf('%d+',exemplar_subset);
     %exemplar_subset = 1:length(models);
 
-    
     models = models(exemplar_subset);
-    
     val_grid = prune_grid(val_grid, exemplar_subset);
     
     % need to prune to subset here
@@ -192,7 +190,7 @@ if isfield(dataset_params,'test_params')
 
 
 else
-  fprintf(1,['Skipping testing becuase dataset_params.test_params not' ...
+  fprintf(1,['Skipping testing because dataset_params.test_params not' ...
              ' present\n']);
   
   %If testing is not performed, there is nothing left to do
