@@ -2,7 +2,7 @@ clear;
 
 %% Initialize dataset
 VOCYEAR = 'VOC2007';
-suffix = '/nfs/baikal/tmalisie/nn311/';
+suffix = load_data_directory;
 dataset_params = get_voc_dataset(VOCYEAR,suffix);
 dataset_params.display = 1;
 
