@@ -29,7 +29,7 @@ PADDER = 100;
 Ipad = pad_image(I,PADDER);
 imagesc(I)
 for q = size(topboxes,1):-1:1
-  plot_bbox(topboxes(q,:),'',colors(q,:))
+  plot_bbox(topboxes(q,:),'',colors(q,:),colors(q,:))
 end
 axis image
 axis off
@@ -89,8 +89,8 @@ for i = 1:N
 
   subplot(N,6,6*(i-1)+3)
   imagesc(chunks{i});
-  plot_bbox([1 1 size(chunks{i},2) size(chunks{i},1)],'',colors(i,:));
-  title([num2str(topboxes(i,end)) ' ' models{topboxes(i,6)}.models_name]);
+  plot_bbox([1 1 size(chunks{i},2) size(chunks{i},1)],'',colors(i,:),colors(i,:));
+  title([num2str(topboxes(i,end))]);% ' ' models{topboxes(i,6)}.models_name]);
   axis image
   axis off
   
@@ -107,7 +107,7 @@ for i = 1:N
     Iex = flip_image(Iex);
   end
   imagesc(Iex)
-  plot_bbox([1 1 size(Iex,2) size(Iex,1)],'',colors(i,:));
+  plot_bbox([1 1 size(Iex,2) size(Iex,1)],'',colors(i,:),colors(i,:));
   axis image
   axis off
   %q = 13;
