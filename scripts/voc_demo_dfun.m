@@ -148,6 +148,7 @@ for i = 1:length(classes)
 
   %dataset_params.JUST_TRAIN = 1;
   %dataset_params.JUST_TRAIN_AND_LOAD = 1;
-  dataset_params.JUST_APPLY = 1;
+  %dataset_params.JUST_APPLY = 1;
+  dataset_params.SKIP_M = 1;
   voc_template(dataset_params, classes{i});
 end
