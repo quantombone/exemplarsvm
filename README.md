@@ -25,9 +25,9 @@ libsvm-3.0-1,
 fast blas convolution code (from voc-release-4.0), 
 hog code (from voc-release-3.1), 
 localization within a pyramid code (my variant of pedro's code from voc-release-3.1),
+VOC development code from http://pascallin.ecs.soton.ac.uk/challenges/VOC/
 
 ---
 Installation of PASCAL VOC Object Recognition Dataset
 Go to http://pascallin.ecs.soton.ac.uk/challenges/VOC/ for more information
 
-This is the experimental branch.
