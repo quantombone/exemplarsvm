@@ -18,14 +18,17 @@ if length(fg) == 0
   return;
 end
 
-NIMS_PER_CHUNK = dataset_params.NIMS_PER_CHUNK;
+
 
 %Only allow display to be enabled on a machine with X
 display = dataset_params.display;
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
+  dataset_params.NIMS_PER_CHUNKS = 1;
 end
+
+NIMS_PER_CHUNK = dataset_params.NIMS_PER_CHUNK;
 
 if ~isfield(dataset_params,'params')
   params = get_default_mining_params;
@@ -73,7 +76,7 @@ for i = 1:length(ordering)
   filerlock = [filer '.lock'];
 
 
-  if fileexists(filer) || (mymkdir_dist(filerlock) == 0)
+  if ~display && (fileexists(filer) || (mymkdir_dist(filerlock) == 0))
     continue
   end
 
@@ -188,6 +191,11 @@ for i = 1:length(ordering)
       res{j}.extras = params.gt_function(dataset_params, Iname, res{j}.bboxes);
     end 
   end
+
+  if display == 1
+    continue
+  end
+  
   
   % save results into file and remove lock file
   save(filer,'res');
