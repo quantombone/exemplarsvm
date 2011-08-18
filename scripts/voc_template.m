@@ -230,7 +230,7 @@ if length(M) > 0
   %exemplar_subset = 1:20;
   NNN = length(models);
   [aaa,bbb] = sort(M.betas(:,1),'descend');
-  for zzz = 1:100
+  for zzz = 1:length(models)
   NNN = zzz;
   rrr = randperm(length(models));
   
