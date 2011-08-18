@@ -83,7 +83,7 @@ dataset_params.models_name = ...
 
 %classes = {cls};
 %classes = {'motorbike','bicycle','person'};
-classes = {'train','bus','car'};
+classes = {'train','bus','aeroplane','motorbike','tvmonitor'};
 %classes = {'chair','sofa','diningtable','tvmonitor'};
 %classes = {'tvmonitor'};
 for z = 1:length(classes)
@@ -101,7 +101,7 @@ for z = 1:length(classes)
                           models{i}.curid);
   end
   
-  filer = sprintf('%s/betas/%s-%s-svm-betas.mat',...
+  filer = sprintf('%s/betas/%s-%s-svm-betas-.mat',...
                   dataset_params.localdir,cls,dataset_params.models_name);
   load(filer);
   M.betas = betas;
@@ -119,8 +119,8 @@ end
 models = cat(2,allmodels{:});
 M.betas = cat(1,allbetas{:});
 
-fg = get_pascal_set(dataset_params, 'test','+car');%, ['+' cls]);
+fg = get_pascal_set(dataset_params, 'test','+motorbike');%, ['+' cls]);
 dataset_params.display = 1;
 
-apply_all_exemplars(dataset_params,models,fg,'test');%,M);
+apply_all_exemplars(dataset_params,models,fg,'test',M);
 
