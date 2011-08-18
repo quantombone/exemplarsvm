@@ -1,11 +1,10 @@
-function voc_template(dataset_params, cls, NNN)
+function voc_template(dataset_params, cls)
 %% This is the main VOC driver script for both scenes and exemplars
 
-dataset_params.subname = 'rand20';
-
-if ~exist('NNN','var')
-  NNN = 20;
-end
+% if ~exist('NNN','var')
+%   NNN = 20;
+% end
+dataset_params.subname = '';
 
 if ~exist(dataset_params.devkitroot,'dir')
   mkdir(dataset_params.devkitroot);
@@ -110,25 +109,6 @@ if isfield(dataset_params,'val_params')
     %Load validation results
     val_grid = load_result_grid(dataset_params, models, ...
                                 curparams.set_name, val_files);
-
-    %Define the exemplar subset to use
-    %exemplar_subset = 1:20;
-    rrr = randperm(length(models));
-    exemplar_subset = rrr(1:NNN);
-    
-    stringer =  'abcdefghijklmnopqrstuvwxyz';
-    %stringer(1:5);
-
-    rrr2 = randperm(length(stringer));
-    dataset_params.subname = sprintf('%s_N=%d', ...
-                                     stringer(rrr2(1:5)),...
-                                     NNN);
-
-    %dataset_params.subname = sprintf('%d+',exemplar_subset);
-    %exemplar_subset = 1:length(models);
-
-    models = models(exemplar_subset);
-    val_grid = prune_grid(val_grid, exemplar_subset);
     
     % need to prune to subset here
     %keyboard
@@ -183,7 +163,6 @@ if isfield(dataset_params,'test_params')
   %Load test results
   test_grid = load_result_grid(dataset_params, models, ...
                                curparams.set_name, test_files);
-  test_grid = prune_grid(test_grid,exemplar_subset);
   %Show all raw detections on test-set as a "memex browser"
   %show_memex_browser2(dataset_params, models, test_grid,...
   %                   test_set, curparams.set_name);
@@ -196,6 +175,7 @@ else
   %If testing is not performed, there is nothing left to do
   %return;
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% EXEMPLAR EVALUATION/DISPLAY %
@@ -210,7 +190,7 @@ end
 %If no calibration was performed, then we dont do calibrated rounds
 if length(M) > 0
   
-  if 1
+  if 0
   % %% Evaluation of laboo + M matrix
   test_struct = pool_exemplar_detections(dataset_params, models, test_grid, M);
   
@@ -226,7 +206,6 @@ if length(M) > 0
   
   %show_memex_browser2(dataset_params, models, test_struct,...
   %                    test_set, curparams.set_name, rc);
-
   
   %% Show top detections for laboo + M matrix
   %show_top_dets(dataset_params, models, test_grid,...
@@ -238,6 +217,31 @@ if length(M) > 0
   %% Evaluation of l.a.b.o.o. afer training
   M2 = [];
   M2.betas = M.betas;
+  models_save = models;
+  test_grid_save = test_grid;
+  
+  cp = sprintf(dataset_params.annocachepath, dataset_params.testset);
+  cpres = load(cp,'gtids','recs');
+
+  
+  stringer =  'abcdefghijklmnopqrstuvwxyz';
+  
+  %Define the exemplar subset to use
+  %exemplar_subset = 1:20;
+  NNN = length(models);
+  [aaa,bbb] = sort(M.betas(:,1),'descend');
+  for zzz = 1:100
+  NNN = zzz;
+  rrr = randperm(length(models));
+  
+  exemplar_subset = bbb(1:zzz);
+  M2.betas = M.betas(exemplar_subset, :);
+  rrr2 = randperm(length(stringer));
+  dataset_params.subname = sprintf('N=%d',NNN);%  ...
+                                   % stringer(rrr2(1:5)),...
+                                   % NNN);  
+  models = models_save(exemplar_subset);
+  test_grid = prune_grid(test_grid_save, exemplar_subset);
   test_struct = pool_exemplar_detections(dataset_params, models, test_grid, ...
                              M2);
   
@@ -246,23 +250,24 @@ if length(M) > 0
     [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                          models, test_grid, ...
                                          curparams.set_name,...
-                                         test_struct);
+                                         test_struct,1,cpres);
     rc = results.corr;    
     test_struct.rc = rc;
     %% Show top detections from l.a.b.o.o.
     % show_top_dets(dataset_params, models, test_grid,...
     %               test_set, curparams.set_name, ...
     %               test_struct);
-
   end  
-
-
+  end
+  
   % show_memex_browser2(dataset_params, models, test_struct,...
   %                     test_set, curparams.set_name, rc);
   
   % return;
-
 end
+
+%% do not bother with uncalibrated evaluation for now
+return;
 
 %% Evaluation of uncalibrated SVM classifiers
 M2 = [];

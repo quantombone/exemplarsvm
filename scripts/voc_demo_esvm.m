@@ -94,15 +94,15 @@ classes = {...
     'bottle'
     'bus'
     'cat'
-    'car'
-    'chair'
+    %'car'
+    %'chair'
     'cow'
     'diningtable'
     'dog'
     'horse'
     'motorbike'
     %'person'
-    'pottedplant'
+    %'pottedplant'
     'sheep'
     'sofa'
     'train'
@@ -119,7 +119,8 @@ classes = {...
 %classes = {'bus'};
 
 %classes = {'motorbike'};
-classes = {'sheep','cow'};
+%-2mzo.classes = {'cow'};
+%classes = {'sheep'};
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
@@ -152,6 +153,6 @@ for i = 1:length(classes)
   %dataset_params.JUST_TRAIN = 1;
   %dataset_params.JUST_TRAIN_AND_LOAD = 1;
   dataset_params.SKIP_M = 1;
-  NNN = 20;
-  voc_template(dataset_params, classes{i}, NNN);
+  %NNN = 20;
+  voc_template(dataset_params, classes{i});
 end
