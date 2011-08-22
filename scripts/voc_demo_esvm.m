@@ -87,28 +87,33 @@ dataset_params.models_name = ...
 
 %classes = {'bus'};
 classes = {...
-    'aeroplane'
-    'bicycle'
+    %'aeroplane'
+    %'bicycle'
     'bird'
     'boat'
     'bottle'
-    'bus'
-    'cat'
-    %'car'
+    %'bus'
+    %'cat'
+    'car'
     %'chair'
-    'cow'
+    %'cow'
     'diningtable'
-    'dog'
-    'horse'
+    %'dog'
+    %'horse'
     'motorbike'
     %'person'
     %'pottedplant'
-    'sheep'
+    %'sheep'
     'sofa'
     'train'
-    'tvmonitor'
+    %'tvmonitor'
 };
+classes = dataset_params.classes;
+classes = setdiff(classes,{'person'});
 
+%classes = {'tvmonitor'};
+%classes = {'chair'};
+%classes = {'diningtable'};
 %classes = {'bicycle'};
 %classes = {'person'};
 %classes = {'train'};
@@ -121,6 +126,9 @@ classes = {...
 %classes = {'motorbike'};
 %-2mzo.classes = {'cow'};
 %classes = {'sheep'};
+classes = {'motorbike'};
+classes = {'person'};
+
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
