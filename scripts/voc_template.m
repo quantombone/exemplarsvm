@@ -182,7 +182,7 @@ end
 %If no calibration was performed, then we dont do calibrated rounds
 if length(M) > 0
   
-  if 0
+  if 1
   % %% Evaluation of laboo + M matrix
   test_struct = pool_exemplar_detections(dataset_params, models, test_grid, M);
   
@@ -196,8 +196,8 @@ if length(M) > 0
     rc = results.corr;
   end
   
-  show_memex_browser2(dataset_params, models, test_struct,...
-                      test_set, curparams.set_name, rc);
+  %show_memex_browser2(dataset_params, models, test_struct,...
+  %                    test_set, curparams.set_name, rc);
 
   
   %% Show top detections for laboo + M matrix
@@ -249,8 +249,8 @@ if (dataset_params.SKIP_EVAL == 0)
   rc = results.corr;
 end
 
-show_memex_browser2(dataset_params, models, test_struct,...
-                    test_set, curparams.set_name, rc);
+%show_memex_browser2(dataset_params, models, test_struct,...
+%                    test_set, curparams.set_name, rc);
 
 %%% Show top detections from uncalibrated SVM classifiers
 % show_top_dets(dataset_params, models, test_grid,...
