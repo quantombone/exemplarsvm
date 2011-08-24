@@ -88,6 +88,8 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
+classes = dataset_params.classes;
+if 0
 %classes = {'bus'};
 classes = {...
     %'horse'
@@ -110,9 +112,12 @@ classes = {...
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
+end
 
-%plot_voc_results(dataset_params);
-%return;
+%plot_voc_results_horiz(dataset_params);
+plot_voc_results3(dataset_params);
+
+return;
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
   dataset_params = save_dataset_params;

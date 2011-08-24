@@ -119,10 +119,24 @@ classes = {...
 %classes = {'sheep'};
 %classes = {'person'};
 %classes = {'bus','train','sheep','cow'};
-classes = {'diningtable','motorbike','bus','train','sheep','cow'};
+%classes = {'diningtable','motorbike','bus','train','sheep','cow'};
+classes = {'motorbike'};
+
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
+
+classes = {'diningtable','motorbike','bus','train','sheep','cow'};
+classes = sort(classes);
+%myRandomize;
+%r = randperm(length(classes));
+%classes = classes(r);
+
+dataset_params.classes = classes; 
+
+plot_voc_results3(dataset_params);
+return;
+
 
 %plot_voc_results_horiz(dataset_params);
 %
