@@ -114,10 +114,14 @@ r = randperm(length(classes));
 classes = classes(r);
 end
 
+%myRandomize;
+%r = randperm(length(classes));
+%classes = classes(r);
 %plot_voc_results_horiz(dataset_params);
 plot_voc_results3(dataset_params);
-
 return;
+%return;
+
 save_dataset_params = dataset_params;
 for i = 1:length(classes)
   dataset_params = save_dataset_params;
