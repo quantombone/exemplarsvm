@@ -10,9 +10,12 @@ if ~exist('CACHE_FILES','var')
   CACHE_FILES = 0;
 end
 
+final_dir = ...
+    sprintf('%s/betas',dataset_params.localdir);
+
 final_file = ...
-    sprintf('%s/betas/%s-%s-M.mat',...
-            dataset_params.localdir, models{1}.cls, models{1}.models_name);
+    sprintf('%s/%s-%s-M-%s.mat',...
+            final_dir, models{1}.cls, models{1}.models_name,dataset_params.subname);
 
 if CACHE_FILES == 1 
   lockfile = [final_file '.lock'];

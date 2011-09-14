@@ -1,4 +1,4 @@
-function [rec,prec,ap,apold,fp,tp,npos,is_correct] = VOCevaldet(VOCopts,id,cls,draw,gtids,recs)
+function [rec,prec,ap,apold,fp,tp,npos,is_correct] = VOCevaldet(VOCopts,id,cls,draw,gtids,recs,stuff)
 
 % load test set
 tic
@@ -34,7 +34,7 @@ if strcmp(VOCopts.dataset,'VOC2007')
   end
 end
 % hash image ids
-hash=VOChash_init(gtids);
+%hash=VOChash_init(gtids);
         
 % extract ground truth objects
 
@@ -49,15 +49,33 @@ for i=1:length(gtids)
     npos=npos+sum(~gt(i).diff);
 end
 
-if isfield(VOCopts,'filename')
-  filename = VOCopts.filename;
-else
-  filename = sprintf(VOCopts.detrespath,id,cls);
+% if isfield(VOCopts,'filename')
+%   filename = VOCopts.filename;
+% else
+%   filename = sprintf(VOCopts.detrespath,id,cls);
+% end
+
+% % load results
+% [ids,confidence,b1,b2,b3,b4]=textread(filename,'%s %f %f %f %f %f');
+% BB=[b1 b2 b3 b4]';
+
+BB = stuff{1}.BB;
+ids = stuff{1}.ids;
+confidence = stuff{1}.conf;
+
+if strcmp(VOCopts.dataset,'VOC2007')
+  for i = 1:length(ids)
+    ids{i} = ['2007_' ids{i}];
+  end
 end
 
-% load results
-[ids,confidence,b1,b2,b3,b4]=textread(filename,'%s %f %f %f %f %f');
-BB=[b1 b2 b3 b4]';
+sss = tic;
+[ap, apold, rec, prec, fp, tp, is_correct] = get_aps(VOCopts,draw,cls,gtids,gt,npos,ids,confidence,BB);
+
+finaltime = toc(sss);
+fprintf(1,'final time is %.3f\n',finaltime);
+
+function [ap,apold,rec,prec,fp,tp,is_correct] = get_aps(VOCopts,draw,cls,gtids,gt,npos,ids,confidence,BB);
 
 % sort detections by decreasing confidence
 [sc,si]=sort(-confidence);
@@ -69,24 +87,23 @@ nd=length(confidence);
 tp=zeros(nd,1);
 fp=zeros(nd,1);
 
-if strcmp(VOCopts.dataset,'VOC2007')
-  for i = 1:length(ids)
-    ids{i} = ['2007_' ids{i}];
-  end
-end
 tic;
+
+%do instead of slow hash
+[tmp,iii] = ismember(ids,gtids);
 
 is_correct = zeros(nd,1);
 for d=1:nd
     % display progress
-    if toc>1
-        fprintf('%s: pr: compute: %d/%d\n',cls,d,nd);
-        drawnow;
-        tic;
-    end
+    % if toc>1
+    %     fprintf('%s: pr: compute: %d/%d\n',cls,d,nd);
+    %     drawnow;
+    %     tic;
+    % end
     
     % find ground truth image
-    i=VOChash_lookup(hash,ids{d});
+    %i=VOChash_lookup(hash,ids{d});
+    i = iii(d);
     if isempty(i)
         error('unrecognized image "%s"',ids{d});
     elseif length(i)>1
@@ -146,8 +163,7 @@ for t=0:0.1:1
 end
 
 apold = ap;
-
-ap=VOCap(rec,prec);
+ap = VOCap(rec,prec);
 
 if draw
     % plot precision/recall
