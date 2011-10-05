@@ -190,7 +190,7 @@ end
 %If no calibration was performed, then we dont do calibrated rounds
 if length(M) > 0
   
-  if 0
+  if 1
   % %% Evaluation of laboo + M matrix
   test_struct = pool_exemplar_detections(dataset_params, models, test_grid, M);
   

@@ -3,6 +3,7 @@
 %% Initialize dataset
 VOCYEAR = 'VOC2007';
 suffix = load_data_directory;
+suffix = '/nfs/baikal/tmalisie/nn311/';
 dataset_params = get_voc_dataset(VOCYEAR,suffix);
 dataset_params.display = 0;
 
@@ -124,6 +125,17 @@ classes = {...
 myRandomize;
 r = randperm(length(classes));
 classes = classes(r);
+
+classes = {'diningtable','motorbike','bus','train','sheep','cow'};
+classes = sort(classes);
+%myRandomize;
+%r = randperm(length(classes));
+%classes = classes(r);
+
+dataset_params.classes = classes; 
+
+plot_voc_results3(dataset_params);
+return;
 
 %plot_voc_results_horiz(dataset_params);
 %
