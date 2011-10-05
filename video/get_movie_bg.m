@@ -1,4 +1,4 @@
-function bg = get_movie_bg(mname,LEN)
+function bg = get_movie_bg(mname,LEN,func)
 %% Create a virtual movie dataset of frames by splitting up the movie
 %% pointed to by filename mname into LEN frames
 %% The LEN frames are obtained by equal-time spaced partitions
@@ -39,8 +39,14 @@ end
 chunks = linspace(0,nsec,LEN);
 bg = cell(LEN,1);
 
-for i = 1:LEN
+if exist('func','var')
+  for i = 1:LEN
+    bg{i} = @()(func(get_movie_frame(mname,get_movie_string(chunks(i)))));
+  end
+else  
+  for i = 1:LEN
     bg{i} = @()(get_movie_frame(mname,get_movie_string(chunks(i))));
+  end
 end
 
 function str = get_movie_string(index)
