@@ -28,11 +28,12 @@ subplot(2,3,4)
 PADDER = 100;
 Ipad = pad_image(I,PADDER);
 imagesc(I)
+
+axis image
+axis off
 for q = size(topboxes,1):-1:1
   plot_bbox(topboxes(q,:),'',colors(q,:),colors(q,:))
 end
-axis image
-axis off
 
 title(sprintf('Box Cluster size %d',size(topboxes,1)))
 exshows = cell(0,1);
@@ -112,7 +113,7 @@ for i = 1:N
   axis off
   %q = 13;
 
-  
+
   % if ~isfield(models{mid},'subI') | length(models{mid}.subI)==0
 
   %   if isfield(models{mid},'I')
