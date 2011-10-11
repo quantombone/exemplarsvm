@@ -30,6 +30,9 @@ hour = sscanf(lenstring(1:seps(1)-1),'%d');
 minute = sscanf(lenstring(seps(1)+1:seps(2)-1),'%d');
 second = sscanf(lenstring(seps(2)+1:end),'%f');
 
+%subtract off last second
+second = second - 1;
+
 nsec = hour*3600+minute*60+second;
 
 if ~exist('LEN','var')
@@ -53,5 +56,5 @@ function str = get_movie_string(index)
 hours = floor(index/(3600));
 minutes = floor(index/60);
 seconds = index - 3600*hours-60*minutes;
-str = sprintf('%02d:%02d:%02.3f',hours,minutes,seconds);
+str = sprintf('%02d:%02d:%02.2f',hours,minutes,seconds);
 
