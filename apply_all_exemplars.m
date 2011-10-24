@@ -25,7 +25,7 @@ display = dataset_params.display;
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
-  dataset_params.NIMS_PER_CHUNKS = 1;
+  dataset_params.NIMS_PER_CHUNK = 1;
 end
 
 NIMS_PER_CHUNK = dataset_params.NIMS_PER_CHUNK;
@@ -95,7 +95,8 @@ for i = 1:length(ordering)
     index = inds{ordering(i)}(j);
     fprintf(1,'   ---image %d\n',index);
     Iname = fg{index};
-    [tmp,curid,tmp] = fileparts(Iname);
+    curid = -1;
+    %[tmp,curid,tmp] = fileparts(Iname);
     
     I = Is{j};
        
@@ -151,11 +152,14 @@ for i = 1:length(ordering)
       %already nmsed (but not for LRs)
       boxes = nms_within_exemplars(boxes,.5);
 
+      size(boxes,1);
       %% ONLY SHOW TOP 5 detections or fewer
-      boxes = boxes(1:min(size(boxes,1),8),:);
+      %boxes = boxes(1:min(size(boxes,1),8),:);
       
-      if size(boxes,1) >=1
-        figure(1)
+      
+      
+      if 1% size(boxes,1) >=1
+        figure(53)
         clf
         % stuff.filer = '';               
         % exemplar_overlay = exemplar_inpaint(boxes(1,:), ...
@@ -163,9 +167,10 @@ for i = 1:length(ordering)
         %                                     stuff);
 
         % show_hits_figure_iccv(models,boxes,I,I,exemplar_overlay,I);
+
         show_hits_figure(models, boxes, I);
         drawnow
-        pause(.1)
+        %pause(.1)
       else
         figure(1)
         clf
