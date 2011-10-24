@@ -42,15 +42,16 @@ imgcount = full(sparse(double(inds1(oks)),double(inds2(oks)),1,...
 
 img = flipud(imgsum./(imgcount+eps));
 
-%mmm = colormap(jet);
-mmm = colormap(gray);
-mstart = [1 0 0];
-mend = [1 1 1];
-mmm = repmat(linspace(0,1,200)',[1 3]);
-mstart = repmat(mstart,[200 1]);
-mend = repmat(mend,[200 1]);
-mmm = mmm.*mend+ (1-mmm).*mstart;
-mmm = mmm(end:-1:1,:);
+mmm = colormap(jet);
+
+% mmm = colormap(gray);
+% mstart = [1 0 0];
+% mend = [1 1 1];
+% mmm = repmat(linspace(0,1,200)',[1 3]);
+% mstart = repmat(mstart,[200 1]);
+% mend = repmat(mend,[200 1]);
+% mmm = mmm.*mend+ (1-mmm).*mstart;
+% mmm = mmm(end:-1:1,:);
 
 % %if empty get null image
 % if sum(img(:))==0
@@ -59,7 +60,7 @@ mmm = mmm(end:-1:1,:);
 %   return;
 % end
 
-img = imfilter(img,fspecial('gaussian',[15 15],3));
+img = imfilter(img,fspecial('gaussian',[61 61],9));
 img(img<0) = 0;
 % if sum(img(:))==0
 %  img = reshape(mmm(1,:),[1 1 3]);
@@ -67,7 +68,8 @@ img(img<0) = 0;
 %  return;
 % end
 
-alphas = double(img~=0);
+%alphas = double(img~=0);
+alphas = double(img / max(img(:)));
 
 %img = log(img);
 %img(isinf(img))=0;
@@ -76,4 +78,4 @@ img = img / max(img(:))*.9999;
 img = reshape(mmm(floor(img*size(mmm,1))+1,:),...
               size(img,1),size(img,2),3);
 
-%imwrite(img,'img.png','Alpha',xAlpha);
+

@@ -1,10 +1,10 @@
-function kml_distribution(gps,values,mygps,name)
+function kml_distribution(gps,values,mygps,name,file_names)
 %Given some gps locations as well as the values associated with
 %each gps coordinate, write the resulting distribution as a Google
 %Earth Loadable kml file
 
-BASEDIR = '/nfs/baikal/tmalisie/gps/';
-URLDIR = 'http://balaton.graphics.cs.cmu.edu/tmalisie/gps/';
+BASEDIR = '/nfs/baikal/tmalisie/gps/siggraph2011/';
+URLDIR = 'http://balaton.graphics.cs.cmu.edu/tmalisie/gps/siggraph2011/';
 
 filename = sprintf('%s/%s_distribution.kml',BASEDIR,name);
 
@@ -20,7 +20,14 @@ Gmax1 = max(gps(1,:));
 Gmin2 = min(gps(2,:));
 Gmax2 = max(gps(2,:));
 
-resolution = [500 1000];
+resolution = [500 500];
+d1 = 30*(Gmax1-Gmin1)/resolution(1);
+d2 = 30*(Gmax2-Gmin2)/resolution(2);
+
+Gmin1 = Gmin1 - d1;
+Gmax1 = Gmax1 + d1;
+Gmin2 = Gmin2 - d2;
+Gmax2 = Gmax2 + d2;
 
 iii = linspace(Gmin1,Gmax1,2);
 jjj = linspace(Gmin2,Gmax2,2);
@@ -40,7 +47,8 @@ end
 
 for i = 1:length(img)
   imname{i} = sprintf('%s_%d.png',name,i);
-  imwrite(img{i},[BASEDIR imname{i}],'Alpha',alphas{i});
+  a = alphas{i}.^.5;
+  imwrite(img{i},[BASEDIR imname{i}],'Alpha',a);
 end
 
 fid = fopen(filename,'w');
@@ -56,7 +64,24 @@ for i = 1:length(img)
               min1{i},max1{i},min2{i},max2{i});
 end
 
-kml_add_placemark(fid,mygps,'image location');
+%kml_add_placemark(fid,mygps,'image location');
 
+fprintf(fid,'<Folder>\n');
+for i = 1:length(file_names)
+  desc_string = ...
+      sprintf('<![CDATA[\n<img width=\"400\" src=\"%s/%s\"/>\n]]>',...
+              'http://balaton.graphics.cs.cmu.edu/tmalisie/flickr_data',...
+              file_names{i});
+
+  fprintf(fid,['<Placemark>\n'...
+               '<description>%s</description>\n<Point>\n' ...
+               '<coordinates>%f,%f</coordinates>' ...
+               '<open>1</open>\n'...
+               '\n</Point>\n</Placemark>\n'],desc_string,...
+          gps(2,i),...
+          gps(1,i));
+end
+
+fprintf(fid,'</Folder>\n');
 fprintf(fid,'</Document>\n</kml>\n');
 fclose(fid);
