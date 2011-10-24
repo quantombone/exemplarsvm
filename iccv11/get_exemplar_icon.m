@@ -7,6 +7,14 @@ function [Iex,Iexmask,Icb,Icbmask] = get_exemplar_icon(models, ...
 %
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
+if ~isfield(models{index}.model,'bb')
+  Iex = ones(10,10,3);
+  Iexmask = ones(10,10,1);
+  Icb = ones(10,10,3);
+  Icbmask = ones(10,10,1);
+  return;
+end
+
 %Subind indicates which window to show (defaults to the base)
 if ~exist('subind','var')
   subind = 1;
