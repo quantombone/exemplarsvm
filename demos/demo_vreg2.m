@@ -2,7 +2,7 @@ function demo_vreg2(X)
 
 if ~exist('X','var')
 
-  N = 4;
+  N = 10;
   D = 2;
 
   noise = .03;
@@ -38,23 +38,34 @@ fprintf(1,'svm time %.5f sec\n',toc(starter));
 
 xstart = randn(D*2+2,1);
 xstart(1:D) = mean(X(:,Y==1),2);
-  
-for zzz = linspace(0,.99,100)
-  
+
+zs = (exp(-(1-linspace(-1,1,100)).^2));
+zs(1) = 0;
+zs(end) = 1;
+%zs = linspace(0,.99,100);
+iter = 0;
+for zzz = zs
+  iter = iter + 1;
 if D == 2
+  
   figure(1)
   clf
-  subplot(1,2,1)
-  plot(X(1,Y==1),X(2,Y==1),'rs','MarkerSize',10);
+  ha = tight_subplot(1, 2, .1, .1,.1);
+  axes(ha(1));
+
+  plot(X(1,Y==1),X(2,Y==1),'s','MarkerSize',10,'MarkerFaceColor','red','MarkerEdgeColor','black','LineWidth',2);
   hold on;
-  plot(X(1,Y==-1),X(2,Y==-1),'bp','MarkerSize',10);
+  plot(X(1,Y==-1),X(2,Y==-1),'bo','MarkerSize',10);
 end
 %[x0,v] = get_pca_solution(X);
 
 
-params = [zzz .00001 (1-zzz)];%.00001 1];
-obj = fminunc(@(x)lossfun(x,X,Y,D,params),xstart);
-obj = fminunc(@(x)lossfun(x,X,Y,D,params),obj);
+params = [zzz .001 (1-zzz)];%.00001 1];
+options = optimset('TolX',1e-12,'MaxFunEvals',2000,'TolFun',1e-12);
+[obj,fval,exitflag,message] = fminunc(@(x)lossfun(x,X,Y,D,params), ...
+                                      xstart,options);
+
+%obj = fminunc(@(x)lossfun(x,X,Y,D,params),obj);
 x0 = obj(1:D);
 w = obj(D+1:D*2);
 b = obj(end);
@@ -65,17 +76,16 @@ if D ~=2
 end
 
 X2 = zeros(size(X));
+ts = zeros(N,1);
 for i = 1:N
-  t = -(x0-X(:,i))'*v;
-  X2(:,i) = x0 + t*v;
+  ts(i) = -(x0-X(:,i))'*v;
+  X2(:,i) = x0 + ts(i)*v;
 end
 hold on;
 
-[aa,bb] = min(X2(1,:));
-[aa2,bb2] = max(X2(1,:));
 
-if 1
-  plot(X2(1,[bb bb2]),X2(2,[bb bb2]),'m','LineWidth',4)
+if 0
+  plot(X2(1,[bb bb2]),X2(2,[bb bb2]),'g','LineWidth',4)
   hold on;
   %for i = 1:N
   %  plot([X(1,i) X2(1,i)],[X(2,i) X2(2,i)],'g-')
@@ -84,36 +94,87 @@ if 1
 end
 hold on;
 
-
 %w = alpha*v;
-plot_them(X,Y,w,b)
 
-axis([-2 2 -2 2])
+
+mins = min(X,[],2);
+maxes = max(X,[],2);
+
+diffs = maxes-mins;
+md = max(diffs);
+d = max(0.0,md - diffs);
+mins = mins - d/2;
+maxes = maxes + d/2;
+
+fracplus = .1;
+mins = mins - fracplus*md;
+maxes = maxes + fracplus*md;
+
+[aa,bb] = min(X2(1,:));
+[aa2,bb2] = max(X2(1,:));
+
+if ts(bb2) > ts(bb)
+  h=arrow(X2(:,bb),X2(:,bb2))
+else
+  h=arrow(X2(:,bb2),X2(:,bb))
+end
+arrow(h,'Width',8,'Length',40);
+set(h,'FaceColor','g')
+
+
+plot_them(X,Y,w,b,mins,maxes)
+
+
+%axis([-2 2 -2 2])
+axis([mins(1) maxes(1) mins(2) maxes(2)]);
 axis square
 grid on;
-h=title(sprintf('Visual Similarity Regressor %.3f',zzz));
+set(gca,'FontSize',18)
+h=title(sprintf('Visual Similarity Regressor: alpha = %.5f',zzz));
 
-subplot(1,2,2)
-plot_them(X,Y,w2,b2)
+axes(ha(2))
+%subplot(1,2,2)
+plot_them(X,Y,w2,b2,mins,maxes)
 h2=title('SVM Solution');
-axis([-2 2 -2 2])
+%axis([-2 2 -2 2])
+axis([mins(1) maxes(1) mins(2) maxes(2)]);
 axis square
 grid on;
+set(gca,'FontSize',18)
 
 set(h,'FontSize',20)
 set(h2,'FontSize',20)
 drawnow
-pause;
+
+%set(gcf,'PaperPosition',[0 0 10 5])
+%print(gcf,'-dpng',sprintf('vreg_%05d.png',iter));
 end
 
+%namer = sprintf('%08d',round(rand*1000000));
+%stringer = sprintf('ffmpeg -i /projects/exemplarsvm/vreg_%%05d.png -b 5000k -y /projects/vids/vreg-%s.mp4',...
+%             namer);
+%unix(stringer);
 
-function plot_them(superx,supery,w,b)
-plot(superx(1,supery==1),superx(2,supery==1),'rs','MarkerSize',10);
+
+function plot_them(superx,supery,w,b,mins,maxes)
+
+X = superx;
+Y = supery;
+plot(X(1,Y==1),X(2,Y==1),'s','MarkerSize',10,'MarkerFaceColor','red','MarkerEdgeColor','black','LineWidth',2);
 hold on;
-plot(superx(1,supery==-1),superx(2,supery==-1),'bp','MarkerSize',10);
+plot(X(1,Y==-1),X(2,Y==-1),'o','MarkerSize',10,'MarkerFaceColor','blue','MarkerEdgecolor','black','LineWidth',2);
 
-mins = min(superx,[],2);
-maxes = max(superx,[],2);
+%plot(superx(1,supery==1),superx(2,supery==1),'rs','MarkerSize',10);
+%hold on;
+%plot(superx(1,supery==-1),superx(2,supery==-1),'bp','MarkerSize',10);
+
+if ~exist('mins','var')
+  mins = min(superx,[],2);
+  maxes = max(superx,[],2);
+  
+  mins = [-2 -2];
+  maxes = [2 2];
+end
 
 %mins(1) = -10;
 %maxes(1) = 10;
@@ -219,7 +280,7 @@ Npos = size(Xpos,2);
 df = Xpos - x0*ones(1,Npos);
 obj = norm(df,'fro').^2 - norm(w'/norm(w)*df,'fro').^2;
 
-obj2 =.5*norm(w).^2;
+obj2 = norm(w).^2;
 
 r = w'*X-b;
 obj3 = sum(hinge(Y'.*r));
