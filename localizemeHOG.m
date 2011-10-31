@@ -126,7 +126,6 @@ for level = length(t.hog):-1:1
     end
 
     cur_scores = rootmatch{exid} - bs{exid};
-    
     [aa,indexes] = sort(cur_scores(:),'descend');
     NKEEP = sum((aa>maxers{exid}) & (aa>=localizeparams.thresh));
     aa = aa(1:NKEEP);
@@ -178,7 +177,11 @@ for level = length(t.hog):-1:1
       if localizeparams.SAVE_SVS == 1
         xs{exid} = xs{exid}(:,bb);
       end
-      maxers{exid} = min(-aa);
+      %TJM: changed so that we only maintain 'maxers' when topk
+      %elements are filled
+      if (newtopk >= localizeparams.TOPK)
+        maxers{exid} = min(-aa);
+      end
     end    
   end
 end
