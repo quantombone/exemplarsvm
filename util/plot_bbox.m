@@ -5,6 +5,9 @@ function plot_bbox(bb,titler,col1,col2,do_spacing,linewidths,hg_size)
 
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
+%Needs to be a double or text command complains (thanks Carl)
+bb = double(bb);
+
 if ~exist('do_spacing','var')
   do_spacing = 0;
 end
