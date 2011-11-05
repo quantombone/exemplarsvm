@@ -19,6 +19,13 @@ function [resstruct,t] = localizemeHOG(I, models, localizeparams)
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
+if length(models) == 0
+  resstruct.bbs{1} = zeros(0,0);
+  resstruct.xs{1} = zeros(0,0);
+  t=[];
+  return;
+end
+
 if ~exist('localizeparams','var')
   localizeparams = get_default_mining_params;
 end
