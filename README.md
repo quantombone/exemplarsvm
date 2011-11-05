@@ -32,7 +32,7 @@ Installation of PASCAL VOC Object Recognition Dataset
 Go to http://pascallin.ecs.soton.ac.uk/challenges/VOC/ for more information
 
 ---
-Copyright (C) <2011> by <Tomasz Malisiewicz>
+Copyright (C) 2011 by Tomasz Malisiewicz
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
