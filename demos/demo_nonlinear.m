@@ -33,12 +33,12 @@ gamma = .001;
 
 
 %tic
-svm_model = svmtrain(y, x',sprintf(['-s 0 -t 2 -c' ...
+svm_model = libsvmtrain(y, x',sprintf(['-s 0 -t 2 -c' ...
                     ' %f -gamma %f -q'],SVMC,gamma));
 %toc
 
 %tic
-[predicted_label, accuracy] = svmpredict(y, x', svm_model);
+[predicted_label, accuracy] = libsvmpredict(y, x', svm_model);
 %toc
 
 
