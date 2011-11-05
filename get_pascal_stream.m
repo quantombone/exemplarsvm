@@ -51,6 +51,7 @@ for i = 1:length(ids)
       res.bbox = recs.objects(objectid).bbox;
       res.cls = cls;
       res.objectid = objectid;
+      res.curid = curid;
       
       %anno is the data-set-specific version
       res.anno = recs.objects(objectid);

@@ -4,6 +4,11 @@ function plot_bbox(bb,titler,col1,col2,do_spacing,linewidths,hg_size)
 %should be dotted or not
 
 %Tomasz Malisiewicz (tomasz@cmu.edu)
+if numel(bb)==0
+  return;
+end
+%Needs to be a double or text command complains (thanks Carl)
+bb = double(bb);
 
 if ~exist('do_spacing','var')
   do_spacing = 0;
@@ -86,5 +91,5 @@ if exist('titler','var') & length(titler)>0
   hold on;
   text(bb(1),bb(2),titler,'color','k','backgroundcolor',col1,...
        'verticalalignment','bottom','horizontalalignment','left', ...
-       'fontsize',min(10,max(4,round(fontscale))));
+       'fontsize',min(50,max(10,round(fontscale))));
 end

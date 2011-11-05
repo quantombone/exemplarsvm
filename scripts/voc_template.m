@@ -25,8 +25,18 @@ models_name = dataset_params.models_name;
 
 %% Initialize exemplars with the exemplar stream
 e_stream_set = get_pascal_stream(dataset_params, cls);
-efiles = exemplar_initialize(dataset_params, e_stream_set, ...
-                             models_name, dataset_params.init_params);
+
+if isfield(dataset_params, 'dalalmode') && (dataset_params.dalalmode ...
+                                            == 1)
+  fprintf(1,'WARNING: using dalal mode\n');
+  efiles = exemplar_initialize_dt(dataset_params, e_stream_set, ...
+                               models_name, dataset_params.init_params);
+  
+else
+  efiles = exemplar_initialize(dataset_params, e_stream_set, ...
+                               models_name, dataset_params.init_params);
+end
+
 
 %Append the nn-type if we are in nn mode
 if length(dataset_params.params.nnmode) > 0

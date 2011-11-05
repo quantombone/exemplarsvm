@@ -20,7 +20,6 @@ function allfiles = exemplar_initialize(dataset_params, e_set, ...
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
-
 % DTstring = '';
 % if dalalmode == 1
 %   %Find the best window size from taking statistics over all
@@ -61,10 +60,13 @@ for i = 1:length(e_set)
   cls = e_set{i}.cls;
   objectid = e_set{i}.objectid;
   bbox = e_set{i}.bbox;
+  curid = e_set{i}.curid;
 
-  [tmp,curid,tmp] = fileparts(e_set{i}.I);    
-  filer = sprintf('%s/%s.%d.%s.mat',...
-                  results_directory, curid, objectid, cls);
+  %[tmp,curid,tmp] = fileparts(e_set{i}.I);    
+  %filer = sprintf('%s/%s.%d.%s.mat',...
+  %                results_directory, curid, objectid, cls);
+  
+  filer = sprintf('%s/%s',results_directory, e_set{i}.filer);
   
   allfiles{i} = filer;
   if ~exist('init_params','var')
@@ -95,7 +97,8 @@ for i = 1:length(e_set)
   
   m.sizeI = size(I);
   m.models_name = models_name;
-  
+  m.name = sprintf('%s.%d.%s',m.curid,m.objectid,m.cls);
+
   save(filer,'m');
   if exist(filerlock,'dir')
     rmdir(filerlock);

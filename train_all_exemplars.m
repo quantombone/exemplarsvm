@@ -39,10 +39,10 @@ mining_params.final_directory = final_directory;
 myRandomize;
 ordering = randperm(length(models));
 
-if dataset_params.display == 1
-  %ordering = 1:length(ordering);
-  ordering = 1:50:length(ordering);
-end
+%always use random ordering
+%if dataset_params.display == 1
+%  ordering = 1:length(ordering);
+%end
 models = models(ordering);
 
 allfiles = cell(length(models), 1);
@@ -55,47 +55,19 @@ for i = 1:length(models)
   m = models{i};
    
   % Create a naming scheme for saving files
-  filer2fill = sprintf('%s/%%s.%s.%d.%s.mat',final_directory, ...
-                       m.curid, ...
-                       m.objectid, ...
-                       m.cls);
+  filer2fill = sprintf('%s/%%s.%s.mat',final_directory, ...
+                       m.name);
   
-  filer2final = sprintf('%s/%s.%d.%s.mat',final_directory, ...
-                        m.curid, ...
-                        m.objectid, ...
-                        m.cls);
+  filer2final = sprintf('%s/%s.mat',final_directory, ...
+                        m.name);
 
   allfiles{i} = filer2final;
   
   % Check if we are ready for an update
   filerlock = [filer2final '.mining.lock'];
-  
-  if fileexists(filer2final) && dataset_params.display == 1
-    m = load(filer2final);
-    
-        
-    exid = ordering(i);
-    filer = sprintf('%s/%s.%s.%05d.png', DUMPDIR, 'train', ...
-                  m.m.cls,exid);
-    
-    if fileexists(filer)
-      continue
-    end
 
-    
-    figure(445)
-    clf
-    showI = get_sv_stack(m.m,5,5);
-    imagesc(showI)
-    drawnow
-    
-    set(gcf,'PaperPosition',[0 0 20 20]);
-    imwrite(showI,filer);
-
-  end
   
   if fileexists(filer2final) || (mymkdir_dist(filerlock) == 0)
-
     continue
   end
   
@@ -135,9 +107,7 @@ for i = 1:length(models)
     m.total_mines = total_mines;
     m = mine_train_iteration(m, mining_params.training_function);
 
-
     %total_mines = m.mining_stats{end}.total_mines;
-
 
     if ((total_mines >= mining_params.MAX_TOTAL_MINED_IMAGES) || ...
           (length(m.mining_queue) == 0)) || ...
@@ -148,10 +118,46 @@ for i = 1:length(models)
       %bump up filename to final file
       filer2 = filer2final;
     end
-
+    
+    %HACK: remove train_set which causes save issue when it is a
+    %cell array of function pointers
+    msave = m;
+    m = rmfield(m,'train_set');
+    
     %Save the current result
     save(filer2,'m');
-  
+    m = msave;
+    
+    if 0 %%dataset_params.display == 1
+
+      exid = ordering(i);
+      filer = sprintf('%s/%s.%s.%05d.png', DUMPDIR, 'train', ...
+                      m.cls,exid);
+      
+      %if fileexists(filer)
+      %  continue
+      %end
+      
+      figure(445)
+      clf
+      showI = get_sv_stack(m,5,5);
+      imagesc(showI)
+      drawnow
+      
+      figure(235)
+      
+      rpos = m.model.w(:)'*m.model.x-m.model.b;
+      rneg = m.model.w(:)'*m.model.svxs - m.model.b;
+      clf
+      plot(sort(rpos,'descend'),'r.')
+      hold on;
+      plot(length(rpos)+[1:length(rneg)],rneg,'b.')
+      drawnow
+
+      %set(gcf,'PaperPosition',[0 0 20 20]);
+      %imwrite(showI,filer);
+    end
+    
     %delete old files
     if m.iteration > 1
       for q = 1:m.iteration-1
@@ -176,53 +182,4 @@ for i = 1:length(models)
   end
 end
 
-
 [allfiles,bb] = sort(allfiles);
-
-% function m = prune_svs(m)
-% %When saving file, only keep negative support vectors, not
-% %the extra ones we save during training
-% rs = m.model.w(:)'*m.model.nsv - m.model.b;
-% [aa,bb] = sort(rs,'descend');
-% goods = bb(aa >= -1.0);
-% oldnsv = m.model.nsv;
-% oldsvids = m.model.svids;
-% m.model.nsv = oldnsv(:,goods);
-% m.model.svids = oldsvids(goods);
-
-% function [target_ids,target_xs] = get_top_from_ex(m,am)
-
-% res = cellfun2(@(x)m.model.w(:)'*x.model.target_x-m.model.b,am);
-% for i = 1:length(res)
-%   [tmp,ind] = max(res{i});
-%   am{i}.model.target_x = am{i}.model.target_x(:,ind);
-%   am{i}.model.target_id = am{i}.model.target_id(ind);
-% end
-
-% target_ids= cellfun2(@(x)x.model.target_id,am);
-% target_xs= cellfun2(@(x)x.model.target_x,am);
-
-% target_ids = cat(1,target_ids{:})';
-% target_xs = cat(2,target_xs{:});
-
-% %% convert to curid format as integer
-
-% %% HERE we take all string curids, and treat them as literals into
-% %the images
-
-% bg = get_pascal_bg('trainval');
-% s = cellfun(@(x)isstr(x.curid),target_ids);
-% s = find(s);
-% if length(s) > 0
-%   train_curids = cell(length(bg),1);
-%   for i = 1:length(bg)
-%     [tmp,train_curids{i},ext] = fileparts(bg{i});
-%   end
-  
-%   test_curids = cellfun2(@(x)x.curid,target_ids);
-
-%   [aa,bb] = ismember(test_curids,train_curids);
-%   for i = 1:length(s)
-%     target_ids{s(i)}.curid = bb(i);
-%   end  
-% end

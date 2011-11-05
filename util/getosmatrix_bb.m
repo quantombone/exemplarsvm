@@ -9,7 +9,8 @@ if ~exist('gts','var')
 end
 
 if numel(boxes) == 0 || numel(gts) == 0
-  os = zeros(size(boxes,1),size(boxes,2));
+  os = zeros(size(boxes,1),size(gts,1));
+
   return;
 end
 
@@ -49,10 +50,10 @@ for i = 1:size(boxes,1)
   o = w.*h;
   o( (w<0) | (h<0) ) = 0;
 
-  os(i,:) = o ./ (area(i) + area2 - o);
+  os(i,:) = o ./ (eps + (area(i) + area2 - o));
   
   if nargout == 2
-    os1(i,:) = o ./ area2;
+    os1(i,:) = (o ./ (eps + area2));
     %os1(i,:) = o ./ area(i);
   end
 end

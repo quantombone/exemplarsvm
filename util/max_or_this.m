@@ -1,6 +1,7 @@
-function res = max_or_this(x,value)
+function [res,ind] = max_or_this(x,value)
 if length(x) > 0
-  res = max(x);
+  [res,ind] = max(x);
   return;
 end
 res = value;
+ind = -1;

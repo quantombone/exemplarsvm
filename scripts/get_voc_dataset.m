@@ -39,7 +39,7 @@ if ~exist('datadir','var')
     dataset_params.datadir = '/nfs/hn38/users/sdivvala/Datasets/Pascal_VOC/';
   end
 else
-  dataset_aprams.datadir = datadir;
+  dataset_params.datadir = datadir;
 end
 
 %Some VOC-specific dataset stats

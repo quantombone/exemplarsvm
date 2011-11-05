@@ -1,4 +1,4 @@
-function bg = get_movie_bg(mname,LEN)
+function bg = get_movie_bg(mname,LEN,func)
 %% Create a virtual movie dataset of frames by splitting up the movie
 %% pointed to by filename mname into LEN frames
 %% The LEN frames are obtained by equal-time spaced partitions
@@ -30,6 +30,9 @@ hour = sscanf(lenstring(1:seps(1)-1),'%d');
 minute = sscanf(lenstring(seps(1)+1:seps(2)-1),'%d');
 second = sscanf(lenstring(seps(2)+1:end),'%f');
 
+%subtract off last second
+second = second - 1;
+
 nsec = hour*3600+minute*60+second;
 
 if ~exist('LEN','var')
@@ -39,13 +42,19 @@ end
 chunks = linspace(0,nsec,LEN);
 bg = cell(LEN,1);
 
-for i = 1:LEN
+if exist('func','var')
+  for i = 1:LEN
+    bg{i} = @()(func(get_movie_frame(mname,get_movie_string(chunks(i)))));
+  end
+else  
+  for i = 1:LEN
     bg{i} = @()(get_movie_frame(mname,get_movie_string(chunks(i))));
+  end
 end
 
 function str = get_movie_string(index)
 hours = floor(index/(3600));
 minutes = floor(index/60);
 seconds = index - 3600*hours-60*minutes;
-str = sprintf('%02d:%02d:%02.3f',hours,minutes,seconds);
+str = sprintf('%02d:%02d:%02.2f',hours,minutes,seconds);
 
