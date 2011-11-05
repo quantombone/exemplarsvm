@@ -4,7 +4,9 @@ function plot_bbox(bb,titler,col1,col2,do_spacing,linewidths,hg_size)
 %should be dotted or not
 
 %Tomasz Malisiewicz (tomasz@cmu.edu)
-
+if numel(bb)==0
+  return;
+end
 %Needs to be a double or text command complains (thanks Carl)
 bb = double(bb);
 
