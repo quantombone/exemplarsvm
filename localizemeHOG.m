@@ -26,6 +26,10 @@ if length(models) == 0
   return;
 end
 
+if ~iscell(models)
+  models = {models};
+end
+
 if ~exist('localizeparams','var')
   localizeparams = get_default_mining_params;
 end
@@ -198,7 +202,7 @@ if localizeparams.SAVE_SVS == 1
 else
   resstruct.xs = cell(N,1);
 end
-fprintf(1,'\n');
+%fprintf(1,'\n');
 
 function [resstruct,t] = localizemeHOGdriverBLOCK(I, models, ...
                                              localizeparams)
@@ -448,8 +452,8 @@ if isnumeric(I)
   clear t
   t.size = size(I);
 
-  fprintf(1,'Localizing %d in I=[%dx%d@%d%s]',N,...
-          t.size(1),t.size(2),localizeparams.lpo,flipstring);
+  %fprintf(1,'Localizing %d in I=[%dx%d@%d%s]',N,...
+  %        t.size(1),t.size(2),localizeparams.lpo,flipstring);
 
   %Compute pyramid
   [t.hog,t.scales] = featpyramid2(I, sbin, localizeparams);  
