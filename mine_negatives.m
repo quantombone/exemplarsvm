@@ -34,6 +34,12 @@ mining_params.SAVE_SVS = 1;
 
 numpassed = 0;
 
+for i = 1:length(models)
+  if ~isfield(models{i},'total_mines')
+    models{i}.total_mines = 0;
+  end
+end
+
 for i = 1:length(mining_queue)
   index = mining_queue{i}.index;
   I = convert_to_I(bg{index});
