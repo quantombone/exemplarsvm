@@ -1,31 +1,38 @@
----
-ExemplarSVM readme
 ![](https://github.com/quantombone/exemplarsvm/raw/master/images/exemplar_classifiers-small_n.png)
 ---- 
-Author + Executive Exemplar-SVM Developer: Tomasz Malisiewicz http://www.cs.cmu.edu/~tmalisie/
+**Author + Executive Exemplar-SVM Developer**: [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/)
+<br/>
+**Exemplar-SVM Fellow Developer**: [Abhinav Shrivastava](http://www.abhinav-shrivastava.info/)
+<br/>
+**Exemplar-SVM Visionary**: [Abhinav Gupta](http://www.cs.cmu.edu/~abhinavg)
+<br/>
+**Exemplar-SVM Visionary**: [Alexei A. Efros](http://www.cs.cmu.edu/~efros)
 
-Exemplar-SVM Fellow Developer: Abhinav Shrivastava http://www.abhinav-shrivastava.info/
+###Please cite the following paper if you use this library:
 
-Exemplar-SVM Visionary: Alexei A. Efros http://www.cs.cmu.edu/~efros
+Tomasz Malisiewicz, Abhinav Gupta, Alexei A. Efros. **Ensemble of Exemplar-SVMs for Object Detection and Beyond.** In ICCV, 2011. 
+[PDF](http://www.cs.cmu.edu/~tmalisie/projects/iccv11/exemplarsvm-iccv11.pdf) 
+[Project Page](http://www.cs.cmu.edu/~tmalisie/projects/iccv11/) 
 
-Exemplar-SVM Visionary: Abhinav Gupta http://www.cs.cmu.edu/~abhinavg
+###See my PhD thesis for more information and ICCV follow-up experiments:
 
+Tomasz Malisiewicz. **Exemplar-based Representations for Object Detection, Association and Beyond.** PhD Dissertation, tech. report CMU-RI-TR-11-32. August, 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/thesis/malisiewicz_thesis.pdf)
 
-Cite the following paper if you use this library:
-
-Tomasz Malisiewicz, Abhinav Gupta, Alexei A. Efros. Ensemble of Exemplar-SVMs for Object Detection and Beyond. In ICCV 2011.
-
-Project page:
-
-http://www.cs.cmu.edu/~tmalisie/projects/iccv11/
+###See our SIGGRAPH ASIA 2011 paper for image on image matching:
+Abhinav Shrivastava, Tomasz Malisiewicz, Abhinav Gupta, Alexei A. Efros. **Data-driven Visual Similarity for Cross-domain Image Matching.** In SIGGRAPH ASIA, December 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/projects/sa11/shrivastava-sa11.pdf) [Project Page](http://graphics.cs.cmu.edu/projects/crossDomainMatching/) 
 
 ----
 This object recognition library is a combination of:
-libsvm-3.0-1,
-fast blas convolution code (from voc-release-4.0), 
-hog code (from voc-release-3.1), 
-localization within a pyramid code (my variant of pedro's code from voc-release-3.1),
-VOC development code from http://pascallin.ecs.soton.ac.uk/challenges/VOC/
+
+* [libsvm-3.0-1](http://www.csie.ntu.edu.tw/~cjlin/libsvm/)
+
+* fast blas convolution code (from [voc-release-4.0](http://www.cs.brown.edu/~pff/latent/)), 
+
+* 31-D HOG feature code (from [voc-release-3.1](http://www.cs.brown.edu/~pff/latent/)), 
+
+* Localization within a pyramid code (using both sliding windows and fast block-based method), and exemplar-svm training
+
+* [VOC development code](http://pascallin.ecs.soton.ac.uk/challenges/VOC/) imported from the PASCAL VOC website
 
 ---
 Installation of PASCAL VOC Object Recognition Dataset
