@@ -1,3 +1,7 @@
+### Abstract
+
+This paper proposes a conceptually simple but surprisingly powerful method which combines the effectiveness of a discriminative object detector with the explicit correspondence offered by a nearest-neighbor approach. The method is based on training a separate linear SVM classifier for every exemplar in the training set. Each of these Exemplar-SVMs is thus defined by a single positive instance and millions of negatives. While each detector is quite specific to its exemplar, we empirically observe that an ensemble of such Exemplar-SVMs offers surprisingly good generalization. Our performance on the PASCAL VOC detection task is on par with the much more complex latent part-based model of Felzenszwalb et al., at only a modest computational cost increase. But the central benefit of our approach is that it creates an explicit association between each detection and a single training exemplar. Because most detections show good alignment to their associated exemplar, it is possible to transfer any available exemplar meta-data (segmentation, geometric structure, 3D model, etc.) directly onto the detections, which can then be used as part of overall scene understanding.
+
 ![](https://github.com/quantombone/exemplarsvm/raw/master/images/exemplar_classifiers-small_n.png)
 ---- 
 **Author + Executive Exemplar-SVM Developer**: [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/)
@@ -39,7 +43,7 @@ Installation of PASCAL VOC Object Recognition Dataset
 Go to http://pascallin.ecs.soton.ac.uk/challenges/VOC/ for more information
 
 ---
-Copyright (C) 2011 by Tomasz Malisiewicz
+**Copyright (C) 2011 by Tomasz Malisiewicz**
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
