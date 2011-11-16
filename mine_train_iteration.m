@@ -28,10 +28,8 @@ end
    
 m = update_the_model(m, mining_stats, training_function);
 
-if m.dataset_params.display == 1
-
+if isfield(m,'dataset_params') && m.dataset_params.display == 1
   dump_figures(m);
-
 end
 
 function [m] = update_the_model(m, mining_stats, training_function)
