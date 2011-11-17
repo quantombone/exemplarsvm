@@ -484,7 +484,7 @@ else
     t = I;
   end
   
-  fprintf(1,'Localizing %d in I=[%dx%d@%d]',N,...
-        t.size(1),t.size(2),localizeparams.lpo);
+  %fprintf(1,'Localizing %d in I=[%dx%d@%d]',N,...
+  %      t.size(1),t.size(2),localizeparams.lpo);
 end
 
