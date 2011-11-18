@@ -1,18 +1,11 @@
 Here are the features used in the Exemplar-SVM framework.
 
-features.m is a Matlab function which calles one of the mexed functions.
+Compile with **compile.m** script
 
-features_pedro.cc are the 31-D features from voc-release-3.1
+** features.m: a Matlab function which calles one of the mexed functions. It returns the dimensionality of the per-cell features when called without arguments.  The idea is that you can add your own features and 31 is never hard-coded in the codebase.
 
-http://people.cs.uchicago.edu/~pff/latent-release3/
+** features_pedro.cc: the 31-D features from voc-release-3.1
 
-P. Felzenszwalb, R. Girshick, D. McAllester, D. Ramanan. Object Detection with Discriminatively Trained Part Based Models. PAMI 2010.
+** features_raw.cc: the same features as features_pedro.cc but without the contrast normalization.  They are definitely worse than when using normalization, but the effect has not been fully studied.
 
-features_raw.cc are the same features but without the contrast normalization.  They are definitely worse than when using normalization, but the effect has not been fully studied.
-
-fconvblas.cc comes from voc-release-4
-
-NOTE: use this for compiling the fconvblas.cc file
-    >> mex -O fconvblas.cc -lmwblas -o fconv
-
-http://people.cs.uchicago.edu/~pff/latent-release4/
+** fconvblas.cc: a fast convolution procedure from from [voc-release-4](http://people.cs.uchicago.edu/~pff/latent-release4/)
