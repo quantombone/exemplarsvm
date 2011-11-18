@@ -12,4 +12,7 @@ features_raw.cc are the same features but without the contrast normalization.  T
 
 fconvblas.cc comes from voc-release-4
 
+NOTE: use this for compiling the fconvblas.cc file
+    >> mex -O fconvblas.cc -lmwblas -o fconv
+
 http://people.cs.uchicago.edu/~pff/latent-release4/
