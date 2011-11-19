@@ -14,13 +14,19 @@ if ~isfield(m.model,'wtrace')
   m.model.btrace{1} = m.model.b;
 end
 
+if length(m.mining_queue) == 0
+  fprintf(1,' ---Null mining queue, not mining!\n');
+  return;
+end
+
 %If the skip is enabled, we just update the model
 if m.mining_params.skip_mine == 0
   [hn, m.mining_queue, mining_stats] = ...
-      mine_negatives({m}, m.mining_queue, m.train_set, m.mining_params);
+      mine_negatives({m}, m.mining_queue, m.train_set, ...
+                     m.mining_params);
+
   m = add_new_detections(m, cat(2,hn.xs{1}{:}), cat(1,hn.bbs{1}{: ...
                    }));
-
 else
   mining_stats.num_visited = 0;
   fprintf(1,'WARNING: not mining, just updating model\n');  
