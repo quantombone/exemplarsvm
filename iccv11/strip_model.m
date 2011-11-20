@@ -14,10 +14,16 @@ for i = 1:length(models)
   m.model.x = cur.model.x(:,1);
   m.model.b = cur.model.b;
   m.model.bb = cur.model.bb;
-  m.I = cur.I;
-  m.curid = cur.curid;
-  m.objectid = cur.objectid;
-  m.cls = cur.cls;
+  if isfield(cur,'I')
+    m.I = cur.I;
+  end
+  if isfield(cur,'curid')
+    m.curid = cur.curid;
+    m.objectid = cur.objectid;
+  end
+  if isfield(cur,'cls')
+    m.cls = cur.cls;
+  end
   m.gt_box = cur.gt_box;
   m.sizeI = cur.sizeI;
   m.models_name = cur.models_name;
