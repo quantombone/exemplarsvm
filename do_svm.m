@@ -28,16 +28,14 @@ mining_params = m.mining_params;
 %% is actually hard negatives for mining
 if mining_params.extract_negatives == 1
   [negatives,vals,pos,m] = find_set_membership(m);
-  
   xs = m.model.svxs(:, [negatives]);
   bbs = m.model.svbbs([negatives],:);
-    
 else
   xs = m.model.svxs;
   bbs = m.model.svbbs;
 end
 
-MAXSIZE = 2000;
+MAXSIZE = 3500;
 if size(xs,2) >= MAXSIZE
   HALFSIZE = MAXSIZE/2;
   %NOTE: random is better than top 5000
