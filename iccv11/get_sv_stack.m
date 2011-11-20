@@ -10,6 +10,7 @@ function Isv = get_sv_stack(m, K2, K1)
 if (sum(m.model.w(:)<0) == 0) || ...
       (sum(m.model.w(:)>0) == 0)
   %%NOTE: square it
+  fprintf(1,'Note, squaring visualization\n');
   m.model.w = (abs(m.model.w)).^2;
 end
 
