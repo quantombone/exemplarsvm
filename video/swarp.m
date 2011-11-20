@@ -38,7 +38,7 @@ for i = 1:K
 end
 
 MAXDIM = 1000;
-min1 = min(result(:,1))
+min1 = min(result(:,1));
 min2 = min(result(:,2));
 o = [min1 min2 min1 min2]-1;
 b = b - o;
