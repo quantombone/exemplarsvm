@@ -38,10 +38,17 @@ d4 = max(0,cb(4) - models{index}.sizeI(1));
 mypad = max([d1,d2,d3,d4]);
 PADDER = round(mypad)+2;
 
-I = convert_to_I(models{index}.I);
-mask = zeros(size(I,1),size(I,2));
+if isfield(models{index},'I')
+  I = convert_to_I(models{index}.I);
+else
+  I = ...
+      convert_to_I(models{index}.train_set{models{index}.model.bb(subind,11)});
+end
+%pre-pad mask because GT region can be outside image
+mask = pad_image(zeros(size(I,1),size(I,2)),PADDER);
 g = models{index}.gt_box;
-mask(g(2):g(4),g(1):g(3)) = 1;
+g2 = g + PADDER;
+mask(g2(2):g2(4),g2(1):g2(3)) = 1;
 
 if loadseg == 1 && exist('VOCopts','var')
   [I2, mask2] = load_seg(VOCopts,models{index});
@@ -54,7 +61,6 @@ end
 
 cb = models{index}.gt_box;    
 Iex = pad_image(I, PADDER);
-mask = pad_image(mask, PADDER);
 cb = round(cb + PADDER);
 
 Iex = Iex(cb(2):cb(4),cb(1):cb(3),:);
