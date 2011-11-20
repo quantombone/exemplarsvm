@@ -58,7 +58,19 @@ for i = 1:length(mining_queue)
   %   %keyboard
   % else
   [rs,t] = localizemeHOG(I, models, mining_params);
-  %end
+
+  if isfield(models{1}.mining_params,'SOFT_NEGATIVE_MINING') && ...
+        (models{1}.mining_params.SOFT_NEGATIVE_MINING==1)
+    for j=1:length(rs.bbs)
+      if size(rs.bbs{j},1) > 0
+        top_det = rs.bbs{j}(1,:);
+        os = getosmatrix_bb(rs.bbs{j},top_det);
+        goods = find(os<models{j}.mining_params.SOFT_NEGATIVE_MINING_OS);
+        rs.bbs{j} = rs.bbs{j}(goods,:);
+        rs.xs{j} = rs.xs{j}(goods);
+      end
+    end
+  end
 
   numpassed = numpassed + 1;
 
