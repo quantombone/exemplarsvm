@@ -212,7 +212,7 @@ function [resstruct,t] = localizemeHOGdriverBLOCK(I, models, ...
 N = length(models);
 ws = cellfun2(@(x)x.model.w,models);
 bs = cellfun(@(x)x.model.b,models)';
-
+bs = reshape(bs,[],1);
 sizes1 = cellfun(@(x)x.model.hg_size(1),models);
 sizes2 = cellfun(@(x)x.model.hg_size(2),models);
 
