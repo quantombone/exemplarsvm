@@ -412,7 +412,7 @@ end
 if localizeparams.SAVE_SVS == 0
   resstruct.xs = cell(N,1);
 end
-fprintf(1,'\n');
+%fprintf(1,'\n');
 
 function rs = prune_nms(rs, params)
 %Prune via nms to eliminate redundant detections
