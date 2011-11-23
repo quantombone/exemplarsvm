@@ -9,7 +9,7 @@ end
 
 while 1
   clf
-  imagesc(I)
+  imagesc(convert_to_I(I))
   axis image
   axis off
   htitle=title(message);
