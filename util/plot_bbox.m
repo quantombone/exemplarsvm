@@ -25,6 +25,12 @@ if ~exist('titler','var')
   titler = '';
 end
 
+if isnumeric(titler)
+  titler = num2str(titler);
+elseif ~isstr(titler)
+  titler = 'invalid';
+end
+
 if ~exist('linewidths','var')
   linewidth1 = 3;
   linewidth2 = 1;
