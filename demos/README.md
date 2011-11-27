@@ -1,8 +1,13 @@
-Here are the Exemplar-SVM main functions for starting the training procedure.
-These demos are meant to work with the PASCAL VOC 2007 dataset.
+Inside this directory you will find two demo files, one to show off Exemplar-svm training, and the other to show how to apply a pre-trained ensemble of exemplars on a test-set of images. These demos are meant to work with the PASCAL VOC 2007 dataset, so let's download some data!
 
-# Running on a cluster information This library was meant to run on a
-cluster with a shared NFS/AFS file structure where all nodes can
+## Installing PASCAL VOC 2007 trainval/test sets
+
+    wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
+    wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar
+    
+## How to run the Exemplar-SVM framework on a cluster 
+
+This library was meant to run on a cluster with a shared NFS/AFS file structure where all nodes can
 read/write data from a common data source.  The PASCAL VOC dataset
 must be installed there and the scratch space must also be present
 there.  The idea is that scratch-work is written as .mat files and
