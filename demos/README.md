@@ -2,8 +2,12 @@ Inside this directory you will find two demo files, one to show off Exemplar-svm
 
 ## Installing PASCAL VOC 2007 trainval/test sets
 
+    mkdir /nfs/baikal/tmalisie/pascal
+    cd /nfs/baikal/tmalisie/pascal
     wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
     wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar
+    tar xf VOCtest_06-Nov-2007.tar 
+    tar xf VOCtrainval_06-Nov-2007.tar 
     
 ## How to run the Exemplar-SVM framework on a cluster 
 
