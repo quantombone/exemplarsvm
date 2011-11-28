@@ -53,36 +53,36 @@ end
 cls = models{1}.cls;
 
 %% Avoid writing a file to disk
-% mname = sprintf('%s%s',models{1}.models_name,final.calib_string);
-% filer = sprintf('%s/%s/%s/comp3_det_%s_%s.txt',...
-%                 VOCopts.resdir,VOCopts.subname,mname,...
-%                 target_directory,cls);
+mname = sprintf('%s%s',models{1}.models_name,final.calib_string);
+filer = sprintf('%s/%s/%s/comp3_det_%s_%s.txt',...
+                VOCopts.resdir,VOCopts.subname,mname,...
+                target_directory,cls);
 
-% %Create directory if it is not present
-% [aaa,bbb,ccc] = fileparts(filer);
-% if ~exist(aaa,'dir')
-%   mkdir(aaa);
-% end
+%Create directory if it is not present
+[aaa,bbb,ccc] = fileparts(filer);
+if ~exist(aaa,'dir')
+  mkdir(aaa);
+end
 
-% fprintf(1,'Writing File %s\n',filer);
-% filerlock = [filer '.lock'];
-% if fileexists(filer) || (mymkdir_dist(filerlock)==0)
-%   wait_until_all_present({filerlock},5,1);
-% else
-%   fid = fopen(filer,'w');
-%   for i = 1:length(final.final_boxes)
-%     curid = grid{i}.curid;
-%     for q = 1:size(final.final_boxes{i},1)
-%       fprintf(fid,'%s %f %f %f %f %f\n',curid,...
-%               final.final_boxes{i}(q,end),...
-%               final.final_boxes{i}(q,1:4));
-%     end
-%   end
-%   fclose(fid);
-% end
+fprintf(1,'Writing File %s\n',filer);
+filerlock = [filer '.lock'];
+if fileexists(filer) || (mymkdir_dist(filerlock)==0)
+  wait_until_all_present({filerlock},5,1);
+else
+  fid = fopen(filer,'w');
+  for i = 1:length(final.final_boxes)
+    curid = grid{i}.curid;
+    for q = 1:size(final.final_boxes{i},1)
+      fprintf(fid,'%s %f %f %f %f %f\n',curid,...
+              final.final_boxes{i}(q,end),...
+              final.final_boxes{i}(q,1:4));
+    end
+  end
+  fclose(fid);
+end
 
-% %make sure filer is present in order to continue here
-% wait_until_all_present({filer});
+%make sure filer is present in order to continue here
+wait_until_all_present({filer});
 
 %fprintf(1,'HACK: changing OVERLAP HERE!\n');
 %VOCopts.minoverlap = .4;
@@ -108,17 +108,17 @@ stuff{1}.ids = ids;
 
 figure(2)
 clf
-%VOCopts.filename = filer;
+VOCopts.filename = filer;
 %VOCopts.detrespath = [VOCopts.detrespath '/' VOCopts.subname];
 
 
-[results.recall,results.prec,results.ap,results.apold,results.fp,results.tp,results.npos,results.corr] = VOCevaldet(VOCopts,'comp3',cls,true,cpres.gtids, cpres.recs,stuff);
+[results.recall,results.prec,results.ap,results.apold,results.fp,results.tp,results.npos,results.corr] = VOCevaldet(VOCopts,'comp3',cls,true);%,cpres.gtids, cpres.recs,stuff);
 
 %fprintf(1,'took %.3f sec\n',ftime);
 
-%if exist(filerlock,'dir')
-%  rmdir(filerlock);
-%end
+if exist(filerlock,'dir')
+ rmdir(filerlock);
+end
 
 set(gca,'FontSize',16)
 set(get(gca,'Title'),'FontSize',16)
@@ -126,41 +126,41 @@ set(get(gca,'YLabel'),'FontSize',16)
 set(get(gca,'XLabel'),'FontSize',16)
 axis([0 1 0 1]);
 
-% filer = sprintf(['%s/www/%s-%s%s-on-%s-%s.pdf'], ...
-%                 VOCopts.localdir, ...
-%                 models{1}.cls, ...
-%                 models{1}.models_name, ...
-%                 final.calib_string, ...
-%                 target_directory, ...
-%                 VOCopts.subname);
+filer = sprintf(['%s/www/%s-%s%s-on-%s-%s.pdf'], ...
+                VOCopts.localdir, ...
+                models{1}.cls, ...
+                models{1}.models_name, ...
+                final.calib_string, ...
+                target_directory, ...
+                VOCopts.subname);
 
-% [basedir,tmp,tmp] = fileparts(filer);
+[basedir,tmp,tmp] = fileparts(filer);
 
-% if ~exist(basedir,'dir')
-%   mkdir(basedir);
-% end
+if ~exist(basedir,'dir')
+  mkdir(basedir);
+end
 
-% set(gcf,'PaperPosition',[0 0 8 8])
-% print(gcf,'-dpdf',filer);
+set(gcf,'PaperPosition',[0 0 8 8])
+print(gcf,'-dpdf',filer);
 
-% filer2 = strrep(filer,'.pdf','.png');
-% print(gcf,'-dpng',filer2);
+filer2 = strrep(filer,'.pdf','.png');
+print(gcf,'-dpng',filer2);
 
-% fprintf(1,'Just Wrote %s\n',filer);
+fprintf(1,'Just Wrote %s\n',filer);
 
-% results.cls = models{1}.cls;
-% drawnow
+results.cls = models{1}.cls;
+drawnow
 
 if CACHE_FILE == 1
   
-  results2 = [];
-  results2.ap = results.ap;
-  results2.apold = results.apold;
+  % results2 = [];
+  % results2.ap = results.ap;
+  % results2.apold = results.apold;
   
-  save(resfile,'results2');
+  % save(resfile,'results2');
     
   %TODO: we are saving really large files for exemplarNN
-  %save(resfile,'results','final');
+  save(resfile,'results','final');
   
   
   if exist(reslock,'dir')
