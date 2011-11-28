@@ -95,8 +95,8 @@ for i = 1:length(ordering)
     index = inds{ordering(i)}(j);
     fprintf(1,'   ---image %d\n',index);
     Iname = fg{index};
-    curid = -1;
-    %[tmp,curid,tmp] = fileparts(Iname);
+    %curid = -1;
+    [tmp,curid,tmp] = fileparts(Iname);
     
     I = Is{j};
        
