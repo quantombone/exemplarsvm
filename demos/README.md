@@ -1,14 +1,50 @@
 Inside this directory you will find two demo files, one to show off Exemplar-svm training, and the other to show how to apply a pre-trained ensemble of exemplars on a test-set of images. These demos are meant to work with the PASCAL VOC 2007 dataset, so let's download some data!
 
 ## Installing PASCAL VOC 2007 trainval/test sets
+``` sh
+$ mkdir /nfs/baikal/tmalisie/pascal #Make a directory for the PASCAL VOC data
+$ cd /nfs/baikal/tmalisie/pascal
+$ wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
+$ wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar
+$ tar xf VOCtest_06-Nov-2007.tar 
+$ tar xf VOCtrainval_06-Nov-2007.tar 
+``` 
 
-    mkdir /nfs/baikal/tmalisie/pascal
-    cd /nfs/baikal/tmalisie/pascal
-    wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
-    wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar
-    tar xf VOCtest_06-Nov-2007.tar 
-    tar xf VOCtrainval_06-Nov-2007.tar 
-    
+## Downloading Exemplar-SVM MATLAB source code
+``` sh
+$ cd ~/projects/
+$ git clone git@github.com:quantombone/exemplarsvm.git #this will make ~/projects/exemplarsvm the code directory
+```
+
+## Making sure Exemplar-SVM library is compiled and working
+``` sh
+$ cd ~/projects/exemplarsvm
+$ matlab
+$ >> addpath(genpath(pwd));
+$ >> cd features/
+$ >> compile;
+```
+---
+At this point you can choose to either train your own detector, or download the pre-trained PASCAL VOC 2007 detectors and use them to create detections in a collection of images
+---
+# Train, Calibrate, and Test pipeline
+
+## Training an Exemplar-SVM "bus" detector
+``` sh
+$ cd ~/projects/exemplarsvm
+$ matlab
+$ >> addpath(genpath(pwd));
+$ >> voc_demo_esvm;
+```
+
+# Applying pre-trained models to a set of images
+## Download pre-trained models
+``` sh
+$ cd ~
+$ wget http://people.csail.mit.edu/tomasz/exemplarsvm-models.tar.gz
+$ gzip -d exemplarsvm-models.tar.gz
+$ tar xf exemplarsvm-models.tar #now ~/exemplarsvm-models/ contains all 20 category PASCAL VOC 2007 models
+```
 ## How to run the Exemplar-SVM framework on a cluster 
 
 This library was meant to run on a cluster with a shared NFS/AFS file structure where all nodes can
