@@ -49,19 +49,19 @@ for i=1:length(gtids)
     npos=npos+sum(~gt(i).diff);
 end
 
-% if isfield(VOCopts,'filename')
-%   filename = VOCopts.filename;
-% else
-%   filename = sprintf(VOCopts.detrespath,id,cls);
-% end
+if isfield(VOCopts,'filename')
+  filename = VOCopts.filename;
+else
+  filename = sprintf(VOCopts.detrespath,id,cls);
+end
 
 % % load results
-% [ids,confidence,b1,b2,b3,b4]=textread(filename,'%s %f %f %f %f %f');
-% BB=[b1 b2 b3 b4]';
+[ids,confidence,b1,b2,b3,b4]=textread(filename,'%s %f %f %f %f %f');
+BB=[b1 b2 b3 b4]';
 
-BB = stuff{1}.BB;
-ids = stuff{1}.ids;
-confidence = stuff{1}.conf;
+%BB = stuff{1}.BB;
+%ids = stuff{1}.ids;
+%confidence = stuff{1}.conf;
 
 if strcmp(VOCopts.dataset,'VOC2007')
   for i = 1:length(ids)
