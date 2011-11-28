@@ -5,9 +5,11 @@
 %% Initialize dataset
 VOCYEAR = 'VOC2007';
 suffix = load_data_directory;
-dataset_params = get_voc_dataset(VOCYEAR,suffix);
-dataset_params.display = 0;
+datadir = '/Users/tomasz/projects/pascal/VOCdevkit/';
 
+dataset_params = get_voc_dataset(VOCYEAR,suffix,datadir);
+dataset_params.display = 0;
+dataset_params.subname = '';
 %Do not skip evaluation, unless it is VOC2010
 dataset_params.SKIP_EVAL = 0;
 
