@@ -60,7 +60,6 @@ if strcmp(setname,'voc')
   [cur_set, gt] = textread(sprintf(dataset_params.imgsetpath,...
                                    target_directory),['%s' ...
                     ' %d']);
-  
   gridids = cellfun2(@(x)x.curid,grid);
   goods = ismember(gridids,cur_set);
   grid = grid(goods);
@@ -173,7 +172,6 @@ fprintf(1,'Pre-processing models for calibration: \n');
 
 for exid = 1:length(models)
   fprintf(1,'.');
-  
   sourcegrid = find(ismember(curids,models{exid}.curid));
   if length(sourcegrid) == 0
     sourcegrid = -1;
