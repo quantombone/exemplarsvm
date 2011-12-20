@@ -4,10 +4,9 @@
 
 %% Initialize dataset
 VOCYEAR = 'VOC2007';
-suffix = load_data_directory;
-datadir = '/Users/tomasz/projects/pascal/VOCdevkit/';
-
-dataset_params = get_voc_dataset(VOCYEAR,suffix,datadir);
+results_directory = load_results_directory;
+data_directory = load_data_directory;
+dataset_params = get_voc_dataset(VOCYEAR, results_directory, data_directory);
 dataset_params.display = 0;
 dataset_params.subname = '';
 %Do not skip evaluation, unless it is VOC2010
@@ -28,16 +27,6 @@ init_params.init_type = sprintf('%s-%d-%d',...
                                 init_params.init_string,...
                                 init_params.goal_ncells,...
                                 init_params.MAXDIM);
-
-% %Initialize exemplar framing function
-% init_params.sbin = 8;
-% init_params.hg_size = [8 8];
-% init_params.init_function = @initialize_fixedframe_model;
-% init_params.init_string = 'f';
-% init_params.init_type = sprintf('%s-%d-%d', ...
-%                                 init_params.init_string, ...
-%                                 init_params.hg_size(1), ...
-%                                 init_params.hg_size(2));
 
 dataset_params.init_params = init_params;
 

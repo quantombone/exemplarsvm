@@ -18,8 +18,6 @@ if length(fg) == 0
   return;
 end
 
-
-
 %Only allow display to be enabled on a machine with X
 display = dataset_params.display;
 
@@ -36,17 +34,12 @@ else
   params = dataset_params.params;
 end
 
-%if strcmp(models{1}.models_name,'dalal')
-%  params.TOPK = 100;
-%  params.thresher = -2.5;
-%end
-
 setname = [setname '.' models{1}.cls];
 
 baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,setname, ...
                 models{1}.models_name);
 
-if ~exist(baser,'dir')
+if (display == 0) && (~exist(baser,'dir'))
   fprintf(1,'Making directory %s\n',baser);
   mkdir(baser);
 end
@@ -75,11 +68,9 @@ for i = 1:length(ordering)
   allfiles{i} = filer;
   filerlock = [filer '.lock'];
 
-
   if ~display && (fileexists(filer) || (mymkdir_dist(filerlock) == 0))
     continue
   end
-
   
   res = cell(0,1);
 
@@ -152,11 +143,9 @@ for i = 1:length(ordering)
       %already nmsed (but not for LRs)
       boxes = nms_within_exemplars(boxes,.5);
 
-      size(boxes,1);
+
       %% ONLY SHOW TOP 5 detections or fewer
-      %boxes = boxes(1:min(size(boxes,1),8),:);
-      
-      
+      boxes = boxes(1:min(size(boxes,1),5),:);
       
       if 1% size(boxes,1) >=1
         figure(53)

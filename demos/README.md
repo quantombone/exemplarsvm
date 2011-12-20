@@ -1,5 +1,7 @@
 Inside this directory you will find two demo files, one to show off Exemplar-svm training, and the other to show how to apply a pre-trained ensemble of exemplars on a test-set of images. These demos are meant to work with the PASCAL VOC 2007 dataset, so let's download some data!
 
+This quickstart guide assumes you have hardcoded "/nfs/baikal/tmalisie/pascal/VOCdevkit/" into the function load_data_directory.m, as well as the results folder "/nfs/baikal/tmalisie/esvm-data/" into "load_results_directory.m"
+
 ## Installing PASCAL VOC 2007 trainval/test sets
 ``` sh
 $ mkdir /nfs/baikal/tmalisie/pascal #Make a directory for the PASCAL VOC data
@@ -24,6 +26,8 @@ $ >> addpath(genpath(pwd));
 $ >> cd features/
 $ >> compile;
 ```
+
+## Set data
 ---
 At this point you can choose to either train your own detector, or download the pre-trained PASCAL VOC 2007 detectors and use them to create detections in a collection of images
 ---
@@ -38,12 +42,12 @@ $ >> voc_demo_esvm;
 ```
 
 # Applying pre-trained models to a set of images
-## Download pre-trained models
+## Download pre-trained models into results direcotry
 ``` sh
-$ cd ~
-$ wget http://people.csail.mit.edu/tomasz/exemplarsvm-models.tar.gz
-$ gzip -d exemplarsvm-models.tar.gz
-$ tar xf exemplarsvm-models.tar #now ~/exemplarsvm-models/ contains all 20 category PASCAL VOC 2007 models
+$ cd /nfs/baikal/tmalisie/esvm-data/
+$ wget http://people.csail.mit.edu/tomasz/exemplarsvm-VOC2007-models.tar.gz
+$ gzip -d exemplarsvm-VOC2007-models.tar.gz
+$ tar xf exemplarsvm-VOC2007-models.tar #now the results directory contains all 20 category PASCAL VOC 2007 models
 ```
 ## How to run the Exemplar-SVM framework on a cluster 
 
@@ -59,8 +63,6 @@ the training will happen in parallel.
 
 
 * Install PASCAL VOC dataset
-
-* Set working directory inside load_data_directory.m
 
 * Run voc_demo_esvm (trains all bus exemplars).  To run this on a cluster, please see my [warp_scripts github repository](https://github.com/quantombone/warp_scripts)
 
