@@ -1,6 +1,11 @@
+function voc_demo_esvm(classes)
 %This is the main Exemplar-SVM driver program, see README.md for
 %instructions
 %Tomasz Malisiewicz (tomasz@cmu.edu)
+
+if ~exist('classes','var')
+  classes = {'bus'};
+end
 
 %% Initialize dataset
 VOCYEAR = 'VOC2007';
@@ -72,7 +77,7 @@ dataset_params.models_name = ...
      '.' ...
      dataset_params.model_type];
 
-classes = {'bus'};
+
 
 %choose all classes except person
 %classes = dataset_params.classes;

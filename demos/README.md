@@ -29,7 +29,6 @@ $ >> cd features/
 $ >> compile;
 ```
 
-## Set data
 ---
 At this point you can choose to either train your own detector, or download the pre-trained PASCAL VOC 2007 detectors and use them to create detections in a collection of images
 ---
@@ -40,18 +39,27 @@ At this point you can choose to either train your own detector, or download the 
 $ cd ~/projects/exemplarsvm
 $ matlab
 $ >> addpath(genpath(pwd));
-$ >> voc_demo_esvm;
+$ >> voc_demo_esvm('bus')
 ```
 
 # Applying pre-trained models to a set of images
-## Download pre-trained models into results direcotry
+## Download pre-trained models into results directory
 ``` sh
 $ cd /nfs/baikal/tmalisie/esvm-data/
 $ wget http://people.csail.mit.edu/tomasz/exemplarsvm-VOC2007-models.tar.gz
 $ gzip -d exemplarsvm-VOC2007-models.tar.gz
 $ tar xf exemplarsvm-VOC2007-models.tar #now the results directory contains all 20 category PASCAL VOC 2007 models
 ```
-## How to run the Exemplar-SVM framework on a cluster 
+
+## Look at some detections
+```
+$ cd ~/projects/exemplarsvm
+$ matlab
+$ >> addpath(genpath(pwd));
+$ >> voc_demo_apply('bus')
+
+
+# How to run the Exemplar-SVM framework on a cluster 
 
 This library was meant to run on a cluster with a shared NFS/AFS file structure where all nodes can
 read/write data from a common data source.  The PASCAL VOC dataset
@@ -64,7 +72,7 @@ be replicated across a cluster, you can run the script 200x times and
 the training will happen in parallel.
 
 
-* Install PASCAL VOC dataset
-
-* Run voc_demo_esvm (trains all bus exemplars).  To run this on a cluster, please see my [warp_scripts github repository](https://github.com/quantombone/warp_scripts)
+To run ExemplarSVM on a cluster, first make sure you have a cluster,
+then please see my [warp_scripts github
+repository](https://github.com/quantombone/warp_scripts)
 
