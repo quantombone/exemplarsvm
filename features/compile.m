@@ -8,4 +8,4 @@ mex -O features_pedro.cc
 mex -O features_raw.cc
 
 % mulththreaded convolution without blas (see voc-release-4)
-mex -O fconvblas.cc -lmwblas -o fconv
+mex -O fconvblas.cc -lmwblas -o fconvblas
