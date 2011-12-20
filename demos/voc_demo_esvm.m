@@ -21,7 +21,6 @@ dataset_params.SKIP_EVAL = 0;
 %% SET SOURCETRAIN/VAL/TEST PARAMS %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 %Initialize framing function
 init_params.sbin = 8;
 init_params.goal_ncells = 100;
@@ -45,7 +44,6 @@ dataset_params.model_type = 'exemplar';
 
 %Create mining/validation/testing params as defaults
 dataset_params.params = get_default_mining_params;
-
 
 %Choose the training function (do_svm, do_rank, ...)
 %Disable NMS in training params
@@ -76,8 +74,6 @@ dataset_params.models_name = ...
      dataset_params.must_have_seg_string ...
      '.' ...
      dataset_params.model_type];
-
-
 
 %choose all classes except person
 %classes = dataset_params.classes;
