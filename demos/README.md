@@ -17,8 +17,7 @@ $ git clone git@github.com:quantombone/exemplarsvm.git #this will make ~/project
 ```
 
 ## Setup paths
-
-This quickstart guide assumes you have hardcoded "/nfs/baikal/tmalisie/pascal/VOCdevkit/" into the function load_data_directory.m, as well as the results folder "/nfs/baikal/tmalisie/esvm-data/" into "load_results_directory.m"
+This quickstart guide assumes you have hardcoded "/nfs/baikal/tmalisie/pascal/VOCdevkit/" into the function load_data_directory.m, as well as the results folder "/nfs/baikal/tmalisie/esvm-data/" into "load_results_directory.m".  Note that you are free to choose any folder names you like, as the results will be written inside those directories.
 
 ## Making sure Exemplar-SVM library is compiled and working
 ``` sh
@@ -30,7 +29,9 @@ $ >> compile;
 ```
 
 ---
+
 At this point you can choose to either train your own detector, or download the pre-trained PASCAL VOC 2007 detectors and use them to create detections in a collection of images
+
 ---
 # Train, Calibrate, and Test pipeline
 
@@ -57,7 +58,6 @@ $ cd ~/projects/exemplarsvm
 $ matlab
 $ >> addpath(genpath(pwd));
 $ >> voc_demo_apply('bus')
-
 
 # How to run the Exemplar-SVM framework on a cluster 
 
