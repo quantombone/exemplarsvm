@@ -1,7 +1,5 @@
 Inside this directory you will find two demo files, one to show off Exemplar-svm training, and the other to show how to apply a pre-trained ensemble of exemplars on a test-set of images. These demos are meant to work with the PASCAL VOC 2007 dataset, so let's download some data!
 
-This quickstart guide assumes you have hardcoded "/nfs/baikal/tmalisie/pascal/VOCdevkit/" into the function load_data_directory.m, as well as the results folder "/nfs/baikal/tmalisie/esvm-data/" into "load_results_directory.m"
-
 ## Installing PASCAL VOC 2007 trainval/test sets
 ``` sh
 $ mkdir /nfs/baikal/tmalisie/pascal #Make a directory for the PASCAL VOC data
@@ -17,6 +15,10 @@ $ tar xf VOCtrainval_06-Nov-2007.tar
 $ cd ~/projects/
 $ git clone git@github.com:quantombone/exemplarsvm.git #this will make ~/projects/exemplarsvm the code directory
 ```
+
+## Setup paths
+
+This quickstart guide assumes you have hardcoded "/nfs/baikal/tmalisie/pascal/VOCdevkit/" into the function load_data_directory.m, as well as the results folder "/nfs/baikal/tmalisie/esvm-data/" into "load_results_directory.m"
 
 ## Making sure Exemplar-SVM library is compiled and working
 ``` sh
