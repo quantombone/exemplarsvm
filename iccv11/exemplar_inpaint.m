@@ -48,7 +48,8 @@ xform_cd = find_xform(g, detection_box(1:4));
 % end
 loadseg = 1;
 
-if strcmp(model.cls,'bus')
+%NOTE: do not display bus geometries
+if 0 %strcmp(model.cls,'bus')
   [mini_overlay.I,mini_overlay.alphamask,mini_overlay.faces] = ...
       get_geometry_icon({model}, 1, detection_box(7));
   

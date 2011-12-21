@@ -147,7 +147,7 @@ localizeparams.pyramid_padder = 5;
 localizeparams.dfun = 0;
 
 
-[rs,t] = localizemeHOG(I,mmm,localizeparams);
+[rs,t] = esvm_detect(I,mmm,localizeparams);
 target_bb = rs.bbs{1}(1,:);
 target_x = rs.xs{1}{1};
 

@@ -1,18 +1,8 @@
-function voc_template(dataset_params, cls)
+function voc_template(dataset_params, e_stream_set, neg_set, ...
+                      val_set, test_set, cls)
 %% This is the main Exemplar-SVM PASCAL VOC pipeline script, which
 %is called from voc_demo_esvm after the parameters of the
 %experiment have been set-up
-
-if ~exist(dataset_params.devkitroot,'dir')
-  mkdir(dataset_params.devkitroot);
-end
-
-resfile = [dataset_params.devkitroot '/dataset_params.mat'];
-if ~fileexists(resfile)
-  %Save the parameters so we know later how we generated this run
-  save([dataset_params.devkitroot '/dataset_params.mat'], ...
-       'dataset_params');
-end
 
 models_name = dataset_params.models_name;
 
@@ -20,20 +10,8 @@ models_name = dataset_params.models_name;
 %%%%%% EXEMPLAR INITIALIZATION %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Initialize exemplars with the exemplar stream
-e_stream_set = get_pascal_stream(dataset_params, cls);
-
-if isfield(dataset_params, 'dalalmode') && (dataset_params.dalalmode ...
-                                            == 1)
-  fprintf(1,'WARNING: using dalal mode\n');
-  efiles = exemplar_initialize_dt(dataset_params, e_stream_set, ...
-                               models_name, dataset_params.init_params);
-  
-else
-  efiles = exemplar_initialize(dataset_params, e_stream_set, ...
-                               models_name, dataset_params.init_params);
-end
-
+efiles = esvm_initialize(dataset_params, e_stream_set, ...
+                         models_name, dataset_params.init_params);
 
 %Append the nn-type if we are in nn mode
 if length(dataset_params.params.nnmode) > 0
@@ -43,7 +21,7 @@ end
 %Load all of the initialized exemplars
 CACHE_FILE = 1;
 STRIP_FILE = 0;
-models = load_all_models(dataset_params, cls, models_name, ...
+models = esvm_load_models(dataset_params, cls, models_name, ...
                          efiles, CACHE_FILE, STRIP_FILE);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -51,88 +29,57 @@ models = load_all_models(dataset_params, cls, models_name, ...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Train each initialized exemplar 
-if isfield(dataset_params,'mining_params')
-  curparams = dataset_params.mining_params;
 
-  train_set = get_pascal_set(dataset_params, ...
-                           curparams.set_name);
-  
-  if isfield(curparams,'set_maxk')
-    train_set = train_set(1:min(length(train_set), ...
-                                curparams.set_maxk));
-  end
+
     
-  [tfiles, models_name] = train_all_exemplars(dataset_params, ...
-                                              models, train_set);  
-  
-  if isfield(dataset_params, 'JUST_TRAIN') && ...
-        (dataset_params.JUST_TRAIN==1)
-    fprintf(1,'only training because JUST_TRAIN is enabled\n');
-    return;
-  end
-  %Load the trained exemplars (this will hold script until all
-  %exemplars have been trained)
-  CACHE_FILE = 1;
-  STRIP_FILE = 1;
-  models = load_all_models(dataset_params, cls, models_name, ...
-                           tfiles, CACHE_FILE, STRIP_FILE);
-  
-  if isfield(dataset_params, 'JUST_TRAIN_AND_LOAD') && ...
-        (dataset_params.JUST_TRAIN_AND_LOAD ==1 )
-    fprintf(1,'only train+load because JUST_TRAIN_AND_LOAD is enabled\n');
-    return;
-  end
-  
-else
-  fprintf(1,['Skipping training because dataset_params.mining_params not' ...
-             ' present\n']);
-end
+[tfiles, models_name] = esvm_train(dataset_params, ...
+                                   models, neg_set);  
 
+if isfield(dataset_params, 'JUST_TRAIN') && ...
+      (dataset_params.JUST_TRAIN==1)
+  fprintf(1,'only training because JUST_TRAIN is enabled\n');
+  return;
+end
+%Load the trained exemplars (this will hold script until all
+%exemplars have been trained)
+CACHE_FILE = 1;
+STRIP_FILE = 1;
+models = esvm_load_models(dataset_params, cls, models_name, ...
+                          tfiles, CACHE_FILE, STRIP_FILE);
+
+if isfield(dataset_params, 'JUST_TRAIN_AND_LOAD') && ...
+      (dataset_params.JUST_TRAIN_AND_LOAD ==1 )
+  fprintf(1,'only train+load because JUST_TRAIN_AND_LOAD is enabled\n');
+  return;
+end
+  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% EXEMPLAR CROSS VALIDATION %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Apply trained exemplars on validation set
-if isfield(dataset_params,'val_params')
-  curparams = dataset_params.val_params;
-  val_set = get_pascal_set(dataset_params, ...
-                           curparams.set_name);
-  if isfield(curparams,'set_maxk')
-    val_set = val_set(1:min(length(val_set), ...
-                            curparams.set_maxk));
-  end
+dataset_params.params = dataset_params.val_params;
+dataset_params.params.gt_function = @get_pascal_anno_function;
+val_files = esvm_detect_set(dataset_params, models, val_set, ...
+                            dataset_params.val_params.set_name);
 
-  dataset_params.params = curparams;
-  dataset_params.params.gt_function = @get_pascal_anno_function;
-  val_files = apply_all_exemplars(dataset_params, models, val_set, ...
-                                  curparams.set_name);
-
-  if isfield(dataset_params, 'JUST_APPLY') && ...
-        (dataset_params.JUST_APPLY==1)
-    fprintf(1,'only applying because JUST_APPLY is enabled\n');
-    %do nothing
-  else
-  
-    %Load validation results
-    val_grid = load_result_grid(dataset_params, models, ...
-                                curparams.set_name, val_files);
-    
-    % need to prune to subset here
-    %keyboard
-    
-    %val_struct is not used
-    %val_struct = pool_exemplar_detections(dataset_params, models, val_grid);
-    
-    %% Perform l.a.b.o.o. calibration and M-matrix estimation
-    CACHE_BETAS = 1;
-    M = calibrate_and_estimate_M(dataset_params, models, ...
-                                 val_grid, val_set, CACHE_BETAS);
-    
-  end
+if isfield(dataset_params, 'JUST_APPLY') && ...
+      (dataset_params.JUST_APPLY==1)
+  fprintf(1,'only applying because JUST_APPLY is enabled\n');
+  %do nothing
 else
-  fprintf(1,['Skipping validation becuase dataset_params.val_params not' ...
-             ' present\n']);
-  M = [];
+  
+  %Load validation results
+  val_grid = esvm_load_result_grid(dataset_params, models, ...
+                                   dataset_params.val_params.set_name, val_files);
+    
+  %val_struct is not used
+  %val_struct = pool_exemplar_detections(dataset_params, models, val_grid);
+  
+  %% Perform l.a.b.o.o. calibration and M-matrix estimation
+  CACHE_BETAS = 1;
+  M = esvm_calibrate_with_matrix(dataset_params, models, ...
+                                 val_grid, val_set, CACHE_BETAS);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -140,48 +87,40 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Apply trained exemplars on test set
-if isfield(dataset_params,'test_params')
-  curparams = dataset_params.test_params;
-  test_set = get_pascal_set(dataset_params, ...
-                           curparams.set_name);
-
-  if isfield(curparams,'set_maxk')
-    test_set = test_set(1:min(length(test_set), ...
-                            curparams.set_maxk));
-  end
-  
-  if length(test_set) == 0
-    fprintf(1,'Warning, testset is empty\n');
-    return;
-  end
-
-  %Apply on test set
-  dataset_params.params = curparams;
-  dataset_params.params.gt_function = [];
-  test_files = apply_all_exemplars(dataset_params, models, test_set, ...
-                                  curparams.set_name);
-  
-  if isfield(dataset_params, 'JUST_APPLY') && ...
-        (dataset_params.JUST_APPLY==1)
-    fprintf(1,'only applying because JUST_APPLY is enabled\n');
-    return;
-  end
-
-  %Load test results
-  test_grid = load_result_grid(dataset_params, models, ...
-                               curparams.set_name, test_files);
-  %Show all raw detections on test-set as a "memex browser"
-  %show_memex_browser2(dataset_params, models, test_grid,...
-  %                   test_set, curparams.set_name);
-
-
-else
-  fprintf(1,['Skipping testing because dataset_params.test_params not' ...
-             ' present\n']);
-  
-  %If testing is not performed, there is nothing left to do
-  %return;
+if length(test_set) == 0
+  fprintf(1,'Warning, testset is empty\n');
+  return;
 end
+
+%Apply on test set
+dataset_params.params = dataset_params.test_params;
+dataset_params.params.gt_function = [];
+test_files = esvm_detect_set(dataset_params, models, test_set, ...
+                             dataset_params.test_params.set_name);
+
+if isfield(dataset_params, 'JUST_APPLY') && ...
+      (dataset_params.JUST_APPLY==1)
+  fprintf(1,'only applying because JUST_APPLY is enabled\n');
+  return;
+end
+
+%Load test results
+test_grid = esvm_load_result_grid(dataset_params, models, ...
+                                  dataset_params.test_params.set_name, ...
+                                  test_files);
+
+test_struct = pool_exemplar_detections(dataset_params, models, test_grid, M);
+
+%[results] = evaluate_pascal_voc_grid(dataset_params, ...
+%                                     models, test_grid, ...
+%                                     dataset_params.test_params.set_name, ...
+%                                     test_struct);
+%rc = results.corr;
+%test_struct.rc = rc;
+
+maxk = 10;
+allbbs = show_top_dets(dataset_params, models, test_grid, test_set, dataset_params.test_params.set_name, ...
+                         test_struct, maxk);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -206,9 +145,10 @@ if length(M) > 0
     
     [results] = evaluate_pascal_voc_grid(dataset_params, ...
                                          models, test_grid, ...
-                                         curparams.set_name, ...
+                                         dataset_params.test_params.set_name, ...
                                          test_struct);
     rc = results.corr;
   end
   end
 end
+

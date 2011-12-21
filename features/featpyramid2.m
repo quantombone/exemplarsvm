@@ -26,6 +26,7 @@ sc = 2 ^(1/interval);
 
 % Start at MAXSCALE, and keep going down by the increment sc, until
 % we reach MAXLEVELS or MINSCALE
+scale = zeros(1,MAXLEVELS);
 for i = 1:MAXLEVELS
   scaler = MAXSCALE / sc^(i-1);
   
@@ -38,7 +39,8 @@ for i = 1:MAXLEVELS
   
   %if minimum dimensions is less than or equal to 5, exit
   if min([size(scaled,1) size(scaled,2)])<=MINDIMENSION
-    return
+    scale = scale(scale>0);
+    return;
   end
 
   feat{i} = features(scaled,sbin);
@@ -57,6 +59,7 @@ for i = 1:MAXLEVELS
   %if the max dimensions is less than or equal to 5, dont produce
   %any more levels
   if max([size(feat{i},1) size(feat{i},2)])<=MINDIMENSION
+    scale = scale(scale>0);
     return;
   end
   

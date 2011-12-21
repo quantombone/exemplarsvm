@@ -39,7 +39,7 @@ moses = cat(1,final_maxos{:});
 %% only good ones now!
 %bb = bb(moses(bb)>.5);
 
-if 1
+if 0
   fprintf(1,'Only segmentation ones here\n');
   %% get ones with segmentation only
   ids = cellfun2(@(x)x.curid,models(bbs(bb,6)));
@@ -69,7 +69,11 @@ counter = 1;
 
 for k = 1:maxk
 
-  corr = finalstruct.rc(k);
+  try
+    corr = finalstruct.rc(k);
+  catch
+    corr = 0;
+  end
   if 1 
     if counter > length(bb)
       break;

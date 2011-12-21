@@ -36,8 +36,14 @@ if ~exist('target_directory','var');
 end
 
 if ~exist('class','var') | (length(class)==0)
-  [neg_set,gt] = textread(sprintf(VOCopts.imgsetpath,target_directory),...
-                          '%s %d');
+  filer = sprintf(VOCopts.imgsetpath,target_directory);
+  try
+    [neg_set,gt] = textread(filer,...
+                            '%s %d');
+  catch
+    fprintf(1,'Cannot load file %s\n',filer);
+    error('Cannot load file');
+  end
   
 elseif (class(1) == '-')
   class = class(2:end);
@@ -48,9 +54,15 @@ elseif (class(1) == '-')
   
 elseif (class(1) == '+')
   class = class(2:end);
-  [neg_set,gt] = textread(sprintf(VOCopts.clsimgsetpath,...
-                                  class,target_directory),...
-                          '%s %d');
+  filer = sprintf(VOCopts.clsimgsetpath,...
+                                  class,target_directory);
+  try
+    [neg_set,gt] = textread(filer,...
+                            '%s %d');
+  catch
+    fprintf(1,'Cannot load %s\n',filer);
+    error('Cannot load file');
+  end
   neg_set = neg_set(gt==1);
 else
   error(sprintf(['Invalid class %s passed to get_pascal_set: must' ...

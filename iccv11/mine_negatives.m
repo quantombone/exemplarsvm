@@ -57,7 +57,7 @@ for i = 1:length(mining_queue)
   %   %plot(rs.bbs{1}(:,end))
   %   %keyboard
   % else
-  [rs,t] = localizemeHOG(I, models, mining_params);
+  [rs,t] = esvm_detect(I, models, mining_params);
 
   if isfield(models{1}.mining_params,'SOFT_NEGATIVE_MINING') && ...
         (models{1}.mining_params.SOFT_NEGATIVE_MINING==1)
