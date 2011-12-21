@@ -1,4 +1,4 @@
-function [resstruct,t] = localizemeHOG(I, models, localizeparams)
+function [resstruct,feat_pyramid] = esvm_detect(I, models, localizeparams)
 % Localize set of models in an Image's feature pyramid via sliding
 % windows and (dot product + bias recognition score).  If there is a
 % small number of models (such as in per-exemplar mining), then
@@ -22,7 +22,7 @@ function [resstruct,t] = localizemeHOG(I, models, localizeparams)
 if length(models) == 0
   resstruct.bbs{1} = zeros(0,0);
   resstruct.xs{1} = zeros(0,0);
-  t=[];
+  feat_pyramid = [];
   return;
 end
 
@@ -41,16 +41,16 @@ end
 doflip = localizeparams.FLIP_LR;
 
 localizeparams.FLIP_LR = 0;
-[rs1, t1] = localizemeHOGdriver(I, models, localizeparams);
+[rs1, t1] = esvm_detectdriver(I, models, localizeparams);
 rs1 = prune_nms(rs1, localizeparams);
 
 if doflip == 1
   localizeparams.FLIP_LR = 1;
-  [rs2, t2] = localizemeHOGdriver(I, models, localizeparams);
+  [rs2, t2] = esvm_detectdriver(I, models, localizeparams);
   rs2 = prune_nms(rs2, localizeparams);
 else %If there is no flip, then we are done
   resstruct = rs1;
-  t = t1;
+  feat_pyramid = t1;
   return;
 end
 
@@ -67,15 +67,17 @@ end
 resstruct = rs1;
 
 %Concatenate normal and LR pyramids
-t = cell(2,1);
-t{1} = t1;
-t{2} = t2;
+feat_pyramid = cat(1,t1,t2);
 
-function [resstruct,t] = localizemeHOGdriver(I, models, ...
+function [resstruct,t] = esvm_detectdriver(I, models, ...
                                              localizeparams)
 
-if length(models)>20 || length(localizeparams.nnmode)>0
-  [resstruct,t] = localizemeHOGdriverBLOCK(I, models, ...
+%If the number of specified models is greater than 20, use the
+%BLOCK-based method
+MAX_MODELS_BEFORE_BLOCK_METHOD = 20;
+if (length(models)>MAX_MODELS_BEFORE_BLOCK_METHOD) ...
+      || (length(localizeparams.nnmode)>0)
+  [resstruct,t] = esvm_detectdriverBLOCK(I, models, ...
                                          localizeparams);
   return;
 end
@@ -204,7 +206,7 @@ else
 end
 %fprintf(1,'\n');
 
-function [resstruct,t] = localizemeHOGdriverBLOCK(I, models, ...
+function [resstruct,t] = esvm_detectdriverBLOCK(I, models, ...
                                              localizeparams)
 
 %%HERE is the chunk version of exemplar localization
