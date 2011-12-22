@@ -75,6 +75,9 @@ raw_boxes = bboxes;
 if exist('M','var') && length(M)>0 && isfield(M,'betas')
   for i = 1:length(bboxes)
     %if neighbor thresh is defined, then we are in M-mode boosting
+    if size(bboxes{i},1) == 0
+      continue
+    end
     if isfield(M,'neighbor_thresh')
       calib_boxes = bboxes{i};
       calib_boxes(:,end) = calib_boxes(:,end)+1;
@@ -92,6 +95,9 @@ if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
   tic
   for i = 1:length(bboxes)
     fprintf(1,'.');
+    if size(bboxes{i},1) == 0
+      continue
+    end
     [xraw,nbrlist{i}] = get_box_features(bboxes{i},length(models), ...
                                                 M.neighbor_thresh);
     r2 = apply_boost_M(xraw,bboxes{i},M);
