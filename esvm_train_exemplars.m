@@ -112,9 +112,8 @@ for i = 1:length(models)
     if ((total_mines >= mining_params.MAX_TOTAL_MINED_IMAGES) || ...
           (length(m.mining_queue) == 0)) || ...
           (m.iteration == mining_params.MAX_MINE_ITERATIONS)
-      fprintf(1,'Mined enough images, rest up\n');
-      keep_going = 0;
-      
+
+      keep_going = 0;      
       %bump up filename to final file
       filer2 = filer2final;
     end
@@ -169,7 +168,7 @@ for i = 1:length(models)
     end
     
     if keep_going==0
-      fprintf(1,' ##Breaking because we reached end\n');
+      fprintf(1,' ### End of training... \n');
       break;
     end
     

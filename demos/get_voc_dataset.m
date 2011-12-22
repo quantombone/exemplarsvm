@@ -36,7 +36,7 @@ dataset_params.testset = 'test';
 
 %NOTE: this is if we want the resulting calibrated models to have
 %different special characters in their name
-dataset_params.subname = '';
+%dataset_params.subname = '';
 
 %Do not skip evaluation, unless it is VOC2010
 dataset_params.SKIP_EVAL = 0;

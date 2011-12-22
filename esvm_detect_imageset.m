@@ -11,15 +11,24 @@ function grid = esvm_detect_imageset(dataset_params, models, ...
 
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
+NIMS_PER_CHUNK = dataset_params.NIMS_PER_CHUNK;
+
 %Only allow display to be enabled on a machine with X
 display = dataset_params.display;
+
+save_files = 1;
+if ~exist('setname','var')
+  save_files = 0;
+  NIMS_PER_CHUNK = 1;
+  setname = '';
+end
 
 if length(imageset) == 0
   grid = {};
   return;
 end
 
-if exist('setname','var')
+if save_files == 1
   fullsetname = [setname '.' models{1}.cls];
   
   final_file = sprintf('%s/applied/%s-%s.mat',dataset_params.localdir,fullsetname, ...
@@ -38,7 +47,7 @@ if display == 1
   dataset_params.NIMS_PER_CHUNK = 1;
 end
 
-NIMS_PER_CHUNK = dataset_params.NIMS_PER_CHUNK;
+
 
 if ~isfield(dataset_params,'params')
   params = get_default_mining_params;
@@ -51,7 +60,7 @@ fullsetname = [setname '.' models{1}.cls];
 baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,fullsetname, ...
                 models{1}.models_name);
 
-if (display == 0) && (~exist(baser,'dir'))
+if (save_files==1) && (display == 0) && (~exist(baser,'dir'))
   fprintf(1,'Making directory %s\n',baser);
   mkdir(baser);
 end
@@ -64,7 +73,7 @@ inds = do_partition(1:length(imageset),NIMS_PER_CHUNK);
 % randomize chunk orderings
 myRandomize;
 ordering = randperm(length(inds));
-if display == 1
+if (display) == 1 || (save_files == 0)
   ordering = 1:length(ordering);
 end
 
@@ -79,10 +88,11 @@ for i = 1:length(ordering)
   allfiles{i} = filer;
   filerlock = [filer '.lock'];
 
-  if ~display && (fileexists(filer) || (mymkdir_dist(filerlock) == 0))
-    continue
+  if save_files == 1
+    if ~display && (fileexists(filer) || (mymkdir_dist(filerlock) == 0))
+      continue
+    end
   end
-  
   res = cell(0,1);
 
   %% pre-load all images in a chunk
@@ -201,17 +211,25 @@ for i = 1:length(ordering)
   end
   
   % save results into file and remove lock file
-  save(filer,'res');
-  try
-    rmdir(filerlock);
-  catch
-    fprintf(1,'Directory %s already gone\n',filerlock);
-  end
   
+  if save_files == 1
+    save(filer,'res');
+    try
+      rmdir(filerlock);
+    catch
+      fprintf(1,'Directory %s already gone\n',filerlock);
+    end
+  else
+    allfiles{i} = res;
+  end
+end
+
+if save_files == 0
+  grid = cellfun2(@(x)x{1},allfiles);
+  return;
 end
 
 [allfiles,bb] = sort(allfiles);
-
 grid = esvm_load_result_grid(dataset_params, models, ...
                              setname, ...
                              allfiles);

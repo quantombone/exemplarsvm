@@ -47,8 +47,9 @@ models = esvm_load_models(dataset_params, cls, models_name, ...
 %% Apply trained exemplars on validation set
 dataset_params.params = dataset_params.val_params;
 dataset_params.params.gt_function = @get_pascal_anno_function;
-val_grid = esvm_detect_imageset(dataset_params, models, val_set, ...
+val_grid = esvm_detect_imageset(dataset_params, models, val_set,...
                             dataset_params.val_params.set_name);
+
 
 %% Perform l.a.b.o.o. calibration and M-matrix estimation
 CACHE_BETAS = 1;
