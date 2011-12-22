@@ -1,4 +1,4 @@
-function final = esvm_pool_exemplars(dataset_params, models, grid, M)
+function final = esvm_apply_calibration(dataset_params, models, grid, M)
 %% Perform detection box post-processing and pool detection boxes
 %(which will then be ready to go into the PASCAL evaluation code)
 % If there are overlap scores associated with boxes, then they are
