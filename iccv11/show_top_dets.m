@@ -205,6 +205,7 @@ for k = 1:maxk
                                overlays,current_rank, corr);
     axis image
     drawnow
+    snapnow
     
     print(gcf,'-depsc2',filer);
     finalfile = strrep(filer,'.eps','.pdf');
