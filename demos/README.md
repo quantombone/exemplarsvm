@@ -25,9 +25,11 @@ $ cd ~/projects/exemplarsvm
 $ matlab
 $ >> addpath(genpath(pwd));
 $ >> cd features/
-$ >> features_compile
+$ >> features_compile;
 $ >> cd ../util/
-$ >> util_compile
+$ >> util_compile;
+$ >> cd ../libsvm/
+$ >> libsvm_compile;
 ```
 
 ---
