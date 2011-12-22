@@ -25,7 +25,9 @@ $ cd ~/projects/exemplarsvm
 $ matlab
 $ >> addpath(genpath(pwd));
 $ >> cd features/
-$ >> compile;
+$ >> features_compile
+$ >> cd ../util/
+$ >> util_compile
 ```
 
 ---

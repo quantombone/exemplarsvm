@@ -1,6 +1,6 @@
 Here are the features used in the Exemplar-SVM framework.
 
-Compile with **compile.m** script
+Compile with **features_compile.m** script
 
 ** features.m: a Matlab function which calles one of the mexed functions. It returns the dimensionality of the per-cell features when called without arguments.  The idea is that you can add your own features and 31 is never hard-coded in the codebase.
 
