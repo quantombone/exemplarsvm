@@ -1,10 +1,10 @@
 function Isv = get_sv_stack(m, K2, K1)
 % Create a K1xK2 image which visualizes the detection windows, as
 % well as information about the trained exemplar m
-% The first shows shows [exemplar image, w+, w-, sum(w.*x,3),
-% mean0, mean 1, ... ,mean N]
-% Second row first icon starts the top detections, with a coloring
-% indicating the set they belong to
+% The first shows shows [exemplar image, w+, w- ,
+%    mean0, mean 1, ... ,mean N]
+% Second row first icon starts the top detections
+%
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if (sum(m.model.w(:)<0) == 0) || ...
@@ -38,7 +38,9 @@ if isfield(m.model,'svxs') && (numel(m.model.svxs)>0)
   m.model.svbbs = m.model.svbbs(bb, :);
   m.model.svxs = m.model.svxs(:, bb);
 else
-  fprintf(1,'Not sorting in get_sv_stack\n');
+  %[aa,bb] = sort(r,'descend');
+  %m.model.svbbs = m.model.svbbs(bb, :);
+  %fprintf(1,'Not sorting in get_sv_stack\n');
 end
 
 %NO NMS
