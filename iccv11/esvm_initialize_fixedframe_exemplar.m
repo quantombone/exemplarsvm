@@ -1,10 +1,11 @@
-function model = initialize_fixedframe_model(I, bbox, ...
-                                             init_params)
+function model = esvm_initialize_fixedframe_exemplar(I, bbox, ...
+                                                  init_params)
 %% Initialize exemplars using a Fixed Frame as defined by
 % init_params.hg_size.  The fixedframe mode also needs to compute a
 % template-mask, which will indicate which part of the square
 % template is actually being used.  This mask will in general have
 % zero regions because we enforce the mask to be square (via padding).
+% Tomasz Malisiewcz (tomasz@csail.mit.edu)
 
 sbin = init_params.sbin;
 hg_size = init_params.hg_size;

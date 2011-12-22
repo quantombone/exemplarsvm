@@ -26,14 +26,14 @@ mining_params = m.mining_params;
 
 %% look into the object inds to figure out which subset of the data
 %% is actually hard negatives for mining
-if mining_params.extract_negatives == 1
-  [negatives,vals,pos,m] = find_set_membership(m);
-  xs = m.model.svxs(:, [negatives]);
-  bbs = m.model.svbbs([negatives],:);
-else
-  xs = m.model.svxs;
-  bbs = m.model.svbbs;
-end
+%if mining_params.extract_negatives == 1
+%  [negatives,vals,pos,m] = find_set_membership(m);
+%  xs = m.model.svxs(:, [negatives]);
+%  bbs = m.model.svbbs([negatives],:);
+%else
+xs = m.model.svxs;
+bbs = m.model.svbbs;
+%end
 
 %NOTE: MAXSIZE should perhaps be inside of the default_params script?
 MAXSIZE = 3500;
@@ -154,6 +154,12 @@ m.model.b = b;
 
 r = m.model.w(:)'*m.model.svxs - m.model.b;
 svs = find(r >= -1.0000);
+
+if length(svs) == 0
+  fprintf(1,' ERROR: number of negative support vectors is 0!\');
+  error('Something went wrong');
+end
+
 
 %KEEP (nsv_multiplier * #SV) vectors, but at most max_negatives of them
 total_length = ceil(mining_params.beyond_nsv_multiplier*length(svs));

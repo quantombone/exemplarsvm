@@ -1,4 +1,4 @@
-function [m,other] = do_dfun(m)
+function [m,other] = esvm_update_dfun(m)
 %% Perform Distance Function learning for a single exemplar model.  We
 % assume that the exemplar has a set of detections loaded in
 % m.model.svxs and m.model.svbbs. 
@@ -33,16 +33,14 @@ mining_params = m.mining_params;
 
 %% look into the object inds to figure out which subset of the data
 %% is actually hard negatives for mining
-if mining_params.extract_negatives == 1
-  [negatives,vals,pos,m] = find_set_membership(m);
-  
-  xs = m.model.svxs(:, [negatives]);
-  bbs = m.model.svbbs([negatives],:);
-    
-else
-  xs = m.model.svxs;
-  bbs = m.model.svbbs;
-end
+%if mining_params.extract_negatives == 1
+%  [negatives,vals,pos,m] = find_set_membership(m); 
+%  xs = m.model.svxs(:, [negatives]);
+%  bbs = m.model.svbbs([negatives],:); 
+%else
+xs = m.model.svxs;
+bbs = m.model.svbbs;
+%end
 
 % A trick in case we have too many detections
 MAXSIZE = 2000;

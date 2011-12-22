@@ -1,5 +1,5 @@
 function [hn, mining_queue, mining_stats] = ...
-    mine_negatives(models, mining_queue, bg, mining_params)
+    esvm_mine_negatives(models, mining_queue, bg, mining_params)
 % Compute detections "aka Hard-Negatives" hn for the images in the
 % stream/queue [bg/mining_queue] when given K classifiers [models]
 % 

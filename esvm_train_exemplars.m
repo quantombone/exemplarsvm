@@ -105,7 +105,7 @@ for i = 1:length(models)
       total_mines = sum(cellfun(@(x)x.total_mines,m.mining_stats));
     end
     m.total_mines = total_mines;
-    m = mine_train_iteration(m, mining_params.training_function);
+    m = esvm_mine_train_iteration(m, mining_params.training_function);
 
     %total_mines = m.mining_stats{end}.total_mines;
 

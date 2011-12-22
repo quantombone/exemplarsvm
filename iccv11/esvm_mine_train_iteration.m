@@ -1,4 +1,4 @@
-function [m] = mine_train_iteration(m, training_function)
+function [m] = esvm_mine_train_iteration(m, training_function)
 %% ONE ITERATION OF: Mine negatives until cache is full and update the current
 % classifier using training_function (do_svm, do_rank, ...). m must
 % contain the field m.train_set, which indicates the current
@@ -22,7 +22,7 @@ end
 %If the skip is enabled, we just update the model
 if m.mining_params.skip_mine == 0
   [hn, m.mining_queue, mining_stats] = ...
-      mine_negatives({m}, m.mining_queue, m.train_set, ...
+      esvm_mine_negatives({m}, m.mining_queue, m.train_set, ...
                      m.mining_params);
 
   m = add_new_detections(m, cat(2,hn.xs{1}{:}), cat(1,hn.bbs{1}{: ...
@@ -49,46 +49,44 @@ end
 
 m = training_function(m);
 
-if (m.mining_params.dfun == 1)
-  r = m.model.w(:)'*bsxfun(@minus,m.model.svxs,m.model.x(:,1)).^2 - ...
-      m.model.b;
-else
-  r = m.model.w(:)'*m.model.svxs - m.model.b;
-end
-m.model.svbbs(:,end) = r;
-
-if strmatch(m.models_name,'dalal')
-  error('deprecated: must address...');
-  %% here we take the best exemplars
-  allscores = m.model.w(:)'*m.model.x - m.model.b;
-  [aa,bb] = sort(allscores,'descend');
-  [aabad,bbbad] = sort(r,'descend');
-  maxbad = aabad(ceil(.05*length(aabad)));
-  LEN = max(sum(aa>=maxbad), m.model.keepx);
-  m.model.x = m.model.x(:,bb(1:LEN));
-  fprintf(1,'dalal:WE NOW HAVE %d exemplars in category\n',LEN);
-end
-
-svs = find(r >= -1.0000);
-
-if length(svs) == 0
-  length(svs)
-  keyboard
-end
-
-%KEEP 3#SV vectors (but at most max_negatives of them)
-total_length = ceil(m.mining_params.beyond_nsv_multiplier*length(svs));
-total_length = min(total_length,m.mining_params.max_negatives);
-
-[alpha,beta] = sort(r,'descend');
-svs = beta(1:min(length(beta),total_length));
-m.model.svxs = m.model.svxs(:,svs);
-m.model.svbbs = m.model.svbbs(svs,:);
-
 % Append new w to trace
-
 m.model.wtrace{end+1} = m.model.w;
 m.model.btrace{end+1} = m.model.b;
+
+
+% if (m.mining_params.dfun == 1)
+%   r = m.model.w(:)'*bsxfun(@minus,m.model.svxs,m.model.x(:,1)).^2 - ...
+%       m.model.b;
+% else
+%   r = m.model.w(:)'*m.model.svxs - m.model.b;
+% end
+% m.model.svbbs(:,end) = r;
+
+% if strmatch(m.models_name,'dalal')
+%   error('deprecated: must address...');
+%   %% here we take the best exemplars
+%   allscores = m.model.w(:)'*m.model.x - m.model.b;
+%   [aa,bb] = sort(allscores,'descend');
+%   [aabad,bbbad] = sort(r,'descend');
+%   maxbad = aabad(ceil(.05*length(aabad)));
+%   LEN = max(sum(aa>=maxbad), m.model.keepx);
+%   m.model.x = m.model.x(:,bb(1:LEN));
+%   fprintf(1,'dalal:WE NOW HAVE %d exemplars in category\n',LEN);
+% end
+
+% %NOTE(TJM): isn't this part of keeping only the supporting negative
+% %supports already done inside the training function?
+% svs = find(r >= -1.0000);
+
+% %KEEP 3#SV vectors (but at most max_negatives of them)
+% total_length = ceil(m.mining_params.beyond_nsv_multiplier*length(svs));
+% total_length = min(total_length,m.mining_params.max_negatives);
+
+% [alpha,beta] = sort(r,'descend');
+% svs = beta(1:min(length(beta),total_length));
+% m.model.svxs = m.model.svxs(:,svs);
+% m.model.svbbs = m.model.svbbs(svs,:);
+
 
 function dump_figures(m)
 
@@ -124,7 +122,6 @@ if (m.mining_params.dump_images == 1) || ...
                     m.objectid, m.iteration), 'png');
 end
 
-
 function m = add_new_detections(m, xs, bbs)
 % Add current detections (xs,bbs) to the model struct (m)
 % making sure we prune away duplicates, and then sort by score
@@ -136,7 +133,6 @@ if ~isfield(m.model, 'svxs') || isempty(m.model.svxs)
   m.model.svxs = [];
   m.model.svbbs = [];
 end
-
 
 m.model.svxs = cat(2,m.model.svxs,xs);
 m.model.svbbs = cat(1,m.model.svbbs,bbs);

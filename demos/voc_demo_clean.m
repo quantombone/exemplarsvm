@@ -22,7 +22,7 @@ end
 init_params.sbin = 8;
 init_params.goal_ncells = 100;
 init_params.MAXDIM = 12;
-init_params.init_function = @initialize_goalsize_model;
+init_params.init_function = @esvm_initialize_goalsize_exemplar;
 init_params.init_type = 'g'; 
 dataset_params.init_params = init_params;
 
