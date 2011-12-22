@@ -47,7 +47,7 @@ models = models(ordering);
 
 allfiles = cell(length(models), 1);
 
-for i = 1:length(models)
+parfor i = 1:length(models)
 
   %filer = sprintf('%s/%s',initial_directory, files(ordering(i)).name);
   %m = load(filer);
@@ -124,7 +124,7 @@ for i = 1:length(models)
     m = rmfield(m,'train_set');
     
     %Save the current result
-    save(filer2,'m');
+    savem(filer2,m);
     m = msave;
     
     if 0 %%dataset_params.display == 1
@@ -182,3 +182,6 @@ for i = 1:length(models)
 end
 
 [allfiles,bb] = sort(allfiles);
+
+function savem(filer2,m)
+save(filer2,'m');
