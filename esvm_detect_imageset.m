@@ -101,11 +101,12 @@ for i = 1:length(ordering)
   for j = 1:length(inds{ordering(i)})
     Is{j} = convert_to_I(imageset{inds{ordering(i)}(j)});
   end
-  
-  for j = 1:length(inds{ordering(i)})
-    counter = counter + 1;
+  L = length(inds{ordering(i)});
+
+  for j = 1:L
+
     index = inds{ordering(i)}(j);
-    fprintf(1,' --image %05d/%05d:',counter,length(imageset));
+    fprintf(1,' --image %05d/%05d:',counter+j,length(imageset));
     Iname = imageset{index};
     %curid = -1;
     [tmp,curid,tmp] = fileparts(Iname);
@@ -123,7 +124,7 @@ for i = 1:length(ordering)
         end
       end
     end
-        
+
     coarse_boxes = cat(1,rs.bbs{:});
     if ~isempty(coarse_boxes)
       scores = coarse_boxes(:,end);
@@ -205,6 +206,9 @@ for i = 1:length(ordering)
       res{j}.extras = params.gt_function(dataset_params, Iname, res{j}.bboxes);
     end 
   end
+
+
+  counter = counter + L;
 
   if display == 1
     continue
