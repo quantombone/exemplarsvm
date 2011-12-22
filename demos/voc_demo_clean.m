@@ -40,7 +40,7 @@ dataset_params.mining_params.TOPK = 100;
 dataset_params.mining_params.set_name = ['train-' cls];
 neg_set = get_pascal_set(dataset_params, ...
                            dataset_params.mining_params.set_name);
-neg_set = neg_set(1:10);
+neg_set = neg_set(1:100);
 
 %% Define validation set
 dataset_params.val_params = dataset_params.params;
@@ -48,7 +48,6 @@ dataset_params.val_params.NMS_OS = 0.5;
 dataset_params.val_params.set_name = ['trainval+' cls];;
 val_set = get_pascal_set(dataset_params, ...
                          dataset_params.val_params.set_name);
-val_set = val_set(1:10);
 
 %Choose a short string to indicate the type of training run we are doing
 dataset_params.models_name = ...
@@ -57,9 +56,8 @@ dataset_params.models_name = ...
      '.' dataset_params.model_type];
 
 %% Perform Exemplar-SVM training
-[models, M] = voc_template(dataset_params, e_stream_set, ...
-                           neg_set, val_set, cls);
-
+[models, M] = esvm_train_and_calibrate(dataset_params, e_stream_set, ...
+                                       neg_set, val_set, cls);
 
 %% Define test-set
 dataset_params.test_params = dataset_params.params;
@@ -67,7 +65,7 @@ dataset_params.test_params.NMS_OS = 0.5;
 dataset_params.test_params.set_name = ['test+' cls];
 test_set = get_pascal_set(dataset_params, ...
                           dataset_params.test_params.set_name);
-test_set = test_set(1:20);
+
 
 %% Apply on test set
 dataset_params.params = dataset_params.test_params;
@@ -80,8 +78,8 @@ test_grid = esvm_load_result_grid(dataset_params, models, ...
                                   test_files);
 
 %apply calibration matrix to test-set results
-test_struct = pool_exemplar_detections(dataset_params, models, ...
-                                       test_grid, M);
+test_struct = esvm_pool_exemplars(dataset_params, models, ...
+                                  test_grid, M);
 
 %Show top hits
 bbs = cat(1,test_struct.unclipped_boxes{:});
