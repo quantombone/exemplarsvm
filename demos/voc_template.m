@@ -1,4 +1,5 @@
-function voc_template(dataset_params, e_stream_set, neg_set, ...
+function [models,M,val_grid,test_grid] = ...
+    voc_template(dataset_params, e_stream_set, neg_set, ...
                       val_set, test_set, cls)
 %% This is the main Exemplar-SVM PASCAL VOC pipeline script, which
 %is called from voc_demo_esvm after the parameters of the
@@ -28,10 +29,7 @@ models = esvm_load_models(dataset_params, cls, models_name, ...
 %%%%%% EXEMPLAR TRAINING %%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Train each initialized exemplar 
-
-
-    
+%% Train each initialized exemplar     
 [tfiles, models_name] = esvm_train(dataset_params, ...
                                    models, neg_set);  
 
@@ -40,6 +38,7 @@ if isfield(dataset_params, 'JUST_TRAIN') && ...
   fprintf(1,'only training because JUST_TRAIN is enabled\n');
   return;
 end
+
 %Load the trained exemplars (this will hold script until all
 %exemplars have been trained)
 CACHE_FILE = 1;
