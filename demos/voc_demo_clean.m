@@ -4,8 +4,8 @@
 %% Initialize dataset parameters
 data_directory = '/Users/tomasz/projects/Pascal_VOC/';
 results_directory = '/nfs/baikal/tmalisie/esvm-data/';
-data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
-results_directory = '/nfs/baikal/tmalisie/esvm-toy/';
+%data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
+%results_directory = '/nfs/baikal/tmalisie/esvm-toy/';
 cls = 'bus';
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
@@ -30,7 +30,7 @@ dataset_params.init_params = init_params;
 
 %Initialize exemplar stream
 dataset_params.stream_set_name = 'trainval';
-dataset_params.stream_max_ex = 50;
+dataset_params.stream_max_ex = 2;
 dataset_params.must_have_seg = 0;
 dataset_params.must_have_seg_string = '';
 dataset_params.model_type = 'exemplar';
@@ -49,7 +49,7 @@ dataset_params.mining_params.TOPK = 100;
 dataset_params.mining_params.set_name = ['train-' cls];
 neg_set = get_pascal_set(dataset_params, ...
                            dataset_params.mining_params.set_name);
-neg_set = neg_set(1:100);
+neg_set = neg_set(1:10);
 
 %% Define validation set
 dataset_params.val_params = dataset_params.params;
@@ -57,16 +57,42 @@ dataset_params.val_params.NMS_OS = 0.5;
 dataset_params.val_params.set_name = ['trainval+' cls];;
 val_set = get_pascal_set(dataset_params, ...
                          dataset_params.val_params.set_name);
-%val_set = val_set(1:10);
+val_set = val_set(1:10);
+
 %Choose a short string to indicate the type of training run we are doing
 dataset_params.models_name = ...
     [init_params.init_type ...
-     dataset_params.must_have_seg_string ...
-     '.' dataset_params.model_type];
+     '.' dataset_params.model_type '.' cls];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% EXEMPLAR INITIALIZATION %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+initial_models = esvm_initialize_exemplars(dataset_params, e_stream_set, ...
+                                   dataset_params.init_params, ...
+                                   dataset_params.models_name);
+
+%Append the nn-type if we are in nn mode
+if length(dataset_params.params.nnmode) > 0
+  models_name = [models_name '-' dataset_params.params.nnmode];
+end
 
 %% Perform Exemplar-SVM training
-[models, M] = esvm_train_and_calibrate(dataset_params, e_stream_set, ...
-                                       neg_set, val_set, cls);
+models = esvm_train_exemplars(dataset_params, ...
+                                initial_models, neg_set);
+ 
+%% Apply trained exemplars on validation set
+dataset_params.params = dataset_params.val_params;
+dataset_params.params.gt_function = @get_pascal_anno_function;
+val_grid = esvm_detect_imageset(dataset_params, models, val_set,...
+                            dataset_params.val_params.set_name);
+
+
+%% Perform l.a.b.o.o. calibration and M-matrix estimation
+CACHE_BETAS = 1;
+M = esvm_perform_calibration(dataset_params, models, ...
+                             val_grid, val_set, CACHE_BETAS);
+
 
 %% Define test-set
 dataset_params.test_params = dataset_params.params;
@@ -74,7 +100,7 @@ dataset_params.test_params.NMS_OS = 0.5;
 dataset_params.test_params.set_name = ['test+' cls];
 test_set = get_pascal_set(dataset_params, ...
                           dataset_params.test_params.set_name);
-%test_set = test_set(1:10);
+test_set = test_set(1:10);
 
 %% Apply on test set
 dataset_params.params = dataset_params.test_params;
@@ -109,4 +135,4 @@ title('Exemplar, w,  and top 16 detections');
 clear options
 options.format ='html';
 options.outputDir = [results_directory  '/www/'];
-publish('helper',options)
+publish('display_helper',options)

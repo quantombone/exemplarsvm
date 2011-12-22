@@ -1,5 +1,5 @@
-function allfiles = esvm_initialize_exemplars(dataset_params, e_set, ...
-                                              models_name, init_params)
+function models = esvm_initialize_exemplars(dataset_params, e_set, ...
+                                             init_params, models_name)
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
 % NOTE: this function is parallelizable (and dalalizable!)  
@@ -36,8 +36,20 @@ function allfiles = esvm_initialize_exemplars(dataset_params, e_set, ...
 %  model = initialize_model_dt(I,bbox,SBIN,hg_size);
 %else
 
+cache_dir =  ...
+    sprintf('%s/models/',dataset_params.localdir);
+
+cache_file = ...
+    sprintf('%s/%s.mat',cache_dir,models_name);
+
+if fileexists(cache_file)
+  models = load(cache_file);
+  models = models.models;
+  return;
+end
+
 results_directory = ...
-    sprintf('%s/models/%s-%s/',dataset_params.localdir, e_set{1}.cls, ...
+    sprintf('%s/models/%s/',dataset_params.localdir, ...
             models_name);
 
 if ~exist(results_directory,'dir')
@@ -121,5 +133,13 @@ end
 
 %sort files so they are in alphabetical order
 [allfiles, bb] = sort(allfiles);
+
+%Load all of the initialized exemplars
+CACHE_FILE = 1;
+STRIP_FILE = 0;
+DELETE_INITIAL = 1;
+models = esvm_load_models(dataset_params, models_name, allfiles, ...
+                          CACHE_FILE, STRIP_FILE, DELETE_INITIAL);
+
 
 fprintf(1,'\n   --- Done initializing %d exemplars\n',length(e_set));

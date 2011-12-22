@@ -1,5 +1,5 @@
-function [models] = esvm_load_models(dataset_params, cls, DET_TYPE, files, ...
-                                    CACHE_FILE, STRIP_FILE)
+function [models] = esvm_load_models(dataset_params, models_name, files, ...
+                                    CACHE_FILE, STRIP_FILE, DELETE_INITIAL)
 %Load all trained models of a specified class 'cls' and
 %type 'DET_TYPE' from a models directory.  If CACHE_FILE is enabled
 %(defaults to turned off), then will try to load/save a cached
@@ -41,6 +41,9 @@ if ~exist('STRIP_FILE','var')
   STRIP_FILE = 0;
 end
 
+
+
+
 if CACHE_FILE == 1
   cache_dir =  ...
       sprintf('%s/models/',dataset_params.localdir);
@@ -48,12 +51,12 @@ if CACHE_FILE == 1
   if ~exist(cache_dir,'dir')
     mkdir(cache_dir);
   end
-  
+
   cache_file = ...
-      sprintf('%s/%s-%s.mat',cache_dir,cls,DET_TYPE);
+      sprintf('%s/%s.mat',cache_dir,models_name);
   
   cache_file_stripped = ...
-      sprintf('%s/%s-%s.mat',cache_dir,cls,[DET_TYPE '-stripped']);
+      sprintf('%s/%s-stripped.mat',cache_dir,models_name);
             
   if fileexists(cache_file)
     %strip_file can only be present if the cache_file is present
@@ -77,9 +80,9 @@ end
 
 if ~exist('files','var') || isempty(files)
   results_directory = ...
-    sprintf('%s/models/%s-%s/',dataset_params.localdir,cls,DET_TYPE);
+    sprintf('%s/models/%s/',dataset_params.localdir,models_name);
 
-  dirstring = [results_directory '*' cls '*.mat'];
+  dirstring = [results_directory '*.mat'];
   files = dir(dirstring);
   fprintf(1,'Pattern of files to load: %s\n',dirstring);
   fprintf(1,'Length of files to load: %d\n',length(files));
@@ -99,46 +102,31 @@ for i = 1:length(files)
   %if a load fails, maybe we are loading a partial result DURING
   %mining, so we only exit
   %try
-  m = load(files{i});%[results_directory files(i).name]);
-  %m = load([results_directory files(i).name]);
-  % catch
-  %   models{i} = [];
-  %   fprintf(1,'#');
-  %   if nargout==0
-  %     fprintf(1,'ERROR: could not load model %s, mining not complete?\n',files(i).name);
-  %     return;
-  %   end
-  % end
+  m = load(files{i});
 
-  %try
   models{i} = m.m;
-  %catch
-  %  models{i} = m.models{1};
-  %end
   
-  models{i}.models_name = DET_TYPE;
-  if max(models{i}.model.hg_size(1:2)) >= 25 %| length(models{i}.model.x)==0
-    fprintf(1,'Truncating very large exemplar id=%d\n', i);
-    models{i}.model.w = zeros(1,1,31);
-    models{i}.hg_size = [1 1 31];
-    models{i}.model.b = 1000;
-  end
+
+  % if max(models{i}.model.hg_size(1:2)) >= 25 %| length(models{i}.model.x)==0
+  %   fprintf(1,'Truncating very large exemplar id=%d\n', i);
+  %   models{i}.model.w = zeros(1,1,31);
+  %   models{i}.hg_size = [1 1 31];
+  %   models{i}.model.b = 1000;
+  % end
   
   %models{i}.model.x = [];
   %models{i}.model.allx = [];
   %models{i}.model.wtrace = [];
   %models{i}.model.btrace = [];
 
+  %NOTE: pruning requires this
   %disable negative support vectors to save space
-  models{i}.model.svxs = [];
+  %models{i}.model.svxs = [];
   
-  if ~isfield(models{i},'models_name')
-    models{i}.models_name=strrep(DET_TYPE,'/','_');
-  end
 end
 
 if length(files) == 0
-  fprintf(1,'WARNING NO MODELS LOADED FOR %s\n',cls);
+  fprintf(1,'WARNING: no models loaded for %s\n', models_name);
   models = cell(0,1);
   return;
 end
@@ -169,6 +157,15 @@ if CACHE_FILE==1
   
   fprintf(1,'Loaded models, saving to %s\n',cache_file);
   save(cache_file,'models');
+  
+  
+  if fileexists(cache_file) && (DELETE_INITIAL == 1)
+    for i = 1:length(files)
+      delete(files{i});
+    end
+    [basedir,file,ext] = fileparts(files{1});
+    rmdir(basedir);
+  end
   
   if STRIP_FILE == 1
     models_save = models;

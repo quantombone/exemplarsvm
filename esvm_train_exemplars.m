@@ -1,5 +1,5 @@
-function [allfiles, new_models_name] = esvm_train_exemplars(dataset_params, ...
-                                                  models, train_set)
+function [newmodels] = esvm_train_exemplars(dataset_params, ...
+                                            models, train_set)
 %% Train models with hard negatives for all exemplars written to
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
@@ -182,6 +182,14 @@ parfor i = 1:length(models)
 end
 
 [allfiles,bb] = sort(allfiles);
+
+%Load all of the initialized exemplars
+CACHE_FILE = 1;
+STRIP_FILE = 0;
+DELETE_INITIAL = 1;
+newmodels = esvm_load_models(dataset_params, new_models_name, allfiles, ...
+                          CACHE_FILE, STRIP_FILE, DELETE_INITIAL);
+
 
 function savem(filer2,m)
 save(filer2,'m');
