@@ -1,11 +1,15 @@
-function fg = get_pascal_stream(VOCopts, cls)
+function fg = get_pascal_stream(VOCopts, cls, CACHE_FILE)
 %Create an exemplar stream, such that each element fg{i} contains
 %these fields: (I, bbox, cls, curid, [objectid], [anno])
 %Make sure the exemplar has a segmentation associated with it if
 %must_have_seg is provided
 
+if ~exist('CACHE_FILE','var')
+  CACHE_FILE = 0;
+end
+
 basedir = sprintf('%s/models/streams/',VOCopts.localdir);
-if ~exist(basedir,'dir')
+if CACHE_FILE == 1 && ~exist(basedir,'dir')
   mkdir(basedir);
 end
 streamname = sprintf('%s/%s-%s-%d-%s%s.mat',...
@@ -14,7 +18,7 @@ streamname = sprintf('%s/%s-%s-%d-%s%s.mat',...
                      VOCopts.model_type,...
                      VOCopts.must_have_seg_string);
 
-if fileexists(streamname)
+if CACHE_FILE && fileexists(streamname)
   fprintf(1,'Loading %s\n',streamname);
   load(streamname);
   return;
@@ -61,7 +65,9 @@ for i = 1:length(ids)
       fg{end+1} = res;
       
       if length(fg) == VOCopts.stream_max_ex
-        save(streamname,'fg');
+        if CACHE_FILE == 1
+          save(streamname,'fg');
+        end
         return;
       end
     end
@@ -86,7 +92,9 @@ for i = 1:length(ids)
     fg{end+1} = res;
     
     if length(fg) == VOCopts.stream_max_ex
-      save(streamname,'fg');
+      if CACHE_FILE == 1
+        save(streamname,'fg');
+      end
       return; 
     end
   else
@@ -94,4 +102,6 @@ for i = 1:length(ids)
   end
 end
 
-save(streamname,'fg');
+if CACHE_FILE == 1
+  save(streamname,'fg');
+end

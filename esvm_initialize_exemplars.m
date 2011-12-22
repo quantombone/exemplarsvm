@@ -1,5 +1,6 @@
 function models = esvm_initialize_exemplars(dataset_params, e_set, ...
-                                             init_params, models_name)
+                                             init_params, models_name, ...
+                                            CACHE_FILE)
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
 % NOTE: this function is parallelizable (and dalalizable!)  
@@ -36,13 +37,17 @@ function models = esvm_initialize_exemplars(dataset_params, e_set, ...
 %  model = initialize_model_dt(I,bbox,SBIN,hg_size);
 %else
 
+if ~exist('CACHE_FILE','var')
+  CACHE_FILE = 0;
+end
+
 cache_dir =  ...
     sprintf('%s/models/',dataset_params.localdir);
 
 cache_file = ...
     sprintf('%s/%s.mat',cache_dir,models_name);
 
-if fileexists(cache_file)
+if CACHE_FILE ==1 && fileexists(cache_file)
   models = load(cache_file);
   models = models.models;
   return;
@@ -52,7 +57,7 @@ results_directory = ...
     sprintf('%s/models/%s/',dataset_params.localdir, ...
             models_name);
 
-if ~exist(results_directory,'dir')
+if CACHE_FILE==1 && ~exist(results_directory,'dir')
   fprintf(1,'Making directory %s\n',results_directory);
   mkdir(results_directory);
 end
@@ -61,9 +66,11 @@ end
 %        results_directory);
 
 %Randomize creation order
-myRandomize;
-rrr = randperm(length(e_set));
-e_set = e_set(rrr);
+if CACHE_FILE == 1
+  myRandomize;
+  rrr = randperm(length(e_set));
+  e_set = e_set(rrr);
+end
 
 %Create an array of all final file names
 allfiles = cell(length(e_set), 1);
@@ -86,8 +93,10 @@ for i = 1:length(e_set)
   end
   filerlock = [filer '.lock'];
   
-  if fileexists(filer) || (mymkdir_dist(filerlock)==0)
-    continue
+  if CACHE_FILE == 1
+    if fileexists(filer) || (mymkdir_dist(filerlock)==0)
+      continue
+    end
   end
   gt_box = bbox;
   fprintf(1,'.');
@@ -110,10 +119,14 @@ for i = 1:length(e_set)
   m.sizeI = size(I);
   m.models_name = models_name;
   m.name = sprintf('%s.%d.%s',m.curid,m.objectid,m.cls);
-
-  save(filer,'m');
-  if exist(filerlock,'dir')
-    rmdir(filerlock);
+  
+  if CACHE_FILE == 1
+    save(filer,'m');
+    if exist(filerlock,'dir')
+      rmdir(filerlock);
+    end
+  else
+    allfiles{i} = m;
   end
 
   % %Print the bounding box overlap between the initial window and
@@ -130,6 +143,11 @@ for i = 1:length(e_set)
     show_exemplar_frames({m}, 1, dataset_params);
   end
 end  
+
+if CACHE_FILE == 0
+  models = allfiles;
+  return;
+end
 
 %sort files so they are in alphabetical order
 [allfiles, bb] = sort(allfiles);

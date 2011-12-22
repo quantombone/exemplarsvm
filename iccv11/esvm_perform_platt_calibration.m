@@ -67,7 +67,7 @@ end
 final_dir = ...
     sprintf('%s/betas',dataset_params.localdir);
 
-if ~exist(final_dir','dir')
+if CACHE_FILES == 1 && ~exist(final_dir','dir')
   mkdir(final_dir);
 end
 

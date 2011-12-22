@@ -36,7 +36,8 @@ dataset_params.must_have_seg_string = '';
 dataset_params.model_type = 'exemplar';
 
 %Create an exemplar stream (list of exemplars)
-e_stream_set = get_pascal_stream(dataset_params, cls);
+CACHE_STREAM = 0;
+e_stream_set = get_pascal_stream(dataset_params, cls, CACHE_STREAM);
 
 %% Define parameters and training
 %Create mining/validation/testing params as defaults
@@ -61,25 +62,26 @@ val_set = val_set(1:10);
 
 %Choose a short string to indicate the type of training run we are doing
 dataset_params.models_name = ...
-    [init_params.init_type ...
-     '.' cls '.' dataset_params.model_type];
+    [cls '-' init_params.init_type ...
+     '.' dataset_params.model_type];
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%% EXEMPLAR INITIALIZATION %%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% Exemplar initialization 
+CACHE_MODELS = 0;
 initial_models = esvm_initialize_exemplars(dataset_params, e_stream_set, ...
-                                   dataset_params.init_params, ...
-                                   dataset_params.models_name);
+                                           dataset_params.init_params, ...
+                                           dataset_params.models_name,...
+                                           CACHE_MODELS);
 
-%Append the nn-type if we are in nn mode
+%Append the nn-type string if we are in nn mode
 if length(dataset_params.params.nnmode) > 0
   models_name = [models_name '-' dataset_params.params.nnmode];
 end
 
 %% Perform Exemplar-SVM training
+CACHE_MODELS = 0;
 models = esvm_train_exemplars(dataset_params, ...
-                                initial_models, neg_set);
+                                initial_models, neg_set, CACHE_MODELS);
  
 %% Apply trained exemplars on validation set
 dataset_params.params = dataset_params.val_params;
@@ -89,7 +91,7 @@ val_grid = esvm_detect_imageset(dataset_params, models, val_set,...
 
 
 %% Perform l.a.b.o.o. calibration and M-matrix estimation
-CACHE_BETAS = 1;
+CACHE_BETAS = 0;
 M = esvm_perform_calibration(dataset_params, models, ...
                              val_grid, val_set, CACHE_BETAS);
 

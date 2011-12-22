@@ -1,8 +1,13 @@
 function [newmodels] = esvm_train_exemplars(dataset_params, ...
-                                            models, train_set)
+                                            models, train_set, CACHE_FILE)
 %% Train models with hard negatives for all exemplars written to
 %% exemplar directory (script is parallelizable)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
+
+if ~exist('CACHE_FILE','var')
+  CACHE_FILE = 0;
+end
+
 
 mining_params = dataset_params.mining_params;
 
@@ -15,7 +20,7 @@ cache_dir =  ...
 cache_file = ...
     sprintf('%s/%s.mat',cache_dir,new_models_name);
 
-if fileexists(cache_file)
+if CACHE_FILE == 1 && fileexists(cache_file)
   newmodels = load(cache_file);
   newmodels = newmodels.models;
   return;
@@ -24,7 +29,7 @@ end
 DUMPDIR = sprintf('%s/www/svs/%s/',dataset_params.localdir, ...
                   new_models_name);
 
-if dataset_params.display ==1 && ~exist(DUMPDIR,'dir')
+if CACHE_FILE==1 && dataset_params.display ==1 && ~exist(DUMPDIR,'dir')
   mkdir(DUMPDIR);
 end
 
@@ -37,7 +42,7 @@ final_directory = ...
             new_models_name);
 
 %make results directory if needed
-if ~exist(final_directory,'dir')
+if CACHE_FILE == 1 && ~exist(final_directory,'dir')
   mkdir(final_directory);
 end
 
@@ -48,13 +53,20 @@ end
 mining_params.final_directory = final_directory;
 
 % randomize chunk orderings
-myRandomize;
-ordering = randperm(length(models));
+if CACHE_FILE == 1
+  myRandomize;
+  ordering = randperm(length(models));
+else
+  ordering = 1:length(models);
+end
+
 
 %always use random ordering
 %if dataset_params.display == 1
 %  ordering = 1:length(ordering);
 %end
+
+
 models = models(ordering);
 
 allfiles = cell(length(models), 1);
@@ -79,8 +91,10 @@ parfor i = 1:length(models)
   filerlock = [filer2final '.mining.lock'];
 
   
-  if fileexists(filer2final) || (mymkdir_dist(filerlock) == 0)
-    continue
+  if CACHE_FILE == 1
+    if fileexists(filer2final) || (mymkdir_dist(filerlock) == 0)
+      continue
+    end
   end
   
   % Add training set and training set's mining queue 
@@ -136,7 +150,11 @@ parfor i = 1:length(models)
     m = rmfield(m,'train_set');
     
     %Save the current result
-    savem(filer2,m);
+    if CACHE_FILE == 1
+      savem(filer2,m);
+    else
+      allfiles{i} = m;
+    end
     m = msave;
     
     if 0 %%dataset_params.display == 1
@@ -174,7 +192,9 @@ parfor i = 1:length(models)
       for q = 1:m.iteration-1
         filer2old = sprintf(filer2fill,num2str(q));
         if fileexists(filer2old)
-          delete(filer2old);
+          if CACHE_FILE == 1
+            delete(filer2old);
+          end
         end
       end
     end
@@ -186,11 +206,18 @@ parfor i = 1:length(models)
     
     m.iteration = m.iteration + 1;
   end %iteratiion
-    
+  
   try
-    rmdir(filerlock);
+    if CACHE_FILE == 1
+      rmdir(filerlock);
+    end
   catch
   end
+end
+
+if CACHE_FILE == 0
+  newmodels = allfiles;
+  return;
 end
 
 [allfiles,bb] = sort(allfiles);
