@@ -1,4 +1,4 @@
-function allfiles = exemplar_initialize(dataset_params, e_set, ...
+function allfiles = esvm_initialize(dataset_params, e_set, ...
                                         models_name, init_params)
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
@@ -121,3 +121,5 @@ end
 
 %sort files so they are in alphabetical order
 [allfiles, bb] = sort(allfiles);
+
+fprintf(1,'\n   --- Done initializing %d exemplars\n',length(e_set));

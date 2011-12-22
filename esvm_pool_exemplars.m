@@ -21,7 +21,6 @@ excurids = cellfun2(@(x)x.curid,models);
 bboxes = cell(1,length(grid));
 maxos = cell(1,length(grid));
 
-fprintf(1,'Loading bboxes\n');
 curcls = find(ismember(dataset_params.classes,models{1}.cls));
 
 for i = 1:length(grid)  
@@ -91,8 +90,9 @@ if exist('M','var') && length(M)>0 && isfield(M,'betas')
 end
 
 if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
-  fprintf(1,'Applying M-boosting:\n');
-  tic
+  fprintf(1,'Applying M-matrix to %d images:',length(bboxes));
+  starter=tic;
+
   for i = 1:length(bboxes)
     fprintf(1,'.');
     if size(bboxes{i},1) == 0
@@ -103,11 +103,11 @@ if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
     r2 = apply_boost_M(xraw,bboxes{i},M);
     bboxes{i}(:,end) = r2;
   end
-  toc
+  fprintf(1,'took %.3fsec\n',toc(starter));
 end
 
 os_thresh = .3;
-fprintf(1, 'Applying Competitive NMS OS threshold=%.3f\n',os_thresh);
+fprintf(1, 'Applying NMS (OS thresh=%.3f)\n',os_thresh);
 for i = 1:length(bboxes)
   if size(bboxes{i},1) > 0
     bboxes{i}(:,5) = 1:size(bboxes{i},1);

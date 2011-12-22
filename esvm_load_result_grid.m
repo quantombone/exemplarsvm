@@ -1,4 +1,5 @@
-function grid = esvm_load_result_grid(dataset_params,models,setname,files,curthresh)
+function grid = esvm_load_result_grid(dataset_params,...
+                                      models,setname,files,curthresh)
 %Given a set of models, return a grid of results from those models' firings
 %on the subset of images (target_directory is 'trainval' or 'test')
 %[curthresh]: only keep detections above this number (-1.1 for
@@ -123,4 +124,14 @@ f = dir(final_file);
 if (f.bytes < 1000)
   fprintf(1,'warning file too small, not saved\n');
   delete(final_file);
+end
+
+if fileexists(final_file)
+  %Clean up individual files which were written to disk
+  for i = 1:length(files)
+    delete(files{i});
+  end
+  %Delete directory too
+  [basedir,other,ext] = fileparts(files{1});
+  rmdir(basedir);
 end

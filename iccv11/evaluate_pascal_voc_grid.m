@@ -87,18 +87,20 @@ wait_until_all_present({filer});
 %fprintf(1,'HACK: changing OVERLAP HERE!\n');
 %VOCopts.minoverlap = .4;
 
-BB = cellfun2(@(x)x(:,1:4),final.final_boxes);
+goods = find(cellfun(@(x)size(x,1),final.final_boxes));
+
+BB = cellfun2(@(x)x(:,1:4),final.final_boxes(goods));
 BB = cat(1,BB{:});
 
-conf = cellfun2(@(x)x(:,end),final.final_boxes);
+conf = cellfun2(@(x)x(:,end),final.final_boxes(goods));
 conf = cat(1,conf{:});
 
-superids = cellfun2(@(x)x(:,11),final.final_boxes);
+superids = cellfun2(@(x)x(:,11),final.final_boxes(goods));
 superids = cat(1,superids{:});
-ids = cell(length(final.final_boxes),1);
+ids = cell(length(final.final_boxes(goods)),1);
 
-for i = 1:length(final.final_boxes)
-  ids{i} = repmat({grid{i}.curid},size(final.final_boxes{i},1),1);
+for i = 1:length(final.final_boxes(goods))
+  ids{i} = repmat({grid{i}.curid},size(final.final_boxes{goods(i)},1),1);
 end
 ids = cat(1,ids{:});
 

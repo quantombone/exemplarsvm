@@ -59,9 +59,8 @@ end
 %[v,host_string]=unix('hostname');
 
 allfiles = cell(length(ordering), 1);
-
+counter = 0;
 for i = 1:length(ordering)
-
   ind1 = inds{ordering(i)}(1);
   ind2 = inds{ordering(i)}(end);
   filer = sprintf('%s/result_%05d-%05d.mat',baser,ind1,ind2);
@@ -75,16 +74,16 @@ for i = 1:length(ordering)
   res = cell(0,1);
 
   %% pre-load all images in a chunk
-  fprintf(1,'Preloading %d images\n',length(inds{ordering(i)}));
+  %fprintf(1,'Preloading %d images\n',length(inds{ordering(i)}));
   clear Is;
   for j = 1:length(inds{ordering(i)})
     Is{j} = convert_to_I(fg{inds{ordering(i)}(j)});
   end
   
   for j = 1:length(inds{ordering(i)})
-
+    counter = counter + 1;
     index = inds{ordering(i)}(j);
-    fprintf(1,'   ---image %d\n',index);
+    fprintf(1,' --image %05d/%05d:',counter,length(fg));
     Iname = fg{index};
     %curid = -1;
     [tmp,curid,tmp] = fileparts(Iname);
@@ -110,8 +109,8 @@ for i = 1:length(ordering)
       scores = [];
     end
     [aa,bb] = max(scores);
-    fprintf(1,' took %.3fsec, maxhit=%.3f, #hits=%d\n',...
-            toc(starter),aa,length(scores));
+    fprintf(1,' %d exemplars took %.3fsec, #windows=%05d, max=%.3f \n',...
+            length(models),toc(starter),length(scores),aa);
     
     % Transfer GT boxes from models onto the detection windows
     boxes = adjust_boxes(coarse_boxes,models);
@@ -122,8 +121,7 @@ for i = 1:length(ordering)
       boxes = boxes(goods,:);
       coarse_boxes = coarse_boxes(goods,:);
     end
-
-
+    
     if display == 1       
       %extract detection box vectors from the localization results
       saveboxes = boxes;

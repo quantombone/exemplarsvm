@@ -9,6 +9,13 @@ dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
                                  results_directory);
 
+%% Issue warning if lock files are present
+lockfiles = check_for_lock_files(results_directory);
+if length(lockfiles) > 0
+  fprintf(1,'WARNING: %d lockfiles present in current directory\n', ...
+          length(lockfiles));
+end
+
 %% Set exemplar-initialization parameters
 
 %Initialize framing function
@@ -48,7 +55,7 @@ dataset_params.val_params.NMS_OS = 0.5;
 dataset_params.val_params.set_name = ['trainval+' cls];;
 val_set = get_pascal_set(dataset_params, ...
                          dataset_params.val_params.set_name);
-
+val_set = val_set(1:10);
 %Choose a short string to indicate the type of training run we are doing
 dataset_params.models_name = ...
     [init_params.init_type ...
@@ -65,7 +72,7 @@ dataset_params.test_params.NMS_OS = 0.5;
 dataset_params.test_params.set_name = ['test+' cls];
 test_set = get_pascal_set(dataset_params, ...
                           dataset_params.test_params.set_name);
-
+test_set = test_set(1:10);
 
 %% Apply on test set
 dataset_params.params = dataset_params.test_params;
@@ -103,5 +110,6 @@ title('Exemplar, w,  and top 16 detections');
 
 
 %maxk = 10;
-%allbbs = show_top_dets(dataset_params, models, test_grid, test_set, dataset_par%ams.test_params.set_name, ...
-%                         test_struct, maxk);
+%allbbs = show_top_dets(dataset_params, models, test_grid, ...
+%                       test_set, dataset_params.test_params.set_name, ...
+%                       test_struct, maxk);

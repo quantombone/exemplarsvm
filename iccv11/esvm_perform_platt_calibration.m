@@ -1,11 +1,10 @@
-function [betas] = perform_calibration(dataset_params,...
-                                       models, grid, val_set, ...
-                                       CACHE_FILES)
+function [betas] = esvm_perform_platt_calibration(dataset_params,...
+                                                  models, grid, val_set, ...
+                                                  CACHE_FILES)
 % Perform calibration by learning the sigmoid parameters (linear
 % transformation of svm scores) for each model independently. If we
 % perform an operation such as NMS, we will now have "comparable"
 % scores.  This is performed on the 'trainval' set for PASCAL VOC.
-
 
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
@@ -22,9 +21,9 @@ end
 %if enabled, do NMS, if disabled return raw detections
 DO_NMS = 0;
 
-if DO_NMS == 0
-  fprintf(1,'Inside calibration: disabled NMS!\n');
-end
+%if DO_NMS == 0
+%  fprintf(1,'Inside calibration: disabled NMS!\n');
+%end
 
 % if enabled, display images
 display = dataset_params.display;
@@ -34,8 +33,8 @@ display = dataset_params.display;
 % into DUMPDIR
 dump_images = 0;
 
-DUMPDIR = sprintf('%s/www%s/calib/%s-%s/',dataset_params.localdir, ...
-                  dataset_params.subname, dataset_params.dataset, ...
+DUMPDIR = sprintf('%s/www/calib/%s-%s/',dataset_params.localdir, ...
+                  dataset_params.dataset, ...
                   models{1}.cls,models{1}.models_name);
 
 if dump_images==1 && ~exist(DUMPDIR,'dir')
@@ -73,9 +72,9 @@ if ~exist(final_dir','dir')
 end
 
 final_file = ...
-    sprintf('%s/%s-%s-betas-%s.mat',...
+    sprintf('%s/%s-%s-betas.mat',...
             final_dir, ...
-            models{1}.cls, models{1}.models_name,dataset_params.subname);
+            models{1}.cls, models{1}.models_name);
 
 if CACHE_FILES == 1 
   lockfile = [final_file '.lock'];
@@ -102,7 +101,7 @@ cls = models{1}.cls;
 
 targetc = find(ismember(dataset_params.classes,models{1}.cls));
 
-fprintf(1,'Preparing boxes for calibration\n');
+%fprintf(1,'Preparing boxes for calibration\n');
 for i = 1:length(grid)    
   if mod(i,100)==0
     fprintf(1,'.');
@@ -168,7 +167,7 @@ ALL_os = cat(1,os{:});
 curids = cellfun2(@(x)x.curid,grid);
 
 
-fprintf(1,'Pre-processing models for calibration: \n');
+%fprintf(1,'Pre-processing models for calibration: \n');
 
 for exid = 1:length(models)
   fprintf(1,'.');
@@ -297,7 +296,7 @@ for exid = 1:length(models)
 end
 
 if CACHE_FILES == 1
-  fprintf(1,'Loaded betas, saving to %s\n',final_file);
+  fprintf(1,'\nLoaded calibration parameters "betas", saving to %s\n',final_file);
   save(final_file,'betas');
   rmdir(lockfile);
 end

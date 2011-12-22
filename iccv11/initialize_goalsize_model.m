@@ -46,7 +46,7 @@ model.init_params = init_params;
 model.hg_size = size(curfeats);
 model.mask = logical(ones(model.hg_size(1),model.hg_size(2)));
 
-fprintf(1,'hg_size = [%d %d]\n',model.hg_size(1),model.hg_size(2));
+fprintf(1,'initialized with HOG_size = [%d %d]\n',model.hg_size(1),model.hg_size(2));
 model.w = curfeats - mean(curfeats(:));
 model.b = 0;
 model.x = curfeats;

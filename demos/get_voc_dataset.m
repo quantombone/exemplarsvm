@@ -18,10 +18,10 @@ end
 dataset_params.NIMS_PER_CHUNK = 4;
 
 % Create a root directory
-dataset_params.devkitroot = [result_dir '/' VOCYEAR];
+dataset_params.devkitroot = [result_dir '/'];
 
 % change this path to a writable local directory for the example code
-dataset_params.localdir = [dataset_params.devkitroot '/local/'];
+dataset_params.localdir = [dataset_params.devkitroot];
 
 % change this path to a writable directory for your results
 dataset_params.resdir = [dataset_params.devkitroot ['/' ...

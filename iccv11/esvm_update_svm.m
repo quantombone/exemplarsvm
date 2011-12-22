@@ -1,4 +1,4 @@
-function [m,other] = do_svm(m)
+function [m,other] = esvm_update_svm(m)
 %Perform SVM learning for a single exemplar model, we assume that
 %the exemplar has a set of detections loaded in m.model.svxs and m.model.svbbs
 %Durning Learning, we can apply some pre-processing such as PCA or
@@ -35,6 +35,7 @@ else
   bbs = m.model.svbbs;
 end
 
+%NOTE: MAXSIZE should perhaps be inside of the default_params script?
 MAXSIZE = 3500;
 if size(xs,2) >= MAXSIZE
   HALFSIZE = MAXSIZE/2;
@@ -51,107 +52,102 @@ if size(xs,2) >= MAXSIZE
 end
 
 
-if 1
-  %old method
   
-  superx = cat(2,m.model.x,xs);
-  supery = cat(1,ones(size(m.model.x,2),1),-1*ones(size(xs,2),1));
-  
-  
-  spos = sum(supery==1);
-  sneg = sum(supery==-1);
+superx = cat(2,m.model.x,xs);
+supery = cat(1,ones(size(m.model.x,2),1),-1*ones(size(xs,2),1));
 
-  wpos = mining_params.POSITIVE_CONSTANT;
-  wneg = 1;
+spos = sum(supery==1);
+sneg = sum(supery==-1);
 
-  if mining_params.BALANCE_POSITIVES == 1
-    fprintf(1,'balancing positives\n');
-    wpos = 1/spos;
-    wneg = 1/sneg;
-    wpos = wpos / wneg;
-    wneg = wneg / wneg;
+wpos = mining_params.POSITIVE_CONSTANT;
+wneg = 1;
+
+if mining_params.BALANCE_POSITIVES == 1
+  fprintf(1,'balancing positives\n');
+  wpos = 1/spos;
+  wneg = 1/sneg;
+  wpos = wpos / wneg;
+  wneg = wneg / wneg;
+end
+
+A = eye(size(superx,1));
+mu = zeros(size(superx,1),1);
+
+if mining_params.DOMINANT_GRADIENT_PROJECTION == 1  
+  A = get_dominant_basis(reshape(mean(m.model.x(:,1),2), ...
+                                 m.model.hg_size),...
+                         mining_params.DOMINANT_GRADIENT_PROJECTION_K);
+  
+  
+  A2 = get_dominant_basis(reshape(mean(superx(:,supery==-1),2), ...
+                                  m.model.hg_size),...
+                          mining_params ...
+                          .DOMINANT_GRADIENT_PROJECTION_K);
+  A = [A A2];
+elseif mining_params.DO_PCA == 1
+  [A,d,mu] = mypca(superx,mining_params.PCA_K);
+elseif mining_params.A_FROM_POSITIVES == 1
+  A = [superx(:,supery==1)];
+  cursize = size(A,2);
+  for qqq = 1:cursize
+    A(:,qqq) = A(:,qqq) - mean(A(:,qqq));
+    A(:,qqq) = A(:,qqq)./ norm(A(:,qqq));
   end
   
-  A = eye(size(superx,1));
-  mu = zeros(size(superx,1),1);
-  
-  if mining_params.DOMINANT_GRADIENT_PROJECTION == 1  
-    A = get_dominant_basis(reshape(mean(m.model.x(:,1),2), ...
-                                   m.model.hg_size),...
-                           mining_params.DOMINANT_GRADIENT_PROJECTION_K);
-    
-    
-    A2 = get_dominant_basis(reshape(mean(superx(:,supery==-1),2), ...
-                                    m.model.hg_size),...
-                            mining_params ...
-                            .DOMINANT_GRADIENT_PROJECTION_K);
-    A = [A A2];
-  elseif mining_params.DO_PCA == 1
-    [A,d,mu] = mypca(superx,mining_params.PCA_K);
-  elseif mining_params.A_FROM_POSITIVES == 1
-    A = [superx(:,supery==1)];
-    cursize = size(A,2);
-    for qqq = 1:cursize
-      A(:,qqq) = A(:,qqq) - mean(A(:,qqq));
-      A(:,qqq) = A(:,qqq)./ norm(A(:,qqq));
-    end
-        
-    %% add some ones
-    A(:,end+1) = 1;
-    A(:,end) = A(:,end) / norm(A(:,end));
-  end
-  
-  newx = bsxfun(@minus,superx,mu);
-  newx = newx(logical(m.model.mask),:);
-  newx = A(m.model.mask,:)'*newx;
-  
-  fprintf(1,' -----\nStarting SVM dim=%d... s+=%d, s-=%d ',...
-          size(newx,1),spos,sneg);
-  starttime = tic;
-  
-  svm_model = libsvmtrain(supery, newx',sprintf(['-s 0 -t 0 -c' ...
+  %% add some ones
+  A(:,end+1) = 1;
+  A(:,end) = A(:,end) / norm(A(:,end));
+end
+
+newx = bsxfun(@minus,superx,mu);
+newx = newx(logical(m.model.mask),:);
+newx = A(m.model.mask,:)'*newx;
+
+fprintf(1,' -----\nStarting SVM: dim=%d... #pos=%d, #neg=%d ',...
+        size(newx,1),spos,sneg);
+starttime = tic;
+
+svm_model = libsvmtrain(supery, newx',sprintf(['-s 0 -t 0 -c' ...
                     ' %f -w1 %.9f -q'], mining_params.SVMC, wpos));
+
+if length(svm_model.sv_coef) == 0
+  %learning had no negatives
+  wex = m.model.w;
+  b = m.model.b;
+  fprintf(1,'reverting to old model...\n');
+else
   
-  if length(svm_model.sv_coef) == 0
-    %learning had no negatives
-    wex = m.model.w;
-    b = m.model.b;
-    fprintf(1,'reverting to old model...\n');
-  else
-    
-    %convert support vectors to decision boundary
-    svm_weights = full(sum(svm_model.SVs .* ...
-                           repmat(svm_model.sv_coef,1, ...
-                                  size(svm_model.SVs,2)),1));
-    
-    wex = svm_weights';
-    b = svm_model.rho;
-    
-    if supery(1) == -1
-      wex = wex*-1;
-      b = b*-1;    
-    end
-    
-    %% project back to original space
-    b = b + wex'*A(m.model.mask,:)'*mu(m.model.mask);
-    wex = A(m.model.mask,:)*wex;
-    
-    wex2 = zeros(size(superx,1),1);
-    wex2(m.model.mask) = wex;
-    
-    wex = wex2;
-    
-    %% issue a warning if the norm is very small
-    if norm(wex) < .00001
-      fprintf(1,'learning broke down!\n');
-    end  
+  %convert support vectors to decision boundary
+  svm_weights = full(sum(svm_model.SVs .* ...
+                         repmat(svm_model.sv_coef,1, ...
+                                size(svm_model.SVs,2)),1));
+  
+  wex = svm_weights';
+  b = svm_model.rho;
+  
+  if supery(1) == -1
+    wex = wex*-1;
+    b = b*-1;    
   end
   
-  maxpos = max(wex'*m.model.x - b);
-  fprintf(1,' --- Max positive is %.3f\n',maxpos);
+  %% project back to original space
+  b = b + wex'*A(m.model.mask,:)'*mu(m.model.mask);
+  wex = A(m.model.mask,:)*wex;
   
-  fprintf(1,'took %.3f sec\n',toc(starttime));
-end %end old method
+  wex2 = zeros(size(superx,1),1);
+  wex2(m.model.mask) = wex;
+  
+  wex = wex2;
+  
+  %% issue a warning if the norm is very small
+  if norm(wex) < .00001
+    fprintf(1,'learning broke down!\n');
+  end  
+end
+
+maxpos = max(wex'*m.model.x - b);
+fprintf(1,' --- Max positive is %.3f\n',maxpos);
+fprintf(1,'SVM iteration took %.3f sec, ',toc(starttime));
 
 m.model.w = reshape(wex, size(m.model.w));
 m.model.b = b;
@@ -159,7 +155,7 @@ m.model.b = b;
 r = m.model.w(:)'*m.model.svxs - m.model.b;
 svs = find(r >= -1.0000);
 
-%KEEP 3#SV vectors (but at most max_negatives of them)
+%KEEP (nsv_multiplier * #SV) vectors, but at most max_negatives of them
 total_length = ceil(mining_params.beyond_nsv_multiplier*length(svs));
 total_length = min(total_length,mining_params.max_negatives);
 
@@ -167,7 +163,6 @@ total_length = min(total_length,mining_params.max_negatives);
 svs = beta(1:min(length(beta),total_length));
 m.model.svxs = m.model.svxs(:,svs);
 m.model.svbbs = m.model.svbbs(svs,:);
-%TODO: Note, we are keeping vectors, but some are actually for
-%validation, some for training...
+fprintf(1,' kept %d negatives\n',total_length);
 
 

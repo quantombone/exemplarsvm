@@ -10,13 +10,12 @@ if ~exist('CACHE_FILES','var')
 end
 
 %% Perform calibration
-betas = perform_calibration(dataset_params, models, grid, ...
-                            cur_set, CACHE_FILES);
+betas = esvm_perform_platt_calibration(dataset_params, models, grid, ...
+                                       cur_set, CACHE_FILES);
 
 if ~(isfield(dataset_params,'SKIP_M') && dataset_params.SKIP_M==1)
   %% Estimate the co-occurrence matrix M
-  [M] = estimate_M(dataset_params, models, grid, betas, ...
-                   CACHE_FILES);
+  [M] = esvm_estimate_M(dataset_params, models, grid, betas, CACHE_FILES);
 end
 
 M.betas = betas;

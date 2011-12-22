@@ -1,7 +1,9 @@
-function M = estimate_M(dataset_params, models, grid, betas, ...
+function M = esvm_estimate_M(dataset_params, models, grid, betas, ...
                         CACHE_FILES)
 %Given a bunch of detections, learn the M boosting matrix, which
-%makes the final scores multiplexed
+%makes a final boxes's score depend on the co-occurrence of certain
+%"friendly" detections
+% Tomasz Malisiewicz (tomasz@csail.mit.edu)
 
 neighbor_thresh = dataset_params.params.calibration_neighbor_thresh;
 count_thresh    = dataset_params.params.calibration_count_thresh;
@@ -14,8 +16,8 @@ final_dir = ...
     sprintf('%s/betas',dataset_params.localdir);
 
 final_file = ...
-    sprintf('%s/%s-%s-M-%s.mat',...
-            final_dir, models{1}.cls, models{1}.models_name,dataset_params.subname);
+    sprintf('%s/%s-%s-M.mat',...
+            final_dir, models{1}.cls, models{1}.models_name);
 
 if CACHE_FILES == 1 
   lockfile = [final_file '.lock'];
@@ -47,12 +49,19 @@ if REMOVE_SELF == 0
 end
 curcls = find(ismember(dataset_params.classes,models{1}.cls));
 
-fprintf(1,'Extracting all boxes\n');
-tic
+fprintf(1,' -Computing Box Features:');
+starter=tic;
 for i = 1:length(grid)
   
   curid = grid{i}.curid;
   boxes{i} = grid{i}.bboxes;
+  
+  if size(boxes{i},1) == 0
+    if length(grid{i}.extras)>0
+      maxos{i} = [];
+    end      
+    continue
+  end
 
   %new-method: use calibrated scores (doesn't work too well)
   %calib_boxes = calibrate_boxes(boxes{i},betas);
@@ -81,7 +90,7 @@ for i = 1:length(grid)
     end
   end
 end
-toc
+
 
 if 0
 %% clip boxes to image
@@ -127,23 +136,21 @@ x = [xraw{:}];
 exids = allboxes(:,6);
 exids(allboxes(:,7)==1)= exids(allboxes(:,7)==1) + length(models);
 imids = allboxes(:,5);
-
-%osmats = cellfun2(@(x)getosmatrix_bb(x,x),boxes);
-%thetadiffmats = cellfun2(@(x)getaspectmatrix_bb(x,x),boxes);
+fprintf(1,'took %.3fsec\n',toc(starter));
 
 
-fprintf(1,'learning M by counting\n');
-tic
+fprintf(1,' -Learning M by counting: ');
+starter=tic;
 %This one works best so far
 M = learn_M_counting(x, exids, os, count_thresh);
-toc
+fprintf(1,'took %.3fsec\n',toc(starter));
 
 M.neighbor_thresh = neighbor_thresh;
 M.count_thresh = count_thresh;
 
 r = cell(length(xraw),1);
-fprintf(1,'applying boost matrix\n');
-tic
+fprintf(1,' -Applying M to %d images: ',length(xraw));
+starter=tic;
 for j = 1:length(xraw)
   r{j} = apply_boost_M(xraw{j},boxes{j},M);
 end
@@ -154,28 +161,28 @@ goods = os>.5;
 
 res = (cumsum(goods(bb))./(1:length(bb)));
 M.score = mean(res);
-toc
+fprintf(1,'took %.3fsec\n',toc(starter));
 
 figure(4)
 subplot(1,2,1)
 plot(scores,os,'r.')
-xlabel('singleton scores')
+xlabel('Scores without calibration matrix')
 ylabel('OS with gt')
 
 subplot(1,2,2)
 plot(r,os,'r.')
-xlabel('combined score')
+xlabel('Scores with calibration matrix')
 ylabel('os')
 
 figure(5)
 clf
 [aa,bb] = sort(scores,'descend');
-plot(cumsum(os(bb)>.5)./(1:length(os)),'r-')
+plot(cumsum(os(bb)>.5)./(1:length(os)),'r-','LineWidth',3)
 hold on;
 [aa,bb] = sort(r,'descend');
-plot(cumsum(os(bb)>.5)./(1:length(os)),'b-')
-title('Precision-Recall');
-legend('singleton','combined')
+plot(cumsum(os(bb)>.5)./(1:length(os)),'b.-','LineWidth',3)
+title('M-matrix estimation Precision-Recall');
+legend('no matrix','matrix')
 
 if CACHE_FILES == 1
   fprintf(1,'Computed M, saving to %s\n',final_file);
@@ -184,8 +191,6 @@ if CACHE_FILES == 1
 end
 
 function M = learn_M_counting(x, exids, os, count_thresh)
-% function M = learn_M_counting(x, exids, maxos, count_thresh, osmats, ...
-%                               thetadiffmats, boxes)
 %Learn the matrix by counting activations on positives
 N = size(x,2);
 K = size(x,1);
@@ -198,9 +203,6 @@ for i = 1:N
   C(cur,exids(i)) = C(cur,exids(i)) + os(i)*(os(i) >= count_thresh) / ...
        length(cur);
 
-  %new way: not so well
-  %C(cur,exids(i)) = C(cur,exids(i)) + os(i)*(os(i) >= count_thresh) / ...
-  %    length(cur)/sum(x(:,i);
 end
 
 for i = 1:K
