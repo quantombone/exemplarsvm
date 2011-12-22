@@ -1,25 +1,37 @@
-function allfiles = esvm_detect_imageset(dataset_params,models,fg,setname,M)
+function grid = esvm_detect_imageset(dataset_params, models, ...
+                                         imageset, setname)
 % Apply a set of models (raw exemplars, trained exemplars, dalals,
 % poselets, components, etc) to a set of images.  Script can be ran in
-% parallel with no arguments.  After running script, use
-% grid=load_result_grid(models) to load results.
+% parallel with no arguments.  
 %
-% models: Input cell array of models (try models=load_all_models)
-% M: The boosting Matrix (optional)
-% curset: The PASCAL VOC image set to apply the exemplars to
-%   ('trainval' or 'test')
-%
+% models: Input cell array of models
+% imageset: a (virtual) set of images, such that
+%   convert_to_I(imageset{i}) return an image
+% setname: a name of the set, which lets us cache results
+
 % Tomasz Malisiewicz (tomasz@cmu.edu)
-
-%Save results every NIMS_PER_CHUNK images
-
-if length(fg) == 0
-  allfiles = {};
-  return;
-end
 
 %Only allow display to be enabled on a machine with X
 display = dataset_params.display;
+
+if length(imageset) == 0
+  grid = {};
+  return;
+end
+
+if exist('setname','var')
+  fullsetname = [setname '.' models{1}.cls];
+  
+  final_file = sprintf('%s/applied/%s-%s.mat',dataset_params.localdir,fullsetname, ...
+                       models{1}.models_name);
+
+  if fileexists(final_file)
+    res = load(final_file);
+    grid = res.grid;
+    return;
+  end
+end
+
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
@@ -34,9 +46,9 @@ else
   params = dataset_params.params;
 end
 
-setname = [setname '.' models{1}.cls];
+fullsetname = [setname '.' models{1}.cls];
 
-baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,setname, ...
+baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,fullsetname, ...
                 models{1}.models_name);
 
 if (display == 0) && (~exist(baser,'dir'))
@@ -47,7 +59,7 @@ end
 %% Chunk the data into NIMS_PER_CHUNK images per chunk so that we
 %process several images, then write results for entire chunk
 
-inds = do_partition(1:length(fg),NIMS_PER_CHUNK);
+inds = do_partition(1:length(imageset),NIMS_PER_CHUNK);
 
 % randomize chunk orderings
 myRandomize;
@@ -77,14 +89,14 @@ for i = 1:length(ordering)
   %fprintf(1,'Preloading %d images\n',length(inds{ordering(i)}));
   clear Is;
   for j = 1:length(inds{ordering(i)})
-    Is{j} = convert_to_I(fg{inds{ordering(i)}(j)});
+    Is{j} = convert_to_I(imageset{inds{ordering(i)}(j)});
   end
   
   for j = 1:length(inds{ordering(i)})
     counter = counter + 1;
     index = inds{ordering(i)}(j);
-    fprintf(1,' --image %05d/%05d:',counter,length(fg));
-    Iname = fg{index};
+    fprintf(1,' --image %05d/%05d:',counter,length(imageset));
+    Iname = imageset{index};
     %curid = -1;
     [tmp,curid,tmp] = fileparts(Iname);
     
@@ -129,9 +141,9 @@ for i = 1:length(ordering)
         boxes(:,5) = 1:size(boxes,1);
       end
       
-      if exist('M','var') && length(M)>0
-        boxes = calibrate_boxes(boxes, M.betas);
-      end
+      % if exist('M','var') && length(M)>0
+      %   boxes = calibrate_boxes(boxes, M.betas);
+      % end
 
       if numel(boxes)>0
         [aa,bb] = sort(boxes(:,end),'descend');
@@ -188,7 +200,6 @@ for i = 1:length(ordering)
     continue
   end
   
-  
   % save results into file and remove lock file
   save(filer,'res');
   try
@@ -200,3 +211,8 @@ for i = 1:length(ordering)
 end
 
 [allfiles,bb] = sort(allfiles);
+
+grid = esvm_load_result_grid(dataset_params, models, ...
+                             setname, ...
+                             allfiles);
+

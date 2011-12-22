@@ -163,26 +163,28 @@ res = (cumsum(goods(bb))./(1:length(bb)));
 M.score = mean(res);
 fprintf(1,'took %.3fsec\n',toc(starter));
 
-figure(4)
-subplot(1,2,1)
-plot(scores,os,'r.')
-xlabel('Scores without calibration matrix')
-ylabel('OS with gt')
-
-subplot(1,2,2)
-plot(r,os,'r.')
-xlabel('Scores with calibration matrix')
-ylabel('os')
-
-figure(5)
-clf
-[aa,bb] = sort(scores,'descend');
-plot(cumsum(os(bb)>.5)./(1:length(os)),'r-','LineWidth',3)
-hold on;
-[aa,bb] = sort(r,'descend');
-plot(cumsum(os(bb)>.5)./(1:length(os)),'b.-','LineWidth',3)
-title('M-matrix estimation Precision-Recall');
-legend('no matrix','matrix')
+if dataset_params.display == 1
+  figure(4)
+  subplot(1,2,1)
+  plot(scores,os,'r.')
+  xlabel('Scores without calibration matrix')
+  ylabel('OS with gt')
+  
+  subplot(1,2,2)
+  plot(r,os,'r.')
+  xlabel('Scores with calibration matrix')
+  ylabel('os')
+  
+  figure(5)
+  clf
+  [aa,bb] = sort(scores,'descend');
+  plot(cumsum(os(bb)>.5)./(1:length(os)),'r-','LineWidth',3)
+  hold on;
+  [aa,bb] = sort(r,'descend');
+  plot(cumsum(os(bb)>.5)./(1:length(os)),'b.-','LineWidth',3)
+  title('M-matrix estimation Precision-Recall');
+  legend('no matrix','matrix')
+end
 
 if CACHE_FILES == 1
   fprintf(1,'Computed M, saving to %s\n',final_file);

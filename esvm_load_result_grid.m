@@ -6,16 +6,25 @@ function grid = esvm_load_result_grid(dataset_params,...
 %esvm, .5 for vis-reg)
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
+fullsetname = [setname '.' models{1}.cls];
+
+final_file = sprintf('%s/applied/%s-%s.mat',...
+                     dataset_params.localdir,fullsetname, ...
+                     models{1}.models_name);
+
+if fileexists(final_file)
+  res = load(final_file);
+  grid = res.grid;
+  return;
+end
+
 wait_until_all_present(files,5);
 
 if ~exist('curthresh','var')
   curthresh = -1.1;
 end
 
-setname = [setname '.' models{1}.cls];
 
-final_file = sprintf('%s/applied/%s-%s.mat',dataset_params.localdir,setname, ...
-                     models{1}.models_name);
 lockfile = [final_file '.lock'];
 
 if fileexists(final_file) || (mymkdir_dist(lockfile)==0)
@@ -85,16 +94,16 @@ end
 
 if 1
   
-%BUG: I'm not sure that pruning here isn't going to hurt me later
-%since we no longer have a direct mapping between detections and the
-%test-set ids
-
-%Prune away files which didn't load
-lens = cellfun(@(x)length(x),grid);
-grid = grid(lens>0);
-grid = cellfun2(@(x)x.res,grid);
-grid2 = grid;
-grid = [grid2{:}];
+  %BUG: I'm not sure that pruning here isn't going to hurt me later
+  %since we no longer have a direct mapping between detections and the
+  %test-set ids
+  
+  %Prune away files which didn't load
+  lens = cellfun(@(x)length(x),grid);
+  grid = grid(lens>0);
+  grid = cellfun2(@(x)x.res,grid);
+  grid2 = grid;
+  grid = [grid2{:}];
 else
   fprintf(1,'warning skipping pruning\n');
 end
