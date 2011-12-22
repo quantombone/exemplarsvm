@@ -9,6 +9,18 @@ mining_params = dataset_params.mining_params;
 models_name = models{1}.models_name;
 new_models_name = [models_name mining_params.training_function()];
 
+cache_dir =  ...
+    sprintf('%s/models/',dataset_params.localdir);
+
+cache_file = ...
+    sprintf('%s/%s.mat',cache_dir,new_models_name);
+
+if fileexists(cache_file)
+  newmodels = load(cache_file);
+  newmodels = newmodels.models;
+  return;
+end
+
 DUMPDIR = sprintf('%s/www/svs/%s/',dataset_params.localdir, ...
                   new_models_name);
 

@@ -62,7 +62,7 @@ val_set = val_set(1:10);
 %Choose a short string to indicate the type of training run we are doing
 dataset_params.models_name = ...
     [init_params.init_type ...
-     '.' dataset_params.model_type '.' cls];
+     '.' cls '.' dataset_params.model_type];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% EXEMPLAR INITIALIZATION %%%%%
@@ -117,7 +117,9 @@ bbs = cat(1,test_struct.unclipped_boxes{:});
 bbs = bbs(bb,:);
 m = models{1};
 m.model.svbbs = bbs;
+m.model = rmfield(m.model,'svxs');
 m.train_set = test_set;
+
 figure(1)
 clf
 imagesc(get_sv_stack(m,4,4))
