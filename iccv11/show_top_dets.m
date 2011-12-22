@@ -98,7 +98,6 @@ for k = 1:maxk
     
     curb = bb(counter);
     curid = grid{imids(curb)}.curid;
-
     I = (convert_to_I(fg{bbs(bb(counter),11)}));
     
     TARGET_BUS = -1;
@@ -208,10 +207,13 @@ for k = 1:maxk
     drawnow
     
     print(gcf,'-depsc2',filer);
+    finalfile = strrep(filer,'.eps','.pdf');
     unix(sprintf('ps2pdf -dEPSCrop -dPDFSETTINGS=/prepress %s %s',...
-                 filer,strrep(filer,'.eps','.pdf')));
+                 filer,finalfile));
 
-    unix(sprintf('rm %s',filer));
+    if fileexists(finalfile)
+      unix(sprintf('rm %s',filer));
+    end
     
     if exist(filerlock,'dir')
       rmdir(filerlock);
