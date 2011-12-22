@@ -1,9 +1,9 @@
-function dataset_params = get_voc_dataset(VOCYEAR)
+function dataset_params = get_voc_dataset(VOCYEAR,datadir,result_dir)
 %Get the dataset structure for a VOC dataset, given the VOCYEAR
 %string which is something like: VOC2007, VOC2010, ...
 
-result_dir = load_results_directory;
-datadir = load_data_directory;
+%result_dir = load_results_directory;
+%datadir = load_data_directory;
 
 if ~exist('VOCYEAR','var')
   fprintf(1,'WARNING: using default VOC2007 dataset\n');
@@ -37,6 +37,12 @@ dataset_params.testset = 'test';
 %NOTE: this is if we want the resulting calibrated models to have
 %different special characters in their name
 dataset_params.subname = '';
+
+%Do not skip evaluation, unless it is VOC2010
+dataset_params.SKIP_EVAL = 0;
+
+%If enabled, shows outputs throughout the training/testing procedure
+dataset_params.display = 0;
 
 %Fill in the params structure with VOC-specific stuff
 dataset_params = VOCinit(dataset_params);

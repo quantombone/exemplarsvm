@@ -1,34 +1,36 @@
 function voc_demo_quick
-%This is the main Exemplar-SVM driver program, see README.md for
-%instructions
+%In this quick demo, we perform the following
+% 1) Choose one exemplar (a bus from PASCAL VOC 2007 trainval set)
+% 2) Define datasets:
+%       negative set as 10 random non-bus images from trainval
+%       validation set as 20 random bus images from trainval
+%       test-set as 20 random bus images from test-set
+% 5) Perform esvm training, calibration on validation set, and
+% evaluation on test-set
+% 6) Show an example AP curve
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
-
+%Choose the class to work with
 cls = 'bus';
 
 %% Initialize dataset
 dataset_params = get_voc_dataset('VOC2007');
-dataset_params.display = 0;
-
-%Do not skip evaluation, unless it is VOC2010
-dataset_params.SKIP_EVAL = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SET SOURCETRAIN/VAL/TEST PARAMS %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Initialize framing function
-init_params.sbin = 8;
-init_params.goal_ncells = 100;
-init_params.MAXDIM = 12;
-init_params.init_function = @initialize_goalsize_model;
-init_params.init_string = 'g';
-init_params.init_type = sprintf('%s-%d-%d',...
-                                init_params.init_string,...
-                                init_params.goal_ncells,...
-                                init_params.MAXDIM);
-
-dataset_params.init_params = init_params;
+dataset_params.init_params.sbin = 8;
+dataset_params.init_params.goal_ncells = 100;
+dataset_params.init_params.MAXDIM = 12;
+dataset_params.init_params.init_function = @initialize_goalsize_model;
+dataset_params.init_params.init_string = 'g';
+dataset_params.init_params.init_type = ...
+    sprintf('%s-%d-%d',...
+            dataset_params.init_params.init_string,...
+            dataset_params.init_params.goal_ncells,...
+            dataset_params.init_params.MAXDIM);
 
 %Initialize exemplar stream
 dataset_params.stream_set_name = 'trainval';
