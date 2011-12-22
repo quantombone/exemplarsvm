@@ -11,8 +11,8 @@ models_name = dataset_params.models_name;
 %%%%%% EXEMPLAR INITIALIZATION %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-efiles = esvm_initialize(dataset_params, e_stream_set, ...
-                         models_name, dataset_params.init_params);
+efiles = esvm_initialize_exemplars(dataset_params, e_stream_set, ...
+                                   models_name, dataset_params.init_params);
 
 %Append the nn-type if we are in nn mode
 if length(dataset_params.params.nnmode) > 0
@@ -30,8 +30,8 @@ models = esvm_load_models(dataset_params, cls, models_name, ...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Train each initialized exemplar     
-[tfiles, models_name] = esvm_train(dataset_params, ...
-                                   models, neg_set);
+[tfiles, models_name] = esvm_train_exemplars(dataset_params, ...
+                                             models, neg_set);
 %Load the trained exemplars (this will hold script until all
 %exemplars have been trained)
 CACHE_FILE = 1;
@@ -47,13 +47,13 @@ models = esvm_load_models(dataset_params, cls, models_name, ...
 %% Apply trained exemplars on validation set
 dataset_params.params = dataset_params.val_params;
 dataset_params.params.gt_function = @get_pascal_anno_function;
-val_files = esvm_detect_set(dataset_params, models, val_set, ...
+val_files = esvm_detect_imageset(dataset_params, models, val_set, ...
                             dataset_params.val_params.set_name);
 val_grid = esvm_load_result_grid(dataset_params, models, ...
                                  dataset_params.val_params.set_name, val_files);
 
 %% Perform l.a.b.o.o. calibration and M-matrix estimation
 CACHE_BETAS = 1;
-M = esvm_calibrate_with_matrix(dataset_params, models, ...
-                               val_grid, val_set, CACHE_BETAS);
+M = esvm_perform_calibration(dataset_params, models, ...
+                             val_grid, val_set, CACHE_BETAS);
 

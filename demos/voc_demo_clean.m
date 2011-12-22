@@ -76,8 +76,8 @@ test_set = test_set(1:10);
 
 %% Apply on test set
 dataset_params.params = dataset_params.test_params;
-test_files = esvm_detect_set(dataset_params, models, test_set, ...
-                             dataset_params.test_params.set_name);
+test_files = esvm_detect_imageset(dataset_params, models, test_set, ...
+                                  dataset_params.test_params.set_name);
 
 %Load test set results
 test_grid = esvm_load_result_grid(dataset_params, models, ...
@@ -85,8 +85,8 @@ test_grid = esvm_load_result_grid(dataset_params, models, ...
                                   test_files);
 
 %apply calibration matrix to test-set results
-test_struct = esvm_pool_exemplars(dataset_params, models, ...
-                                  test_grid, M);
+test_struct = esvm_apply_calibration(dataset_params, models, ...
+                                     test_grid, M);
 
 %Show top hits
 bbs = cat(1,test_struct.unclipped_boxes{:});

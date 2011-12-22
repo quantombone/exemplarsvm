@@ -1,4 +1,4 @@
-function allfiles = esvm_detect_set(dataset_params,models,fg,setname,M)
+function allfiles = esvm_detect_imageset(dataset_params,models,fg,setname,M)
 % Apply a set of models (raw exemplars, trained exemplars, dalals,
 % poselets, components, etc) to a set of images.  Script can be ran in
 % parallel with no arguments.  After running script, use

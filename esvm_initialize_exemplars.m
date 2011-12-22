@@ -1,5 +1,5 @@
-function allfiles = esvm_initialize(dataset_params, e_set, ...
-                                        models_name, init_params)
+function allfiles = esvm_initialize_exemplars(dataset_params, e_set, ...
+                                              models_name, init_params)
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
 % NOTE: this function is parallelizable (and dalalizable!)  
