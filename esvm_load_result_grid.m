@@ -1,4 +1,4 @@
-function grid = load_result_grid(dataset_params,models,setname,files,curthresh)
+function grid = esvm_load_result_grid(dataset_params,models,setname,files,curthresh)
 %Given a set of models, return a grid of results from those models' firings
 %on the subset of images (target_directory is 'trainval' or 'test')
 %[curthresh]: only keep detections above this number (-1.1 for
@@ -105,8 +105,8 @@ if length(grid) > 0
   grid = grid(bb);
   
   %only keep grids with at least one detection
-  lens = cellfun(@(x)size(x.bboxes,1),grid);
-  grid = grid(lens>0);
+  %lens = cellfun(@(x)size(x.bboxes,1),grid);
+  %grid = grid(lens>0);
 end
 
 %if fileexists(final_file) || (mymkdir_dist(lockfile) == 0)
