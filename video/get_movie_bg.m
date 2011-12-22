@@ -8,8 +8,8 @@ function bg = get_movie_bg(mname,LEN,func)
 %% Tomasz Malisiewicz (tomasz@cmu.edu)
   
 if ~exist('mname','var') | length(mname)==0
-    mname='~/Movies/Caddyshack/Caddyshack.avi';
-    mname = '~/Movies/National.Geographic.Clash.of.the.Continents.PDTV.XviD.MP3.MVGroup.org.avi';
+  mname='~/Movies/movie.avi';
+  fprintf(1,'Warning defaulting to movie: %s\',mname);
 end
 
 %FFMPEG_PATH = '/nfs/baikal/tmalisie/ffmpeg/ffmpeg-0.6/ffmpeg';
