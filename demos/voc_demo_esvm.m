@@ -4,8 +4,11 @@
 %% Initialize dataset parameters
 %data_directory = '/Users/tomasz/projects/Pascal_VOC/';
 %results_directory = '/nfs/baikal/tmalisie/esvm-data/';
-data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
-results_directory = '/nfs/baikal/tmalisie/esvm-bus/';
+%data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
+%results_directory = '/nfs/baikal/tmalisie/esvm-bus/';
+
+data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
+results_directory = '/csail/vision-videolabelme/people/tomasz/esvm-bus/';
 cls = 'bus';
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
