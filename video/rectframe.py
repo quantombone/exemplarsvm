@@ -52,12 +52,19 @@ class FancyFrame(wx.Frame):
         self.Show(True)
         
     def AlphaCycle(self, evt):
+        f = open("coords.txt")
+        xtl, ytl, xbr, ybr = "".join(f.readlines()).strip().split(" ")
+        xtl = int(xtl)
+        ytl = int(ytl)
+        xbr = int(xbr)
+        ybr = int(ybr)
+        f.close()
         self.amount += self.delta
-        if self.amount == 0 or self.amount == 255:
-            self.delta = -self.delta
-        self.Move((self.amount,250))
+        #if self.amount == 0 or self.amount == 255:
+        #    self.delta = -self.delta
+        self.Move((xtl,ytl))
         #print self.amount
-        self.InitializeToSize(self.amount+100,220)
+        self.InitializeToSize(xbr-xtl,ybr-ytl)
         self.Show()
 
 
