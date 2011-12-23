@@ -16,9 +16,6 @@ $ cd ~/projects/
 $ git clone git@github.com:quantombone/exemplarsvm.git #this will make ~/projects/exemplarsvm the code directory
 ```
 
-## Setup paths
-This quickstart guide assumes you have hardcoded "/nfs/baikal/tmalisie/pascal/VOCdevkit/" into the function load_data_directory.m, as well as the results folder "/nfs/baikal/tmalisie/esvm-data/" into "load_results_directory.m".  Note that you are free to choose any folder names you like, as the results will be written inside those directories.
-
 ## Making sure Exemplar-SVM library is compiled and working
 ``` sh
 $ cd ~/projects/exemplarsvm
@@ -39,12 +36,14 @@ At this point you can choose to either train your own detector, or download the 
 ---
 # 1) Train, Calibrate, and Test 
 
+## Make sure demos/voc_demo_esvm.m contains the right paths for voc installation as well as the results directory
+
 ## Training an Exemplar-SVM "bus" detector
 ``` sh
 $ cd ~/projects/exemplarsvm
 $ matlab
 $ >> addpath(genpath(pwd));
-$ >> voc_demo_esvm('bus')
+$ >> voc_demo_esvm
 ```
 
 # 2) Applying pre-trained models to a set of images
