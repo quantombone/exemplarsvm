@@ -219,7 +219,7 @@ end
 
 %Load all of the initialized exemplars
 CACHE_FILE = 1;
-STRIP_FILE = 0;
+STRIP_FILE = 1;
 DELETE_INITIAL = 0;
 newmodels = esvm_load_models(dataset_params, new_models_name, allfiles, ...
                           CACHE_FILE, STRIP_FILE, DELETE_INITIAL);

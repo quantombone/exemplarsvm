@@ -253,7 +253,7 @@ end
 %templates_x  = templates_x .* maskmat;
 
 sbin = models{1}.model.init_params.sbin;
-t = get_pyramid(I, sbin, length(models), localizeparams);
+t = get_pyramid(I, sbin, localizeparams);
 resstruct.padder = t.padder;
 
 pyr_N = cellfun(@(x)prod([size(x,1) size(x,2)]-S+1),t.hog);

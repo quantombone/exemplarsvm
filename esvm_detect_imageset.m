@@ -104,7 +104,8 @@ for i = 1:length(ordering)
   %% pre-load all images in a chunk
   %fprintf(1,'Preloading %d images\n',length(inds{ordering(i)}));
   clear Is;
-  Is = cellfun2(@(x)convert_to_I(x),imageset{inds{ordering(i)}});
+  Is = cellfun2(@(x)convert_to_I(x),imageset(inds{ordering(i)}));
+
   %for j = 1:length(inds{ordering(i)})
   %  Is{j} = convert_to_I(imageset{inds{ordering(i)}(j)});
   %end

@@ -7,8 +7,8 @@
 data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
 results_directory = '/nfs/baikal/tmalisie/esvm-bicycle/';
 
-%data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
-%results_directory = '/csail/vision-videolabelme/people/tomasz/esvm-bus/';
+data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
+results_directory = '/csail/vision-videolabelme/people/tomasz/esvm-bicycle/';
 cls = 'bicycle';
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
@@ -89,15 +89,15 @@ models = esvm_train_exemplars(dataset_params, ...
 %% Apply trained exemplars on validation set
 dataset_params.params = dataset_params.val_params;
 dataset_params.params.gt_function = @get_pascal_anno_function;
-val_grid = esvm_detect_imageset(dataset_params, models, val_set,...
-                            dataset_params.val_params.set_name);
-
+val_grid = esvm_detect_imageset(val_set,models,...
+                                dataset_params.val_params,...
+                                dataset_params.val_params.set_name,...
+                                dataset_params);
 
 %% Perform l.a.b.o.o. calibration and M-matrix estimation
 CACHE_BETAS = 1;
 M = esvm_perform_calibration(dataset_params, models, ...
                              val_grid, val_set, CACHE_BETAS);
-
 
 %% Define test-set
 dataset_params.test_params = dataset_params.params;
