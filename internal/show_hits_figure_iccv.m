@@ -86,7 +86,7 @@ for i = 1:N
     Itotal = Ia.*alphamap + Ib.*(1-alphamap);
     
     Imeta = Itotal;
-    offset = [0 size(Ishow,1)+size(Iex2,1)]
+    offset = [0 size(Ishow,1)+size(Iex2,1)];
  
     Ishow = cat(1,Ishow,Iex2,Imeta);
   

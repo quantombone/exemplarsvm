@@ -30,7 +30,9 @@ if ~exist('loadseg','var')
   loadseg = 1;
 end
 
-cb = models{index}.model.bb(subind,1:4);
+%cb = models{index}.model.bb(subind,1:4);
+%TJM: changed
+cb = models{index}.gt_box;    
 d1 = max(0,1 - cb(1));
 d2 = max(0,1 - cb(2));
 d3 = max(0,cb(3) - models{index}.sizeI(2));
@@ -55,16 +57,16 @@ if loadseg == 1 && exist('VOCopts','var')
   if numel(I2) > 0
     I = I2;
     mask = mask2;
-  end
-  
+  end  
 end
 
 cb = models{index}.gt_box;    
 Iex = pad_image(I, PADDER);
+Iexmask = pad_image(mask,PADDER);
 cb = round(cb + PADDER);
 
 Iex = Iex(cb(2):cb(4),cb(1):cb(3),:);
-Iexmask = mask(cb(2):cb(4),cb(1):cb(3));
+Iexmask = Iexmask(cb(2):cb(4),cb(1):cb(3));
 
 cb = models{index}.model.bb(subind,1:4);
 Icb = pad_image(I, PADDER);

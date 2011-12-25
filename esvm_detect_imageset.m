@@ -1,25 +1,27 @@
-function grid = esvm_detect_imageset(dataset_params, models, ...
-                                         imageset, setname)
+function grid = esvm_detect_imageset(imageset, models, ...
+                                     localizeparams, setname, dataset_params)
 % Apply a set of models (raw exemplars, trained exemplars, dalals,
-% poselets, components, etc) to a set of images.  Script can be ran in
-% parallel with no arguments.  
+% poselets, components, etc) to a set of images.  
 %
 % models: Input cell array of models
 % imageset: a (virtual) set of images, such that
-%   convert_to_I(imageset{i}) return an image
-% setname: a name of the set, which lets us cache results
+%   convert_to_I(imageset{i}) returns an image
+% dataset_params(optional): detection parameters
+% setname(optional): a name of the set, which lets us cache results
 
 % Tomasz Malisiewicz (tomasz@cmu.edu)
-
-NIMS_PER_CHUNK = dataset_params.NIMS_PER_CHUNK;
+  
+if ~exist('localizeparams','var')
+  localizeparams = get_default_mining_params;
+end
 
 %Only allow display to be enabled on a machine with X
-display = dataset_params.display;
+display = 0;
 
 save_files = 1;
 if ~exist('setname','var')
   save_files = 0;
-  NIMS_PER_CHUNK = 1;
+  localizeparams.NIMS_PER_CHUNK = 1;
   setname = '';
 end
 
@@ -29,9 +31,10 @@ if length(imageset) == 0
 end
 
 if save_files == 1
-  fullsetname = [setname '.' models{1}.cls];
+  fullsetname = [setname];
   
-  final_file = sprintf('%s/applied/%s-%s.mat',dataset_params.localdir,fullsetname, ...
+  final_file = sprintf('%s/applied/%s-%s.mat',...
+                       dataset_params.localdir,fullsetname, ...
                        models{1}.models_name);
 
   if fileexists(final_file)
@@ -41,24 +44,25 @@ if save_files == 1
   end
 end
 
-
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
-  dataset_params.NIMS_PER_CHUNK = 1;
+  localizeparams.NIMS_PER_CHUNK = 1;
 end
 
+% if ~isfield(dataset_params,'params')
+%   params = get_default_mining_params;
+% else
+%   params = dataset_params.params;
+% end
 
+fullsetname = [setname];
 
-if ~isfield(dataset_params,'params')
-  params = get_default_mining_params;
+if save_files == 1
+  baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,fullsetname, ...
+                  models{1}.models_name);
 else
-  params = dataset_params.params;
+  baser = '';
 end
-
-fullsetname = [setname '.' models{1}.cls];
-
-baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,fullsetname, ...
-                models{1}.models_name);
 
 if (save_files==1) && (display == 0) && (~exist(baser,'dir'))
   fprintf(1,'Making directory %s\n',baser);
@@ -68,7 +72,7 @@ end
 %% Chunk the data into NIMS_PER_CHUNK images per chunk so that we
 %process several images, then write results for entire chunk
 
-inds = do_partition(1:length(imageset),NIMS_PER_CHUNK);
+inds = do_partition(1:length(imageset),localizeparams.NIMS_PER_CHUNK);
 
 % randomize chunk orderings
 myRandomize;
@@ -114,19 +118,21 @@ for i = 1:length(ordering)
     I = Is{j};
        
     starter = tic;
-    [rs,t] = esvm_detect(I, models, params);
+    rs = esvm_detect(I, models, localizeparams);
+
     
-    for q = 1:length(rs.bbs)
-      if ~isempty(rs.bbs{q})
-        rs.bbs{q}(:,11) = index;
-        if length(rs.bbs{q}(1,:))~=12
-          error('BUG: Invalid length bb');
-        end
-      end
-    end
+    % for q = 1:length(rs.bbs)
+    %   if ~isempty(rs.bbs{q})
+    %     rs.bbs{q}(:,11) = index;
+    %     if length(rs.bbs{q}(1,:))~=12
+    %       error('BUG: Invalid length bb');
+    %     end
+    %   end
+    % end
 
     coarse_boxes = cat(1,rs.bbs{:});
     if ~isempty(coarse_boxes)
+      coarse_boxes(:,11) = index;
       scores = coarse_boxes(:,end);
     else
       scores = [];
@@ -137,10 +143,11 @@ for i = 1:length(ordering)
     
     % Transfer GT boxes from models onto the detection windows
     boxes = adjust_boxes(coarse_boxes,models);
-    
-    if (params.MIN_SCENE_OS > 0.0)
+
+
+    if (localizeparams.MIN_SCENE_OS > 0.0)
       os = getosmatrix_bb(boxes,[1 1 size(I,2) size(I,1)]);
-      goods = find(os >= params.MIN_SCENE_OS);
+      goods = find(os >= localizeparams.MIN_SCENE_OS);
       boxes = boxes(goods,:);
       coarse_boxes = coarse_boxes(goods,:);
     end
@@ -202,8 +209,8 @@ for i = 1:length(ordering)
     res{j}.curid = curid;
 
     %%%NOTE: the gt-function is well-defined for VOC-exemplars
-    if isfield(params,'gt_function') && ~isempty(params.gt_function)
-      res{j}.extras = params.gt_function(dataset_params, Iname, res{j}.bboxes);
+    if isfield(localizeparams,'gt_function') && ~isempty(params.gt_function)
+      res{j}.extras = localizeparams.gt_function(dataset_params, Iname, res{j}.bboxes);
     end 
   end
 

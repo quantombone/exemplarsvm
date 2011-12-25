@@ -154,3 +154,10 @@ mining_params.nnmode = '';
 
 %Be default, we use an SVM
 mining_params.dfun = 0;
+
+% Choose the number of images to process in each chunk for detection.
+% This parameters tells us how many images each core will process at
+% at time before saving results.  A higher number of images per chunk
+% means there will be less constant access to hard disk by separate
+% processes than if images per chunk was 1.
+mining_params.NIMS_PER_CHUNK = 4;

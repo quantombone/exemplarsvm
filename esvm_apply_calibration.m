@@ -1,8 +1,13 @@
 function final = esvm_apply_calibration(dataset_params, models, grid, M)
-%% Perform detection box post-processing and pool detection boxes
+%% Perform detection post-processing and pool detection boxes
 %(which will then be ready to go into the PASCAL evaluation code)
 % If there are overlap scores associated with boxes, then they are
 % also kept track of propertly, even after NMS.
+% 
+% If M is empty, then just NMS is performed
+% If M has neighbor_thresh defined, then we apply the
+% calibration-matrix
+% If M has betas defined, then do platt-calibration
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
@@ -69,27 +74,23 @@ end
 %2. platt's calibration (sigmoid scaling)
 %3. raw score + 1
 
-raw_boxes = bboxes;
-
-if exist('M','var') && length(M)>0 && isfield(M,'betas')
+if (exist('M','var') && (length(M)>0) && isfield(M,'betas') && ...
+    ~isfield(M,'neighbor_thresh'))
+  
+  fprintf(1,'Applying betas to %d images:',length(bboxes));
   for i = 1:length(bboxes)
     %if neighbor thresh is defined, then we are in M-mode boosting
     if size(bboxes{i},1) == 0
       continue
     end
-    if isfield(M,'neighbor_thresh')
-      calib_boxes = bboxes{i};
-      calib_boxes(:,end) = calib_boxes(:,end)+1;
-    else
-      calib_boxes = calibrate_boxes(bboxes{i},M.betas); 
-    end
+
+    calib_boxes = calibrate_boxes(bboxes{i},M.betas); 
+   
     oks = find(calib_boxes(:,end) > dataset_params.params.calibration_threshold);
     calib_boxes = calib_boxes(oks,:);
     bboxes{i} = calib_boxes;
   end
-end
-
-if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
+elseif exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
   fprintf(1,'Applying M-matrix to %d images:',length(bboxes));
   starter=tic;
 
@@ -98,13 +99,19 @@ if exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
     if size(bboxes{i},1) == 0
       continue
     end
+    
+    bboxes{i}(:,end) = bboxes{i}(:,end)+1;
+
     [xraw,nbrlist{i}] = get_box_features(bboxes{i},length(models), ...
                                                 M.neighbor_thresh);
     r2 = apply_boost_M(xraw,bboxes{i},M);
     bboxes{i}(:,end) = r2;
   end
   fprintf(1,'took %.3fsec\n',toc(starter));
+else
+  fprintf(1,'No betas, No M-matrix, no calibration\n');
 end
+
 
 os_thresh = .3;
 fprintf(1, 'Applying NMS (OS thresh=%.3f)\n',os_thresh);

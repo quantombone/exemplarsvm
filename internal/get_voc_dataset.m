@@ -10,13 +10,9 @@ if ~exist('VOCYEAR','var')
   VOCYEAR = 'VOC2007';
 end
 
-% Choose the number of images to process in each chunk for detection.
-% This parameters tells us how many images each core will process at
-% at time before saving results.  A higher number of images per chunk
-% means there will be less constant access to hard disk by separate
-% processes than if images per chunk was 1.
-dataset_params.NIMS_PER_CHUNK = 4;
-
+if ~exist('result_dir','var')
+  result_dir = '/tmp/';
+end
 % Create a root directory
 dataset_params.devkitroot = [result_dir '/'];
 

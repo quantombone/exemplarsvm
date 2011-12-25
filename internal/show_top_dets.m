@@ -1,5 +1,5 @@
 function allbbs = show_top_dets(dataset_params, models, grid, fg, set_name, ...
-                                finalstruct, maxk)
+                                finalstruct, maxk, CACHE_FILES)
 % Show the top detections for [models] where [grid] is the set of
 % detections from the set [fg] with name [set_name] ('test' or 'trainval')
 % finalstruct (which contains final boxes) is obtained from
@@ -30,11 +30,20 @@ final_boxes = finalstruct.unclipped_boxes;
 final_maxos = finalstruct.final_maxos;
 
 bbs = cat(1,final_boxes{:});
-imids = bbs(:,11);
+try
+  imids = bbs(:,11);
+catch
+  imids = [];
+end
 moses = cat(1,final_maxos{:});
 
 %% sort detections by score
-[aa,bb] = sort(bbs(:,end), 'descend');
+try
+  [aa,bb] = sort(bbs(:,end), 'descend');
+catch
+  aa = [];
+  bb = [];
+end
 
 %% only good ones now!
 %bb = bb(moses(bb)>.5);
@@ -82,11 +91,11 @@ for k = 1:maxk
     wwwdir = sprintf('%s/www/%s.%s%s/',dataset_params.localdir,...
                      set_name, ...
                      models{1}.models_name,finalstruct.calib_string);
-    if ~exist(wwwdir,'dir')
+    if ~exist(wwwdir,'dir') && exist('CACHE_FILES','var') && (CACHE_FILES == 1)
       mkdir(wwwdir);
     end
     
-    filer = sprintf('%s/%s.%05d%s.eps',wwwdir,models{1}.cls,k,suffix);
+    filer = sprintf('%s/%05d%s.eps',wwwdir,k,suffix);
     filerlock = [filer '.lock'];
     if 0 %fileexists(filer) || (mymkdir_dist(filerlock) == 0)
       counter = counter + 1;
@@ -207,18 +216,21 @@ for k = 1:maxk
     drawnow
     snapnow
     
-    print(gcf,'-depsc2',filer);
-    finalfile = strrep(filer,'.eps','.pdf');
-    unix(sprintf('ps2pdf -dEPSCrop -dPDFSETTINGS=/prepress %s %s',...
-                 filer,finalfile));
-
-    if fileexists(finalfile)
-      unix(sprintf('rm %s',filer));
+    if exist('CACHE_FILES','var') && CACHE_FILES == 1
+      print(gcf,'-depsc2',filer);
+      finalfile = strrep(filer,'.eps','.pdf');
+      unix(sprintf('ps2pdf -dEPSCrop -dPDFSETTINGS=/prepress %s %s',...
+                   filer,finalfile));
+      
+      if fileexists(finalfile)
+        unix(sprintf('rm %s',filer));
+      end
+      
+      if exist(filerlock,'dir')
+        rmdir(filerlock);
+      end
     end
     
-    if exist(filerlock,'dir')
-      rmdir(filerlock);
-    end
     %filer2 = filer;
     %filer2(end-2:end) = 'png';
     %print(gcf,'-dpng',filer2);

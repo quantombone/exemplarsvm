@@ -1,41 +1,62 @@
-function voc_demo_apply(cls)
+function voc_demo_apply(imageset, models, M)
 %In this application demo, we simply load the models belonging to
 %some class and apply them
+data_directory = '/Users/tmalisie/projects/Pascal_VOC/'
+dataset_params = get_voc_dataset('VOC2007',...
+                                 data_directory);
+% imageset = get_pascal_set(dataset_params, 'test' , setname);
 
-if ~exist('cls','var')
-  cls = 'bicycle';
-end
-
-
-VOCYEAR = 'VOC2007';
-dataset_params = get_voc_dataset(VOCYEAR);
-dataset_params.display = 1;
-
-%Do not skip evaluation, unless it is VOC2010
-dataset_params.SKIP_EVAL = 0;
-
-test_set = get_pascal_set(dataset_params, 'test' , ['+' cls]);
-
-models = load([load_results_directory '/' VOCYEAR ['/local/models/' cls '-g-' ...
-                    '100-12.exemplar-svm-stripped.mat']]);
-betas = load([load_results_directory '/' VOCYEAR ['/local/betas/' cls '-g-' ...
-                    '100-12.exemplar-svm-betas.mat']]);
-%M = load([results_directory '/' VOCYEAR ['/local/betas/' cls '-g-' ...
-%                    '100-12.exemplar-svm-M.mat']]);
-
-models = models.models;
-betas = betas.betas;
-%M = M.M;
-
-subset = 1;
-models = models(subset);
-betas = betas(subset,:);
+%subset = 1;
+%models = models(subset);
 
 for i = 1:length(models)
-  models{i}.I = [load_data_directory '/' ...
+  models{i}.I = [data_directory '/' ...
                  models{i}.I(strfind(models{i}.I,'VOC2007/'):end)];
 end
 
-calibration_data.betas = betas;
-test_set = test_set(1);
-esvm_detect_set(dataset_params, models, test_set,[], calibration_data);
+dataset_params.params = get_default_mining_params;
+
+for i = 1:length(imageset)
+  %res =
+  %esvm_detect(convert_to_I(test_set{i}),models,models{1}.mining_params);
+  tic
+  grid = esvm_detect_imageset(imageset(i), models, dataset_params.params);
+  toc
+
+  tic
+  if ~exist('M','var')
+    final = esvm_apply_calibration(dataset_params, models, grid);
+  else
+    final = esvm_apply_calibration(dataset_params, models, grid, ...
+                                     M);
+  end
+  toc
+  
+
+
+  
+  show_top_dets(dataset_params, models, grid, imageset(i), 'noname', ...
+                final, 1, 0);
+  drawnow
+  continue
+
+  I = convert_to_I(imageset{i});
+  figure(1)
+  clf
+  imagesc(I)
+  if size(final.final_boxes{1},1) == 0
+    drawnow
+    continue;
+  end
+  final.final_boxes{1}(:,end)
+  bb = final.final_boxes{1}(1,:);
+  plot_bbox(bb)
+  axis image
+  axis off
+  drawnow
+end
+
+
+% calibration_data.betas = betas;
+% test_set = test_set(1);
+% esvm_detect_set(dataset_params, models, test_set,[], calibration_data);

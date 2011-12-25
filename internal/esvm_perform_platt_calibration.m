@@ -33,9 +33,9 @@ display = dataset_params.display;
 % into DUMPDIR
 dump_images = 0;
 
-DUMPDIR = sprintf('%s/www/calib/%s-%s/',dataset_params.localdir, ...
+DUMPDIR = sprintf('%s/www/calib/%s/',dataset_params.localdir, ...
                   dataset_params.dataset, ...
-                  models{1}.cls,models{1}.models_name);
+                  models{1}.models_name);
 
 if dump_images==1 && ~exist(DUMPDIR,'dir')
   mkdir(DUMPDIR);
@@ -72,9 +72,9 @@ if CACHE_FILES == 1 && ~exist(final_dir','dir')
 end
 
 final_file = ...
-    sprintf('%s/%s-%s-betas.mat',...
+    sprintf('%s/%s-betas.mat',...
             final_dir, ...
-            models{1}.cls, models{1}.models_name);
+            models{1}.models_name);
 
 if CACHE_FILES == 1 
   lockfile = [final_file '.lock'];
