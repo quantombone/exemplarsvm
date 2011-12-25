@@ -40,8 +40,7 @@ if CACHE_FILE==1 && dataset_params.display ==1 && ~exist(DUMPDIR,'dir')
 end
 
 final_directory = ...
-    sprintf('%s/models/%s-%s/',dataset_params.localdir,...
-            models{1}.cls,...
+    sprintf('%s/models/%s/',dataset_params.localdir,...
             new_models_name);
 
 %make results directory if needed
@@ -221,7 +220,7 @@ end
 %Load all of the initialized exemplars
 CACHE_FILE = 1;
 STRIP_FILE = 0;
-DELETE_INITIAL = 1;
+DELETE_INITIAL = 0;
 newmodels = esvm_load_models(dataset_params, new_models_name, allfiles, ...
                           CACHE_FILE, STRIP_FILE, DELETE_INITIAL);
 
