@@ -2,7 +2,13 @@ function [newmodels] = esvm_train_exemplars(dataset_params, ...
                                             models, train_set, CACHE_FILE)
 %% Train models with hard negatives for all exemplars written to
 %% exemplar directory (script is parallelizable)
-%% Tomasz Malisiewicz (tomasz@cmu.edu)
+
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+
 
 if ~exist('CACHE_FILE','var')
   CACHE_FILE = 0;
@@ -99,7 +105,7 @@ parfor i = 1:length(models)
   
   % Add training set and training set's mining queue 
   m.train_set = train_set;
-  m.mining_queue = initialize_mining_queue(m.train_set);
+  m.mining_queue = esvm_initialize_mining_queue(m.train_set);
   
   % Add mining_params, and dataset_params to this exemplar
   m.mining_params = mining_params;

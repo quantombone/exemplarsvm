@@ -1,4 +1,4 @@
-function models = strip_model(models)
+function models = strip_models(models)
 %Take the models, and strip them of residual training data, only
 %keep the information relevant for detection, this is useful for
 %keeping a stripped version of models around for faster detections

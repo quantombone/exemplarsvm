@@ -5,7 +5,12 @@ function [m] = esvm_mine_train_iteration(m, training_function)
 % training set of negative images
 % Returns the updated model (where m.mining_queue is updated mining_queue)
 %
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+
 
 % Start wtrace (trace of learned classifier parameters across
 % iterations) with first round classifier, if not present already

@@ -108,7 +108,7 @@ if exist('M','var') && length(M)>0
   nbrlist = cell(1,length(bboxes));
   for i = 1:length(bboxes)
     [xraw,nbrlist{i}] = get_box_features(bboxes{i},length(models),M.neighbor_thresh);
-    r2 = apply_boost_M(xraw,bboxes{i},M);
+    r2 = esvm_apply_M(xraw,bboxes{i},M);
     bboxes{i}(:,end) = r2;
   end
   toc

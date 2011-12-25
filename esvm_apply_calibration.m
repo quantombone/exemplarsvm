@@ -9,7 +9,12 @@ function final = esvm_apply_calibration(dataset_params, models, grid, M)
 % calibration-matrix
 % If M has betas defined, then do platt-calibration
 %
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+
 
 %REMOVE FIRINGS ON SELF-IMAGE (these create artificially high
 %scores when evaluating on the training set, but no need to set
@@ -104,7 +109,7 @@ elseif exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
 
     [xraw,nbrlist{i}] = get_box_features(bboxes{i},length(models), ...
                                                 M.neighbor_thresh);
-    r2 = apply_boost_M(xraw,bboxes{i},M);
+    r2 = esvm_apply_M(xraw,bboxes{i},M);
     bboxes{i}(:,end) = r2;
   end
   fprintf(1,'took %.3fsec\n',toc(starter));

@@ -1,10 +1,11 @@
 function [resstruct,feat_pyramid] = esvm_detect(I, models, localizeparams)
-% Localize set of models in an Image's feature pyramid via sliding
-% windows and (dot product + bias recognition score).  If there is a
-% small number of models (such as in per-exemplar mining), then
-% fconvblas is used for detection.  If the number is large, then the
-% BLOCK feature matrix method (with a single matrix multiplication) is
-% used.
+% Localize a set of models in an image.
+% function [resstruct,feat_pyramid] = esvm_detect(I, models, localizeparams)
+%
+% If there is a small number of models (such as in per-exemplar
+% mining), then fconvblas is used for detection.  If the number is
+% large, then the BLOCK feature matrix method (with a single matrix
+% multiplication) is used.
 %
 % I: Input image (or already precomputed pyramid)
 % models: A cell array of models to localize inside this image
@@ -17,7 +18,11 @@ function [resstruct,feat_pyramid] = esvm_detect(I, models, localizeparams)
 %   resstruct.xs{:}: Detection features
 % t: The Feature pyramid output
 %
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
 
 if length(models) == 0
   resstruct.bbs{1} = zeros(0,0);

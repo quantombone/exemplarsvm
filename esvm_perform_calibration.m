@@ -3,7 +3,13 @@ function M = esvm_perform_calibration(dataset_params, models, grid, ...
 %% 1. Perform LABOO calibration procedure and 2. Learn a combination
 %matrix M which multiplexes the detection results (by compiling
 %co-occurrence statistics on true positives) 
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+
 
 if ~exist('CACHE_FILES','var')
   CACHE_FILES = 0;

@@ -1,13 +1,13 @@
 function [hn, mining_queue, mining_stats] = ...
-    esvm_mine_negatives(models, mining_queue, bg, mining_params)
+    esvm_mine_negatives(models, mining_queue, imageset, mining_params)
 % Compute detections "aka Hard-Negatives" hn for the images in the
-% stream/queue [bg/mining_queue] when given K classifiers [models]
+% stream/queue [imageset/mining_queue] when given K classifiers [models]
 % 
 % Input Data:
 % models: Kx1 cell array of models
 % mining_queue: the mining queue create from
-%    initialize_mining_queue(bg)
-% bg: the source of images (potentially already in pyramid feature
+%    esvm_initialize_mining_queue(imageset)
+% imageset: the source of images (potentially already in pyramid feature
 %   format)
 % mining_params: the parameters of the mining/localization
 % procedure
@@ -42,7 +42,7 @@ end
 
 for i = 1:length(mining_queue)
   index = mining_queue{i}.index;
-  I = convert_to_I(bg{index});
+  I = convert_to_I(imageset{index});
 
   %HACK ROTATE UPSIDE DOWN
   %fprintf(1,'HACK: rotate upside down negatives\n');
@@ -106,7 +106,7 @@ for i = 1:length(mining_queue)
   total = sum(cellfun(@(x)x.num_visited,mining_queue));
   fprintf(1,'Found %04d windows, image:%05d (#seen=%05d/%05d%s)\n',...
           supersize, index, ...
-          length(bg)-length(mining_queue)+i, length(bg), addon);
+          length(imageset)-length(mining_queue)+i, length(imageset), addon);
 
   %increment how many times we processed this image
   mining_queue{i}.num_visited = mining_queue{i}.num_visited + 1;

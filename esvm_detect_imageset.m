@@ -9,7 +9,12 @@ function grid = esvm_detect_imageset(imageset, models, ...
 % dataset_params(optional): detection parameters
 % setname(optional): a name of the set, which lets us cache results
 
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+
   
 if ~exist('localizeparams','var')
   localizeparams = get_default_mining_params;
@@ -142,7 +147,7 @@ for i = 1:length(ordering)
             length(models),toc(starter),length(scores),aa);
     
     % Transfer GT boxes from models onto the detection windows
-    boxes = adjust_boxes(coarse_boxes,models);
+    boxes = esvm_adjust_boxes(coarse_boxes,models);
 
 
     if (localizeparams.MIN_SCENE_OS > 0.0)

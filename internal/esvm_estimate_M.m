@@ -3,7 +3,12 @@ function M = esvm_estimate_M(dataset_params, models, grid, betas, ...
 %Given a bunch of detections, learn the M boosting matrix, which
 %makes a final boxes's score depend on the co-occurrence of certain
 %"friendly" detections
-% Tomasz Malisiewicz (tomasz@csail.mit.edu)
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
 
 neighbor_thresh = dataset_params.params.calibration_neighbor_thresh;
 count_thresh    = dataset_params.params.calibration_count_thresh;
@@ -152,7 +157,7 @@ r = cell(length(xraw),1);
 fprintf(1,' -Applying M to %d images: ',length(xraw));
 starter=tic;
 for j = 1:length(xraw)
-  r{j} = apply_boost_M(xraw{j},boxes{j},M);
+  r{j} = esvm_apply_M(xraw{j},boxes{j},M);
 end
 
 r = [r{:}];

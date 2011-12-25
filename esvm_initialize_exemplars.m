@@ -14,12 +14,18 @@ function models = esvm_initialize_exemplars(dataset_params, e_set, ...
 % init_params.init_function: a function which takes as input (I,bbox,params)
 %   and returns a model structure [if not specified, then just dump
 %   out names of resulting files]
-
+%
 % OUTPUTS:
 % allfiles: The names of all outputs (which are .mat model files
 %   containing the initialized exemplars)
 %
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+
 
 % DTstring = '';
 % if dalalmode == 1

@@ -6,7 +6,13 @@ function [models] = esvm_load_models(dataset_params, models_name, files, ...
 %file. if STRIP_FILE is enabled, then save a stripped file (raw
 %detectors only saved)
 
-%Tomasz Malisiewicz (tomasz@cmu.edu)
+
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+
 % if ~exist('cls','var') || length(cls) == 0
 %   [cls,DET_TYPE] = load_default_class;
 % end
@@ -169,7 +175,7 @@ if CACHE_FILE==1
   
   if STRIP_FILE == 1
     models_save = models;
-    models = strip_model(models);
+    models = strip_models(models);
     fprintf(1,'Saving stripped to %s\n',cache_file_stripped);
     save(cache_file_stripped,'models');
     models = models_save;

@@ -1,7 +1,7 @@
-function top = adjust_boxes(boxes, models)
-%Here we take the detection boxes and adjust them so they are 'GT'
-%boxes.
-
+function top = esvm_adjust_boxes(boxes, models)
+%Adjust coarse-frame detections into ground-truth frames.
+%function top = esvm_adjust_boxes(boxes, models)
+%
 %This step is necessary since the exemplars are framed in a slightly
 %different window (one of the coarse aspect ratios based on the 8
 %pixel cells) than the actual GT window (which can have any possible
@@ -11,8 +11,13 @@ function top = adjust_boxes(boxes, models)
 %detection window "d", once we find the rigid transformation
 %between "coarse_box" and "d", we can apply the same projection to
 %the ground truth window
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
 
-%% Tomasz Malisiewicz (tomasz@cmu.edu)
 
 top = boxes;
 
