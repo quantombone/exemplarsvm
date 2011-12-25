@@ -25,9 +25,8 @@ if REMOVE_SELF == 1
   curids = cellfun2(@(x)x.curid,models);
 end
 
-cls = models{1}.cls;
-
-excurids = cellfun2(@(x)x.curid,models);
+%cls = models{1}.cls;
+%excurids = cellfun2(@(x)x.curid,models);
 bboxes = cell(1,length(grid));
 maxos = cell(1,length(grid));
 
@@ -40,7 +39,7 @@ for i = 1:length(grid)
     continue
   end
   
-  if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
+  if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
     maxos{i} = grid{i}.extras.maxos;
     maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
   end
@@ -51,8 +50,8 @@ for i = 1:length(grid)
     badex = find(ismember(excurids,{curid}));
     bboxes{i}(badex,:) = [];
     
-    if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
-      if length(maxos{i})>0
+    if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
+      if ~isempty(maxos{i})
         maxos{i}(badex) = [];
       end
     end
@@ -61,25 +60,25 @@ end
 
 % perform within-exemplar NMS
 % NOTE: this is already done during detection time
-if 0 
-  fprintf(1,'applying exemplar nms\n');
-  for i = 1:length(bboxes)
-    if size(bboxes{i},1) > 0
-      bboxes{i}(:,5) = 1:size(bboxes{i},1);
-      bboxes{i} = nms_within_exemplars(bboxes{i},.5);
-      if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'os')
-        maxos{i} = maxos{i}(bboxes{i}(:,5));
-      end
-    end
-  end
-end
+% if 0 
+%   fprintf(1,'applying exemplar nms\n');
+%   for i = 1:length(bboxes)
+%     if size(bboxes{i},1) > 0
+%       bboxes{i}(:,5) = 1:size(bboxes{i},1);
+%       bboxes{i} = nms_within_exemplars(bboxes{i},.5);
+%       if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'os')
+%         maxos{i} = maxos{i}(bboxes{i}(:,5));
+%       end
+%     end
+%   end
+% end
 
 %Perform score rescaling
 %1. no scaling
 %2. platt's calibration (sigmoid scaling)
 %3. raw score + 1
 
-if (exist('M','var') && (length(M)>0) && isfield(M,'betas') && ...
+if (exist('M','var') && (~isempty(M)) && isfield(M,'betas') && ...
     ~isfield(M,'neighbor_thresh'))
   
   fprintf(1,'Applying betas to %d images:',length(bboxes));
@@ -95,10 +94,11 @@ if (exist('M','var') && (length(M)>0) && isfield(M,'betas') && ...
     calib_boxes = calib_boxes(oks,:);
     bboxes{i} = calib_boxes;
   end
-elseif exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
+elseif exist('M','var') && ~isempty(M) && isfield(M,'neighbor_thresh')
   fprintf(1,'Applying M-matrix to %d images:',length(bboxes));
   starter=tic;
 
+  nbrlist = cell(length(bboxes),1);
   for i = 1:length(bboxes)
     fprintf(1,'.');
     if size(bboxes{i},1) == 0
@@ -108,7 +108,7 @@ elseif exist('M','var') && length(M)>0 && isfield(M,'neighbor_thresh')
     bboxes{i}(:,end) = bboxes{i}(:,end)+1;
 
     [xraw,nbrlist{i}] = get_box_features(bboxes{i},length(models), ...
-                                                M.neighbor_thresh);
+                                                   M.neighbor_thresh);
     r2 = esvm_apply_M(xraw,bboxes{i},M);
     bboxes{i}(:,end) = r2;
   end
@@ -124,7 +124,7 @@ for i = 1:length(bboxes)
   if size(bboxes{i},1) > 0
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
     bboxes{i} = nms(bboxes{i},os_thresh);
-    if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'maxos')
+    if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
       maxos{i} = maxos{i}(bboxes{i}(:,5));
     end
     if exist('nbrlist','var')
@@ -134,33 +134,33 @@ for i = 1:length(bboxes)
   end
 end
 
-if 0
-if exist('M','var') && length(M)>0 && isfield(M,'betas')
-
-  fprintf(1,'Propagating scores onto raw detections\n');
-  %% propagate scores onto raw boxes
-  for i = 1:length(bboxes)
-    calib_boxes = calibrate_boxes(raw_boxes{i},M.betas);
-    beta_scores = calib_boxes(:,end);
-    
-    osmat = getosmatrix_bb(bboxes{i},raw_boxes{i});
-    for j = 1:size(osmat,1)
-      curscores = (osmat(j,:)>.5) .* beta_scores';
-      [aa,bb] = max(curscores);
-      bboxes{i}(j,:) = raw_boxes{i}(bb,:);
-      bboxes{i}(j,end) = aa;
-    end
-    
-    % new_scores = beta_scores;
-    % for j = 1:length(nbrlist{i})
-    %   new_scores(nbrlist{i}{j}) = max(new_scores(nbrlist{i}{j}),...
-    %                                   beta_scores(nbrlist{i}{j}).*...
-    %                                   bboxes{i}(nbrlist{i}{j},end));
-    % end
-    % bboxes{i}(:,end) = new_scores;
-  end
-end
-end
+% if 0
+% if exist('M','var') && length(M)>0 && isfield(M,'betas')
+% 
+%   fprintf(1,'Propagating scores onto raw detections\n');
+%   %% propagate scores onto raw boxes
+%   for i = 1:length(bboxes)
+%     calib_boxes = calibrate_boxes(raw_boxes{i},M.betas);
+%     beta_scores = calib_boxes(:,end);
+%     
+%     osmat = getosmatrix_bb(bboxes{i},raw_boxes{i});
+%     for j = 1:size(osmat,1)
+%       curscores = (osmat(j,:)>.5) .* beta_scores';
+%       [aa,bb] = max(curscores);
+%       bboxes{i}(j,:) = raw_boxes{i}(bb,:);
+%       bboxes{i}(j,end) = aa;
+%     end
+%     
+%     % new_scores = beta_scores;
+%     % for j = 1:length(nbrlist{i})
+%     %   new_scores(nbrlist{i}{j}) = max(new_scores(nbrlist{i}{j}),...
+%     %                                   beta_scores(nbrlist{i}{j}).*...
+%     %                                   bboxes{i}(nbrlist{i}{j},end));
+%     % end
+%     % bboxes{i}(:,end) = new_scores;
+%   end
+% end
+% end
 
 % Clip boxes to image dimensions since VOC testing annotation
 % always fall within the image
@@ -178,11 +178,11 @@ final.final_maxos = maxos;
 
 %Create a string which summarizes the pooling type
 calib_string = '';
-if exist('M','var') && length(M)>0 && isfield(M,'betas')
+if exist('M','var') && ~isempty(M) && isfield(M,'betas')
    calib_string = '-calibrated';
 end
 
-if exist('M','var') && length(M)>0 && isfield(M,'betas') && isfield(M,'w')
+if exist('M','var') && ~isempty(M) && isfield(M,'betas') && isfield(M,'w')
   calib_string = [calib_string '-M'];
 end
 

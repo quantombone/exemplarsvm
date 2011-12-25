@@ -16,7 +16,7 @@ function [resstruct,feat_pyramid] = esvm_detect(I, models, localizeparams)
 % resstruct: Sliding window output struct with 
 %   resstruct.bbs{:}: Detection boxes and pyramid locations
 %   resstruct.xs{:}: Detection features
-% t: The Feature pyramid output
+% feat_pyramid: The Feature pyramid output
 %
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
@@ -24,7 +24,7 @@ function [resstruct,feat_pyramid] = esvm_detect(I, models, localizeparams)
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 
-if length(models) == 0
+if isempty(models)
   resstruct.bbs{1} = zeros(0,0);
   resstruct.xs{1} = zeros(0,0);
   feat_pyramid = [];
@@ -77,11 +77,11 @@ feat_pyramid = cat(1,t1,t2);
 function [resstruct,t] = esvm_detectdriver(I, models, ...
                                              localizeparams)
 
-%If the number of specified models is greater than 20, use the
+%NOTE: If the number of specified models is greater than 20, use the
 %BLOCK-based method
 MAX_MODELS_BEFORE_BLOCK_METHOD = 20;
 if (length(models)>MAX_MODELS_BEFORE_BLOCK_METHOD) ...
-      || (length(localizeparams.nnmode)>0)
+      || (~isempty(localizeparams.nnmode))
   [resstruct,t] = esvm_detectdriverBLOCK(I, models, ...
                                          localizeparams);
   return;
@@ -93,7 +93,7 @@ bs = cellfun2(@(x)x.model.b,models);
 
 %NOTE: all exemplars in this set must have the same sbin
 sbin = models{1}.model.init_params.sbin;
-t = get_pyramid(I, sbin, length(models), localizeparams);
+t = get_pyramid(I, sbin, localizeparams);
 
 resstruct.padder = t.padder;
 resstruct.bbs = cell(N,1);
@@ -109,6 +109,7 @@ if localizeparams.dfun == 1
   wxs = cellfun2(@(x)reshape(x.model.x(:,1),size(x.model.w)), ...
                  models);
   ws2 = ws;
+  special_offset = zeros(length(ws2),1);
   for q = 1:length(ws2)
     ws2{q} = -2*ws{q}.*wxs{q};
     special_offset(q) = ws{q}(:)'*(models{q}.model.x(:,1).^2);
@@ -236,7 +237,7 @@ for i = 1:length(models)
   templates(:,:,:,i) = t;
   template_masks(:,:,:,i) = repmat(double(sum(t.^2,3)>0),[1 1 features]);
 
-  if (length(localizeparams.nnmode) > 0) || ...
+  if (~isempty(localizeparams.nnmode)) || ...
         (isfield(localizeparams,'wtype') && ...
          strcmp(localizeparams.wtype,'dfun')==1)
     x = zeros(S(1),S(2),features);
@@ -296,7 +297,7 @@ if isfield(localizeparams,'wtype') && ...
   r2 = repmat(sum(W.*(U.^2),1)',1,size(X,2));
   r =  (W'*(X.^2) - 2*(W.*U)'*X + r2);
   r = bsxfun(@minus, r, bs);
-elseif length(localizeparams.nnmode) == 0
+elseif isempty(localizeparams.nnmode)
   %nnmode 0: Apply linear classifiers by performing one large matrix
   %multiplication and subtract bias
   r = exemplar_matrix' * X;
@@ -311,62 +312,8 @@ elseif strcmp(localizeparams.nnmode,'nndfun') == 1
   U = reshape(templates_x,[],length(models));
   r2 = repmat(sum(W.*(U.^2),1)',1,size(X,2));
   r = - (W'*(X.^2) - 2*(W.*U)'*X + r2);
-elseif strcmp(localizeparams.nnmode,'cosangle') == 1
-  %nnmode 1: Apply linear classifiers by performing one large matrix
-  %multiplication and subtract bias
-  
-  %mf = mean(X,1);
-  %X = X - repmat(mf,size(X,1),1);
-  %r = exemplar_matrix' * X;
-  
-  exemplar_matrix = reshape(templates_x, [], size(templates_x,4));
-  
-  % %% do normalization for each window
-  % tm = template_masks;
-  % tm = reshape(tm,[],length(models));
-  % ut = unique(tm','rows');
-  % [tmp,utids] = ismember(tm',ut,'rows');
-  
-  % r = zeros(length(models),size(finalf,2));
-  % for j = 1:size(ut,1)
-  %   fprintf(1,'!');
-  %   curmask = repmat(reshape(ut(j,:),...
-  %                     [size(templates_x,1) size(templates_x,2)]),...
-  %                    [1 1 features]);
-  %   hits = find(utids == j);
-    
-  %   curf = finalf;
-  %   curf = curf.*repmat(curmask(:),1,size(curf,2));
-  %   curr = slmetric_pw(exemplar_matrix(:,hits),curf,'nrmcorr');
-
-  %   r(hits,:) = curr;
-  % end
-  
-  r = slmetric_pw(exemplar_matrix, X, 'nrmcorr');
-
-  %% why am I not getting perfect hits for g-mode?
-  %% ANSWER: because there is a padding which we cannot enforce on
-  %test-windows efficiently...This will affect the normalization of
-  %the test windows
-  
-  % exemplar_x_matrix = reshape(templates_x,[],size(templates_x,4));
-  % res = sum(exemplar_matrix .* exemplar_x_matrix,1);
-  % exemplar_matrix = exemplar_matrix ./ repmat(res+eps,size(exemplar_matrix,1),1);
-  % r = exemplar_matrix' * finalf;
-
-  %keyboard
-  
-  % rrr = randperm(size(www2,2));
-  % rrr = rrr(1:10);
-  % r2 = slmetric_pw(www2(:,rrr),finalf,'chisq');
-  % r = zeros(size(www2,2),size(finalf,2));  
-  % r(rrr,:) = exp(-.001*r2);
-  
-  %r = exemplar_matrix' * finalf;
-  %r = bsxfun(@minus, r, bs);
-  
 else
-  error(sprintf('invalid nnmode=%s\n',localizeparams.nnmode));
+  error('invalid nnmode=%s\n',localizeparams.nnmode);
 end
 
 resstruct.bbs = cell(N,1);
@@ -442,15 +389,12 @@ if ~isempty(rs.xs)
   end
 end
 
-function t = get_pyramid(I, sbin, N, localizeparams)
+function t = get_pyramid(I, sbin, localizeparams)
 %Extract feature pyramid from variable I (which could be either an image,
 %or already a feature pyramid)
 
 if isnumeric(I)
-
-  flipstring = '';
   if (localizeparams.FLIP_LR == 1)
-    flipstring = '@F';
     I = flip_image(I);
   else    
     %take unadulterated "aka" un-flipped image
@@ -458,9 +402,6 @@ if isnumeric(I)
   
   clear t
   t.size = size(I);
-
-  %fprintf(1,'Localizing %d in I=[%dx%d@%d%s]',N,...
-  %        t.size(1),t.size(2),localizeparams.lpo,flipstring);
 
   %Compute pyramid
   [t.hog,t.scales] = featpyramid2(I, sbin, localizeparams);  
@@ -471,13 +412,7 @@ if isnumeric(I)
   
   minsizes = cellfun(@(x)min([size(x,1) size(x,2)]), t.hog);
   t.hog = t.hog(minsizes >= t.padder*2);
-  t.scales = t.scales(minsizes >= t.padder*2);
-    
-  %if only_compute_pyramid == 1
-  %  resstruct = t;
-  %  return;
-  %end
-  
+  t.scales = t.scales(minsizes >= t.padder*2);  
 else
   fprintf(1,'Already found features\n');
   
@@ -490,8 +425,5 @@ else
   else
     t = I;
   end
-  
-  %fprintf(1,'Localizing %d in I=[%dx%d@%d]',N,...
-  %      t.size(1),t.size(2),localizeparams.lpo);
 end
 

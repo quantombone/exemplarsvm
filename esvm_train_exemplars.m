@@ -39,9 +39,6 @@ if CACHE_FILE==1 && dataset_params.display ==1 && ~exist(DUMPDIR,'dir')
   mkdir(DUMPDIR);
 end
 
-%initial_directory = ...
-%    sprintf('%s/%s/',dataset_params.localdir,models_name);
-
 final_directory = ...
     sprintf('%s/models/%s-%s/',dataset_params.localdir,...
             models{1}.cls,...
@@ -51,10 +48,6 @@ final_directory = ...
 if CACHE_FILE == 1 && ~exist(final_directory,'dir')
   mkdir(final_directory);
 end
-
-%Find all initial files of the current class/mode
-%files = dir([initial_directory '*' cls '*.mat']);
-%files = dir([initial_directory '*000540.1*.mat']);
 
 mining_params.final_directory = final_directory;
 
@@ -78,10 +71,6 @@ models = models(ordering);
 allfiles = cell(length(models), 1);
 
 parfor i = 1:length(models)
-
-  %filer = sprintf('%s/%s',initial_directory, files(ordering(i)).name);
-  %m = load(filer);
-  %m = m.m;
   m = models{i};
    
   % Create a naming scheme for saving files
@@ -142,7 +131,7 @@ parfor i = 1:length(models)
     %total_mines = m.mining_stats{end}.total_mines;
 
     if ((total_mines >= mining_params.MAX_TOTAL_MINED_IMAGES) || ...
-          (length(m.mining_queue) == 0)) || ...
+          (isempty(m.mining_queue))) || ...
           (m.iteration == mining_params.MAX_MINE_ITERATIONS)
 
       keep_going = 0;      
@@ -163,31 +152,31 @@ parfor i = 1:length(models)
     end
     m = msave;
     
-    if 0 %%dataset_params.display == 1
+    if dataset_params.display == 1
 
-      exid = ordering(i);
-      filer = sprintf('%s/%s.%s.%05d.png', DUMPDIR, 'train', ...
-                      m.cls,exid);
+      %exid = ordering(i);
+      %filer = sprintf('%s/%s.%s.%05d.png', DUMPDIR, 'train', ...
+      %                m.cls,exid);
       
       %if fileexists(filer)
       %  continue
       %end
       
-      figure(445)
-      clf
+      figure(445);
+      clf;
       showI = get_sv_stack(m,5,5);
-      imagesc(showI)
-      drawnow
+      imagesc(showI);
+      drawnow;
       
       figure(235)
       
       rpos = m.model.w(:)'*m.model.x-m.model.b;
       rneg = m.model.w(:)'*m.model.svxs - m.model.b;
-      clf
-      plot(sort(rpos,'descend'),'r.')
+      clf;
+      plot(sort(rpos,'descend'),'r.');
       hold on;
-      plot(length(rpos)+[1:length(rneg)],rneg,'b.')
-      drawnow
+      plot(length(rpos)+(1:length(rneg)),rneg,'b.');
+      drawnow;
 
       %set(gcf,'PaperPosition',[0 0 20 20]);
       %imwrite(showI,filer);
@@ -218,6 +207,7 @@ parfor i = 1:length(models)
       rmdir(filerlock);
     end
   catch
+    fprintf(1,'Cannot delete %s\n',filerlock);
   end
 end
 
@@ -226,7 +216,7 @@ if CACHE_FILE == 0
   return;
 end
 
-[allfiles,bb] = sort(allfiles);
+[allfiles] = sort(allfiles);
 
 %Load all of the initialized exemplars
 CACHE_FILE = 1;

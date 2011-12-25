@@ -30,16 +30,15 @@ if ~exist('setname','var')
   setname = '';
 end
 
-if length(imageset) == 0
+if isempty(imageset)
   grid = {};
   return;
 end
 
 if save_files == 1
-  fullsetname = [setname];
   
   final_file = sprintf('%s/applied/%s-%s.mat',...
-                       dataset_params.localdir,fullsetname, ...
+                       dataset_params.localdir,setname, ...
                        models{1}.models_name);
 
   if fileexists(final_file)
@@ -60,10 +59,8 @@ end
 %   params = dataset_params.params;
 % end
 
-fullsetname = [setname];
-
 if save_files == 1
-  baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,fullsetname, ...
+  baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,setname, ...
                   models{1}.models_name);
 else
   baser = '';
@@ -107,9 +104,10 @@ for i = 1:length(ordering)
   %% pre-load all images in a chunk
   %fprintf(1,'Preloading %d images\n',length(inds{ordering(i)}));
   clear Is;
-  for j = 1:length(inds{ordering(i)})
-    Is{j} = convert_to_I(imageset{inds{ordering(i)}(j)});
-  end
+  Is = cellfun2(@(x)convert_to_I(x),imageset{inds{ordering(i)}});
+  %for j = 1:length(inds{ordering(i)})
+  %  Is{j} = convert_to_I(imageset{inds{ordering(i)}(j)});
+  %end
   L = length(inds{ordering(i)});
 
   for j = 1:L
@@ -193,13 +191,13 @@ for i = 1:length(ordering)
         show_hits_figure(models, boxes, I);
         drawnow
         %pause(.1)
-      else
-        figure(1)
-        clf
-        imagesc(I)
-        drawnow
-        fprintf(1,'No detections in this Image\n');
-        pause(.1)
+%       else
+%         figure(1)
+%         clf
+%         imagesc(I)
+%         drawnow
+%         fprintf(1,'No detections in this Image\n');
+%         pause(.1)
       end
       boxes = saveboxes;
     end
@@ -245,7 +243,7 @@ if save_files == 0
   return;
 end
 
-[allfiles,bb] = sort(allfiles);
+[allfiles] = sort(allfiles);
 grid = esvm_load_result_grid(dataset_params, models, ...
                              setname, ...
                              allfiles);
