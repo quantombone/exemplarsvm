@@ -4,12 +4,12 @@
 %% Initialize dataset parameters
 %data_directory = '/Users/tomasz/projects/Pascal_VOC/';
 %results_directory = '/nfs/baikal/tmalisie/esvm-data/';
-%data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
-%results_directory = '/nfs/baikal/tmalisie/esvm-bus/';
+data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
+results_directory = '/nfs/baikal/tmalisie/esvm-bicycle/';
 
-data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
-results_directory = '/csail/vision-videolabelme/people/tomasz/esvm-bus/';
-cls = 'bus';
+%data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
+%results_directory = '/csail/vision-videolabelme/people/tomasz/esvm-bus/';
+cls = 'bicycle';
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
                                  results_directory);
@@ -40,7 +40,7 @@ dataset_params.model_type = 'exemplar';
 
 %Create an exemplar stream (list of exemplars)
 CACHE_STREAM = 1;
-e_stream_set = get_pascal_stream(dataset_params, cls, CACHE_STREAM);
+e_stream_set = esvm_get_pascal_stream(dataset_params, cls, CACHE_STREAM);
 
 %% Define parameters and training
 %Create mining/validation/testing params as defaults
