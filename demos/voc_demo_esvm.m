@@ -5,11 +5,12 @@
 %data_directory = '/Users/tomasz/projects/Pascal_VOC/';
 %results_directory = '/nfs/baikal/tmalisie/esvm-data/';
 data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
-results_directory = '/nfs/baikal/tmalisie/esvm-bicycle/';
+results_directory = '/nfs/baikal/tmalisie/esvm-cow/';
 
 data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
-results_directory = '/csail/vision-videolabelme/people/tomasz/esvm-bicycle/';
-cls = 'bicycle';
+results_directory = '/csail/vision-videolabelme/people/tomasz/esvm-motorbike/';
+cls = 'motorbike';
+
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
                                  results_directory);
@@ -63,7 +64,7 @@ val_set = get_pascal_set(dataset_params, ...
                          dataset_params.val_params.set_name);
 
 
-%Choose a short string to indicate the type of training run we are doing
+%Choose a models name to indicate the type of training run we are doing
 dataset_params.models_name = ...
     [cls '-' init_params.init_type ...
      '.' dataset_params.model_type];
@@ -88,13 +89,13 @@ models = esvm_train_exemplars(dataset_params, ...
  
 %% Apply trained exemplars on validation set
 dataset_params.params = dataset_params.val_params;
-dataset_params.params.gt_function = @get_pascal_anno_function;
+dataset_params.val_params.gt_function = @get_pascal_anno_function;
 val_grid = esvm_detect_imageset(val_set,models,...
                                 dataset_params.val_params,...
                                 dataset_params.val_params.set_name,...
                                 dataset_params);
 
-%% Perform l.a.b.o.o. calibration and M-matrix estimation
+%% Perform Platt calibration and M-matrix estimation
 CACHE_BETAS = 1;
 M = esvm_perform_calibration(dataset_params, models, ...
                              val_grid, val_set, CACHE_BETAS);
@@ -106,11 +107,12 @@ dataset_params.test_params.set_name = ['test'];
 test_set = get_pascal_set(dataset_params, ...
                           dataset_params.test_params.set_name);
 
-
 %% Apply on test set
 dataset_params.params = dataset_params.test_params;
-test_grid = esvm_detect_imageset(dataset_params, models, test_set,...
-                                 dataset_params.test_params.set_name);
+test_grid = esvm_detect_imageset(test_set, models, ...
+                                 dataset_params.test_params,...
+                                 dataset_params.test_params.set_name, ...
+                                 dataset_params);
 
 %apply calibration matrix to test-set results
 test_struct = esvm_apply_calibration(dataset_params, models, ...

@@ -213,7 +213,8 @@ for i = 1:length(ordering)
     res{j}.curid = curid;
 
     %%%NOTE: the gt-function is well-defined for VOC-exemplars
-    if isfield(localizeparams,'gt_function') && ~isempty(params.gt_function)
+    if isfield(localizeparams,'gt_function') && ...
+          ~isempty(localizeparams.gt_function)
       res{j}.extras = localizeparams.gt_function(dataset_params, Iname, res{j}.bboxes);
     end 
   end

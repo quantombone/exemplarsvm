@@ -199,6 +199,7 @@ end
 
 function M = learn_M_counting(x, exids, os, count_thresh)
 %Learn the matrix by counting activations on positives
+
 N = size(x,2);
 K = size(x,1);
 C = zeros(K,K);
