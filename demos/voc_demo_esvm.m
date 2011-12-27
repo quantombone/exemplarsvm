@@ -1,15 +1,20 @@
 %This is an Exemplar-SVM training demo
 %Tomasz Malisiewicz (tomasz@cmu.edu)
+function voc_demo_esvm(cls)
 
 %% Initialize dataset parameters
 %data_directory = '/Users/tomasz/projects/Pascal_VOC/';
 %results_directory = '/nfs/baikal/tmalisie/esvm-data/';
-data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
-results_directory = '/nfs/baikal/tmalisie/esvm-cow/';
+if ~exist('cls','var')
+  cls = 'car';
+end
+
+%data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
+%results_directory = '/nfs/baikal/tmalisie/esvm-car/';
 
 data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
-results_directory = '/csail/vision-videolabelme/people/tomasz/esvm-motorbike/';
-cls = 'motorbike';
+results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
+
 
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
@@ -124,7 +129,10 @@ bbs = cat(1,test_struct.unclipped_boxes{:});
 bbs = bbs(bb,:);
 m = models{1};
 m.model.svbbs = bbs;
+try
 m.model = rmfield(m.model,'svxs');
+catch
+end
 m.train_set = test_set;
 
 figure(1)
@@ -141,7 +149,7 @@ title('Exemplar, w,  and top 16 detections');
 %rc = results.corr;
 
 
-clear options
-options.format ='html';
-options.outputDir = [results_directory  '/www/'];
-publish('display_helper',options)
+%clear options
+%options.format ='html';
+%options.outputDir = [results_directory  '/www/'];
+%publish('display_helper',options)

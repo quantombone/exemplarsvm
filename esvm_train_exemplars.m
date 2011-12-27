@@ -26,6 +26,16 @@ cache_dir =  ...
 cache_file = ...
     sprintf('%s/%s.mat',cache_dir,new_models_name);
 
+cache_file_stripped = ...
+    sprintf('%s/%s-stripped.mat',cache_dir,new_models_name);
+
+if CACHE_FILE == 1 && fileexists(cache_file_stripped)
+  newmodels = load(cache_file_stripped);
+  newmodels = newmodels.models;
+  return;
+end
+
+
 if CACHE_FILE == 1 && fileexists(cache_file)
   newmodels = load(cache_file);
   newmodels = newmodels.models;
