@@ -25,7 +25,7 @@ if length(m.mining_queue) == 0
 end
 
 %If the skip is enabled, we just update the model
-if m.mining_params.skip_mine == 0
+if m.mining_params.train_skip_mining == 0
   [hn, m.mining_queue, mining_stats] = ...
       esvm_mine_negatives({m}, m.mining_queue, m.train_set, ...
                      m.mining_params);
@@ -34,7 +34,7 @@ if m.mining_params.skip_mine == 0
                    }));
 else
   mining_stats.num_visited = 0;
-  fprintf(1,'WARNING: not mining, just updating model\n');  
+  fprintf(1,'WARNING: train_skip_mining==0, just updating model\n');  
 end
    
 m = update_the_model(m, mining_stats, training_function);

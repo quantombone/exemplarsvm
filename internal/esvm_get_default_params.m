@@ -48,6 +48,13 @@ mining_params.detect_min_scale = .01;
 %that have this OS with the entire input image.
 mining_params.detect_min_scene_os = 0.0;
 
+% Choose the number of images to process in each chunk for detection.
+% This parameters tells us how many images each core will process at
+% at time before saving results.  A higher number of images per chunk
+% means there will be less constant access to hard disk by separate
+% processes than if images per chunk was 1.
+mining_params.detect_images_per_chunk = 4;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Training/Mining parameters %%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,13 +84,15 @@ mining_params.train_max_images_per_iteration = 400;
 %1000, where alpha is the "keep nsv multiplier"
 mining_params.train_keep_nsv_multiplier = 3;
 
-
 %ICCV11 constant for SVM learning
 mining_params.train_svm_c = .01; %% regularize more with .0001;
 
 %The constant which tells us the weight in front of the positives
 %during SVM learning
 mining_params.train_positives_constant = 50;
+
+%experimental flag to skip the mining process
+mining_params.train_skip_mining = 0;
 
 %Mining Queue mode can be one of:
 % {'onepass','cycle-violators','front-violators'}
@@ -127,12 +136,12 @@ mining_params.queue_mode = 'onepass';
 %that score below this number)
 mining_params.calibration_threshold = -1;
 
-%The M-estimation parameters
+%The M-matrix estimation parameters
 mining_params.calibration_count_thresh = .5;
 mining_params.calibration_neighbor_thresh = .5;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Saving Output parameters %%%%%%
+%% Saving and Output parameters %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %if enabled, we dump learning images into results directory
@@ -141,21 +150,9 @@ mining_params.dump_images = 0;
 %if enabled, we dump the last image
 mining_params.dump_last_image = 1;
 
-%experimental flag to skip the mining process
-mining_params.skip_mine = 0;
-
 %NOTE: I'm not sure in which sections should this be defined.  By
-%default, NN mode is turned off and we assume per-exemplar learned
-%W's.
+%default, NN mode is turned off and we assume per-exemplar SVMs
 mining_params.nnmode = '';
 
 %Be default, we use an SVM
 mining_params.dfun = 0;
-
-% Choose the number of images to process in each chunk for detection.
-% This parameters tells us how many images each core will process at
-% at time before saving results.  A higher number of images per chunk
-% means there will be less constant access to hard disk by separate
-% processes than if images per chunk was 1.
-mining_params.detect_images_per_chunk = 4;
-
