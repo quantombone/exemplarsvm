@@ -139,9 +139,9 @@ parfor i = 1:length(models)
 
     %total_mines = m.mining_stats{end}.total_mines;
 
-    if ((total_mines >= mining_params.MAX_TOTAL_MINED_IMAGES) || ...
+    if ((total_mines >= mining_params.train_max_mined_images) || ...
           (isempty(m.mining_queue))) || ...
-          (m.iteration == mining_params.MAX_MINE_ITERATIONS)
+          (m.iteration == mining_params.train_max_mine_iterations)
 
       keep_going = 0;      
       %bump up filename to final file

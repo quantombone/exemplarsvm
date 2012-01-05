@@ -23,17 +23,9 @@ if length(m.model.mask(:)) ~= numel(m.model.w)
 end
 
 mining_params = m.mining_params;
-
-%% look into the object inds to figure out which subset of the data
-%% is actually hard negatives for mining
-%if mining_params.extract_negatives == 1
-%  [negatives,vals,pos,m] = find_set_membership(m);
-%  xs = m.model.svxs(:, [negatives]);
-%  bbs = m.model.svbbs([negatives],:);
-%else
 xs = m.model.svxs;
 bbs = m.model.svbbs;
-%end
+
 
 %NOTE: MAXSIZE should perhaps be inside of the default_params script?
 MAXSIZE = 3500;
@@ -59,45 +51,45 @@ supery = cat(1,ones(size(m.model.x,2),1),-1*ones(size(xs,2),1));
 spos = sum(supery==1);
 sneg = sum(supery==-1);
 
-wpos = mining_params.POSITIVE_CONSTANT;
+wpos = mining_params.train_positives_constant;
 wneg = 1;
 
-if mining_params.BALANCE_POSITIVES == 1
-  fprintf(1,'balancing positives\n');
-  wpos = 1/spos;
-  wneg = 1/sneg;
-  wpos = wpos / wneg;
-  wneg = wneg / wneg;
-end
+% if mining_params.BALANCE_POSITIVES == 1
+%   fprintf(1,'balancing positives\n');
+%   wpos = 1/spos;
+%   wneg = 1/sneg;
+%   wpos = wpos / wneg;
+%   wneg = wneg / wneg;
+% end
 
 A = eye(size(superx,1));
 mu = zeros(size(superx,1),1);
 
-if mining_params.DOMINANT_GRADIENT_PROJECTION == 1  
-  A = get_dominant_basis(reshape(mean(m.model.x(:,1),2), ...
-                                 m.model.hg_size),...
-                         mining_params.DOMINANT_GRADIENT_PROJECTION_K);
+% if mining_params.DOMINANT_GRADIENT_PROJECTION == 1  
+%   A = get_dominant_basis(reshape(mean(m.model.x(:,1),2), ...
+%                                  m.model.hg_size),...
+%                          mining_params.DOMINANT_GRADIENT_PROJECTION_K);
   
   
-  A2 = get_dominant_basis(reshape(mean(superx(:,supery==-1),2), ...
-                                  m.model.hg_size),...
-                          mining_params ...
-                          .DOMINANT_GRADIENT_PROJECTION_K);
-  A = [A A2];
-elseif mining_params.DO_PCA == 1
-  [A,d,mu] = mypca(superx,mining_params.PCA_K);
-elseif mining_params.A_FROM_POSITIVES == 1
-  A = [superx(:,supery==1)];
-  cursize = size(A,2);
-  for qqq = 1:cursize
-    A(:,qqq) = A(:,qqq) - mean(A(:,qqq));
-    A(:,qqq) = A(:,qqq)./ norm(A(:,qqq));
-  end
+%   A2 = get_dominant_basis(reshape(mean(superx(:,supery==-1),2), ...
+%                                   m.model.hg_size),...
+%                           mining_params ...
+%                           .DOMINANT_GRADIENT_PROJECTION_K);
+%   A = [A A2];
+% elseif mining_params.DO_PCA == 1
+%   [A,d,mu] = mypca(superx,mining_params.PCA_K);
+% elseif mining_params.A_FROM_POSITIVES == 1
+%   A = [superx(:,supery==1)];
+%   cursize = size(A,2);
+%   for qqq = 1:cursize
+%     A(:,qqq) = A(:,qqq) - mean(A(:,qqq));
+%     A(:,qqq) = A(:,qqq)./ norm(A(:,qqq));
+%   end
   
-  %% add some ones
-  A(:,end+1) = 1;
-  A(:,end) = A(:,end) / norm(A(:,end));
-end
+%   %% add some ones
+%   A(:,end+1) = 1;
+%   A(:,end) = A(:,end) / norm(A(:,end));
+% end
 
 newx = bsxfun(@minus,superx,mu);
 newx = newx(logical(m.model.mask),:);
@@ -108,7 +100,7 @@ fprintf(1,' -----\nStarting SVM: dim=%d... #pos=%d, #neg=%d ',...
 starttime = tic;
 
 svm_model = libsvmtrain(supery, newx',sprintf(['-s 0 -t 0 -c' ...
-                    ' %f -w1 %.9f -q'], mining_params.SVMC, wpos));
+                    ' %f -w1 %.9f -q'], mining_params.train_svm_c, wpos));
 
 if length(svm_model.sv_coef) == 0
   %learning had no negatives
@@ -162,8 +154,8 @@ end
 
 
 %KEEP (nsv_multiplier * #SV) vectors, but at most max_negatives of them
-total_length = ceil(mining_params.beyond_nsv_multiplier*length(svs));
-total_length = min(total_length,mining_params.max_negatives);
+total_length = ceil(mining_params.train_keep_nsv_multiplier*length(svs));
+total_length = min(total_length,mining_params.train_max_negatives_in_cache);
 
 [alpha,beta] = sort(r,'descend');
 svs = beta(1:min(length(beta),total_length));

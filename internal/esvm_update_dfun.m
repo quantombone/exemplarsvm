@@ -30,17 +30,9 @@ if length(m.model.mask(:)) ~= numel(m.model.w)
 end
 
 mining_params = m.mining_params;
-
-%% look into the object inds to figure out which subset of the data
-%% is actually hard negatives for mining
-%if mining_params.extract_negatives == 1
-%  [negatives,vals,pos,m] = find_set_membership(m); 
-%  xs = m.model.svxs(:, [negatives]);
-%  bbs = m.model.svbbs([negatives],:); 
-%else
 xs = m.model.svxs;
 bbs = m.model.svbbs;
-%end
+
 
 % A trick in case we have too many detections
 MAXSIZE = 2000;
@@ -66,16 +58,16 @@ newy = cat(1,ones(size(m.model.x,2),1),-1*ones(size(xs,2),1));
 number_positives = sum(newy==1);
 number_negatives = sum(newy==-1);
 
-wpos = mining_params.POSITIVE_CONSTANT;
+wpos = mining_params.train_positives_constant;
 wneg = 1;
 
-if mining_params.BALANCE_POSITIVES == 1
-  fprintf(1,'balancing positives\n');
-  wpos = 1/number_positives;
-  wneg = 1/number_negatives;
-  wpos = wpos / wneg;
-  wneg = wneg / wneg;
-end
+% if mining_params.BALANCE_POSITIVES == 1
+%   fprintf(1,'balancing positives\n');
+%   wpos = 1/number_positives;
+%   wneg = 1/number_negatives;
+%   wpos = wpos / wneg;
+%   wneg = wneg / wneg;
+% end
 
 newx = newx(logical(m.model.mask),:);
 
@@ -84,7 +76,7 @@ fprintf(1,' -----\nStarting SVM dim=%d... s+=%d, s-=%d ',...
 starttime = tic;
 
 svm_model = libsvmtrain(newy, newx',sprintf(['-s 0 -t 0 -c' ...
-                    ' %f -w1 %.9f -q'], mining_params.SVMC, wpos));
+                    ' %f -w1 %.9f -q'], mining_params.train_svm_c, wpos));
 
 if length(svm_model.sv_coef) == 0
   %learning had no negatives
@@ -128,11 +120,11 @@ fprintf(1,'took %.3f sec\n',toc(starttime));
 m.model.w = reshape(wex, size(m.model.w));
 m.model.b = b;
 
-%Take top mining_params.max_negatives detections 
+%Take top train_max_negatives detections 
 r = m.model.w(:)'*bsxfun(@minus,m.model.svxs,m.model.x(:,1)).^2 - m.model.b;
 
 [alpha,beta] = sort(r,'descend');
-svs = beta(1:min(length(beta),mining_params.max_negatives));
+svs = beta(1:min(length(beta),mining_params.train_max_negatives_in_cache));
 m.model.svxs = m.model.svxs(:,svs);
 m.model.svbbs = m.model.svbbs(svs,:);
 

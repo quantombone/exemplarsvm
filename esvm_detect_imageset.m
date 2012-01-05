@@ -26,7 +26,7 @@ display = 0;
 save_files = 1;
 if ~exist('setname','var')
   save_files = 0;
-  localizeparams.NIMS_PER_CHUNK = 1;
+  localizeparams.detect_images_per_chunk = 1;
   setname = '';
 end
 
@@ -50,7 +50,7 @@ end
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
-  localizeparams.NIMS_PER_CHUNK = 1;
+  localizeparams.detect_images_per_chunk = 1;
 end
 
 % if ~isfield(dataset_params,'params')
@@ -71,10 +71,10 @@ if (save_files==1) && (display == 0) && (~exist(baser,'dir'))
   mkdir(baser);
 end
 
-%% Chunk the data into NIMS_PER_CHUNK images per chunk so that we
+%% Chunk the data into detect_images_per_chunk images per chunk so that we
 %process several images, then write results for entire chunk
 
-inds = do_partition(1:length(imageset),localizeparams.NIMS_PER_CHUNK);
+inds = do_partition(1:length(imageset),localizeparams.detect_images_per_chunk);
 
 % randomize chunk orderings
 myRandomize;

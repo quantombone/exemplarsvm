@@ -374,12 +374,12 @@ function rs = prune_nms(rs, params)
 
 %If the field is missing, or it is set to 1, then we don't need to
 %process anything.  If it is zero, we also don't do NMS.
-if ~isfield(params,'NMS_OS') || (params.NMS_OS >= 1) ...
-      || (params.NMS_OS == 0)
+if ~isfield(params,'detect_exemplar_nms_os_threshold') || (params.detect_exemplar_nms_os_threshold >= 1) ...
+      || (params.detect_exemplar_nms_os_threshold == 0)
   return;
 end
 
-rs.bbs = cellfun2(@(x)nms(x,params.NMS_OS),rs.bbs);
+rs.bbs = cellfun2(@(x)nms(x,params.detect_exemplar_nms_os_threshold),rs.bbs);
 
 if ~isempty(rs.xs)
   for i = 1:length(rs.bbs)
@@ -406,7 +406,7 @@ if isnumeric(I)
 
   %Compute pyramid
   [t.hog,t.scales] = featpyramid2(I, sbin, localizeparams);  
-  t.padder = localizeparams.pyramid_padder;
+  t.padder = localizeparams.detect_pyramid_padding;
   for level = 1:length(t.hog)
     t.hog{level} = padarray(t.hog{level}, [t.padder t.padder 0], 0);
   end

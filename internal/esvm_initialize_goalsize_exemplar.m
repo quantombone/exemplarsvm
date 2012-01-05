@@ -143,7 +143,7 @@ localizeparams.detect_max_windows_per_exemplar = 1;
 localizeparams.detect_levels_per_octave = 10;
 localizeparams.detect_save_features = 1;
 localizeparams.detect_add_flip = 0;
-localizeparams.pyramid_padder = 5;
+localizeparams.detect_pyramid_padding = 5;
 localizeparams.dfun = 0;
 
 

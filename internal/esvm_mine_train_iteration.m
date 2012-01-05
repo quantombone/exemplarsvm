@@ -58,7 +58,6 @@ m = training_function(m);
 m.model.wtrace{end+1} = m.model.w;
 m.model.btrace{end+1} = m.model.b;
 
-
 % if (m.mining_params.dfun == 1)
 %   r = m.model.w(:)'*bsxfun(@minus,m.model.svxs,m.model.x(:,1)).^2 - ...
 %       m.model.b;
@@ -66,32 +65,6 @@ m.model.btrace{end+1} = m.model.b;
 %   r = m.model.w(:)'*m.model.svxs - m.model.b;
 % end
 % m.model.svbbs(:,end) = r;
-
-% if strmatch(m.models_name,'dalal')
-%   error('deprecated: must address...');
-%   %% here we take the best exemplars
-%   allscores = m.model.w(:)'*m.model.x - m.model.b;
-%   [aa,bb] = sort(allscores,'descend');
-%   [aabad,bbbad] = sort(r,'descend');
-%   maxbad = aabad(ceil(.05*length(aabad)));
-%   LEN = max(sum(aa>=maxbad), m.model.keepx);
-%   m.model.x = m.model.x(:,bb(1:LEN));
-%   fprintf(1,'dalal:WE NOW HAVE %d exemplars in category\n',LEN);
-% end
-
-% %NOTE(TJM): isn't this part of keeping only the supporting negative
-% %supports already done inside the training function?
-% svs = find(r >= -1.0000);
-
-% %KEEP 3#SV vectors (but at most max_negatives of them)
-% total_length = ceil(m.mining_params.beyond_nsv_multiplier*length(svs));
-% total_length = min(total_length,m.mining_params.max_negatives);
-
-% [alpha,beta] = sort(r,'descend');
-% svs = beta(1:min(length(beta),total_length));
-% m.model.svxs = m.model.svxs(:,svs);
-% m.model.svbbs = m.model.svbbs(svs,:);
-
 
 function dump_figures(m)
 
@@ -101,7 +74,7 @@ function dump_figures(m)
 
 % if (mining_params.dump_images == 1) || ...
 %       (mining_params.dump_last_image == 1 && ...
-%        m.iteration == mining_params.MAX_MINE_ITERATIONS)
+%        m.iteration == mining_params.train_max_mine_iterations)
 %   set(gcf,'PaperPosition',[0 0 10 3]);
 %   print(gcf,sprintf('%s/%s.%d_iter=%05d.png', ...
 %                     mining_params.final_directory,m.curid,...
@@ -120,7 +93,7 @@ drawnow
 
 if (m.mining_params.dump_images == 1) || ...
       (m.mining_params.dump_last_image == 1 && ...
-       m.iteration == m.mining_params.MAX_MINE_ITERATIONS)
+       m.iteration == m.mining_params.train_max_mine_iterations)
 
   imwrite(Isv1,sprintf('%s/%s.%d_iter_I=%05d.png', ...
                     m.mining_params.final_directory, m.curid,...

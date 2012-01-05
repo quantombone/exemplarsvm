@@ -64,8 +64,8 @@ load e_stream_set.mat
 dataset_params.params = get_default_mining_params;
 dataset_params.mining_params = dataset_params.params;
 dataset_params.mining_params.training_function = @esvm_update_svm;
-dataset_params.mining_params.NMS_OS = 1.0; %disable NMS
-dataset_params.mining_params.MAXSCALE = 0.5;
+dataset_params.mining_params.detect_exemplar_nms_os_threshold = 1.0; %disable NMS
+dataset_params.mining_params.detect_max_scale = 0.5;
 dataset_params.mining_params.detect_max_windows_per_exemplar = 100;
 dataset_params.mining_params.set_name = ['trainval'];
 neg_set = get_pascal_set(dataset_params, ...
@@ -109,7 +109,7 @@ M = esvm_perform_calibration(dataset_params, models, ...
 
 %% Define test-set
 dataset_params.test_params = dataset_params.params;
-dataset_params.test_params.NMS_OS = 0.5;
+dataset_params.test_params.detect_exemplar_nms_os_threshold = 0.5;
 dataset_params.test_params.set_name = ['test'];
 test_set = get_pascal_set(dataset_params, ...
                           dataset_params.test_params.set_name);
