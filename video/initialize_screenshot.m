@@ -5,7 +5,7 @@ function capture_region = initialize_screenshot
 % Tomasz Malisiewicz (tomasz@csail.mit.edu)
 
 I = capture_screen;
-capture_region = select_bbox_from_image(I);
+capture_region = select_bbox_from_image(I,'Select screenshot region');
 
 if nargout == 0
   save capture_region.mat capture_region
