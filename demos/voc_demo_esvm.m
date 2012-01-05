@@ -53,7 +53,8 @@ e_stream_set = esvm_get_pascal_stream(dataset_params, cls, CACHE_STREAM);
 dataset_params.params = get_default_mining_params;
 dataset_params.mining_params = dataset_params.params;
 dataset_params.mining_params.training_function = @esvm_update_svm;
-dataset_params.mining_params.detect_exemplar_nms_os_threshold = 1.0; %disable NMS
+%disable NSM
+dataset_params.mining_params.detect_exemplar_nms_os_threshold = 1.0; 
 dataset_params.mining_params.detect_max_scale = 0.5;
 dataset_params.mining_params.detect_max_windows_per_exemplar = 100;
 dataset_params.mining_params.set_name = ['train-' cls];
