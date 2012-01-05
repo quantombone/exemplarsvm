@@ -147,9 +147,13 @@ title('Exemplar, w,  and top 16 detections');
                                      dataset_params.test_params.set_name, ...
                                      test_struct);
 %rc = results.corr;
-
-
 %clear options
 %options.format ='html';
 %options.outputDir = [results_directory  '/www/'];
 %publish('display_helper',options)
+
+%if enabled show and print some top detections into the www directory
+%maxk = 2;
+%allbbs = show_top_dets(dataset_params, models, test_grid, ...
+%                       test_set, dataset_params.test_params.set_name, ...
+%                       test_struct, maxk);
