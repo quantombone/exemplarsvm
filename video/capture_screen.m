@@ -10,8 +10,10 @@ robo = java.awt.Robot;
 t = java.awt.Toolkit.getDefaultToolkit();
 
 if exist('capture_region','var')
-  rectangle = java.awt.Rectangle(capture_region(1),capture_region(2),capture_region(3), ...
-                                 capture_region(4));
+  %rectangle = java.awt.Rectangle(capture_region(1),capture_region(2),capture_region(3), ...
+  %capture_region(4));
+  rectangle = java.awt.Rectangle(capture_region(1),capture_region(2),capture_region(3)-capture_region(1)+1, ...
+                                 capture_region(4)-capture_region(2)+1);
 else
   rectangle = java.awt.Rectangle(t.getScreenSize());  
 end
