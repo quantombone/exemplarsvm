@@ -1,4 +1,4 @@
-function mining_params = get_default_mining_params
+function mining_params = esvm_get_default_params
 %% Return the default detection/training parameters
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
@@ -8,24 +8,24 @@ function mining_params = get_default_mining_params
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Turn on image flips for detection/training. If enabled, processing
 %happes on each image as well as its left-right flipped version.
-mining_params.FLIP_LR = 1;
+mining_params.detect_add_flip = 1;
 
 %Levels-per-octave defines how many levels between 2x sizes in pyramid
 %(denser pyramids will have more windows and thus be slower for
 %detection/training)
-mining_params.lpo = 10;
+mining_params.detect_levels_per_octave = 10;
 
 %By default dont save feature vectors of detections (training turns
 %this on automatically)
-mining_params.SAVE_SVS = 0;
+mining_params.detect_save_features = 0;
 
 %Default detection threshold (negative margin makes most sense for
 %SVM-trained detectors).  Only keep detections for detection/training
 %that fall above this threshold.
-mining_params.thresh = -1;
+mining_params.detect_keep_threshold = -1;
 
 %Maximum #windows per exemplar (per image) to keep
-mining_params.TOPK = 10;
+mining_params.detect_max_windows_per_exemplar = 10;
 
 %Determines if NMS (Non-maximum suppression) should be used to
 %prune highly overlapping, redundant, detections.

@@ -20,7 +20,7 @@ MAXLEVELS = 200;
 MINDIMENSION = 5;
 
 %Get the levels per octave from the parameters
-interval = params.lpo;
+interval = params.detect_levels_per_octave;
 
 sc = 2 ^(1/interval);
 

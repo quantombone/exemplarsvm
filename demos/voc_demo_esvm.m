@@ -55,7 +55,7 @@ dataset_params.mining_params = dataset_params.params;
 dataset_params.mining_params.training_function = @esvm_update_svm;
 dataset_params.mining_params.NMS_OS = 1.0; %disable NMS
 dataset_params.mining_params.MAXSCALE = 0.5;
-dataset_params.mining_params.TOPK = 100;
+dataset_params.mining_params.detect_max_windows_per_exemplar = 100;
 dataset_params.mining_params.set_name = ['train-' cls];
 neg_set = get_pascal_set(dataset_params, ...
                            dataset_params.mining_params.set_name);

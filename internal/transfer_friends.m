@@ -1,8 +1,9 @@
 function [fboxes,cs] = transfer_friends(models, bboxes)
 %transfer friends onto detections
+error('deprecated function.. see VOCinit');
 
 VOCinit;
-% if isfield(models{i},'FLIP_LR') && models{i}.FLIP_LR == 1
+% if isfield(models{i},'detect_add_flip') && models{i}.detect_add_flip == 1
 %   models{i}.gt_box = flip_box(models{i}.gt_box,[recs.size.height ...
 %                     recs.size.width]);
 % end
@@ -25,7 +26,7 @@ for i = 1:length(bboxes)
     curg = models{exid}.gt_box;
     others = models{exid}.friendbb;
     
-    if isfield(models{exid},'FLIP_LR') && models{exid}.FLIP_LR == 1
+    if isfield(models{exid},'detect_add_flip') && models{exid}.detect_add_flip == 1
       sizeI = models{exid}.sizeI;      
       %curg = flip_box(curg,sizeI);
       others = flip_box(others,sizeI);
@@ -35,13 +36,13 @@ for i = 1:length(bboxes)
     
     %news = others;
     
-    if isfield(models{exid},'FLIP_LR') && models{exid}.FLIP_LR == 1
+    if isfield(models{exid},'detect_add_flip') && models{exid}.detect_add_flip == 1
       others = flip_box(others,sizeI);
     end
 
     news = apply_xform(others,xform_cd);
     
-    %if isfield(models{exid},'FLIP_LR') && models{exid}.FLIP_LR == 1
+    %if isfield(models{exid},'detect_add_flip') && models{exid}.detect_add_flip == 1
     %  news = flip_box(news,sizeI);
     %end
 

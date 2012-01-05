@@ -30,7 +30,7 @@ number_of_windows = zeros(length(models),1);
 violating_images = zeros(0,1);
 empty_images = zeros(0,1);
 
-mining_params.SAVE_SVS = 1;
+mining_params.detect_save_features = 1;
 
 numpassed = 0;
 

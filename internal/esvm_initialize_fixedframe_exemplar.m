@@ -54,7 +54,7 @@ bbox = squareize_bbox(bbox);
 
 %Compute pyramid 
 clear t
-params.lpo = 10;
+params.detect_levels_per_octave = 10;
 [t.hog, t.scales] = featpyramid2(I, sbin, params);  
 t.padder = 2;
 

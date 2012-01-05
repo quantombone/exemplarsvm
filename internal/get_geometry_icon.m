@@ -30,7 +30,7 @@ alphamask = double(res.res.seg>0);
 %imagesc(alphamask)
 %pause
 
-if isfield(models{index},'FLIP_LR') && models{index}.FLIP_LR==1
+if isfield(models{index},'detect_add_flip') && models{index}.detect_add_flip==1
   has23 = sum(res.res.seg(:)==2) && sum(res.res.seg(:)==3);
   if has23
     new2 = 3;

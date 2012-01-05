@@ -43,14 +43,14 @@ if ~isfield(localizeparams,'nnmode')
  localizeparams.nnmode = '';
 end
 
-doflip = localizeparams.FLIP_LR;
+doflip = localizeparams.detect_add_flip;
 
-localizeparams.FLIP_LR = 0;
+localizeparams.detect_add_flip = 0;
 [rs1, t1] = esvm_detectdriver(I, models, localizeparams);
 rs1 = prune_nms(rs1, localizeparams);
 
 if doflip == 1
-  localizeparams.FLIP_LR = 1;
+  localizeparams.detect_add_flip = 1;
   [rs2, t2] = esvm_detectdriver(I, models, localizeparams);
   rs2 = prune_nms(rs2, localizeparams);
 else %If there is no flip, then we are done
@@ -146,7 +146,7 @@ for level = length(t.hog):-1:1
 
     cur_scores = rootmatch{exid} - bs{exid};
     [aa,indexes] = sort(cur_scores(:),'descend');
-    NKEEP = sum((aa>maxers{exid}) & (aa>=localizeparams.thresh));
+    NKEEP = sum((aa>maxers{exid}) & (aa>=localizeparams.detect_keep_threshold));
     aa = aa(1:NKEEP);
     indexes = indexes(1:NKEEP);
     if NKEEP==0
@@ -173,14 +173,14 @@ for level = length(t.hog):-1:1
     bbs(:,10) = vvs;
     bbs(:,12) = aa;
     
-    if (localizeparams.FLIP_LR == 1)
+    if (localizeparams.detect_add_flip == 1)
       bbs = flip_box(bbs,t.size);
       bbs(:,7) = 1;
     end
     
     resstruct.bbs{exid} = cat(1,resstruct.bbs{exid},bbs);
     
-    if localizeparams.SAVE_SVS == 1
+    if localizeparams.detect_save_features == 1
       for z = 1:NKEEP
         xs{exid}{end+1} = ...
             reshape(t.hog{level}(uus(z)+(1:sss(1))-1, ...
@@ -190,22 +190,22 @@ for level = length(t.hog):-1:1
     end
         
     if (NKEEP > 0)
-      newtopk = min(localizeparams.TOPK,size(resstruct.bbs{exid},1));
+      newtopk = min(localizeparams.detect_max_windows_per_exemplar,size(resstruct.bbs{exid},1));
       [aa,bb] = psort(-resstruct.bbs{exid}(:,end),newtopk);
       resstruct.bbs{exid} = resstruct.bbs{exid}(bb,:);
-      if localizeparams.SAVE_SVS == 1
+      if localizeparams.detect_save_features == 1
         xs{exid} = xs{exid}(:,bb);
       end
       %TJM: changed so that we only maintain 'maxers' when topk
       %elements are filled
-      if (newtopk >= localizeparams.TOPK)
+      if (newtopk >= localizeparams.detect_max_windows_per_exemplar)
         maxers{exid} = min(-aa);
       end
     end    
   end
 end
 
-if localizeparams.SAVE_SVS == 1
+if localizeparams.detect_save_features == 1
   resstruct.xs = xs;
 else
   resstruct.xs = cell(N,1);
@@ -319,17 +319,18 @@ end
 resstruct.bbs = cell(N,1);
 resstruct.xs = cell(N,1);
 
-TOPK = localizeparams.TOPK;
 for exid = 1:N
 
-  goods = find(r(exid,:) >= localizeparams.thresh);
+  goods = find(r(exid,:) >= localizeparams.detect_keep_threshold);
   
   if isempty(goods)
     continue
   end
   
-  [sorted_scores,bb] = psort(-r(exid,goods)',min(TOPK, ...
-                                                 length(goods)));
+  [sorted_scores,bb] = ...
+      psort(-r(exid,goods)',...
+            min(localizeparams.detect_max_windows_per_exemplar, ...
+                length(goods)));
   bb = goods(bb);
 
   sorted_scores = -sorted_scores';
@@ -355,7 +356,7 @@ for exid = 1:N
   bbs(:,10) = vvs(bb);
   bbs(:,12) = sorted_scores;
   
-  if (localizeparams.FLIP_LR == 1)
+  if (localizeparams.detect_add_flip == 1)
     bbs = flip_box(bbs,t.size);
     bbs(:,7) = 1;
   end
@@ -363,7 +364,7 @@ for exid = 1:N
   resstruct.bbs{exid} = bbs;
 end
 
-if localizeparams.SAVE_SVS == 0
+if localizeparams.detect_save_features == 0
   resstruct.xs = cell(N,1);
 end
 %fprintf(1,'\n');
@@ -394,7 +395,7 @@ function t = get_pyramid(I, sbin, localizeparams)
 %or already a feature pyramid)
 
 if isnumeric(I)
-  if (localizeparams.FLIP_LR == 1)
+  if (localizeparams.detect_add_flip == 1)
     I = flip_image(I);
   else    
     %take unadulterated "aka" un-flipped image
@@ -417,7 +418,7 @@ else
   fprintf(1,'Already found features\n');
   
   if iscell(I)
-    if localizeparams.FLIP_LR==1
+    if localizeparams.detect_add_flip==1
       t = I{2};
     else
       t = I{1};

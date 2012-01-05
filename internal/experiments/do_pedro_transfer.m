@@ -1,4 +1,5 @@
 function [g,m] = do_pedro_transfer(models)
+error('deprecated');
 
 m = models;
 for i = 1:length(models)

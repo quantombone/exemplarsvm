@@ -30,7 +30,7 @@ ARTPAD = 0;
 I_real_pad = pad_image(I, ARTPAD);
 
 %Get the hog feature pyramid for the entire image
-params.lpo = 10;
+params.detect_levels_per_octave = 10;
 [f_real,scales] = featpyramid2(I_real_pad, init_params.sbin, params);
 
 %Extract the regions most overlapping with Ibox from each level in the pyramid
@@ -138,11 +138,11 @@ function [target_bb,target_x] = get_target_bb(model,I)
 %Get the id of the top detection
 mmm{1}.model = model;
 mmm{1}.model.hg_size = size(model.w);
-localizeparams.thresh = -100000.0;
-localizeparams.TOPK = 1;
-localizeparams.lpo = 10;
-localizeparams.SAVE_SVS = 1;
-localizeparams.FLIP_LR = 0;
+localizeparams.detect_keep_threshold = -100000.0;
+localizeparams.detect_max_windows_per_exemplar = 1;
+localizeparams.detect_levels_per_octave = 10;
+localizeparams.detect_save_features = 1;
+localizeparams.detect_add_flip = 0;
 localizeparams.pyramid_padder = 5;
 localizeparams.dfun = 0;
 
