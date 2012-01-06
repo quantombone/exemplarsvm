@@ -1,6 +1,6 @@
-function [resstruct,feat_pyramid] = esvm_detect(I, models, localizeparams)
+function [resstruct,feat_pyramid] = esvm_detect(I, models, params)
 % Localize a set of models in an image.
-% function [resstruct,feat_pyramid] = esvm_detect(I, models, localizeparams)
+% function [resstruct,feat_pyramid] = esvm_detect(I, models, params)
 %
 % If there is a small number of models (such as in per-exemplar
 % mining), then fconvblas is used for detection.  If the number is
@@ -11,7 +11,7 @@ function [resstruct,feat_pyramid] = esvm_detect(I, models, localizeparams)
 % models: A cell array of models to localize inside this image
 %   models{:}.model.w: Learned template
 %   models{:}.model.b: Learned template's offset
-% localizeparams: Localization parameters (see get_default_mining_params.m)
+% params: Localization parameters (see esvm_get_default_params.m)
 %
 % resstruct: Sliding window output struct with 
 %   resstruct.bbs{:}: Detection boxes and pyramid locations
@@ -25,6 +25,7 @@ function [resstruct,feat_pyramid] = esvm_detect(I, models, localizeparams)
 % available under the terms of the MIT license (see COPYING file).
 
 if isempty(models)
+  fprintf(1,'Warning: empty models in esvm_detect\n');
   resstruct.bbs{1} = zeros(0,0);
   resstruct.xs{1} = zeros(0,0);
   feat_pyramid = [];
@@ -35,24 +36,24 @@ if ~iscell(models)
   models = {models};
 end
 
-if ~exist('localizeparams','var')
-  localizeparams = get_default_mining_params;
+if ~exist('params','var')
+  params = esvm_get_default_mining_params;
 end
 
-if ~isfield(localizeparams,'nnmode')
- localizeparams.nnmode = '';
+if ~isfield(params,'nnmode')
+ params.nnmode = '';
 end
 
-doflip = localizeparams.detect_add_flip;
+doflip = params.detect_add_flip;
 
-localizeparams.detect_add_flip = 0;
-[rs1, t1] = esvm_detectdriver(I, models, localizeparams);
-rs1 = prune_nms(rs1, localizeparams);
+params.detect_add_flip = 0;
+[rs1, t1] = esvm_detectdriver(I, models, params);
+rs1 = prune_nms(rs1, params);
 
 if doflip == 1
-  localizeparams.detect_add_flip = 1;
-  [rs2, t2] = esvm_detectdriver(I, models, localizeparams);
-  rs2 = prune_nms(rs2, localizeparams);
+  params.detect_add_flip = 1;
+  [rs2, t2] = esvm_detectdriver(I, models, params);
+  rs2 = prune_nms(rs2, params);
 else %If there is no flip, then we are done
   resstruct = rs1;
   feat_pyramid = t1;
@@ -75,15 +76,13 @@ resstruct = rs1;
 feat_pyramid = cat(1,t1,t2);
 
 function [resstruct,t] = esvm_detectdriver(I, models, ...
-                                             localizeparams)
+                                             params)
 
-%NOTE: If the number of specified models is greater than 20, use the
-%BLOCK-based method
-MAX_MODELS_BEFORE_BLOCK_METHOD = 20;
-if (length(models)>MAX_MODELS_BEFORE_BLOCK_METHOD) ...
-      || (~isempty(localizeparams.nnmode))
+if (length(models) > params.max_models_before_block_method) ...
+      || (~isempty(params.nnmode))
+
   [resstruct,t] = esvm_detectdriverBLOCK(I, models, ...
-                                         localizeparams);
+                                         params);
   return;
 end
 
@@ -92,8 +91,32 @@ ws = cellfun2(@(x)x.model.w,models);
 bs = cellfun2(@(x)x.model.b,models);
 
 %NOTE: all exemplars in this set must have the same sbin
-sbin = models{1}.model.init_params.sbin;
-t = get_pyramid(I, sbin, localizeparams);
+luq = 1;
+
+if isfield(models{1}.model,'init_params')
+  sbins = cellfun(@(x)x.model.init_params.sbin,models);
+  luq = length(unique(sbins));
+end
+
+if isfield(models{1}.model,'init_params') && luq == 1
+  sbin = models{1}.model.init_params.sbin;
+elseif ~isfield(models{1}.model,'init_params')
+  if isfield(params,'init_params')
+    sbin = params.init_params.sbin;
+  else
+    fprintf(1,'No hint for sbin!\n');
+    error('No sbin provided');
+  end
+  
+else
+  fprintf(1,['Warning: not all exemplars have save sbin, using' ...
+             ' first]\n']);
+  sbin = models{1}.model.init_params.sbin;
+end
+
+
+
+t = get_pyramid(I, sbin, params);
 
 resstruct.padder = t.padder;
 resstruct.bbs = cell(N,1);
@@ -105,7 +128,7 @@ for q = 1:N
 end
 
 
-if localizeparams.dfun == 1
+if params.dfun == 1
   wxs = cellfun2(@(x)reshape(x.model.x(:,1),size(x.model.w)), ...
                  models);
   ws2 = ws;
@@ -120,7 +143,7 @@ end
 for level = length(t.hog):-1:1
   featr = t.hog{level};
   
-  if localizeparams.dfun == 1
+  if params.dfun == 1
     featr_squared = featr.^2;
     
     %Use blas-based fast convolution code
@@ -146,7 +169,7 @@ for level = length(t.hog):-1:1
 
     cur_scores = rootmatch{exid} - bs{exid};
     [aa,indexes] = sort(cur_scores(:),'descend');
-    NKEEP = sum((aa>maxers{exid}) & (aa>=localizeparams.detect_keep_threshold));
+    NKEEP = sum((aa>maxers{exid}) & (aa>=params.detect_keep_threshold));
     aa = aa(1:NKEEP);
     indexes = indexes(1:NKEEP);
     if NKEEP==0
@@ -173,14 +196,14 @@ for level = length(t.hog):-1:1
     bbs(:,10) = vvs;
     bbs(:,12) = aa;
     
-    if (localizeparams.detect_add_flip == 1)
+    if (params.detect_add_flip == 1)
       bbs = flip_box(bbs,t.size);
       bbs(:,7) = 1;
     end
     
     resstruct.bbs{exid} = cat(1,resstruct.bbs{exid},bbs);
     
-    if localizeparams.detect_save_features == 1
+    if params.detect_save_features == 1
       for z = 1:NKEEP
         xs{exid}{end+1} = ...
             reshape(t.hog{level}(uus(z)+(1:sss(1))-1, ...
@@ -190,22 +213,22 @@ for level = length(t.hog):-1:1
     end
         
     if (NKEEP > 0)
-      newtopk = min(localizeparams.detect_max_windows_per_exemplar,size(resstruct.bbs{exid},1));
+      newtopk = min(params.detect_max_windows_per_exemplar,size(resstruct.bbs{exid},1));
       [aa,bb] = psort(-resstruct.bbs{exid}(:,end),newtopk);
       resstruct.bbs{exid} = resstruct.bbs{exid}(bb,:);
-      if localizeparams.detect_save_features == 1
+      if params.detect_save_features == 1
         xs{exid} = xs{exid}(:,bb);
       end
       %TJM: changed so that we only maintain 'maxers' when topk
       %elements are filled
-      if (newtopk >= localizeparams.detect_max_windows_per_exemplar)
+      if (newtopk >= params.detect_max_windows_per_exemplar)
         maxers{exid} = min(-aa);
       end
     end    
   end
 end
 
-if localizeparams.detect_save_features == 1
+if params.detect_save_features == 1
   resstruct.xs = xs;
 else
   resstruct.xs = cell(N,1);
@@ -213,7 +236,7 @@ end
 %fprintf(1,'\n');
 
 function [resstruct,t] = esvm_detectdriverBLOCK(I, models, ...
-                                             localizeparams)
+                                             params)
 
 %%HERE is the chunk version of exemplar localization
 
@@ -237,9 +260,9 @@ for i = 1:length(models)
   templates(:,:,:,i) = t;
   template_masks(:,:,:,i) = repmat(double(sum(t.^2,3)>0),[1 1 features]);
 
-  if (~isempty(localizeparams.nnmode)) || ...
-        (isfield(localizeparams,'wtype') && ...
-         strcmp(localizeparams.wtype,'dfun')==1)
+  if (~isempty(params.nnmode)) || ...
+        (isfield(params,'wtype') && ...
+         strcmp(params.wtype,'dfun')==1)
     x = zeros(S(1),S(2),features);
     x(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
         reshape(models{i}.model.x(:,1),models{i}.model.hg_size);
@@ -253,7 +276,7 @@ end
 %templates_x  = templates_x .* maskmat;
 
 sbin = models{1}.model.init_params.sbin;
-t = get_pyramid(I, sbin, localizeparams);
+t = get_pyramid(I, sbin, params);
 resstruct.padder = t.padder;
 
 pyr_N = cellfun(@(x)prod([size(x,1) size(x,2)]-S+1),t.hog);
@@ -276,8 +299,8 @@ for i = 1:length(t.hog)
   offsets{i}(end+1,:) = i;
   
   for j = 1:size(b,2)
-    X(:,counter) = reshape(curf(b(:,j),:),[],1);
-    counter = counter + 1;
+   X(:,counter) = reshape (curf(b(:,j),:),[],1);
+   counter = counter + 1;
   end
   
   [uus{i},vvs{i}] = ind2sub(s,offsets{i}(1,:));
@@ -288,23 +311,36 @@ offsets = cat(2,offsets{:});
 uus = cat(2,uus{:});
 vvs = cat(2,vvs{:});
 
+% m.model.w = zeros(S(1),S(2),features);
+% m.model.b = 0;
+% temp_params = params;
+% temp_params.detect_save_features = 1;
+% temp_params.detect_exemplar_nms_os_threshold = 1.0;
+% temp_params.max_models_before_block_method = 1;
+% temp_params.detect_max_windows_per_exemplar = 28000;
+
+% [rs] = esvm_detect(I, {m}, temp_params);
+% X2=cat(2,rs.xs{1}{:});
+% bbs2 = rs.bbs{1};
+
+
 exemplar_matrix = reshape(templates,[],size(templates,4));
 
-if isfield(localizeparams,'wtype') && ...
-      strcmp(localizeparams.wtype,'dfun')==1
+if isfield(params,'wtype') && ...
+      strcmp(params.wtype,'dfun')==1
   W = exemplar_matrix;
   U = reshape(templates_x,[],length(models));
   r2 = repmat(sum(W.*(U.^2),1)',1,size(X,2));
   r =  (W'*(X.^2) - 2*(W.*U)'*X + r2);
   r = bsxfun(@minus, r, bs);
-elseif isempty(localizeparams.nnmode)
+elseif isempty(params.nnmode)
   %nnmode 0: Apply linear classifiers by performing one large matrix
   %multiplication and subtract bias
   r = exemplar_matrix' * X;
   r = bsxfun(@minus, r, bs);
-elseif strcmp(localizeparams.nnmode,'normalizedhog') == 1
+elseif strcmp(params.nnmode,'normalizedhog') == 1
   r = exemplar_matrix' * X;
-elseif strcmp(localizeparams.nnmode,'nndfun') == 1
+elseif strcmp(params.nnmode,'nndfun') == 1
   %Do euclidean distance (but only over the regions corresponding
   %to the in-mask (non-padded) regions
   W = reshape(template_masks,[],length(models));
@@ -313,7 +349,7 @@ elseif strcmp(localizeparams.nnmode,'nndfun') == 1
   r2 = repmat(sum(W.*(U.^2),1)',1,size(X,2));
   r = - (W'*(X.^2) - 2*(W.*U)'*X + r2);
 else
-  error('invalid nnmode=%s\n',localizeparams.nnmode);
+  error('invalid nnmode=%s\n',params.nnmode);
 end
 
 resstruct.bbs = cell(N,1);
@@ -321,7 +357,7 @@ resstruct.xs = cell(N,1);
 
 for exid = 1:N
 
-  goods = find(r(exid,:) >= localizeparams.detect_keep_threshold);
+  goods = find(r(exid,:) >= params.detect_keep_threshold);
   
   if isempty(goods)
     continue
@@ -329,7 +365,7 @@ for exid = 1:N
   
   [sorted_scores,bb] = ...
       psort(-r(exid,goods)',...
-            min(localizeparams.detect_max_windows_per_exemplar, ...
+            min(params.detect_max_windows_per_exemplar, ...
                 length(goods)));
   bb = goods(bb);
 
@@ -356,7 +392,7 @@ for exid = 1:N
   bbs(:,10) = vvs(bb);
   bbs(:,12) = sorted_scores;
   
-  if (localizeparams.detect_add_flip == 1)
+  if (params.detect_add_flip == 1)
     bbs = flip_box(bbs,t.size);
     bbs(:,7) = 1;
   end
@@ -364,7 +400,8 @@ for exid = 1:N
   resstruct.bbs{exid} = bbs;
 end
 
-if localizeparams.detect_save_features == 0
+
+if params.detect_save_features == 0
   resstruct.xs = cell(N,1);
 end
 %fprintf(1,'\n');
@@ -390,12 +427,12 @@ if ~isempty(rs.xs)
   end
 end
 
-function t = get_pyramid(I, sbin, localizeparams)
+function t = get_pyramid(I, sbin, params)
 %Extract feature pyramid from variable I (which could be either an image,
 %or already a feature pyramid)
 
 if isnumeric(I)
-  if (localizeparams.detect_add_flip == 1)
+  if (params.detect_add_flip == 1)
     I = flip_image(I);
   else    
     %take unadulterated "aka" un-flipped image
@@ -405,8 +442,8 @@ if isnumeric(I)
   t.size = size(I);
 
   %Compute pyramid
-  [t.hog,t.scales] = featpyramid2(I, sbin, localizeparams);  
-  t.padder = localizeparams.detect_pyramid_padding;
+  [t.hog,t.scales] = featpyramid2(I, sbin, params);  
+  t.padder = params.detect_pyramid_padding;
   for level = 1:length(t.hog)
     t.hog{level} = padarray(t.hog{level}, [t.padder t.padder 0], 0);
   end
@@ -418,7 +455,7 @@ else
   fprintf(1,'Already found features\n');
   
   if iscell(I)
-    if localizeparams.detect_add_flip==1
+    if params.detect_add_flip==1
       t = I{2};
     else
       t = I{1};

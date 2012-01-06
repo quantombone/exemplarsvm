@@ -1,11 +1,19 @@
-function allbbs = show_top_dets(finalstruct, grid, fg, models, params, set_name, maxk);%dataset_params, models, grid, fg, set_name, ...
-       %                         finalstruct, maxk, CACHE_FILES)
+function allbbs = show_top_dets(finalstruct, grid, fg, models, params, ...
+                                maxk, set_name)
+
 % Show the top detections for [models] where [grid] is the set of
 % detections from the set [fg] with name [set_name] ('test' or 'trainval')
 % finalstruct (which contains final boxes) is obtained from
 % the function pool_exemplar_detections
 %
 % Tomasz Malisiewicz (tomasz@cmu.edu)
+
+if exist('set_name','var') && length(set_name)>0
+  CACHE_FILES = 1;
+else
+  CACHE_FILES = 0;
+  set_name = '';
+end
 
 %Default exemplar-inpainting show mode
 %SHOW_MODE = 1;
@@ -95,7 +103,7 @@ for k = 1:maxk
       mkdir(wwwdir);
     end
     
-    filer = sprintf('%s/%05d%s.eps',wwwdir,k,suffix);
+    filer = sprintf('%s/%05d%s',wwwdir,k,suffix);
     filerlock = [filer '.lock'];
     if 0 %fileexists(filer) || (mymkdir_dist(filerlock) == 0)
       counter = counter + 1;
@@ -217,14 +225,15 @@ for k = 1:maxk
     snapnow
     
     if exist('CACHE_FILES','var') && CACHE_FILES == 1
-      print(gcf,'-depsc2',filer);
-      finalfile = strrep(filer,'.eps','.pdf');
-      unix(sprintf('ps2pdf -dEPSCrop -dPDFSETTINGS=/prepress %s %s',...
-                   filer,finalfile));
+      %print(gcf,'-depsc2',filer);
+      print(gcf,'-dpng',[filer '.png']);
+      %finalfile = strrep(filer,'.eps','.pdf');
+      %unix(sprintf('zsh "ps2pdf -dEPSCrop -dPDFSETTINGS=/prepress %s %s"',...
+      %             filer,finalfile));
       
-      if fileexists(finalfile)
-        unix(sprintf('rm %s',filer));
-      end
+      %if fileexists(finalfile)
+      %  unix(sprintf('rm %s',filer));
+      %end
       
       if exist(filerlock,'dir')
         rmdir(filerlock);

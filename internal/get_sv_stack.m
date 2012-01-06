@@ -126,19 +126,28 @@ indicator = ones(length(svims), 1);
 NSHIFT_BASE = 3;
 
 svimstack = cat(4,svims{:});
+
+
+SSS = size(svimstack,4)*~isempty(svimstack);
+
 NMS = K2-NSHIFT_BASE;
 if NMS == 1
-  cuts(1) = size(svimstack,4);
+  cuts(1) = SSS;
 else
-  cuts = round(linspace(1,size(svimstack,4),NMS+1));
+  cuts = round(linspace(1,SSS,NMS+1));
   cuts = cuts(2:end);
 end
 
-for i = 1:length(cuts)
-  mss{i} = mean(svimstack(:,:,:,1:cuts(i)),4);
-end
-
 PADSIZE = 5;
+
+for i = 1:length(cuts)
+  if SSS > 0
+    mss{i} = mean(svimstack(:,:,:,1:cuts(i)),4);
+  else
+    mss{i} = zeros(newsize(1),...
+                   newsize(2),3);
+  end
+end
 
 for i = 1:numel(svims)
   %% find membership here
@@ -183,6 +192,7 @@ neg_picture = jettify(imresize(neg_picture,newsize,'nearest'));
 
 NSHIFT = length(mss) + NSHIFT_BASE;
 
+
 svims((NSHIFT+1):end) = svims(1:end-NSHIFT);
 
 %ex goes in slot 1
@@ -193,9 +203,12 @@ svims{3} = neg_picture;
 
 svims(NSHIFT_BASE+(1:length(mss))) = mss;
 
+
 for q = 1:(NSHIFT_BASE+length(mss))
   svims{q} = pad_image(svims{q},PADSIZE,[1 1 1]);
 end
+
+
 
 svims = reshape(svims,K1,K2)';
 for j = 1:K2

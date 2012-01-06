@@ -10,7 +10,9 @@ function M = esvm_perform_calibration(grid, models, params, CACHE_FILES)
 % available under the terms of the MIT license (see COPYING file).
 
 
-if ~exist('CACHE_FILES','var')
+if isfield(params,'CACHE_BETAS') && params.CACHE_BETAS==1%~exist('CACHE_FILES','var')
+  CACHE_FILES = 1;
+else
   CACHE_FILES = 0;
 end
 
