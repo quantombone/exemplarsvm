@@ -54,7 +54,7 @@ if CACHE_FILE == 1
     fprintf(1,'Pre loading %s\n',resfile);
     res = load_keep_trying(resfile);
     results = res.results;
-    final = res.final;
+    res_struct = res.res_struct;
     return;
   end
 end
@@ -167,7 +167,7 @@ if CACHE_FILE == 1
   % save(resfile,'results2');
     
   %TODO: we are saving really large files for exemplarNN
-  save(resfile,'results','final');
+  save(resfile,'results','test_struct');
   
   
   if exist(reslock,'dir')
