@@ -1,12 +1,22 @@
-function allbbs = show_top_dets(finalstruct, grid, fg, models, params, ...
-                                maxk, set_name)
+function allbbs = esvm_show_top_dets(test_struct, grid, ...
+                                     test_set, models, params, ...
+                                     maxk, set_name)
 
-% Show the top detections for [models] where [grid] is the set of
-% detections from the set [fg] with name [set_name] ('test' or 'trainval')
-% finalstruct (which contains final boxes) is obtained from
-% the function pool_exemplar_detections
-%
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Show maxk top detections for [models] where [grid] is the set of
+% detections from the set [test_set], [test_struct] contains final
+% boxes after calibration and is obtained from applying calibration
+% If [set_name] is present, then results are saved based on naming
+% convention into www/ subfolder
+
+% NOTE: this function requires some cleanup, but is functional
+
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+
+allbbs = [];
 
 if exist('set_name','var') && length(set_name)>0
   CACHE_FILES = 1;
@@ -34,8 +44,8 @@ if ~exist('maxk','var')
   end
 end
 
-final_boxes = finalstruct.unclipped_boxes;
-final_maxos = finalstruct.final_maxos;
+final_boxes = test_struct.unclipped_boxes;
+final_maxos = test_struct.final_maxos;
 
 bbs = cat(1,final_boxes{:});
 try
@@ -65,7 +75,7 @@ if 0
                                            dataset_params.datadir, ...
                                            dataset_params.dataset,x)),ids);
   bb = bb(find(has_seg));
-  finalstruct.rc = finalstruct.rc(find(has_seg));
+  test_struct.rc = test_struct.rc(find(has_seg));
   suffix = '.seg';
 end
 
@@ -87,7 +97,7 @@ counter = 1;
 for k = 1:maxk
 
   try
-    corr = finalstruct.rc(k);
+    corr = test_struct.rc(k);
   catch
     corr = 0;
   end
@@ -98,7 +108,7 @@ for k = 1:maxk
     
     wwwdir = sprintf('%s/www/%s.%s%s/',params.dataset_params.localdir,...
                      set_name, ...
-                     models{1}.models_name,finalstruct.calib_string);
+                     models{1}.models_name,test_struct.calib_string);
     if ~exist(wwwdir,'dir') && exist('CACHE_FILES','var') && (CACHE_FILES == 1)
       mkdir(wwwdir);
     end
@@ -115,7 +125,7 @@ for k = 1:maxk
     
     curb = bb(counter);
     curid = grid{imids(curb)}.curid;
-    I = (convert_to_I(fg{bbs(bb(counter),11)}));
+    I = (convert_to_I(test_set{bbs(bb(counter),11)}));
     
     TARGET_BUS = -1;
 
@@ -166,7 +176,7 @@ for k = 1:maxk
     
     %CVPR VERSION: use the top local score within a cluster
     %fprintf(1,' -- Finding within-cluster local max\n');
-    % allbb = finalstruct.raw_boxes{target_image_id};
+    % allbb = test_struct.raw_boxes{target_image_id};
     % osmat = getosmatrix_bb(allbb,bbs(bb(counter),:));
     % goods = find(osmat>.5);
     % allbb = allbb(goods,:);
@@ -204,9 +214,9 @@ for k = 1:maxk
       gtim = faces2colors(seg);
       
       shower = I;
-      fg = repmat(double(seg~=0),[1 1 3]);
+      test_set = repmat(double(seg~=0),[1 1 3]);
       
-      shower(find(fg)) = shower(find(fg))*.0 + 1.0*gtim(find(fg));
+      shower(find(test_set)) = shower(find(test_set))*.0 + 1.0*gtim(find(test_set));
       gtim = shower;
       gtim(repmat(seg==0,[1 1 3]))=0;
       
@@ -218,8 +228,8 @@ for k = 1:maxk
     clf
 
     current_rank = k;
-    NR = show_hits_figure_iccv(I,models,allbb, ...
-                               overlays,current_rank, corr);
+    NR = esvm_show_transfer_figure(I, models, allbb, ...
+                                   overlays, current_rank, corr);
     axis image
     drawnow
     snapnow

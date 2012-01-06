@@ -62,6 +62,7 @@ else
   [mini_overlay.I, mini_overlay.alphamask] = ...
       get_exemplar_icon({model},1,detection_box(7),1,...
                                 loadseg,stuff.dataset_params);
+
 end
 
 %[mini_overlay.I, mini_overlay.alphamask] = ...
@@ -219,8 +220,10 @@ mask = max(0.0,min(1.0,mask));
 Ia = Iblack;
 Ib = I;
 alphamap = mask;
-alphamap(alphamap>0) = .5;
-alphamap(alphamap==0) = .7;
+alphamap(alphamap>0) = .8;
+alphamap(alphamap==0) = 0;
+%alphamap(alphamap>0) = .5;
+%alphamap(alphamap==0) = .7;
 alphamap = repmat(alphamap,[1 1 3]);
 Itotal = Ia.*alphamap + Ib.*(1-alphamap);
 

@@ -1,5 +1,5 @@
 function M = esvm_estimate_M(grid,  models, params, ...
-                        CACHE_FILES)
+                             CACHE_FILES)
 %Given a bunch of detections, learn the M boosting matrix, which
 %makes a final boxes's score depend on the co-occurrence of certain
 %"friendly" detections
@@ -18,7 +18,7 @@ if ~exist('CACHE_FILES','var')
 end
 
 final_dir = ...
-    sprintf('%s/betas',params.dataset_params.localdir);
+    sprintf('%s/models',params.dataset_params.localdir);
 
 final_file = ...
     sprintf('%s/%s-M.mat',...

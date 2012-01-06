@@ -37,7 +37,7 @@ end
 
 if save_files == 1
   
-  final_file = sprintf('%s/applied/%s-%s.mat',...
+  final_file = sprintf('%s/detections/%s-%s.mat',...
                        params.dataset_params.localdir,setname, ...
                        models{1}.models_name);
 
@@ -60,7 +60,7 @@ end
 % end
 
 if save_files == 1
-  baser = sprintf('%s/applied/%s-%s/',params.dataset_params.localdir,setname, ...
+  baser = sprintf('%s/detections/%s-%s/',params.dataset_params.localdir,setname, ...
                   models{1}.models_name);
 else
   baser = '';
@@ -117,7 +117,11 @@ for i = 1:length(ordering)
     fprintf(1,' --image %05d/%05d:',counter+j,length(imageset));
     Iname = imageset{index};
     %curid = -1;
-    [tmp,curid,tmp] = fileparts(Iname);
+    try
+      [tmp,curid,tmp] = fileparts(Iname);
+    catch
+      curid = '';
+    end
     
     I = Is{j};
        

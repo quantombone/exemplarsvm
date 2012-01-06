@@ -1,6 +1,6 @@
 function [betas] = perform_hitdump(dataset_params, models, grid, ...
                                    val_set, CACHE_FILES, cursetname)
-
+error('old API');
 % Perform hitdump for exemplar model evaluation.. this dumps out
 % resulting icons which show the exemplar, its learned weights, and
 % top 20 detections

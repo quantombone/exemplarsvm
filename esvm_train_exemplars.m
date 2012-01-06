@@ -1,7 +1,8 @@
 function [newmodels,new_models_name] = ...
     esvm_train_exemplars(models, train_set, params)
-%% Train models with hard negatives for all exemplars written to
-%% exemplar directory (script is parallelizable)
+%% Train models with hard negatives mined from train_set,
+%% [models] cell array of initialized exemplar models
+%% [params] localization and training parameters
 
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
@@ -67,18 +68,15 @@ else
   ordering = 1:length(models);
 end
 
-
 %always use random ordering
 %if params.dataset_params.display == 1
 %  ordering = 1:length(ordering);
 %end
 
-
 models = models(ordering);
-
 allfiles = cell(length(models), 1);
-
 parfor i = 1:length(models)
+  filer = '';
   m = models{i};
    
   % Create a naming scheme for saving files
@@ -160,35 +158,40 @@ parfor i = 1:length(models)
     end
     m = msave;
     
-    if params.dataset_params.display == 1
+    % if params.dataset_params.display == 1
 
-      %exid = ordering(i);
-      %filer = sprintf('%s/%s.%s.%05d.png', DUMPDIR, 'train', ...
-      %                m.cls,exid);
+    %   if params.dataset_params.write_after_display == 1
+    %     exid = ordering(i);
+    %     filer = sprintf('%s/%s.%s.%05d.png', DUMPDIR, 'train', ...
+    %                     m.cls,exid);
+        
+    %     if fileexists(filer)
+    %       continue
+    %     end
+    %   end
       
-      %if fileexists(filer)
-      %  continue
-      %end
+    %   figure(445);
+    %   clf;
+    %   showI = get_sv_stack(m,5,5);
+    %   imagesc(showI);
+    %   title('Exemplar and Top Dets');
+    %   drawnow;
       
-      figure(445);
-      clf;
-      showI = get_sv_stack(m,5,5);
-      imagesc(showI);
-      drawnow;
+    %   figure(235)
       
-      figure(235)
-      
-      rpos = m.model.w(:)'*m.model.x-m.model.b;
-      rneg = m.model.w(:)'*m.model.svxs - m.model.b;
-      clf;
-      plot(sort(rpos,'descend'),'r.');
-      hold on;
-      plot(length(rpos)+(1:length(rneg)),rneg,'b.');
-      drawnow;
+    %   rpos = m.model.w(:)'*m.model.x-m.model.b;
+    %   rneg = m.model.w(:)'*m.model.svxs - m.model.b;
+    %   clf;
+    %   plot(sort(rpos,'descend'),'r.');
+    %   hold on;
+    %   plot(length(rpos)+(1:length(rneg)),rneg,'b.');
+    %   drawnow;
 
-      %set(gcf,'PaperPosition',[0 0 20 20]);
-      %imwrite(showI,filer);
-    end
+    %   if params.dataset_params.write_after_display == 1
+    %     set(gcf,'PaperPosition',[0 0 20 20]);
+    %     imwrite(showI,filer);
+    %   end
+    % end
     
     %delete old files
     if m.iteration > 1

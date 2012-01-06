@@ -77,6 +77,9 @@ feat_pyramid = cat(1,t1,t2);
 
 function [resstruct,t] = esvm_detectdriver(I, models, ...
                                              params)
+if ~isfield(params,'max_models_before_block_method')
+  params.max_models_before_block_method = 20;
+end
 
 if (length(models) > params.max_models_before_block_method) ...
       || (~isempty(params.nnmode))

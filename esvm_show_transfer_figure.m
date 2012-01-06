@@ -1,5 +1,5 @@
-function NR = show_hits_figure_iccv(I,models,topboxes,overlays, ...
-                                    current_rank, corr)
+function NR = esvm_show_transfer_figure(I,models,topboxes,overlays, ...
+                                        current_rank, corr)
 %Show a figure with the detections of the exemplar svm model
 %Tomasz Malisiewicz(tomasz@cmu.edu)
 
@@ -186,6 +186,7 @@ axis off
 %title(sprintf('Detection (Rank=%d, Score=%.3f)',current_rank, ...
 %              topboxes(1,end)))
 
+
 curcolor = [0 1 0];
 if corr == 0
   curcolor = [1 0 0 ];
@@ -225,6 +226,7 @@ axis image
 axis off
 %title('Appearance Transfer')%sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
 %title(sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
+
 
 if add_one == 1
   %transfer objects here

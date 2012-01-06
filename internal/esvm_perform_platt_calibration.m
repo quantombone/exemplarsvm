@@ -64,7 +64,7 @@ if strcmp(setname,'voc')
 end
 
 final_dir = ...
-    sprintf('%s/betas',params.dataset_params.localdir);
+    sprintf('%s/models',params.dataset_params.localdir);
 
 if CACHE_FILES == 1 && ~exist(final_dir','dir')
   mkdir(final_dir);
@@ -220,7 +220,7 @@ for exid = 1:length(models)
     continue
   end
   
-  if display == 1
+  if 0 %display == 1
     %figure(222)
     %show_calibration_rank(m,ALL_bboxes(hits,:), 
     
@@ -269,12 +269,12 @@ for exid = 1:length(models)
     %    extract_svs(bbs_show,100);%,'trainval','');
 
     models{exid}.model.svbbs = bbs_show;
-    models{exid}.train_set = val_set;
-
+    m2 = models(exid);
+    m2{1}.train_set = val_set;
 
     figure(445)
     clf
-    imagesc(get_sv_stack(models{exid},8))
+    imagesc(get_sv_stack(m2{1},8))
   end
   
 
@@ -290,7 +290,7 @@ for exid = 1:length(models)
     print(gcf,filer,'-dpng');
     
   else
-    pause
+    pause(.01)
   end  
 end
 
