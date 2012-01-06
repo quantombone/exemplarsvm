@@ -1,5 +1,5 @@
-function allbbs = show_top_dets(dataset_params, models, grid, fg, set_name, ...
-                                finalstruct, maxk, CACHE_FILES)
+function allbbs = show_top_dets(finalstruct, grid, fg, models, params, set_name, maxk);%dataset_params, models, grid, fg, set_name, ...
+       %                         finalstruct, maxk, CACHE_FILES)
 % Show the top detections for [models] where [grid] is the set of
 % detections from the set [fg] with name [set_name] ('test' or 'trainval')
 % finalstruct (which contains final boxes) is obtained from
@@ -88,7 +88,7 @@ for k = 1:maxk
       break;
     end
     
-    wwwdir = sprintf('%s/www/%s.%s%s/',dataset_params.localdir,...
+    wwwdir = sprintf('%s/www/%s.%s%s/',params.dataset_params.localdir,...
                      set_name, ...
                      models{1}.models_name,finalstruct.calib_string);
     if ~exist(wwwdir,'dir') && exist('CACHE_FILES','var') && (CACHE_FILES == 1)
@@ -112,7 +112,7 @@ for k = 1:maxk
     TARGET_BUS = -1;
 
     if TARGET_BUS > 0
-      gtrecs = PASreadrecord(sprintf(dataset_params.annopath,curid));
+      gtrecs = PASreadrecord(sprintf(params.dataset_params.annopath,curid));
       businds = find(ismember({gtrecs.objects.class},{'bus'}) & ~[gtrecs.objects.difficult]);
       gtbbs = cat(1,gtrecs.objects.bbox);
       gtbbs = gtbbs(businds,:);
@@ -173,7 +173,7 @@ for k = 1:maxk
     %curoses = getosmatrix_bb(mean0(1,:),allbb);
     
     stuff.I = I;
-    stuff.dataset_params = dataset_params;
+    stuff.dataset_params = params.dataset_params;
     
     clear overlays
     
