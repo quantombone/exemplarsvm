@@ -55,6 +55,10 @@ mining_params.detect_min_scene_os = 0.0;
 % processes than if images per chunk was 1.
 mining_params.detect_images_per_chunk = 4;
 
+%NOTE: If the number of specified models is greater than 20, use the
+%BLOCK-based method
+mining_params.max_models_before_block_method = 20;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Training/Mining parameters %%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
