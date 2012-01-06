@@ -1,5 +1,4 @@
-function M = esvm_perform_calibration(dataset_params, models, grid, ...
-                                      cur_set, CACHE_FILES)
+function M = esvm_perform_calibration(grid, models, params, CACHE_FILES)
 %% 1. Perform LABOO calibration procedure and 2. Learn a combination
 %matrix M which multiplexes the detection results (by compiling
 %co-occurrence statistics on true positives) 
@@ -16,12 +15,12 @@ if ~exist('CACHE_FILES','var')
 end
 
 %% Perform calibration
-betas = esvm_perform_platt_calibration(dataset_params, models, grid, ...
-                                       cur_set, CACHE_FILES);
+betas = esvm_perform_platt_calibration(grid, models, ...
+                                       params, CACHE_FILES);
 
-if ~(isfield(dataset_params,'SKIP_M') && dataset_params.SKIP_M==1)
+if ~(isfield(params,'SKIP_M') && params.SKIP_M==1)
   %% Estimate the co-occurrence matrix M
-  [M] = esvm_estimate_M(dataset_params, models, grid, betas, CACHE_FILES);
+  [M] = esvm_estimate_M(grid, models, params, CACHE_FILES);
 end
 
 M.betas = betas;

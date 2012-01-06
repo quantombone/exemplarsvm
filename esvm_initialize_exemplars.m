@@ -1,12 +1,12 @@
-function models = esvm_initialize_exemplars(dataset_params, e_set, ...
-                                             init_params, models_name, ...
-                                            CACHE_FILE)
+function models = esvm_initialize_exemplars(e_set, params, ...
+                                            models_name)
+
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
 % NOTE: this function is parallelizable (and dalalizable!)  
 % 
 % INPUTS:
-% dataset_params: the parameters of the current dataset
+% params.dataset_params: the parameters of the current dataset
 % e_set: the exemplar stream set which contains
 %   e_set{i}.I, e_set{i}.cls, e_set{i}.objectid, e_set{i}.bbox
 % models_name: model name
@@ -43,12 +43,14 @@ function models = esvm_initialize_exemplars(dataset_params, e_set, ...
 %  model = initialize_model_dt(I,bbox,SBIN,hg_size);
 %else
 
-if ~exist('CACHE_FILE','var')
+if ~exist('models_name','var')
   CACHE_FILE = 0;
+else
+  CACHE_FILE = 1;
 end
 
 cache_dir =  ...
-    sprintf('%s/models/',dataset_params.localdir);
+    sprintf('%s/models/',params.dataset_params.localdir);
 
 cache_file = ...
     sprintf('%s/%s.mat',cache_dir,models_name);
@@ -60,7 +62,7 @@ if CACHE_FILE ==1 && fileexists(cache_file)
 end
 
 results_directory = ...
-    sprintf('%s/models/%s/',dataset_params.localdir, ...
+    sprintf('%s/models/%s/',params.dataset_params.localdir, ...
             models_name);
 
 if CACHE_FILE==1 && ~exist(results_directory,'dir')
@@ -94,11 +96,12 @@ for i = 1:length(e_set)
   filer = sprintf('%s/%s',results_directory, e_set{i}.filer);
   
   allfiles{i} = filer;
-  if ~exist('init_params','var')
-    continue
+  if ~isfield(params,'init_params')
+    error('Warning, cannot initialize without params.init_params\n');
   end
   filerlock = [filer '.lock'];
-  
+
+
   if CACHE_FILE == 1
     if fileexists(filer) || (mymkdir_dist(filerlock)==0)
       continue
@@ -110,7 +113,7 @@ for i = 1:length(e_set)
   I = convert_to_I(e_set{i}.I);
 
   %Call the init function which is a mapping from (I,bbox) to (model)
-  [model] = init_params.init_function(I, bbox, init_params);
+  [model] = params.init_params.init_function(I, bbox, params.init_params);
   
   clear m
   m.model = model;    
@@ -125,7 +128,8 @@ for i = 1:length(e_set)
   m.sizeI = size(I);
   m.models_name = models_name;
   m.name = sprintf('%s.%d.%s',m.curid,m.objectid,m.cls);
-  
+
+
   if CACHE_FILE == 1
     save(filer,'m');
     if exist(filerlock,'dir')
@@ -134,6 +138,7 @@ for i = 1:length(e_set)
   else
     allfiles{i} = m;
   end
+
 
   % %Print the bounding box overlap between the initial window and
   % %the final window
@@ -145,8 +150,8 @@ for i = 1:length(e_set)
   %         m.model.hg_size(1), m.model.hg_size(2));
 
   %Show the initialized exemplars
-  if dataset_params.display == 1
-    show_exemplar_frames({m}, 1, dataset_params);
+  if params.dataset_params.display == 1
+    show_exemplar_frames({m}, 1, params.dataset_params);
   end
 end  
 
@@ -162,7 +167,8 @@ end
 CACHE_FILE = 1;
 STRIP_FILE = 0;
 DELETE_INITIAL = 0;
-models = esvm_load_models(dataset_params, models_name, allfiles, ...
+
+models = esvm_load_models(params.dataset_params, models_name, allfiles, ...
                           CACHE_FILE, STRIP_FILE, DELETE_INITIAL);
 
 

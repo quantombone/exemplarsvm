@@ -91,6 +91,9 @@ mining_params.train_svm_c = .01; %% regularize more with .0001;
 %during SVM learning
 mining_params.train_positives_constant = 50;
 
+%The svm update equation
+mining_params.training_function = @esvm_update_svm;
+
 %experimental flag to skip the mining process
 mining_params.train_skip_mining = 0;
 
@@ -156,3 +159,15 @@ mining_params.nnmode = '';
 
 %Be default, we use an SVM
 mining_params.dfun = 0;
+
+%Initialize framing function
+init_params.sbin = 8;
+init_params.goal_ncells = 100;
+init_params.MAXDIM = 12;
+init_params.init_function = @esvm_initialize_goalsize_exemplar;
+init_params.init_type = 'g';
+
+mining_params.init_params = init_params;
+mining_params.model_type = 'exemplar';
+
+mining_params.SKIP_EVAL = 0;

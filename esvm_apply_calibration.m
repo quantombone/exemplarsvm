@@ -1,4 +1,4 @@
-function final = esvm_apply_calibration(dataset_params, models, grid, M)
+function final = esvm_apply_calibration(grid, models, M, params)
 %% Perform detection post-processing and pool detection boxes
 %(which will then be ready to go into the PASCAL evaluation code)
 % If there are overlap scores associated with boxes, then they are
@@ -30,7 +30,7 @@ end
 bboxes = cell(1,length(grid));
 maxos = cell(1,length(grid));
 
-curcls = find(ismember(dataset_params.classes,models{1}.cls));
+curcls = find(ismember(params.dataset_params.classes,models{1}.cls));
 
 for i = 1:length(grid)  
   curid = grid{i}.curid;
@@ -87,10 +87,8 @@ if (exist('M','var') && (~isempty(M)) && isfield(M,'betas') && ...
     if size(bboxes{i},1) == 0
       continue
     end
-
     calib_boxes = calibrate_boxes(bboxes{i},M.betas); 
-   
-    oks = find(calib_boxes(:,end) > dataset_params.params.calibration_threshold);
+    oks = find(calib_boxes(:,end) > params.dataset_params.calibration_threshold);
     calib_boxes = calib_boxes(oks,:);
     bboxes{i} = calib_boxes;
   end

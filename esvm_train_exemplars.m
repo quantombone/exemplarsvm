@@ -1,5 +1,5 @@
-function [newmodels] = esvm_train_exemplars(dataset_params, ...
-                                            models, train_set, CACHE_FILE)
+function [newmodels,new_models_name] = ...
+    esvm_train_exemplars(models, train_set, params)
 %% Train models with hard negatives for all exemplars written to
 %% exemplar directory (script is parallelizable)
 
@@ -9,19 +9,17 @@ function [newmodels] = esvm_train_exemplars(dataset_params, ...
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 
-
-if ~exist('CACHE_FILE','var')
+if ~isfield(params,'CACHE_FILE')
   CACHE_FILE = 0;
+else
+  CACHE_FILE = 1;
 end
 
-
-mining_params = dataset_params.mining_params;
-
 models_name = models{1}.models_name;
-new_models_name = [models_name mining_params.training_function()];
+new_models_name = [models_name params.training_function()];
 
 cache_dir =  ...
-    sprintf('%s/models/',dataset_params.localdir);
+    sprintf('%s/models/',params.dataset_params.localdir);
 
 cache_file = ...
     sprintf('%s/%s.mat',cache_dir,new_models_name);
@@ -42,15 +40,15 @@ if CACHE_FILE == 1 && fileexists(cache_file)
   return;
 end
 
-DUMPDIR = sprintf('%s/www/svs/%s/',dataset_params.localdir, ...
+DUMPDIR = sprintf('%s/www/svs/%s/',params.dataset_params.localdir, ...
                   new_models_name);
 
-if CACHE_FILE==1 && dataset_params.display ==1 && ~exist(DUMPDIR,'dir')
+if CACHE_FILE==1 && params.dataset_params.display ==1 && ~exist(DUMPDIR,'dir')
   mkdir(DUMPDIR);
 end
 
 final_directory = ...
-    sprintf('%s/models/%s/',dataset_params.localdir,...
+    sprintf('%s/models/%s/',params.dataset_params.localdir,...
             new_models_name);
 
 %make results directory if needed
@@ -58,7 +56,8 @@ if CACHE_FILE == 1 && ~exist(final_directory,'dir')
   mkdir(final_directory);
 end
 
-mining_params.final_directory = final_directory;
+%NOTE: why was this here?
+%mining_params.final_directory = final_directory;
 
 % randomize chunk orderings
 if CACHE_FILE == 1
@@ -70,7 +69,7 @@ end
 
 
 %always use random ordering
-%if dataset_params.display == 1
+%if params.dataset_params.display == 1
 %  ordering = 1:length(ordering);
 %end
 
@@ -105,17 +104,17 @@ parfor i = 1:length(models)
   m.train_set = train_set;
   m.mining_queue = esvm_initialize_mining_queue(m.train_set);
   
-  % Add mining_params, and dataset_params to this exemplar
-  m.mining_params = mining_params;
-  m.dataset_params = dataset_params;
+  % Add mining_params, and params.dataset_params to this exemplar
+  m.mining_params = params;
+  m.dataset_params = params.dataset_params;
 
   % Append '-svm' to the mode to create the models name
   m.models_name = new_models_name;
   m.iteration = 1;
   
   %if we are a distance function, initialize to uniform weights
-  if isfield(dataset_params.params,'wtype') && ...
-        strcmp(dataset_params.params.wtype,'dfun')==1
+  if isfield(params,'wtype') && ...
+        strcmp(params.wtype,'dfun')==1
     m.model.w = m.model.w*0-1;
     m.model.b = -1000;
 
@@ -135,13 +134,13 @@ parfor i = 1:length(models)
       total_mines = sum(cellfun(@(x)x.total_mines,m.mining_stats));
     end
     m.total_mines = total_mines;
-    m = esvm_mine_train_iteration(m, mining_params.training_function);
+    m = esvm_mine_train_iteration(m, params.training_function);
 
     %total_mines = m.mining_stats{end}.total_mines;
 
-    if ((total_mines >= mining_params.train_max_mined_images) || ...
+    if ((total_mines >= params.train_max_mined_images) || ...
           (isempty(m.mining_queue))) || ...
-          (m.iteration == mining_params.train_max_mine_iterations)
+          (m.iteration == params.train_max_mine_iterations)
 
       keep_going = 0;      
       %bump up filename to final file
@@ -161,7 +160,7 @@ parfor i = 1:length(models)
     end
     m = msave;
     
-    if dataset_params.display == 1
+    if params.dataset_params.display == 1
 
       %exid = ordering(i);
       %filer = sprintf('%s/%s.%s.%05d.png', DUMPDIR, 'train', ...
@@ -231,7 +230,7 @@ end
 CACHE_FILE = 1;
 STRIP_FILE = 1;
 DELETE_INITIAL = 0;
-newmodels = esvm_load_models(dataset_params, new_models_name, allfiles, ...
+newmodels = esvm_load_models(params.dataset_params, new_models_name, allfiles, ...
                           CACHE_FILE, STRIP_FILE, DELETE_INITIAL);
 
 

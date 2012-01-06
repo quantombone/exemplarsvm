@@ -1,14 +1,20 @@
-function [results] = evaluate_pascal_voc_grid(VOCopts,models,grid, ...
-                                              target_directory, ...
-                                              final, CACHE_FILE, cpres)
+function [results] = evaluate_pascal_voc_grid(test_struct, grid, ...
+                                              params, ...
+                                              target_directory, cls, ...
+                                              models_name)
+
+
+
 %% Evaluate PASCAL VOC detection task with the models, their output
 %% firings grid, on the set target_directory which can be either
 %% 'trainval' or 'test'
 
-if VOCopts.SKIP_EVAL == 1
+if params.SKIP_EVAL == 1
   results = [];
   return;
 end
+
+VOCopts = params.dataset_params;
 
 %In case we want to evaluate a subset of detectors
 % targets = [4 5];
@@ -19,7 +25,10 @@ end
 %   grid{i}.extras.os = grid{i}.extras.os(goods,:);
 % end
 
-if ~exist('CACHE_FILE','var')
+if ~exist('models_name','var')
+  CACHE_FILE = 0;
+  models_name = '';
+else
   CACHE_FILE = 1;
 end
 
@@ -34,8 +43,8 @@ else
 end
 
 resfile = sprintf('%s/%s%s_%s_results.mat',VOCopts.resdir, ...
-                  models{1}.models_name, ...
-                  final.calib_string, target_directory');
+                  models_name, ...
+                  test_struct.calib_string, target_directory');
 
 if CACHE_FILE == 1
   reslock = [resfile '.lock'];
@@ -50,10 +59,10 @@ if CACHE_FILE == 1
   end
 end
 
-cls = models{1}.cls;
+%cls = models{1}.cls;
 
 %% Avoid writing a file to disk
-mname = sprintf('%s%s',models{1}.models_name,final.calib_string);
+mname = sprintf('%s%s',models_name,test_struct.calib_string);
 filer = sprintf('%s/%s/comp3_det_%s.txt',...
                 VOCopts.resdir,mname,...
                 target_directory);
@@ -70,12 +79,12 @@ if fileexists(filer) || (mymkdir_dist(filerlock)==0)
   wait_until_all_present({filerlock},5,1);
 else
   fid = fopen(filer,'w');
-  for i = 1:length(final.final_boxes)
+  for i = 1:length(test_struct.final_boxes)
     curid = grid{i}.curid;
-    for q = 1:size(final.final_boxes{i},1)
+    for q = 1:size(test_struct.final_boxes{i},1)
       fprintf(fid,'%s %f %f %f %f %f\n',curid,...
-              final.final_boxes{i}(q,end),...
-              final.final_boxes{i}(q,1:4));
+              test_struct.final_boxes{i}(q,end),...
+              test_struct.final_boxes{i}(q,1:4));
     end
   end
   fclose(fid);
@@ -87,20 +96,20 @@ wait_until_all_present({filer});
 %fprintf(1,'HACK: changing OVERLAP HERE!\n');
 %VOCopts.minoverlap = .4;
 
-goods = find(cellfun(@(x)size(x,1),final.final_boxes));
+goods = find(cellfun(@(x)size(x,1),test_struct.final_boxes));
 
-BB = cellfun2(@(x)x(:,1:4),final.final_boxes(goods));
+BB = cellfun2(@(x)x(:,1:4),test_struct.final_boxes(goods));
 BB = cat(1,BB{:});
 
-conf = cellfun2(@(x)x(:,end),final.final_boxes(goods));
+conf = cellfun2(@(x)x(:,end),test_struct.final_boxes(goods));
 conf = cat(1,conf{:});
 
-superids = cellfun2(@(x)x(:,11),final.final_boxes(goods));
+superids = cellfun2(@(x)x(:,11),test_struct.final_boxes(goods));
 superids = cat(1,superids{:});
-ids = cell(length(final.final_boxes(goods)),1);
+ids = cell(length(test_struct.final_boxes(goods)),1);
 
-for i = 1:length(final.final_boxes(goods))
-  ids{i} = repmat({grid{i}.curid},size(final.final_boxes{goods(i)},1),1);
+for i = 1:length(test_struct.final_boxes(goods))
+  ids{i} = repmat({grid{i}.curid},size(test_struct.final_boxes{goods(i)},1),1);
 end
 ids = cat(1,ids{:});
 
@@ -128,8 +137,8 @@ axis([0 1 0 1]);
 
 filer = sprintf(['%s/www/%s%s-on-%s.pdf'], ...
                 VOCopts.localdir, ...
-                models{1}.models_name, ...
-                final.calib_string, ...
+                models_name, ...
+                test_struct.calib_string, ...
                 target_directory);
 
 [basedir,tmp,tmp] = fileparts(filer);
@@ -146,7 +155,7 @@ print(gcf,'-dpng',filer2);
 
 fprintf(1,'Just Wrote %s\n',filer);
 
-results.cls = models{1}.cls;
+results.cls = cls;
 drawnow
 
 if CACHE_FILE == 1

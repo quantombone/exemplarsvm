@@ -1,6 +1,5 @@
-function [betas] = esvm_perform_platt_calibration(dataset_params,...
-                                                  models, grid, val_set, ...
-                                                  CACHE_FILES)
+function [betas] = esvm_perform_platt_calibration(grid, models, ...
+                                                  params, CACHE_FILES)
 % Perform calibration by learning the sigmoid parameters (linear
 % transformation of svm scores) for each model independently. If we
 % perform an operation such as NMS, we will now have "comparable"
@@ -26,15 +25,15 @@ DO_NMS = 0;
 %end
 
 % if enabled, display images
-display = dataset_params.display;
+display = params.dataset_params.display;
 %display = 0;
 
 % if display is enabled and dump_images is enabled, then dump images
 % into DUMPDIR
 dump_images = 0;
 
-DUMPDIR = sprintf('%s/www/calib/%s/',dataset_params.localdir, ...
-                  dataset_params.dataset, ...
+DUMPDIR = sprintf('%s/www/calib/%s/',params.dataset_params.localdir, ...
+                  params.dataset_params.dataset, ...
                   models{1}.models_name);
 
 if dump_images==1 && ~exist(DUMPDIR,'dir')
@@ -56,7 +55,7 @@ if strcmp(setname,'voc')
   fprintf(1,'Using VOC set so performing calibration with set: %s\n',target_directory);
   
   %% prune grid to contain only images from target_directory
-  [cur_set, gt] = textread(sprintf(dataset_params.imgsetpath,...
+  [cur_set, gt] = textread(sprintf(params.dataset_params.imgsetpath,...
                                    target_directory),['%s' ...
                     ' %d']);
   gridids = cellfun2(@(x)x.curid,grid);
@@ -65,7 +64,7 @@ if strcmp(setname,'voc')
 end
 
 final_dir = ...
-    sprintf('%s/betas',dataset_params.localdir);
+    sprintf('%s/betas',params.dataset_params.localdir);
 
 if CACHE_FILES == 1 && ~exist(final_dir','dir')
   mkdir(final_dir);
@@ -99,7 +98,7 @@ model_ids = cellfun2(@(x)x.curid,models);
 targets = 1:length(models);
 cls = models{1}.cls;
 
-targetc = find(ismember(dataset_params.classes,models{1}.cls));
+targetc = find(ismember(params.dataset_params.classes,models{1}.cls));
 
 %fprintf(1,'Preparing boxes for calibration\n');
 for i = 1:length(grid)    
@@ -250,7 +249,7 @@ for exid = 1:length(models)
     %   Iex = im2double(models{exid}.I);  
     % else
     %   %try pascal VOC image
-    %   Iex = im2double(imread(sprintf(dataset_params.imgpath, ...
+    %   Iex = im2double(imread(sprintf(params.dataset_params.imgpath, ...
     %                                  models{exid}.curid)));
     % end
     imagesc(Iex)

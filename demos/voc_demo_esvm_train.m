@@ -1,6 +1,6 @@
 %This is an Exemplar-SVM training demo
 %Tomasz Malisiewicz (tomasz@cmu.edu)
-function voc_demo_esvm(cls)
+function voc_demo_esvm_train(cls)
 
 %% Initialize dataset parameters
 %data_directory = '/Users/tomasz/projects/Pascal_VOC/';
@@ -60,7 +60,6 @@ dataset_params.mining_params.detect_max_windows_per_exemplar = 100;
 dataset_params.mining_params.set_name = ['train-' cls];
 neg_set = get_pascal_set(dataset_params, ...
                            dataset_params.mining_params.set_name);
-
 
 %% Define validation set
 dataset_params.val_params = dataset_params.params;

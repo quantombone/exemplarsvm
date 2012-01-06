@@ -1,4 +1,4 @@
-function M = esvm_estimate_M(dataset_params, models, grid, betas, ...
+function M = esvm_estimate_M(grid,  models, params, ...
                         CACHE_FILES)
 %Given a bunch of detections, learn the M boosting matrix, which
 %makes a final boxes's score depend on the co-occurrence of certain
@@ -10,15 +10,15 @@ function M = esvm_estimate_M(dataset_params, models, grid, betas, ...
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 
-neighbor_thresh = dataset_params.params.calibration_neighbor_thresh;
-count_thresh    = dataset_params.params.calibration_count_thresh;
+neighbor_thresh = params.calibration_neighbor_thresh;
+count_thresh    = params.calibration_count_thresh;
 
 if ~exist('CACHE_FILES','var')
   CACHE_FILES = 0;
 end
 
 final_dir = ...
-    sprintf('%s/betas',dataset_params.localdir);
+    sprintf('%s/betas',params.dataset_params.localdir);
 
 final_file = ...
     sprintf('%s/%s-M.mat',...
@@ -52,7 +52,7 @@ maxos = cell(1,length(grid));
 if REMOVE_SELF == 0
   fprintf(1,'Warning: Not removing self-hits\n');
 end
-curcls = find(ismember(dataset_params.classes,models{1}.cls));
+curcls = find(ismember(params.dataset_params.classes,models{1}.cls));
 
 fprintf(1,' -Computing Box Features:');
 starter=tic;
@@ -76,7 +76,7 @@ for i = 1:length(grid)
   calib_boxes(:,end) = calib_boxes(:,end)+1;
   
   %Threshold at the target value specified in parameters
-  oks = find(calib_boxes(:,end) >= dataset_params.params.calibration_threshold);
+  oks = find(calib_boxes(:,end) >= params.calibration_threshold);
   boxes{i} = calib_boxes(oks,:);
   if length(grid{i}.extras)>0
     maxos{i} = grid{i}.extras.maxos;
@@ -168,7 +168,7 @@ res = (cumsum(goods(bb))./(1:length(bb)));
 M.score = mean(res);
 fprintf(1,'took %.3fsec\n',toc(starter));
 
-if dataset_params.display == 1
+if params.dataset_params.display == 1
   figure(4)
   subplot(1,2,1)
   plot(scores,os,'r.')

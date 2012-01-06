@@ -1,11 +1,11 @@
 function grid = esvm_detect_imageset(imageset, models, ...
-                                     localizeparams, setname, dataset_params)
+                                     params, setname)
 % Apply a set of models (raw exemplars, trained exemplars, dalals,
 % poselets, components, etc) to a set of images.  
 %
-% models: Input cell array of models
 % imageset: a (virtual) set of images, such that
 %   convert_to_I(imageset{i}) returns an image
+% models: Input cell array of models
 % dataset_params(optional): detection parameters
 % setname(optional): a name of the set, which lets us cache results
 
@@ -16,8 +16,8 @@ function grid = esvm_detect_imageset(imageset, models, ...
 % available under the terms of the MIT license (see COPYING file).
 
   
-if ~exist('localizeparams','var')
-  localizeparams = get_default_mining_params;
+if ~exist('params','var')
+  params = esvm_get_default_mining_params;
 end
 
 %Only allow display to be enabled on a machine with X
@@ -26,7 +26,7 @@ display = 0;
 save_files = 1;
 if ~exist('setname','var')
   save_files = 0;
-  localizeparams.detect_images_per_chunk = 1;
+  params.detect_images_per_chunk = 1;
   setname = '';
 end
 
@@ -38,7 +38,7 @@ end
 if save_files == 1
   
   final_file = sprintf('%s/applied/%s-%s.mat',...
-                       dataset_params.localdir,setname, ...
+                       params.dataset_params.localdir,setname, ...
                        models{1}.models_name);
 
   if fileexists(final_file)
@@ -50,17 +50,17 @@ end
 
 if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
-  localizeparams.detect_images_per_chunk = 1;
+  params.detect_images_per_chunk = 1;
 end
 
-% if ~isfield(dataset_params,'params')
+% if ~isfield(params.dataset_params,'params')
 %   params = get_default_mining_params;
 % else
-%   params = dataset_params.params;
+%   params = params.dataset_params.params;
 % end
 
 if save_files == 1
-  baser = sprintf('%s/applied/%s-%s/',dataset_params.localdir,setname, ...
+  baser = sprintf('%s/applied/%s-%s/',params.dataset_params.localdir,setname, ...
                   models{1}.models_name);
 else
   baser = '';
@@ -74,7 +74,7 @@ end
 %% Chunk the data into detect_images_per_chunk images per chunk so that we
 %process several images, then write results for entire chunk
 
-inds = do_partition(1:length(imageset),localizeparams.detect_images_per_chunk);
+inds = do_partition(1:length(imageset),params.detect_images_per_chunk);
 
 % randomize chunk orderings
 myRandomize;
@@ -122,7 +122,7 @@ for i = 1:length(ordering)
     I = Is{j};
        
     starter = tic;
-    rs = esvm_detect(I, models, localizeparams);
+    rs = esvm_detect(I, models, params);
 
     
     % for q = 1:length(rs.bbs)
@@ -148,10 +148,9 @@ for i = 1:length(ordering)
     % Transfer GT boxes from models onto the detection windows
     boxes = esvm_adjust_boxes(coarse_boxes,models);
 
-
-    if (localizeparams.MIN_SCENE_OS > 0.0)
+    if (params.detect_min_scene_os > 0.0)
       os = getosmatrix_bb(boxes,[1 1 size(I,2) size(I,1)]);
-      goods = find(os >= localizeparams.MIN_SCENE_OS);
+      goods = find(os >= params.detect_min_scene_os);
       boxes = boxes(goods,:);
       coarse_boxes = coarse_boxes(goods,:);
     end
@@ -213,9 +212,9 @@ for i = 1:length(ordering)
     res{j}.curid = curid;
 
     %%%NOTE: the gt-function is well-defined for VOC-exemplars
-    if isfield(localizeparams,'gt_function') && ...
-          ~isempty(localizeparams.gt_function)
-      res{j}.extras = localizeparams.gt_function(dataset_params, Iname, res{j}.bboxes);
+    if isfield(params,'gt_function') && ...
+          ~isempty(params.gt_function)
+      res{j}.extras = params.gt_function(params.dataset_params, Iname, res{j}.bboxes);
     end 
   end
 
@@ -246,7 +245,7 @@ if save_files == 0
 end
 
 [allfiles] = sort(allfiles);
-grid = esvm_load_result_grid(dataset_params, models, ...
+grid = esvm_load_result_grid(params.dataset_params, models, ...
                              setname, ...
                              allfiles);
 
