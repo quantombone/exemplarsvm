@@ -18,8 +18,8 @@ results_directory = '/nfs/baikal/tmalisie/esvm-car/';
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
                                  results_directory);
-dataset_params.display = 1;
-dataset_params.dump_images = 1;
+%dataset_params.display = 1;
+%dataset_params.dump_images = 1;
 
 %% Issue warning if lock files are present
 lockfiles = check_for_lock_files(results_directory);
@@ -40,7 +40,7 @@ params.dataset_params = dataset_params;
 
 %Initialize exemplar stream
 stream_params.stream_set_name = 'trainval';
-stream_params.stream_max_ex = 1;
+stream_params.stream_max_ex = 15;
 stream_params.must_have_seg = 0;
 stream_params.must_have_seg_string = '';
 stream_params.model_type = 'exemplar'; %must be scene or exemplar;
@@ -64,7 +64,7 @@ initial_models = esvm_initialize_exemplars(e_stream_set, params, models_name);
 %% Perform Exemplar-SVM training
 train_params = params;
 train_params.detect_max_scale = 0.5;
-train_params.train_max_mined_images = 30;
+train_params.train_max_mined_images = 300;
 train_params.detect_exemplar_nms_os_threshold = 1.0; 
 train_params.detect_max_windows_per_exemplar = 100;
 train_params.CACHE_FILE = 1;
@@ -77,14 +77,14 @@ val_params.CACHE_BETAS = 1;
 val_set_name = ['trainval+' cls];
 
 val_set = get_pascal_set(dataset_params, val_set_name);
-val_set = val_set(1:10);
+%val_set = val_set(1:10);
 
 %% Define test-set
 test_params = params;
 test_params.detect_exemplar_nms_os_threshold = 0.5;
 test_set_name = ['test+' cls];
 test_set = get_pascal_set(dataset_params, test_set_name);
-test_set = test_set(10);
+%test_set = test_set(10);
 
 %% Train the exemplars and get updated models name
 [models,models_name] = esvm_train_exemplars(initial_models, ...
@@ -118,7 +118,7 @@ M = esvm_perform_calibration(val_grid, models, val_params);
 test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);
 
 %% Apply calibration matrix to test-set results
-test_struct = esvm_apply_calibration(test_grid, models, M, test_params);
+test_struct = esvm_apply_calibration(test_grid, models, [], test_params);
 
 % %% Show top hits for exemplar 1
 % I = show_top_match_image(test_struct, test_set, models, 1);
@@ -129,14 +129,14 @@ test_struct = esvm_apply_calibration(test_grid, models, M, test_params);
 % axis off
 % title('Exemplar, w,  and top 16 detections');
 
-maxk = 2;
+maxk = 20;
 allbbs = esvm_show_top_dets(test_struct, test_grid, test_set, models, ...
                        params,  maxk, test_set_name);
 
-%return
-%[results] = evaluate_pascal_voc_grid(test_struct, test_grid,  ...
-%                                     params, test_set_name, cls,
-%                                     models_name);
+return;
+[results] = evaluate_pascal_voc_grid(test_struct, test_grid,  ...
+                                     params, test_set_name, cls, ...
+                                     models_name);
 
 
 %rc = results.corr;
