@@ -6,19 +6,20 @@ function voc_demo_esvm_train(cls)
 %data_directory = '/Users/tomasz/projects/Pascal_VOC/';
 %results_directory = '/nfs/baikal/tmalisie/esvm-data/';
 if ~exist('cls','var')
-  cls = 'car';
+  cls = 'bus';
 end
 
-%data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
+%data_directory = '/Users/tmalisie/projects/pascal/VOCdevkit/';
 %results_directory = '/nfs/baikal/tmalisie/esvm-car/';
 
 data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
 results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
 
-
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
                                  results_directory);
+%dataset_params.display = 1;
+%dataset_params.dump_images = 1;
 
 %% Issue warning if lock files are present
 lockfiles = check_for_lock_files(results_directory);
@@ -27,125 +28,88 @@ if length(lockfiles) > 0
           length(lockfiles));
 end
 
-%% Set exemplar-initialization parameters
+% KILL_LOCKS = 1;
+% for i = 1:length(lockfiles)
+%   unix(sprintf('rmdir %s',lockfiles{i}));
+% end
 
-%Initialize framing function
-init_params.sbin = 8;
-init_params.goal_ncells = 100;
-init_params.MAXDIM = 12;
-init_params.init_function = @esvm_initialize_goalsize_exemplar;
-init_params.init_type = 'g'; 
-dataset_params.init_params = init_params;
+%% Set exemplar-initialization parameters
+params = esvm_get_default_params;
+params.model_type = 'exemplar';
+params.dataset_params = dataset_params;
 
 %Initialize exemplar stream
-dataset_params.stream_set_name = 'trainval';
-dataset_params.stream_max_ex = 5000;
-dataset_params.must_have_seg = 0;
-dataset_params.must_have_seg_string = '';
-dataset_params.model_type = 'exemplar';
+stream_params.stream_set_name = 'trainval';
+stream_params.stream_max_ex = 10000;
+stream_params.must_have_seg = 0;
+stream_params.must_have_seg_string = '';
+stream_params.model_type = 'exemplar'; %must be scene or exemplar;
+stream_params.cache_file = 1;
+stream_params.cls = cls;
 
 %Create an exemplar stream (list of exemplars)
-CACHE_STREAM = 1;
-e_stream_set = esvm_get_pascal_stream(dataset_params, cls, CACHE_STREAM);
+e_stream_set = esvm_get_pascal_stream(stream_params, dataset_params);
 
-%% Define parameters and training
-%Create mining/validation/testing params as defaults
-dataset_params.params = get_default_mining_params;
-dataset_params.mining_params = dataset_params.params;
-dataset_params.mining_params.training_function = @esvm_update_svm;
-%disable NSM
-dataset_params.mining_params.detect_exemplar_nms_os_threshold = 1.0; 
-dataset_params.mining_params.detect_max_scale = 0.5;
-dataset_params.mining_params.detect_max_windows_per_exemplar = 100;
-dataset_params.mining_params.set_name = ['train-' cls];
-neg_set = get_pascal_set(dataset_params, ...
-                           dataset_params.mining_params.set_name);
-
-%% Define validation set
-dataset_params.val_params = dataset_params.params;
-dataset_params.val_params.detect_exemplar_nms_os_threshold = 0.5;
-dataset_params.val_params.set_name = ['trainval'];
-val_set = get_pascal_set(dataset_params, ...
-                         dataset_params.val_params.set_name);
-
+neg_set = get_pascal_set(dataset_params, ['train-' cls]);
+%neg_set = neg_set(1:10);
+%neg_set = cellfun2(@(x)convert_to_I(x),neg_set);
 
 %Choose a models name to indicate the type of training run we are doing
-dataset_params.models_name = ...
-    [cls '-' init_params.init_type ...
-     '.' dataset_params.model_type];
+models_name = ...
+    [cls '-' params.init_params.init_type ...
+     '.' params.model_type];
 
-
-%% Exemplar initialization 
-CACHE_MODELS = 1;
-initial_models = esvm_initialize_exemplars(dataset_params, e_stream_set, ...
-                                           dataset_params.init_params, ...
-                                           dataset_params.models_name,...
-                                           CACHE_MODELS);
-
-%Append the nn-type string if we are in nn mode
-if length(dataset_params.params.nnmode) > 0
-  models_name = [models_name '-' dataset_params.params.nnmode];
-end
+initial_models = esvm_initialize_exemplars(e_stream_set, params, models_name);
 
 %% Perform Exemplar-SVM training
-CACHE_MODELS = 1;
-models = esvm_train_exemplars(dataset_params, ...
-                                initial_models, neg_set, CACHE_MODELS);
- 
-%% Apply trained exemplars on validation set
-dataset_params.params = dataset_params.val_params;
-dataset_params.val_params.gt_function = @get_pascal_anno_function;
-val_grid = esvm_detect_imageset(val_set,models,...
-                                dataset_params.val_params,...
-                                dataset_params.val_params.set_name,...
-                                dataset_params);
+train_params = params;
+train_params.detect_max_scale = 0.5;
+train_params.train_max_mined_images = 300;
+train_params.detect_exemplar_nms_os_threshold = 1.0; 
+train_params.detect_max_windows_per_exemplar = 100;
+train_params.CACHE_FILE = 1;
 
-%% Perform Platt calibration and M-matrix estimation
-CACHE_BETAS = 1;
-M = esvm_perform_calibration(dataset_params, models, ...
-                             val_grid, val_set, CACHE_BETAS);
+val_params = params;
+val_params.detect_exemplar_nms_os_threshold = 0.5;
+val_params.gt_function = @get_pascal_anno_function;
+val_params.CACHE_BETAS = 1;
+
+val_set_name = ['trainval'];
+
+val_set = get_pascal_set(dataset_params, val_set_name);
 
 %% Define test-set
-dataset_params.test_params = dataset_params.params;
-dataset_params.test_params.detect_exemplar_nms_os_threshold = 0.5;
-dataset_params.test_params.set_name = ['test'];
-test_set = get_pascal_set(dataset_params, ...
-                          dataset_params.test_params.set_name);
+test_params = params;
+test_params.detect_exemplar_nms_os_threshold = 0.5;
+test_set_name = ['test'];
+test_set = get_pascal_set(dataset_params, test_set_name);
+
+%% Train the exemplars and get updated models name
+[models,models_name] = esvm_train_exemplars(initial_models, ...
+                                            neg_set, train_params);
+
+%% Apply trained exemplars on validation set
+val_grid = esvm_detect_imageset(val_set, models, val_params, val_set_name);
+                       
+%% Perform Platt calibration and M-matrix estimation
+M = esvm_perform_calibration(val_grid, models, val_params);
 
 %% Apply on test set
-dataset_params.params = dataset_params.test_params;
-test_grid = esvm_detect_imageset(test_set, models, ...
-                                 dataset_params.test_params,...
-                                 dataset_params.test_params.set_name, ...
-                                 dataset_params);
+test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);
 
-%apply calibration matrix to test-set results
-test_struct = esvm_apply_calibration(dataset_params, models, ...
-                                     test_grid, M);
+%% Apply calibration matrix to test-set results
+test_struct = esvm_apply_calibration(test_grid, models, [], test_params);
 
-%Show top hits
-bbs = cat(1,test_struct.unclipped_boxes{:});
-[aa,bb] = sort(bbs(:,end),'descend');
-bbs = bbs(bb,:);
-m = models{1};
-m.model.svbbs = bbs;
-try
-m.model = rmfield(m.model,'svxs');
-catch
-end
-m.train_set = test_set;
 
-figure(1)
-clf
-imagesc(get_sv_stack(m,4,4))
-axis image
-axis off
-title('Exemplar, w,  and top 16 detections');
+maxk = 20;
+allbbs = esvm_show_top_dets(test_struct, test_grid, test_set, models, ...
+                       params,  maxk, test_set_name);
 
-[results] = evaluate_pascal_voc_grid(dataset_params, ...
-                                     models, test_grid, ...
-                                     dataset_params.test_params.set_name, ...
-                                     test_struct);
+[results] = evaluate_pascal_voc_grid(test_struct, test_grid,  ...
+                                     params, test_set_name, cls, ...
+                                     models_name);
+
+
 %rc = results.corr;
 %clear options
 %options.format ='html';
@@ -153,7 +117,3 @@ title('Exemplar, w,  and top 16 detections');
 %publish('display_helper',options)
 
 %if enabled show and print some top detections into the www directory
-%maxk = 2;
-%allbbs = show_top_dets(dataset_params, models, test_grid, ...
-%                       test_set, dataset_params.test_params.set_name, ...
-%                       test_struct, maxk);
