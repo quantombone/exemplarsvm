@@ -9,11 +9,11 @@ if ~exist('cls','var')
   cls = 'bus';
 end
 
-data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
-results_directory = sprintf('/nfs/baikal/tmalisie/esvm-%s/',cls);
+%data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
+%results_directory = sprintf('/nfs/baikal/tmalisie/esvm-%s/',cls);
 
-%data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
-%results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
+data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
+results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
 
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
@@ -66,7 +66,7 @@ initial_models = esvm_initialize_exemplars(e_stream_set, params, models_name);
 %% Perform Exemplar-SVM training
 train_params = params;
 train_params.detect_max_scale = 0.5;
-train_params.train_max_mined_images = 300;
+%train_params.train_max_mined_images = 300;
 train_params.detect_exemplar_nms_os_threshold = 1.0; 
 train_params.detect_max_windows_per_exemplar = 100;
 train_params.CACHE_FILE = 1;
@@ -100,7 +100,7 @@ M = esvm_perform_calibration(val_grid, models, val_params);
 test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);
 
 %% Apply calibration matrix to test-set results
-test_struct = esvm_apply_calibration(test_grid, models, [], test_params);
+test_struct = esvm_apply_calibration(test_grid, models, M, test_params);
 
 
 maxk = 20;
@@ -111,11 +111,3 @@ allbbs = esvm_show_top_dets(test_struct, test_grid, test_set, models, ...
                                      params, test_set_name, cls, ...
                                      models_name);
 
-
-%rc = results.corr;
-%clear options
-%options.format ='html';
-%options.outputDir = [results_directory  '/www/'];
-%publish('display_helper',options)
-
-%if enabled show and print some top detections into the www directory
