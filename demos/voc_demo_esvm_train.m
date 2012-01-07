@@ -9,11 +9,11 @@ if ~exist('cls','var')
   cls = 'bus';
 end
 
-%data_directory = '/Users/tmalisie/projects/pascal/VOCdevkit/';
-%results_directory = '/nfs/baikal/tmalisie/esvm-car/';
+data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
+results_directory = sprintf('/nfs/baikal/tmalisie/esvm-%s/',cls);
 
-data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
-results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
+%data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
+%results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
 
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
@@ -50,6 +50,7 @@ stream_params.cls = cls;
 %Create an exemplar stream (list of exemplars)
 e_stream_set = esvm_get_pascal_stream(stream_params, dataset_params);
 
+
 neg_set = get_pascal_set(dataset_params, ['train-' cls]);
 %neg_set = neg_set(1:10);
 %neg_set = cellfun2(@(x)convert_to_I(x),neg_set);
@@ -58,6 +59,7 @@ neg_set = get_pascal_set(dataset_params, ['train-' cls]);
 models_name = ...
     [cls '-' params.init_params.init_type ...
      '.' params.model_type];
+
 
 initial_models = esvm_initialize_exemplars(e_stream_set, params, models_name);
 
