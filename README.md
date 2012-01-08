@@ -41,13 +41,13 @@ re-photography, and painting2gps.
 ---- 
 
 
-This object recognition library uses some great software:
+This object recognition library uses some great open-source software:
 
-* linear SVM training: [libsvm-3.0-1](http://www.csie.ntu.edu.tw/~cjlin/libsvm/)
+* Linear SVM training: [libsvm-3.0-1](http://www.csie.ntu.edu.tw/~cjlin/libsvm/)
 
-* fast blas convolution code (from [voc-release-4.0](http://www.cs.brown.edu/~pff/latent/)), 
+* Fast blas convolution code (from [voc-release-4.0](http://www.cs.brown.edu/~pff/latent/)), 
 
-* 31-D HOG feature code (from [voc-release-3.1](http://www.cs.brown.edu/~pff/latent/)), 
+* HOG feature code (31-D) (from [voc-release-3.1](http://www.cs.brown.edu/~pff/latent/)), 
 
 * [VOC development/evaluation code](http://pascallin.ecs.soton.ac.uk/challenges/VOC/) imported from the PASCAL VOC website
 
@@ -56,50 +56,50 @@ This object recognition library uses some great software:
 
 # MATLAB Quick Start Guide
 
-Inside this directory you will find two demo files, one to show off
-Exemplar-svm training, and the other to show how to apply a
-pre-trained ensemble of exemplars on a test-set of images. 
-
+To get started, you need to install MATLAB and download the code from Github.
 
 ## Downloading Exemplar-SVM MATLAB source code
 ``` sh
-$ cd ~/projects/
-$ git clone git@github.com:quantombone/exemplarsvm.git
-$ cd ~/projects/exemplarsvm
-$ matlab
-$ >> addpath(genpath(pwd));
+cd ~/projects/
+git clone git@github.com:quantombone/exemplarsvm.git
 ```
 
-## Download and cache some pre-trained models within MATLAB
+## Start MATLAB
+``` sh
+cd ~/projects/exemplarsvm
+matlab
+```
+
+## Download and cache some pre-trained models from within MATLAB
 
 ``` sh
-$ >> [models,betas,M] = esvm_download_models('bus');
+[models,betas,M] = esvm_download_models('bus');
 ```
 
 ## Load up some images
 
 #VOC2007 bus images from testset
 ``` sh
-$ >> load bus_set.mat 
-$ >> esvm_demo_apply_exemplars(bus_set,models,M);
+load bus_set.mat 
+esvm_demo_apply_exemplars(bus_set,models,M);
 ```
 
 #load your own image
 ``` sh
-$ >> I = imread('...'); #your own image
-$ >> esvm_demo_apply_exemplars(I,models,M)
+I = imread('...'); #your own image
+esvm_demo_apply_exemplars(I,models,M)
 ```
 
 #load your own set of images
 ``` sh
-$ >> Iarray = {I1,I2,...,IN}
-$ >> esvm_demo_apply_exemplars(Iarray,models,M)
+Iarray = {I1,I2,...,IN}
+esvm_demo_apply_exemplars(Iarray,models,M)
 ```
 
 #a directory of images
 ``` sh
-$ >> Idirectory = '~/myimages/';
-$ >> esvm_demo_apply_exemplars(Idirectory,models,M)
+Idirectory = '~/myimages/';
+esvm_demo_apply_exemplars(Idirectory,models,M)
 ```
 
 Also, you can download all models
