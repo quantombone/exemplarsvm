@@ -54,6 +54,8 @@ This object recognition library uses some great software:
 
 ----
 
+# MATLAB Quick Start Guide
+
 Inside this directory you will find two demo files, one to show off Exemplar-svm training, and the other to show how to apply a pre-trained ensemble of exemplars on a test-set of images. These demos are meant to work with the PASCAL VOC 2007 dataset, so let's download some data!
 
 ## Installing PASCAL VOC 2007 trainval/test sets
@@ -69,7 +71,7 @@ $ tar xf VOCtrainval_06-Nov-2007.tar
 ## Downloading Exemplar-SVM MATLAB source code
 ``` sh
 $ cd ~/projects/
-$ git clone git@github.com:quantombone/exemplarsvm.git #this will make ~/projects/exemplarsvm the code directory
+$ git clone git@github.com:quantombone/exemplarsvm.git
 ```
 
 ## Making sure Exemplar-SVM library is compiled and working

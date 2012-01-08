@@ -1,4 +1,4 @@
-function voc_demo_apply(imageset, models, M)
+function esvm_demo_apply_exemplars(imageset, models, M)
 %In this application demo, we simply load the models belonging to
 %some class and apply them
 data_directory = '/Users/tmalisie/projects/Pascal_VOC/'
