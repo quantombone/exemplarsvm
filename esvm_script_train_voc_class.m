@@ -1,6 +1,6 @@
 %This is an Exemplar-SVM training demo
 %Tomasz Malisiewicz (tomasz@cmu.edu)
-function voc_demo_esvm_train(cls)
+function esvm_script_train_voc_class(cls)
 
 %% Initialize dataset parameters
 %data_directory = '/Users/tomasz/projects/Pascal_VOC/';
@@ -9,8 +9,8 @@ if ~exist('cls','var')
   cls = 'bus';
 end
 
-%data_directory = '/Users/tomasz/projects/pascal/VOCdevkit/';
-%results_directory = sprintf('/nfs/baikal/tmalisie/esvm-%s/',cls);
+data_directory = '/Users/tmalisie/projects/pascal/VOCdevkit/';
+results_directory = sprintf('/nfs/baikal/tmalisie/esvm-%s/',cls);
 
 data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
 results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
