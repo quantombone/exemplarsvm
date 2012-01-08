@@ -4,7 +4,7 @@ models = [];
 betas = [];
 M = [];
 if ~exist(f,'file')
-  unix(sprintf('wget http://people.csail.mit.edu/tomasz/exemplarsvm/models/%s'));
+  unix(sprintf('wget http://people.csail.mit.edu/tomasz/exemplarsvm/models/%s',f));
   
 end
 
