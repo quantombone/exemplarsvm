@@ -123,7 +123,7 @@ $ >> esvm_demo_apply_exemplars(Idirectory, models, M)
 
 ---
 
-###Also, you can download all models
+###Also, you can download all pre-trained PASCAL VOC2007 models (20 classes)
 
 ``` sh
 $ cd ~/projects/exemplarsvm/
@@ -144,8 +144,8 @@ $ >> load voc2007_bus.mat
 
 ---
 
-The training demos are meant to work with the PASCAL VOC 2007 dataset,
-so let's download some data!
+The training scripts are designed to work with the PASCAL VOC 2007
+dataset, so we need to download that first.
 
 ## Install PASCAL VOC 2007 trainval/test sets
 ``` sh
@@ -157,7 +157,7 @@ $ tar xf VOCtest_06-Nov-2007.tar
 $ tar xf VOCtrainval_06-Nov-2007.tar 
 ``` 
 
-## Edit esvm_script_train_voc_class.m 
+## Edit directories in esvm_script_train_voc_class.m 
 ``` sh
 data_directory = '/your/directory/to/pascal/VOCdevkit/';
 results_directory = '/your/results/directory/';
@@ -168,6 +168,7 @@ results_directory = '/your/results/directory/';
 $ matlab
 $ addpath(genpath(pwd))
 $ >> [models,M] = esvm_script_train_voc_class('bus');
+# All output has been written to results_directory
 ```
 
 # Extra: How to run the Exemplar-SVM framework on a cluster 
