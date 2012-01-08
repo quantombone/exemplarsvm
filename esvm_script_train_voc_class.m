@@ -12,8 +12,8 @@ end
 data_directory = '/Users/tmalisie/projects/pascal/VOCdevkit/';
 results_directory = sprintf('/nfs/baikal/tmalisie/esvm-%s/',cls);
 
-data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
-results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
+%data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
+%results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
 
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory,...
@@ -50,10 +50,7 @@ stream_params.cls = cls;
 %Create an exemplar stream (list of exemplars)
 e_stream_set = esvm_get_pascal_stream(stream_params, dataset_params);
 
-
 neg_set = get_pascal_set(dataset_params, ['train-' cls]);
-%neg_set = neg_set(1:10);
-%neg_set = cellfun2(@(x)convert_to_I(x),neg_set);
 
 %Choose a models name to indicate the type of training run we are doing
 models_name = ...
@@ -66,7 +63,6 @@ initial_models = esvm_initialize_exemplars(e_stream_set, params, models_name);
 %% Perform Exemplar-SVM training
 train_params = params;
 train_params.detect_max_scale = 0.5;
-%train_params.train_max_mined_images = 300;
 train_params.detect_exemplar_nms_os_threshold = 1.0; 
 train_params.detect_max_windows_per_exemplar = 100;
 train_params.CACHE_FILE = 1;

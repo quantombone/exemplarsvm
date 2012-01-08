@@ -40,7 +40,7 @@ params.dataset_params = dataset_params;
 
 %Initialize exemplar stream
 stream_params.stream_set_name = 'trainval';
-stream_params.stream_max_ex = 15;
+stream_params.stream_max_ex = 1;
 stream_params.must_have_seg = 0;
 stream_params.must_have_seg_string = '';
 stream_params.model_type = 'exemplar'; %must be scene or exemplar;
@@ -64,7 +64,7 @@ initial_models = esvm_initialize_exemplars(e_stream_set, params, models_name);
 %% Perform Exemplar-SVM training
 train_params = params;
 train_params.detect_max_scale = 0.5;
-train_params.train_max_mined_images = 300;
+train_params.train_max_mined_images = 10;
 train_params.detect_exemplar_nms_os_threshold = 1.0; 
 train_params.detect_max_windows_per_exemplar = 100;
 train_params.CACHE_FILE = 1;

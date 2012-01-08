@@ -1,4 +1,4 @@
-
+%Here is a quick demo
 esvm_download_models('bus');
 load voc2007-bus.mat
 esvm_demo_apply_exemplars(test_set(1:10), models, M);

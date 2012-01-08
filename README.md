@@ -174,7 +174,7 @@ results_directory = '/your/results/directory/';
 $ matlab
 $ addpath(genpath(pwd))
 $ >> [models,M] = esvm_script_train_voc_class('bus');
-# All output has been written to results_directory
+# All output (models, M-matrix, AP curve) has been written to results_directory
 ```
 
 # Extra: How to run the Exemplar-SVM framework on a cluster?
@@ -195,6 +195,12 @@ use an ssh-based launcher such as my
 [warp_scripts](https://github.com/quantombone/warp_scripts) github
 project.  I have used warp_starter.sh at CMU (using WARP cluster)
 and sc.sh at MIT (using the continents).
+
+##Here is the command I use at MIT to start my projects, where machine_list.sh contains computer names
+``` sh
+./sc.sh "cd ~/projects/exemplarsvm; addpath(genpath(pwd)); esvm_script_train_voc_class('train');"
+qqq
+
 
 --- 
 **Copyright (C) 2011 by Tomasz Malisiewicz**
