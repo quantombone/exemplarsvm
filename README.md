@@ -71,7 +71,7 @@ cd ~/projects/exemplarsvm
 $ matlab
 $ addpath(genpath(pwd))
 $ >> esvm_download_models('bus');
-$ >> load bus.mat #vars "models" and "M" are loaded
+$ >> load voc2007-bus.mat #vars "models" and "M" are loaded
 ```
 
 ``` sh
