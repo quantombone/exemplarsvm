@@ -1,5 +1,6 @@
 function [models,M,test_set] = esvm_download_models(cls)
-%Download a pre-trained PASCAL VOC2007 model from my MIT CSAIL homepage
+%Download a pre-trained PASCAL VOC2007 model from my MIT CSAIL
+%homepage (http://people.csail.mit.edu/tomasz/)
 
 f = sprintf('voc2007-%s.mat',cls);
 models = [];
@@ -11,8 +12,3 @@ end
 
 load(f);
 
-% if isfield(models{1},'I') && isstr(models{1}.I) && length(models{1}.I)>=7 ...
-%       && strcmp(models{1}.I(1:7),'http://')
-%   fprintf(1,'Warning: Models have images as URLs\n -- Use [models]=esvm_update_voc_models(models,local_dir);\n');
-% end
-  
