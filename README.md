@@ -175,19 +175,20 @@ $ >> [models,M] = esvm_script_train_voc_class('bus');
 
 This library was meant to run on a cluster with a shared NFS/AFS file
 structure where all nodes can read/write data from a common data
-source.  The PASCAL VOC dataset must be installed there and the
-scratch space must also be present there.  The idea is that
-scratch-work is written as .mat files and intermediate work is
-protected via .lock files.  lock files are temporary files (they are
-directories actually) which are deleted once something has finished
-process.  This means that the entire script can be replicated across a
+source/target.  The PASCAL VOC dataset must be installed on such a
+shared resource and the results directory as well.  The idea is that
+results are written as .mat files and intermediate work is protected
+via lock files. Lock files are temporary files (they are directories
+actually) which are deleted once something has finished process.  This
+means that the entire voc training script can be replicated across a
 cluster, you can run the script 200x times and the training will
 happen in parallel.
 
 To run ExemplarSVM on a cluster, first make sure you have a cluster,
-then please see my
+use an ssh-based launcher such as my
 [warp_scripts](https://github.com/quantombone/warp_scripts) github
-repository
+repository.  I have used warp_starter.sh at CMU (using WARP cluster)
+and sc.sh at MIT (using the continents).
 
 --- 
 **Copyright (C) 2011 by Tomasz Malisiewicz**
