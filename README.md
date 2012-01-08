@@ -71,11 +71,13 @@ $ >> addpath(genpath(pwd));
 ```
 
 ## Download and cache some pre-trained models
+
 ``` sh
 $ >> [models,betas,M] = esvm_download_models('bus');
 ```
 
 Alternatively you can download all models
+
 ``` sh
 $ cd ~/projects/exemplarsvm;
 $ wget http://people.csail.mit.edu/~tomasz/exemplarsvm/voc2007-models.tar
