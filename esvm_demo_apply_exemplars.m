@@ -2,6 +2,15 @@ function esvm_demo_apply_exemplars(imageset, models, M)
 %In this application demo, we simply load the models belonging to
 %some class and apply them
 
+if ~iscell(imageset) 
+  if isdir(imageset)
+    files = dir(imageset);
+    isdir=arrayfun(@(x)x.isdir,files);
+    files = files(~isdir);
+  else
+    imageset = {imageset};
+  end
+end
 
 
 %This is nice walk through the data

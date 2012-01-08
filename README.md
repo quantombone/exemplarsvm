@@ -76,7 +76,33 @@ $ >> addpath(genpath(pwd));
 $ >> [models,betas,M] = esvm_download_models('bus');
 ```
 
-Alternatively you can download all models in the shell
+## Load up some images
+
+#VOC2007 bus images from testset
+``` sh
+$ >> load bus_set.mat 
+$ >> esvm_demo_apply_exemplars(bus_set,models,M);
+```
+
+#load your own image
+``` sh
+$ >> I = imread('...'); #your own image
+$ >> esvm_demo_apply_exemplars(I,models,M)
+```
+
+#load your own set of images
+``` sh
+$ >> Iarray = {I1,I2,...,IN}
+$ >> esvm_demo_apply_exemplars(Iarray,models,M)
+```
+
+#a directory of images
+``` sh
+$ >> Idirectory = '~/myimages/';
+$ >> esvm_demo_apply_exemplars(Idirectory,models,M)
+```
+
+Also, you can download all models
 
 ``` sh
 $ cd ~/projects/exemplarsvm
