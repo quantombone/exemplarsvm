@@ -1,6 +1,7 @@
-function NR = esvm_show_transfer_figure(I,models,topboxes,overlays, ...
+function NR = esvm_show_transfer_figure(I, models, topboxes, overlays, ...
                                         current_rank, corr)
 %Show a figure with the detections of the exemplar svm model
+%NOTE(TJM): this function needs cleanup
 %Tomasz Malisiewicz(tomasz@cmu.edu)
 
 topboxes = topboxes(1:min(2,size(topboxes,1)),:);
@@ -88,7 +89,7 @@ for i = 1:N
     Imeta = Itotal;
     offset = [0 size(Ishow,1)+size(Iex2,1)];
  
-    Ishow = cat(1,Ishow,Iex2,Imeta);
+    %Ishow = cat(1,Ishow,Iex2,Imeta);
   
   elseif strcmp(models{mid}.cls,'bus')
     m1 = repmat(double(overlays{1}.mini_overlay.alphamask>0)*.8,[1 ...
@@ -104,14 +105,13 @@ for i = 1:N
         cellfun2(@ ...
                  (x)bsxfun(@plus,x,offset),overlays{1}.mini_overlay.faces);
  
-    Ishow = cat(1,Ishow,Iex2,Imeta);
+    %Ishow = cat(1,Ishow,Iex2,Imeta);
   end
  
   bb1 = [1 1 size(Iex,2) size(Iex,1)];
   bb2 = bb1;
   
   bb2([2 4]) = bb2([2 4]) + size(Iex,1) + PPP;
-   
   axes(ha(1));
   imagesc(Ishow)
 
@@ -135,16 +135,13 @@ for i = 1:N
     curcolor = [1 0 0 ];
   end
 
-  plot_bbox(bb1, sprintf('w %d',mid), ...
+  plot_bbox(bb1, sprintf('Exemplar-SVM %s %d',models{mid}.cls,mid), ...
             curcolor, curcolor, 0, [2 1])
   
   %sprintf('Exemplar.%d',mid)
-
   
-  plot_bbox(bb2, sprintf('I %d',mid), [1 1 0], [1 1 0], 0, [2 1])
-
+  plot_bbox(bb2, sprintf('Image %d',mid), [1 1 0], [1 1 0], 0, [2 1])
   
-
   id_string = '';
   if isfield(models{abs(mid)},'curid')
     try
@@ -192,7 +189,7 @@ if corr == 0
   curcolor = [1 0 0 ];
 end
 
-plot_bbox(clipped_top,'',curcolor, curcolor,0,[2 1]);
+plot_bbox(clipped_top,models{1}.cls,curcolor, curcolor,0,[2 1]);
 
 if 0
   %%NOTE: not sure why this is not working?
@@ -219,14 +216,15 @@ end
 clipped_top([2 4]) = clipped_top([2 4]) + size(I,1)+size(I2,1);
 
 %dont do yellow box for segmentation
-if 0 %%~strcmp(models{mid}.cls,'bus')
-  plot_bbox(clipped_top,'',[1 1 0],[1 1 0],0,[2 1]);
+if 1 %%~strcmp(models{mid}.cls,'bus')
+  plot_bbox(clipped_top,'Exemplar',[1 1 0],[1 1 0],0,[2 1]);
 end
 axis image
 axis off
 %title('Appearance Transfer')%sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
 %title(sprintf('Exemplar Inpainting: %.3f',topboxes(1,end)))
 
+title('Exemplar-SVM detection','FontSize',12);
 
 if add_one == 1
   %transfer objects here

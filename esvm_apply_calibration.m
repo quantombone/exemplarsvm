@@ -63,6 +63,8 @@ for i = 1:length(grid)
   end
 end
 
+raw_boxes = bboxes;
+
 % perform within-exemplar NMS
 % NOTE: this is already done during detection time
 % if 0 
@@ -93,7 +95,7 @@ if (exist('M','var') && (~isempty(M)) && isfield(M,'betas') && ...
       continue
     end
     calib_boxes = calibrate_boxes(bboxes{i},M.betas); 
-    oks = find(calib_boxes(:,end) > params.dataset_params.calibration_threshold);
+    oks = find(calib_boxes(:,end) > params.calibration_threshold);
     calib_boxes = calib_boxes(oks,:);
     bboxes{i} = calib_boxes;
   end
@@ -137,23 +139,22 @@ for i = 1:length(bboxes)
   end
 end
 
-% if 0
 % if exist('M','var') && length(M)>0 && isfield(M,'betas')
-% 
+
 %   fprintf(1,'Propagating scores onto raw detections\n');
 %   %% propagate scores onto raw boxes
 %   for i = 1:length(bboxes)
 %     calib_boxes = calibrate_boxes(raw_boxes{i},M.betas);
 %     beta_scores = calib_boxes(:,end);
-%     
+    
 %     osmat = getosmatrix_bb(bboxes{i},raw_boxes{i});
 %     for j = 1:size(osmat,1)
-%       curscores = (osmat(j,:)>.5) .* beta_scores';
+%       curscores = (osmat(j,:)>.8) .* beta_scores';
 %       [aa,bb] = max(curscores);
 %       bboxes{i}(j,:) = raw_boxes{i}(bb,:);
 %       bboxes{i}(j,end) = aa;
 %     end
-%     
+    
 %     % new_scores = beta_scores;
 %     % for j = 1:length(nbrlist{i})
 %     %   new_scores(nbrlist{i}{j}) = max(new_scores(nbrlist{i}{j}),...
@@ -162,7 +163,6 @@ end
 %     % end
 %     % bboxes{i}(:,end) = new_scores;
 %   end
-% end
 % end
 
 % Clip boxes to image dimensions since VOC testing annotation
