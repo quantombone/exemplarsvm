@@ -3,7 +3,8 @@ function [Iex,Iexmask,Icb,Icbmask] = get_exemplar_icon(models, ...
                                                   loadseg, VOCopts)
 %Extract an exemplar visualization image (one from gt box, one from
 %cb box) [and does flip if specified]
-%Allows allows for the loading of a segmentation icon
+%Allows allows for the loading of a segmentation too
+% NOTE: this function works, but needs cleanup
 %
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 

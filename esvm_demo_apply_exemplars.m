@@ -2,6 +2,16 @@ function esvm_demo_apply_exemplars(imageset, models, M)
 %In this application demo, we simply load the models belonging to
 %some class and apply them
 
+if isfield(models{1},'I') && isstr(models{1}.I) && length(models{1}.I)>=7 ...
+      && strcmp(models{1}.I(1:7),'http://')
+  fprintf(1,'Warning: Models have images as URLs\n -- Use [models]=esvm_update_voc_models(models,local_dir);\n');
+end
+
+
+if ~exist('M','var')
+  M = [];
+end
+
 if ~iscell(imageset) 
   if isdir(imageset)
     files = dir(imageset);
@@ -14,17 +24,14 @@ end
 
 params = esvm_get_default_params;
 
-%This is nice walk through the data
+
 for i = 1:length(imageset)
-  I = convert_to_I(imageset{i});
-  ts = {I};
-  grid = esvm_detect_imageset(ts, models, params);
-  
-  result_struct = esvm_apply_calibration(grid, models, M, params);
+  local_detections = esvm_detect_imageset(imageset(i), models, params);
+  result_struct = esvm_apply_calibration(local_detections, models, M, params);
   
   maxk = 1;
-  allbbs = esvm_show_top_dets(result_struct, grid, ...
-                              ts, models, ...
+  allbbs = esvm_show_top_dets(result_struct, local_detections, ...
+                              imageset(i), models, ...
                               params,  maxk);
   drawnow
 end
@@ -39,10 +46,6 @@ dataset_params = get_voc_dataset('VOC2007',...
 %subset = 1;
 %models = models(subset);
 
-for i = 1:length(models)
-  models{i}.I = [data_directory '/' ...
-                 models{i}.I(strfind(models{i}.I,'VOC2007/'):end)];
-end
 
 dataset_params.params = get_default_mining_params;
 

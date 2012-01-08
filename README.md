@@ -1,9 +1,14 @@
-Welcome to the Exemplar-SVM library.  The code is written in Matlab
-and is the basis of the following two projects:
+Welcome to the Exemplar-SVM library, a large-scale object recognition
+library developed at Carnegie Mellon University while obtaining my PhD
+in Robotics. 
+  -- Tomasz Malisiewicz
+
+The code is written in Matlab and is the basis of the following two
+projects:
 
 [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/), [Abhinav Gupta](http://www.cs.cmu.edu/~abhinavg), [Alexei A. Efros](http://www.cs.cmu.edu/~efros). **Ensemble of Exemplar-SVMs for Object Detection and Beyond.** In ICCV, 2011. 
 [PDF](http://www.cs.cmu.edu/~tmalisie/projects/iccv11/exemplarsvm-iccv11.pdf) 
-[Project Page](http://www.cs.cmu.edu/~tmalisie/projects/iccv11/) 
+| [Project Page](http://www.cs.cmu.edu/~tmalisie/projects/iccv11/) 
 
 ![](https://github.com/quantombone/exemplarsvm/raw/master/images/exemplar_classifiers-small_n.png)
 
@@ -13,7 +18,7 @@ This paper proposes a conceptually simple but surprisingly powerful method which
 
 ---
 
-[Abhinav Shrivastava](http://www.abhinav-shrivastava.info/), [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/), [Abhinav Gupta](http://www.cs.cmu.edu/~abhinavg), [Alexei A. Efros](http://www.cs.cmu.edu/~efros). **Data-driven Visual Similarity for Cross-domain Image Matching.** In SIGGRAPH ASIA, December 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/projects/sa11/shrivastava-sa11.pdf) [Project Page](http://graphics.cs.cmu.edu/projects/crossDomainMatching/) 
+[Abhinav Shrivastava](http://www.abhinav-shrivastava.info/), [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/), [Abhinav Gupta](http://www.cs.cmu.edu/~abhinavg), [Alexei A. Efros](http://www.cs.cmu.edu/~efros). **Data-driven Visual Similarity for Cross-domain Image Matching.** In SIGGRAPH ASIA, December 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/projects/sa11/shrivastava-sa11.pdf) | [Project Page](http://graphics.cs.cmu.edu/projects/crossDomainMatching/) 
 
 ![](https://github.com/quantombone/exemplarsvm/raw/v1/images/sa_teaser.png)
 
@@ -56,13 +61,25 @@ This object recognition library uses some great open-source software:
 
 # MATLAB Quick Start Guide
 
-To get started, you need to install MATLAB and download the code from Github.
+To get started, you need to install MATLAB and download the code from Github. This code has been tested on Mac OS X and Linux.  Pre-compiled Mex files for Mac OS X and Linux are included.
 
-## Download Exemplar-SVM MATLAB source code
+## Download Exemplar-SVM Library source code (MATLAB and C++)
 ``` sh
-cd ~/projects/
-git clone git@github.com:quantombone/exemplarsvm.git
-cd ~/projects/exemplarsvm
+$ cd ~/projects/
+$ git clone git@github.com:quantombone/exemplarsvm.git
+$ cd ~/projects/exemplarsvm
+```
+
+### Make sure Exemplar-SVM library is compiled and working
+### (You shouldn't have to do this on Mac OS X or Linux)
+``` sh
+$ matlab
+$ >> cd features/
+$ >> features_compile;
+$ >> cd ../util/
+$ >> util_compile;
+$ >> cd ../libsvm/
+$ >> libsvm_compile;
 ```
 
 ## Download and load pre-trained VOC2007 model(s)
@@ -71,22 +88,24 @@ cd ~/projects/exemplarsvm
 $ matlab
 $ addpath(genpath(pwd))
 $ >> esvm_download_models('bus');
-$ >> load voc2007-bus.mat #vars "models" and "M" are loaded
+$ >> load voc2007-bus.mat #vars "models", "M" and URL-based "test_set" are loaded
 ```
+
+## Apply models to a set of images
 
 ``` sh
 $ >> load esvm_demo_bus_test_set.mat
 $ >> esvm_demo_apply_exemplars(bus_set, models, M);
 ```
 
-### or load your own image
+### Or load your own image
 ``` sh
 $ matlab
-$ >> I = imread('image1.png'); #your own image
+$ >> I = imread('image1.png'); #load your own image
 $ >> esvm_demo_apply_exemplars(I, models, M);
 ```
 
-### or load your own set of images
+### Or load your own set of images
 ``` sh
 $ matlab
 $ >> I1 = imread('image1.png'); #your own image
@@ -96,7 +115,7 @@ $ >> Iarray = {I1, ..., IN};
 $ >> esvm_demo_apply_exemplars(Iarray, models, M)
 ```
 
-### a directory of images
+### Or process a directory of images
 ``` sh
 $ matlab
 $ >> Idirectory = '~/images/';
@@ -118,17 +137,6 @@ then in MATLAB, you can load models by their name:
 ``` sh
 $ matlab
 $ >> load voc2007_bus.mat
-```
-
-### Make sure Exemplar-SVM library is compiled and working
-``` sh
-$ matlab
-$ >> cd features/
-$ >> features_compile;
-$ >> cd ../util/
-$ >> util_compile;
-$ >> cd ../libsvm/
-$ >> libsvm_compile;
 ```
 
 ---
