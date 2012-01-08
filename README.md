@@ -160,6 +160,9 @@ $ tar xf VOCtest_06-Nov-2007.tar
 $ tar xf VOCtrainval_06-Nov-2007.tar 
 ``` 
 
+You can also get the VOC 2007 dataset tar files manually, [VOCtrainval_06-Nov-2007.tar](http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) and [VOCtest_06-Nov-2007.tar](http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar)
+
+
 ## Edit directories in esvm_script_train_voc_class.m 
 ``` sh
 data_directory = '/your/directory/to/pascal/VOCdevkit/';
