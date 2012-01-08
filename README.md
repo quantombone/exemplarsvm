@@ -70,8 +70,7 @@ $ git clone git@github.com:quantombone/exemplarsvm.git
 $ cd ~/projects/exemplarsvm
 ```
 
-### Make sure Exemplar-SVM library is compiled and working
-### (You shouldn't have to do this on Mac OS X or Linux)
+### Make sure Exemplar-SVM library is compiled and working (You shouldn't have to do this on Mac OS X or Linux)
 ``` sh
 $ matlab
 $ >> cd features/
@@ -140,9 +139,8 @@ $ >> load voc2007_bus.mat
 
 ---
 
-# 1) Train and Test an Ensemble of Exemplar-SVMs from scratch
+# Train and Test an Ensemble of Exemplar-SVMs from scratch
 
----
 
 The training scripts are designed to work with the PASCAL VOC 2007
 dataset, so we need to download that first.
