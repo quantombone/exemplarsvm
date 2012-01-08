@@ -14,18 +14,16 @@ This paper proposes a conceptually simple but surprisingly powerful method which
 
 [Abhinav Shrivastava](http://www.abhinav-shrivastava.info/), [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/), [Abhinav Gupta](http://www.cs.cmu.edu/~abhinavg), [Alexei A. Efros](http://www.cs.cmu.edu/~efros). **Data-driven Visual Similarity for Cross-domain Image Matching.** In SIGGRAPH ASIA, December 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/projects/sa11/shrivastava-sa11.pdf) [Project Page](http://graphics.cs.cmu.edu/projects/crossDomainMatching/) 
 
-![](https://github.com/quantombone/exemplarsvm/raw/master/images/sa_teaser.png)
+![](https://github.com/quantombone/exemplarsvm/raw/v1/images/sa_teaser.png)
 
 [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/). **Exemplar-based Representations for Object Detection, Association and Beyond.** PhD Dissertation, tech. report CMU-RI-TR-11-32. August, 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/thesis/malisiewicz_thesis.pdf)
 
-
-![](https://github.com/quantombone/exemplarsvm/raw/master/images/exemplar_classifiers-small_n.png)
 ---- 
 
 
 This object recognition library uses some great software:
 
-* [libsvm-3.0-1](http://www.csie.ntu.edu.tw/~cjlin/libsvm/)
+* linear SVM training: [libsvm-3.0-1](http://www.csie.ntu.edu.tw/~cjlin/libsvm/)
 
 * fast blas convolution code (from [voc-release-4.0](http://www.cs.brown.edu/~pff/latent/)), 
 
