@@ -1,47 +1,202 @@
-### ICCV2011 Abstract
+Welcome to the Exemplar-SVM library, a large-scale object recognition
+library developed at Carnegie Mellon University while obtaining my PhD
+in Robotics. 
+  -- Tomasz Malisiewicz
+
+The code is written in Matlab and is the basis of the following two
+projects:
+
+## [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/), [Abhinav Gupta](http://www.cs.cmu.edu/~abhinavg), [Alexei A. Efros](http://www.cs.cmu.edu/~efros). **Ensemble of Exemplar-SVMs for Object Detection and Beyond.** In ICCV, 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/projects/iccv11/exemplarsvm-iccv11.pdf) | [Project Page](http://www.cs.cmu.edu/~tmalisie/projects/iccv11/) 
+
+![](https://github.com/quantombone/exemplarsvm/raw/master/images/exemplar_classifiers-small_n.png)
+
+Abstract
 
 This paper proposes a conceptually simple but surprisingly powerful method which combines the effectiveness of a discriminative object detector with the explicit correspondence offered by a nearest-neighbor approach. The method is based on training a separate linear SVM classifier for every exemplar in the training set. Each of these Exemplar-SVMs is thus defined by a single positive instance and millions of negatives. While each detector is quite specific to its exemplar, we empirically observe that an ensemble of such Exemplar-SVMs offers surprisingly good generalization. Our performance on the PASCAL VOC detection task is on par with the much more complex latent part-based model of Felzenszwalb et al., at only a modest computational cost increase. But the central benefit of our approach is that it creates an explicit association between each detection and a single training exemplar. Because most detections show good alignment to their associated exemplar, it is possible to transfer any available exemplar meta-data (segmentation, geometric structure, 3D model, etc.) directly onto the detections, which can then be used as part of overall scene understanding.
 
-![](https://github.com/quantombone/exemplarsvm/raw/master/images/exemplar_classifiers-small_n.png)
+---
+
+## [Abhinav Shrivastava](http://www.abhinav-shrivastava.info/), [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/), [Abhinav Gupta](http://www.cs.cmu.edu/~abhinavg), [Alexei A. Efros](http://www.cs.cmu.edu/~efros). **Data-driven Visual Similarity for Cross-domain Image Matching.** In SIGGRAPH ASIA, December 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/projects/sa11/shrivastava-sa11.pdf) | [Project Page](http://graphics.cs.cmu.edu/projects/crossDomainMatching/)
+
+![](https://github.com/quantombone/exemplarsvm/raw/v1/images/sa_teaser.png)
+
+Abstract
+
+The goal of this work is to find visually similar images even if they
+appear quite different at the raw pixel level. This task is
+particularly important for matching images across visual domains, such
+as photos taken over different seasons or lighting conditions,
+paintings, hand-drawn sketches, etc. We propose a surprisingly simple
+method that estimates the relative importance of different features in
+a query image based on the notion of "data-driven uniqueness". We
+employ standard tools from discriminative object detection in a novel
+way, yielding a generic approach that does not depend on a particular
+image representation or a specific visual domain. Our approach shows
+good performance on a number of difficult cross-domain visual tasks
+e.g., matching paintings or sketches to real photographs. The method
+also allows us to demonstrate novel applications such as Internet
+re-photography, and painting2gps.
+
+---
+
+More details and experimental evaluation can be found in my PhD thesis, available to download as a PDF.
+
+[Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/). **Exemplar-based Representations for Object Detection, Association and Beyond.** PhD Dissertation, tech. report CMU-RI-TR-11-32. August, 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/thesis/malisiewicz_thesis.pdf)
+
 ---- 
-**Author + Executive Exemplar-SVM Developer**: [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/)
-<br/>
-**Exemplar-SVM Fellow Developer**: [Abhinav Shrivastava](http://www.abhinav-shrivastava.info/)
-<br/>
-**Exemplar-SVM Visionary**: [Abhinav Gupta](http://www.cs.cmu.edu/~abhinavg)
-<br/>
-**Exemplar-SVM Visionary**: [Alexei A. Efros](http://www.cs.cmu.edu/~efros)
 
-###Please cite the following paper if you use this library:
+This object recognition library uses some great open-source software:
 
-Tomasz Malisiewicz, Abhinav Gupta, Alexei A. Efros. **Ensemble of Exemplar-SVMs for Object Detection and Beyond.** In ICCV, 2011. 
-[PDF](http://www.cs.cmu.edu/~tmalisie/projects/iccv11/exemplarsvm-iccv11.pdf) 
-[Project Page](http://www.cs.cmu.edu/~tmalisie/projects/iccv11/) 
+* Linear SVM training: [libsvm-3.0-1](http://www.csie.ntu.edu.tw/~cjlin/libsvm/)
 
-###See my PhD thesis for more information and ICCV follow-up experiments:
+* Fast blas convolution code (from [voc-release-4.0](http://www.cs.brown.edu/~pff/latent/)), 
 
-Tomasz Malisiewicz. **Exemplar-based Representations for Object Detection, Association and Beyond.** PhD Dissertation, tech. report CMU-RI-TR-11-32. August, 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/thesis/malisiewicz_thesis.pdf)
-
-###See our SIGGRAPH ASIA 2011 paper for image on image matching:
-Abhinav Shrivastava, Tomasz Malisiewicz, Abhinav Gupta, Alexei A. Efros. **Data-driven Visual Similarity for Cross-domain Image Matching.** In SIGGRAPH ASIA, December 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/projects/sa11/shrivastava-sa11.pdf) [Project Page](http://graphics.cs.cmu.edu/projects/crossDomainMatching/) 
-
-----
-This object recognition library uses some great software:
-
-* [libsvm-3.0-1](http://www.csie.ntu.edu.tw/~cjlin/libsvm/)
-
-* fast blas convolution code (from [voc-release-4.0](http://www.cs.brown.edu/~pff/latent/)), 
-
-* 31-D HOG feature code (from [voc-release-3.1](http://www.cs.brown.edu/~pff/latent/)), 
+* HOG feature code (31-D) (from [voc-release-3.1](http://www.cs.brown.edu/~pff/latent/)), 
 
 * [VOC development/evaluation code](http://pascallin.ecs.soton.ac.uk/challenges/VOC/) imported from the PASCAL VOC website
 
----
-## Quickstart Guide
 
- * For training your own exemplars, see the notes in [exemplarsvm/demos/README.md](https://github.com/quantombone/exemplarsvm/blob/master/demos/README.md) and the main training script in [exemplarsvm/demos/voc_demo_esvm.m](https://github.com/quantombone/exemplarsvm/blob/master/demos/voc_demo_esvm.m)
- 
- * For evaluating the PASCAL VOC 2007 pre-trained exemplars, see the notes in [exemplarsvm/demos/README.md](https://github.com/quantombone/exemplarsvm/blob/master/demos/README.md) and the main evaluation function in [exemplarsvm/demos/voc_demo_apply.m](https://github.com/quantombone/exemplarsvm/blob/master/demos/voc_demo_apply.m)
+----
+
+# MATLAB Quick Start Guide
+
+To get started, you need to install MATLAB and download the code from Github. This code has been tested on Mac OS X and Linux.  Pre-compiled Mex files for Mac OS X and Linux are included.
+
+## Download Exemplar-SVM Library source code (MATLAB and C++)
+``` sh
+$ cd ~/projects/
+$ git clone git@github.com:quantombone/exemplarsvm.git
+$ cd ~/projects/exemplarsvm
+```
+
+## Make sure Exemplar-SVM library is compiled and working (You shouldn't have to do this on Mac OS X or Linux)
+``` sh
+$ matlab
+$ >> cd features/
+$ >> features_compile;
+$ >> cd ../util/
+$ >> util_compile;
+$ >> cd ../libsvm/
+$ >> libsvm_compile;
+```
+
+## Download and load pre-trained VOC2007 model(s)
+``` sh
+$ matlab
+$ addpath(genpath(pwd))
+$ >> esvm_download_models('bus');
+$ >> load voc2007-bus.mat #vars "models", "M" and URL-based "test_set" are loaded
+```
+
+You can alternatively download the pre-trained models individually from [http://people.csail.mit.edu/tomasz/exemplarsvm/models/](http://people.csail.mit.edu/tomasz/exemplarsvm/models/) or a tar file of all models [voc2007-models.tar](http://people.csail.mit.edu/tomasz/exemplarsvm/models/voc2007-models.tar) (NOTE: 449MB)
+
+``` sh
+$ cd ~/projects/exemplarsvm/
+$ wget http://people.csail.mit.edu/~tomasz/exemplarsvm/voc2007-models.tar
+$ tar -xf voc2007-models.tar
+```
+
+then in MATLAB, you can load models by their name:
+
+``` sh
+$ matlab
+$ >> load voc2007_bus.mat
+```
+
+
+## Apply models to a set of images (test_set)
+
+``` sh
+$ >> esvm_demo_apply_exemplars(test_set, models, M);
+```
+
+Or load your own image
+
+``` sh
+$ matlab
+$ >> I = imread('image1.png'); #load your own image
+$ >> esvm_demo_apply_exemplars(I, models, M);
+```
+
+Or load your own set of images
+
+``` sh
+$ matlab
+$ >> I1 = imread('image1.png'); #your own image
+$ >> ...
+$ >> IN = imread('imageN.png'); #your own image
+$ >> Iarray = {I1, ..., IN};
+$ >> esvm_demo_apply_exemplars(Iarray, models, M)
+```
+
+Or process a directory of images
+
+``` sh
+$ matlab
+$ >> Idirectory = '~/images/';
+$ >> esvm_demo_apply_exemplars(Idirectory, models, M)
+```
+
+---
+
+# Train and Test an Ensemble of Exemplar-SVMs from scratch
+
+
+The training scripts are designed to work with the PASCAL VOC 2007
+dataset, so we need to download that first.
+
+## Install PASCAL VOC 2007 trainval/test sets
+``` sh
+$ mkdir /nfs/baikal/tmalisie/pascal #Make a directory for the PASCAL VOC data
+$ cd /nfs/baikal/tmalisie/pascal
+$ wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
+$ wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar
+$ tar xf VOCtest_06-Nov-2007.tar 
+$ tar xf VOCtrainval_06-Nov-2007.tar 
+``` 
+
+You can also get the VOC 2007 dataset tar files manually, [VOCtrainval_06-Nov-2007.tar](http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) and [VOCtest_06-Nov-2007.tar](http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar)
+
+
+## Edit directories in esvm_script_train_voc_class.m 
+``` sh
+data_directory = '/your/directory/to/pascal/VOCdevkit/';
+results_directory = '/your/results/directory/';
+```
+
+## Training and Evaluating an Ensemble of "bus" Exemplar-SVMs
+``` sh
+$ matlab
+$ addpath(genpath(pwd))
+$ >> [models,M] = esvm_script_train_voc_class('bus');
+# All output (models, M-matrix, AP curve) has been written to results_directory
+```
+
+# Extra: How to run the Exemplar-SVM framework on a cluster?
+
+This library was meant to run on a cluster with a shared NFS/AFS file
+structure where all nodes can read/write data from a common data
+source/target.  The PASCAL VOC dataset must be installed on such a
+shared resource and the results directory as well.  The idea is that
+results are written as .mat files and intermediate work is protected
+via lock files. Lock files are temporary files (they are directories
+actually) which are deleted once something has finished process.  This
+means that the entire voc training script can be replicated across a
+cluster, you can run the script 200x times and the training will
+happen in parallel.
+
+To run ExemplarSVM on a cluster, first make sure you have a cluster,
+use an ssh-based launcher such as my
+[warp_scripts](https://github.com/quantombone/warp_scripts) github
+project.  I have used warp_starter.sh at CMU (using WARP cluster)
+and sc.sh at MIT (using the continents).
+
+### Here is the command I often use at MIT to start Exemplar-SVM runs, where machine_list.sh contains computer names
+``` sh
+$ cd ~/warp_scripts/
+$ ./sc.sh "cd ~/projects/exemplarsvm; addpath(genpath(pwd)); esvm_script_train_voc_class('train');"
+```
+
 
 --- 
 **Copyright (C) 2011 by Tomasz Malisiewicz**

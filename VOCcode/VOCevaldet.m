@@ -73,7 +73,7 @@ sss = tic;
 [ap, apold, rec, prec, fp, tp, is_correct] = get_aps(VOCopts,draw,cls,gtids,gt,npos,ids,confidence,BB);
 
 finaltime = toc(sss);
-fprintf(1,'final time is %.3f\n',finaltime);
+fprintf(1,'Time for computing AP: %.3fsec\n',finaltime);
 
 function [ap,apold,rec,prec,fp,tp,is_correct] = get_aps(VOCopts,draw,cls,gtids,gt,npos,ids,confidence,BB);
 
@@ -113,6 +113,7 @@ for d=1:nd
     % assign detection to ground truth object if any
     bb=BB(:,d);
     ovmax=-inf;
+
     for j=1:size(gt(i).BB,2)
         bbgt=gt(i).BB(:,j);
         bi=[max(bb(1),bbgt(1)) ; max(bb(2),bbgt(2)) ; min(bb(3),bbgt(3)) ; min(bb(4),bbgt(4))];

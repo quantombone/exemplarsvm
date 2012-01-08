@@ -4,32 +4,36 @@ function [feat, scale] = featpyramid2(im, sbin, params)
 %Make sure image is in double format
 im = double(im);
 
-if isfield(params,'MAXSCALE')
-  MAXSCALE = params.MAXSCALE;
+if isfield(params,'detect_max_scale')
+  detect_max_scale = params.detect_max_scale;
 else
-  MAXSCALE = 1.0;
+  detect_max_scale = 1.0;
 end
 
-if isfield(params,'MINSCALE')
-  MINSCALE = params.MINSCALE;
+if isfield(params,'detect_min_scale')
+  detect_min_scale = params.detect_min_scale;
 else
-  MINSCALE = .01;
+  detect_min_scale = .01;
 end
 
+%Hardcoded maximum number of levels in the pyramid
 MAXLEVELS = 200;
+
+%Hardcoded minimum dimension of smallest (coarsest) pyramid level
 MINDIMENSION = 5;
 
 %Get the levels per octave from the parameters
-interval = params.lpo;
+interval = params.detect_levels_per_octave;
 
 sc = 2 ^(1/interval);
 
-% Start at MAXSCALE, and keep going down by the increment sc, until
-% we reach MAXLEVELS or MINSCALE
+% Start at detect_max_scale, and keep going down by the increment sc, until
+% we reach MAXLEVELS or detect_min_scale
+scale = zeros(1,MAXLEVELS);
 for i = 1:MAXLEVELS
-  scaler = MAXSCALE / sc^(i-1);
+  scaler = detect_max_scale / sc^(i-1);
   
-  if scaler < MINSCALE
+  if scaler < detect_min_scale
     return
   end
   
@@ -38,7 +42,8 @@ for i = 1:MAXLEVELS
   
   %if minimum dimensions is less than or equal to 5, exit
   if min([size(scaled,1) size(scaled,2)])<=MINDIMENSION
-    return
+    scale = scale(scale>0);
+    return;
   end
 
   feat{i} = features(scaled,sbin);
@@ -57,6 +62,7 @@ for i = 1:MAXLEVELS
   %if the max dimensions is less than or equal to 5, dont produce
   %any more levels
   if max([size(feat{i},1) size(feat{i},2)])<=MINDIMENSION
+    scale = scale(scale>0);
     return;
   end
   
