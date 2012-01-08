@@ -90,6 +90,19 @@ $ >> load voc2007-bus.mat #vars "models", "M" and URL-based "test_set" are loade
 
 You can alternatively download the pre-trained models individually from [http://people.csail.mit.edu/tomasz/exemplarsvm/models/](http://people.csail.mit.edu/tomasz/exemplarsvm/models/) or a tar file of all models [voc2007-models.tar](http://people.csail.mit.edu/tomasz/exemplarsvm/models/voc2007-models.tar) (NOTE: 449MB)
 
+``` sh
+$ cd ~/projects/exemplarsvm/
+$ wget http://people.csail.mit.edu/~tomasz/exemplarsvm/voc2007-models.tar
+$ tar -xf voc2007-models.tar
+```
+
+then in MATLAB, you can load models by their name:
+
+``` sh
+$ matlab
+$ >> load voc2007_bus.mat
+```
+
 
 ## Apply models to a set of images (test_set)
 
@@ -122,23 +135,6 @@ Or process a directory of images
 $ matlab
 $ >> Idirectory = '~/images/';
 $ >> esvm_demo_apply_exemplars(Idirectory, models, M)
-```
-
----
-
-##Also, you can download all pre-trained PASCAL VOC2007 models (20 classes)
-
-``` sh
-$ cd ~/projects/exemplarsvm/
-$ wget http://people.csail.mit.edu/~tomasz/exemplarsvm/voc2007-models.tar
-$ tar -xf voc2007-models.tar
-```
-
-then in MATLAB, you can load models by their name:
-
-``` sh
-$ matlab
-$ >> load voc2007_bus.mat
 ```
 
 ---
