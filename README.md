@@ -7,14 +7,34 @@ and is the basis of the following two projects:
 
 ![](https://github.com/quantombone/exemplarsvm/raw/master/images/exemplar_classifiers-small_n.png)
 
-### ICCV2011 Abstract
+Abstract
 
 This paper proposes a conceptually simple but surprisingly powerful method which combines the effectiveness of a discriminative object detector with the explicit correspondence offered by a nearest-neighbor approach. The method is based on training a separate linear SVM classifier for every exemplar in the training set. Each of these Exemplar-SVMs is thus defined by a single positive instance and millions of negatives. While each detector is quite specific to its exemplar, we empirically observe that an ensemble of such Exemplar-SVMs offers surprisingly good generalization. Our performance on the PASCAL VOC detection task is on par with the much more complex latent part-based model of Felzenszwalb et al., at only a modest computational cost increase. But the central benefit of our approach is that it creates an explicit association between each detection and a single training exemplar. Because most detections show good alignment to their associated exemplar, it is possible to transfer any available exemplar meta-data (segmentation, geometric structure, 3D model, etc.) directly onto the detections, which can then be used as part of overall scene understanding.
 
+---
 
 [Abhinav Shrivastava](http://www.abhinav-shrivastava.info/), [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/), [Abhinav Gupta](http://www.cs.cmu.edu/~abhinavg), [Alexei A. Efros](http://www.cs.cmu.edu/~efros). **Data-driven Visual Similarity for Cross-domain Image Matching.** In SIGGRAPH ASIA, December 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/projects/sa11/shrivastava-sa11.pdf) [Project Page](http://graphics.cs.cmu.edu/projects/crossDomainMatching/) 
 
 ![](https://github.com/quantombone/exemplarsvm/raw/v1/images/sa_teaser.png)
+
+Abstract
+
+The goal of this work is to find visually similar images even if they
+appear quite different at the raw pixel level. This task is
+particularly important for matching images across visual domains, such
+as photos taken over different seasons or lighting conditions,
+paintings, hand-drawn sketches, etc. We propose a surprisingly simple
+method that estimates the relative importance of different features in
+a query image based on the notion of "data-driven uniqueness". We
+employ standard tools from discriminative object detection in a novel
+way, yielding a generic approach that does not depend on a particular
+image representation or a specific visual domain. Our approach shows
+good performance on a number of difficult cross-domain visual tasks
+e.g., matching paintings or sketches to real photographs. The method
+also allows us to demonstrate novel applications such as Internet
+re-photography, and painting2gps.
+
+---
 
 [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/). **Exemplar-based Representations for Object Detection, Association and Beyond.** PhD Dissertation, tech. report CMU-RI-TR-11-32. August, 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/thesis/malisiewicz_thesis.pdf)
 
