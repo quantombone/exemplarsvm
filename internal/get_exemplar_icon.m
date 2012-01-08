@@ -53,11 +53,16 @@ g2 = g + PADDER;
 mask(g2(2):g2(4),g2(1):g2(3)) = 1;
 
 if loadseg == 1 && exist('VOCopts','var')
-  [I2, mask2] = load_seg(VOCopts,models{index});
-  if numel(I2) > 0
-    I = I2;
-    mask = mask2;
-  end  
+  try
+    %NOTE(TJM): this is voc-only and should not be here in the most
+    %general scenario
+    [I2, mask2] = load_seg(VOCopts,models{index});
+    if numel(I2) > 0
+      I = I2;
+      mask = mask2;
+    end  
+  catch
+  end
 end
 
 cb = models{index}.gt_box;    

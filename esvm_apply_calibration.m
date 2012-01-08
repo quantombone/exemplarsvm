@@ -30,7 +30,12 @@ end
 bboxes = cell(1,length(grid));
 maxos = cell(1,length(grid));
 
-curcls = find(ismember(params.dataset_params.classes,models{1}.cls));
+try
+  curcls = find(ismember(params.dataset_params.classes, ...
+                         models{1}.cls));
+catch
+  %dataset_params is missing
+end
 
 for i = 1:length(grid)  
   curid = grid{i}.curid;

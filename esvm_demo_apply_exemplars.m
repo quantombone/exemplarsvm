@@ -5,25 +5,26 @@ function esvm_demo_apply_exemplars(imageset, models, M)
 if ~iscell(imageset) 
   if isdir(imageset)
     files = dir(imageset);
-    isdir=arrayfun(@(x)x.isdir,files);
-    files = files(~isdir);
+    isdirs = arrayfun(@(x)x.isdir,files);
+    files = files(~isdirs);
   else
     imageset = {imageset};
   end
 end
 
+params = esvm_get_default_params;
 
 %This is nice walk through the data
-for i = 1:length(test_set)
-  I = convert_to_I(test_set{i});
+for i = 1:length(imageset)
+  I = convert_to_I(imageset{i});
   ts = {I};
-  test_grid = esvm_detect_imageset(ts, models(1), test_params);
+  grid = esvm_detect_imageset(ts, models, params);
   
-  test_struct = esvm_apply_calibration(test_grid, models(1), M, test_params);
+  result_struct = esvm_apply_calibration(grid, models, M, params);
   
   maxk = 1;
-  allbbs = esvm_show_top_dets(test_struct, test_grid, ...
-                              ts, models(1), ...
+  allbbs = esvm_show_top_dets(result_struct, grid, ...
+                              ts, models, ...
                               params,  maxk);
   drawnow
 end
@@ -47,7 +48,7 @@ dataset_params.params = get_default_mining_params;
 
 for i = 1:length(imageset)
   %res =
-  %esvm_detect(convert_to_I(test_set{i}),models,models{1}.mining_params);
+  %esvm_detect(convert_to_I(imageset{i}),models,models{1}.mining_params);
   tic
   grid = esvm_detect_imageset(imageset(i), models, dataset_params.params);
   toc
@@ -87,5 +88,5 @@ end
 
 
 % calibration_data.betas = betas;
-% test_set = test_set(1);
-% esvm_detect_set(dataset_params, models, test_set,[], calibration_data);
+% imageset = imageset(1);
+% esvm_detect_set(dataset_params, models, imageset,[], calibration_data);

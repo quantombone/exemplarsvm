@@ -175,3 +175,7 @@ mining_params.init_params = init_params;
 mining_params.model_type = 'exemplar';
 
 mining_params.SKIP_EVAL = 0;
+
+mining_params.dataset_params.localdir = '';
+mining_params.dataset_params.datadir = '';
+%mining_params.dataset_params.resdir = '';

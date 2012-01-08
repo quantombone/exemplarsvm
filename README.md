@@ -75,7 +75,7 @@ $ >> load voc2007-bus.mat #vars "models" and "M" are loaded
 ```
 
 ``` sh
-$ >> load bus_test_set.mat
+$ >> load esvm_demo_bus_test_set.mat
 $ >> esvm_demo_apply_exemplars(bus_set, models, M);
 ```
 
