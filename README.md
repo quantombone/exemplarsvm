@@ -18,7 +18,7 @@ This paper proposes a conceptually simple but surprisingly powerful method which
 
 ## [Abhinav Shrivastava](http://www.abhinav-shrivastava.info/), [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/), [Abhinav Gupta](http://www.cs.cmu.edu/~abhinavg), [Alexei A. Efros](http://www.cs.cmu.edu/~efros). **Data-driven Visual Similarity for Cross-domain Image Matching.** In SIGGRAPH ASIA, December 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/projects/sa11/shrivastava-sa11.pdf) | [Project Page](http://graphics.cs.cmu.edu/projects/crossDomainMatching/)
 
-![](https://github.com/quantombone/exemplarsvm/raw/v1/images/sa_teaser.png)
+![](https://github.com/quantombone/exemplarsvm/raw/master/images/sa_teaser.png)
 
 Abstract
 
