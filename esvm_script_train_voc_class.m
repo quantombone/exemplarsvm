@@ -1,6 +1,6 @@
 %This is an Exemplar-SVM training demo
 %Tomasz Malisiewicz (tomasz@cmu.edu)
-function esvm_script_train_voc_class(cls)
+function [models,M] = esvm_script_train_voc_class(cls)
 
 %% Initialize dataset parameters
 %data_directory = '/Users/tomasz/projects/Pascal_VOC/';

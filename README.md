@@ -62,62 +62,61 @@ To get started, you need to install MATLAB and download the code from Github.
 ``` sh
 cd ~/projects/
 git clone git@github.com:quantombone/exemplarsvm.git
-```
-
-## Start MATLAB
-``` sh
 cd ~/projects/exemplarsvm
-matlab
 ```
 
-## Download and cache some pre-trained models from within MATLAB
+## Download and cache some pre-trained VOC2007 models
 
 ``` sh
-[models,betas,M] = esvm_download_models('bus');
+$ matlab
+$ >> esvm_download_models('bus');
+$ >> load bus.mat
+$ >> load bus_test_set.mat
+$ >> esvm_demo_apply_exemplars(bus_set,models,M);
 ```
 
-## Load up some images
-
-#VOC2007 bus images from testset
+#or load your own image
 ``` sh
-load bus_set.mat 
-esvm_demo_apply_exemplars(bus_set,models,M);
+$ matlab
+$ >> I = imread('image1.png'); #your own image
+$ >> esvm_demo_apply_exemplars(I,models,M)
 ```
 
-#load your own image
+#or load your own set of images
 ``` sh
-I = imread('...'); #your own image
-esvm_demo_apply_exemplars(I,models,M)
-```
-
-#load your own set of images
-``` sh
-Iarray = {I1,I2,...,IN}
-esvm_demo_apply_exemplars(Iarray,models,M)
+$ matlab
+$ >> I1 = imread('image1.png'); #your own image
+$ >> ...
+$ >> IN = imread('imageN.png'); #your own image
+$ >> Iarray = {I1,...,IN};
+$ >> esvm_demo_apply_exemplars(Iarray,models,M)
 ```
 
 #a directory of images
 ``` sh
-Idirectory = '~/myimages/';
-esvm_demo_apply_exemplars(Idirectory,models,M)
+$ matlab
+$ >> Idirectory = '~/images/';
+$ >> esvm_demo_apply_exemplars(Idirectory,models,M)
 ```
 
 Also, you can download all models
 
 ``` sh
-$ cd ~/projects/exemplarsvm
+$ cd ~/projects/exemplarsvm/
 $ wget http://people.csail.mit.edu/~tomasz/exemplarsvm/voc2007-models.tar
 $ tar -xf voc2007-models.tar
 ```
 
-then in MATLAB, you can load models like this:
+then in MATLAB, you can load models by their name:
 
 ``` sh
+$ matlab
 $ >> load bicycle.mat
 ```
 
-## Making sure Exemplar-SVM library is compiled and working
+### Making sure Exemplar-SVM library is compiled and working
 ``` sh
+$ matlab
 $ >> cd features/
 $ >> features_compile;
 $ >> cd ../util/
@@ -148,17 +147,9 @@ $ tar xf VOCtrainval_06-Nov-2007.tar
 
 ### Make sure esvm_script_train_voc_class.m contains the right paths for voc installation as well as the results directory
 
-## Training an Exemplar-SVM "bus" detector
+## Training and Evaluating an Ensemble of "bus" Exemplar-SVMs
 ``` sh
 $ >> esvm_script_train_voc_class('bus');
-```
-
-## Look at some detections
-``` sh
-$ cd ~/projects/exemplarsvm
-$ matlab
-$ >> addpath(genpath(pwd));
-$ >> voc_demo_apply('bus')
 ```
 
 # Extra: How to run the Exemplar-SVM framework on a cluster 
