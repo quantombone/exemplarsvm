@@ -56,7 +56,37 @@ This object recognition library uses some great software:
 
 # MATLAB Quick Start Guide
 
-Inside this directory you will find two demo files, one to show off Exemplar-svm training, and the other to show how to apply a pre-trained ensemble of exemplars on a test-set of images. These demos are meant to work with the PASCAL VOC 2007 dataset, so let's download some data!
+Inside this directory you will find two demo files, one to show off
+Exemplar-svm training, and the other to show how to apply a
+pre-trained ensemble of exemplars on a test-set of images. 
+
+
+## Downloading Exemplar-SVM MATLAB source code
+``` sh
+$ cd ~/projects/
+$ git clone git@github.com:quantombone/exemplarsvm.git
+$ cd ~/projects/exemplarsvm
+$ matlab
+$ >> addpath(genpath(pwd));
+```
+
+## Download and cache some pre-trained models
+``` sh
+$ >> [models,betas,M] = esvm_download_models('bus');
+```
+
+Alternatively you can download all models
+``` sh
+$ cd ~/projects/exemplarsvm;
+$ wget http://people.csail.mit.edu/~tomasz/exemplarsvm/voc2007-models.tar
+$ tar -xf voc2007-models.tar
+$ rm voc2007-models.tar
+```
+
+
+These demos
+are meant to work with the PASCAL VOC 2007 dataset, so let's download
+some data!
 
 ## Installing PASCAL VOC 2007 trainval/test sets
 ``` sh
@@ -68,17 +98,9 @@ $ tar xf VOCtest_06-Nov-2007.tar
 $ tar xf VOCtrainval_06-Nov-2007.tar 
 ``` 
 
-## Downloading Exemplar-SVM MATLAB source code
-``` sh
-$ cd ~/projects/
-$ git clone git@github.com:quantombone/exemplarsvm.git
-```
 
 ## Making sure Exemplar-SVM library is compiled and working
 ``` sh
-$ cd ~/projects/exemplarsvm
-$ matlab
-$ >> addpath(genpath(pwd));
 $ >> cd features/
 $ >> features_compile;
 $ >> cd ../util/
@@ -98,10 +120,7 @@ At this point you can choose to either train your own detector, or download the 
 
 ## Training an Exemplar-SVM "bus" detector
 ``` sh
-$ cd ~/projects/exemplarsvm
-$ matlab
-$ >> addpath(genpath(pwd));
-$ >> voc_demo_esvm
+$ >> esvm_script_train_voc_class('bus');
 ```
 
 # 2) Applying pre-trained models to a set of images

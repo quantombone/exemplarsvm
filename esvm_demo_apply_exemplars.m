@@ -1,6 +1,26 @@
 function esvm_demo_apply_exemplars(imageset, models, M)
 %In this application demo, we simply load the models belonging to
 %some class and apply them
+
+
+
+%This is nice walk through the data
+for i = 1:length(test_set)
+  I = convert_to_I(test_set{i});
+  ts = {I};
+  test_grid = esvm_detect_imageset(ts, models(1), test_params);
+  
+  test_struct = esvm_apply_calibration(test_grid, models(1), M, test_params);
+  
+  maxk = 1;
+  allbbs = esvm_show_top_dets(test_struct, test_grid, ...
+                              ts, models(1), ...
+                              params,  maxk);
+  drawnow
+end
+
+return;
+
 data_directory = '/Users/tmalisie/projects/Pascal_VOC/'
 dataset_params = get_voc_dataset('VOC2007',...
                                  data_directory);
