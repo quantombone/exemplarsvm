@@ -139,31 +139,33 @@ for i = 1:length(bboxes)
   end
 end
 
-% if exist('M','var') && length(M)>0 && isfield(M,'betas')
+if exist('M','var') && length(M)>0 && isfield(M,'betas')
 
-%   fprintf(1,'Propagating scores onto raw detections\n');
-%   %% propagate scores onto raw boxes
-%   for i = 1:length(bboxes)
-%     calib_boxes = calibrate_boxes(raw_boxes{i},M.betas);
-%     beta_scores = calib_boxes(:,end);
+  fprintf(1,'Propagating scores onto raw detections\n');
+  %% propagate scores onto raw boxes
+  for i = 1:length(bboxes)
+    allMscores = bboxes{i}(:,end);
+    calib_boxes = calibrate_boxes(raw_boxes{i},M.betas);
+    beta_scores = calib_boxes(:,end);
     
-%     osmat = getosmatrix_bb(bboxes{i},raw_boxes{i});
-%     for j = 1:size(osmat,1)
-%       curscores = (osmat(j,:)>.8) .* beta_scores';
-%       [aa,bb] = max(curscores);
-%       bboxes{i}(j,:) = raw_boxes{i}(bb,:);
-%       bboxes{i}(j,end) = aa;
-%     end
+    osmat = getosmatrix_bb(bboxes{i},raw_boxes{i});
+    for j = 1:size(osmat,1)
+      curscores = (osmat(j,:)>.8) .* beta_scores';
+      [aa,bb] = max(curscores);
+      bboxes{i}(j,:) = raw_boxes{i}(bb,:);
+      bboxes{i}(j,end) = aa;
+    end
+    bboxes{i}(:,end) = allMscores;
     
-%     % new_scores = beta_scores;
-%     % for j = 1:length(nbrlist{i})
-%     %   new_scores(nbrlist{i}{j}) = max(new_scores(nbrlist{i}{j}),...
-%     %                                   beta_scores(nbrlist{i}{j}).*...
-%     %                                   bboxes{i}(nbrlist{i}{j},end));
-%     % end
-%     % bboxes{i}(:,end) = new_scores;
-%   end
-% end
+    % new_scores = beta_scores;
+    % for j = 1:length(nbrlist{i})
+    %   new_scores(nbrlist{i}{j}) = max(new_scores(nbrlist{i}{j}),...
+    %                                   beta_scores(nbrlist{i}{j}).*...
+    %                                   bboxes{i}(nbrlist{i}{j},end));
+    % end
+    % bboxes{i}(:,end) = new_scores;
+  end
+end
 
 % Clip boxes to image dimensions since VOC testing annotation
 % always fall within the image
