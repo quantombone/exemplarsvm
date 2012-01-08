@@ -91,11 +91,10 @@ $ >> esvm_download_models('bus');
 $ >> load voc2007-bus.mat #vars "models", "M" and URL-based "test_set" are loaded
 ```
 
-## Apply models to a set of images
+## Apply models to a set of images (test_set)
 
 ``` sh
-$ >> load esvm_demo_bus_test_set.mat
-$ >> esvm_demo_apply_exemplars(bus_set, models, M);
+$ >> esvm_demo_apply_exemplars(test_set, models, M);
 ```
 
 ### Or load your own image
