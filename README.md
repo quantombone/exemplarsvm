@@ -58,48 +58,54 @@ This object recognition library uses some great open-source software:
 
 To get started, you need to install MATLAB and download the code from Github.
 
-## Downloading Exemplar-SVM MATLAB source code
+## Download Exemplar-SVM MATLAB source code
 ``` sh
 cd ~/projects/
 git clone git@github.com:quantombone/exemplarsvm.git
 cd ~/projects/exemplarsvm
 ```
 
-## Download and cache some pre-trained VOC2007 models
+## Download and load pre-trained VOC2007 model(s)
 
 ``` sh
 $ matlab
+$ addpath(genpath(pwd))
 $ >> esvm_download_models('bus');
-$ >> load bus.mat
-$ >> load bus_test_set.mat
-$ >> esvm_demo_apply_exemplars(bus_set,models,M);
+$ >> load bus.mat #vars "models" and "M" are loaded
 ```
 
-#or load your own image
+``` sh
+$ >> load bus_test_set.mat
+$ >> esvm_demo_apply_exemplars(bus_set, models, M);
+```
+
+### or load your own image
 ``` sh
 $ matlab
 $ >> I = imread('image1.png'); #your own image
-$ >> esvm_demo_apply_exemplars(I,models,M)
+$ >> esvm_demo_apply_exemplars(I, models, M);
 ```
 
-#or load your own set of images
+### or load your own set of images
 ``` sh
 $ matlab
 $ >> I1 = imread('image1.png'); #your own image
 $ >> ...
 $ >> IN = imread('imageN.png'); #your own image
-$ >> Iarray = {I1,...,IN};
-$ >> esvm_demo_apply_exemplars(Iarray,models,M)
+$ >> Iarray = {I1, ..., IN};
+$ >> esvm_demo_apply_exemplars(Iarray, models, M)
 ```
 
-#a directory of images
+### a directory of images
 ``` sh
 $ matlab
 $ >> Idirectory = '~/images/';
-$ >> esvm_demo_apply_exemplars(Idirectory,models,M)
+$ >> esvm_demo_apply_exemplars(Idirectory, models, M)
 ```
 
-Also, you can download all models
+---
+
+###Also, you can download all models
 
 ``` sh
 $ cd ~/projects/exemplarsvm/
@@ -111,10 +117,10 @@ then in MATLAB, you can load models by their name:
 
 ``` sh
 $ matlab
-$ >> load bicycle.mat
+$ >> load voc2007_bus.mat
 ```
 
-### Making sure Exemplar-SVM library is compiled and working
+### Make sure Exemplar-SVM library is compiled and working
 ``` sh
 $ matlab
 $ >> cd features/
@@ -127,15 +133,14 @@ $ >> libsvm_compile;
 
 ---
 
-At this point you can choose to either train your own detector, or download the pre-trained PASCAL VOC 2007 detectors and use them to create detections in a collection of images
+# 1) Train and Test an Ensemble of Exemplar-SVMs from scratch
 
 ---
-# 1) Train, Calibrate, and Test 
 
 The training demos are meant to work with the PASCAL VOC 2007 dataset,
 so let's download some data!
 
-## Installing PASCAL VOC 2007 trainval/test sets
+## Install PASCAL VOC 2007 trainval/test sets
 ``` sh
 $ mkdir /nfs/baikal/tmalisie/pascal #Make a directory for the PASCAL VOC data
 $ cd /nfs/baikal/tmalisie/pascal
@@ -145,11 +150,17 @@ $ tar xf VOCtest_06-Nov-2007.tar
 $ tar xf VOCtrainval_06-Nov-2007.tar 
 ``` 
 
-### Make sure esvm_script_train_voc_class.m contains the right paths for voc installation as well as the results directory
+## Edit esvm_script_train_voc_class.m 
+``` sh
+data_directory = '/your/directory/to/pascal/VOCdevkit/';
+results_directory = '/your/results/directory/';
+```
 
 ## Training and Evaluating an Ensemble of "bus" Exemplar-SVMs
 ``` sh
-$ >> esvm_script_train_voc_class('bus');
+$ matlab
+$ addpath(genpath(pwd))
+$ >> [models,M] = esvm_script_train_voc_class('bus');
 ```
 
 # Extra: How to run the Exemplar-SVM framework on a cluster 
