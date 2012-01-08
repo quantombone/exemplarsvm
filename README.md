@@ -70,7 +70,7 @@ $ git clone git@github.com:quantombone/exemplarsvm.git
 $ cd ~/projects/exemplarsvm
 ```
 
-### Make sure Exemplar-SVM library is compiled and working (You shouldn't have to do this on Mac OS X or Linux)
+## Make sure Exemplar-SVM library is compiled and working (You shouldn't have to do this on Mac OS X or Linux)
 ``` sh
 $ matlab
 $ >> cd features/
@@ -82,7 +82,6 @@ $ >> libsvm_compile;
 ```
 
 ## Download and load pre-trained VOC2007 model(s)
-
 ``` sh
 $ matlab
 $ addpath(genpath(pwd))
@@ -90,20 +89,25 @@ $ >> esvm_download_models('bus');
 $ >> load voc2007-bus.mat #vars "models", "M" and URL-based "test_set" are loaded
 ```
 
+You can alternatively download the pre-trained models individually from [http://people.csail.mit.edu/tomasz/exemplarsvm/models/](http://people.csail.mit.edu/tomasz/exemplarsvm/models/) or a tar file of all models [voc2007-models.tar](http://people.csail.mit.edu/tomasz/exemplarsvm/models/voc2007-models.tar) (NOTE: 449MB)
+
+
 ## Apply models to a set of images (test_set)
 
 ``` sh
 $ >> esvm_demo_apply_exemplars(test_set, models, M);
 ```
 
-### Or load your own image
+Or load your own image
+
 ``` sh
 $ matlab
 $ >> I = imread('image1.png'); #load your own image
 $ >> esvm_demo_apply_exemplars(I, models, M);
 ```
 
-### Or load your own set of images
+Or load your own set of images
+
 ``` sh
 $ matlab
 $ >> I1 = imread('image1.png'); #your own image
@@ -113,7 +117,8 @@ $ >> Iarray = {I1, ..., IN};
 $ >> esvm_demo_apply_exemplars(Iarray, models, M)
 ```
 
-### Or process a directory of images
+Or process a directory of images
+
 ``` sh
 $ matlab
 $ >> Idirectory = '~/images/';
@@ -122,7 +127,7 @@ $ >> esvm_demo_apply_exemplars(Idirectory, models, M)
 
 ---
 
-###Also, you can download all pre-trained PASCAL VOC2007 models (20 classes)
+##Also, you can download all pre-trained PASCAL VOC2007 models (20 classes)
 
 ``` sh
 $ cd ~/projects/exemplarsvm/
@@ -169,7 +174,7 @@ $ >> [models,M] = esvm_script_train_voc_class('bus');
 # All output has been written to results_directory
 ```
 
-# Extra: How to run the Exemplar-SVM framework on a cluster 
+# Extra: How to run the Exemplar-SVM framework on a cluster?
 
 This library was meant to run on a cluster with a shared NFS/AFS file
 structure where all nodes can read/write data from a common data
@@ -185,7 +190,7 @@ happen in parallel.
 To run ExemplarSVM on a cluster, first make sure you have a cluster,
 use an ssh-based launcher such as my
 [warp_scripts](https://github.com/quantombone/warp_scripts) github
-repository.  I have used warp_starter.sh at CMU (using WARP cluster)
+project.  I have used warp_starter.sh at CMU (using WARP cluster)
 and sc.sh at MIT (using the continents).
 
 --- 
