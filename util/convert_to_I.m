@@ -3,22 +3,33 @@ function I = convert_to_I(I)
 %be one of: real image, string, function.
 %Output will be a [M x N x 3] image matrix
 
-if iscell(I)
-  %if we are given a cell array
+%NOTE: convert_to_I should always load image
+% if iscell(I)
+%   %if we are given a cell array
   
-  return;
-end
+%   return;
+% end
 
 %if we have a string, then it is a path
 if isstr(I) 
   if I(end)~=')'
-    I = im2double(imread(I));
+    if (length(I)>=7 && strcmp(I(1:7),'http://'))
+      fprintf(1,'Warning: loading image from URL\n');
+    end
+    I = imread(I);
   else
     I = eval(I);
   end
   %if we have a function, then call it with default arguments
 elseif isa(I,'function_handle')
   I = I();
+elseif isnumeric(I)
+  %If we get here, then we have a numeric representation, so it is
+  %an image
+else
+  fprintf(1,['WARNING: convert_to_I given non-image type as input\' ...
+             'n']);
+  error('Invalid image type');
 end
 
 %now we have a real image
