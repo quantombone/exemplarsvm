@@ -1,10 +1,12 @@
 function esvm_demo_apply_exemplars(imageset, models, M)
-%In this application demo, we simply load the models belonging to
-%some class and apply them
+%In this application demo, we apply the ensemble of Exemplar-SVMs
+%represented by [models,M] onto the sequence of images [imageset]
 
 if isfield(models{1},'I') && isstr(models{1}.I) && length(models{1}.I)>=7 ...
       && strcmp(models{1}.I(1:7),'http://')
-  fprintf(1,'Warning: Models have images as URLs\n -- Use [models]=esvm_update_voc_models(models,local_dir);\n');
+  fprintf(1,['Warning: Models have images as URLs\n -- If you want' ...
+             ' to apply detectors to a LOT of images, download the' ...
+              ' PASCAL VOC2007 dataset locally and call :\n   [models]=esvm_update_voc_models(models,local_dir);\n']);
 end
 
 
@@ -13,17 +15,23 @@ if ~exist('M','var')
 end
 
 if ~iscell(imageset) 
-  if isdir(imageset)
+  if isnumeric(imageset)
+    imageset = {imageset};
+  elseif isdir(imageset)
     files = dir(imageset);
     isdirs = arrayfun(@(x)x.isdir,files);
     files = files(~isdirs);
+    files = {files.name};
+    files = cellfun2(@(x)[imageset '/' x],files);
+    imageset = files;
   else
-    imageset = {imageset};
+    fprintf(1,['Warning, input is not a cell array, not numeric, and' ...
+               ' not a directory\n']);
+    error('Cannot continue');
   end
 end
 
 params = esvm_get_default_params;
-
 
 for i = 1:length(imageset)
   local_detections = esvm_detect_imageset(imageset(i), models, params);
@@ -35,61 +43,3 @@ for i = 1:length(imageset)
                               params,  maxk);
   drawnow
 end
-
-return;
-
-data_directory = '/Users/tmalisie/projects/Pascal_VOC/'
-dataset_params = get_voc_dataset('VOC2007',...
-                                 data_directory);
-% imageset = get_pascal_set(dataset_params, 'test' , setname);
-
-%subset = 1;
-%models = models(subset);
-
-
-dataset_params.params = get_default_mining_params;
-
-for i = 1:length(imageset)
-  %res =
-  %esvm_detect(convert_to_I(imageset{i}),models,models{1}.mining_params);
-  tic
-  grid = esvm_detect_imageset(imageset(i), models, dataset_params.params);
-  toc
-
-  tic
-  if ~exist('M','var')
-    final = esvm_apply_calibration(dataset_params, models, grid);
-  else
-    final = esvm_apply_calibration(dataset_params, models, grid, ...
-                                     M);
-  end
-  toc
-  
-
-
-  
-  show_top_dets(dataset_params, models, grid, imageset(i), 'noname', ...
-                final, 1, 0);
-  drawnow
-  continue
-
-  I = convert_to_I(imageset{i});
-  figure(1)
-  clf
-  imagesc(I)
-  if size(final.final_boxes{1},1) == 0
-    drawnow
-    continue;
-  end
-  final.final_boxes{1}(:,end)
-  bb = final.final_boxes{1}(1,:);
-  plot_bbox(bb)
-  axis image
-  axis off
-  drawnow
-end
-
-
-% calibration_data.betas = betas;
-% imageset = imageset(1);
-% esvm_detect_set(dataset_params, models, imageset,[], calibration_data);
