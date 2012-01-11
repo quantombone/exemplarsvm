@@ -54,7 +54,6 @@ if CACHE_FILE == 1
     fprintf(1,'Pre loading %s\n',resfile);
     res = load_keep_trying(resfile);
     results = res.results;
-    res_struct = res.res_struct;
     return;
   end
 end
