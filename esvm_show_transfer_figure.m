@@ -140,7 +140,7 @@ for i = 1:N
   
   %sprintf('Exemplar.%d',mid)
   
-  plot_bbox(bb2, sprintf('Image %d',mid), [1 1 0], [1 1 0], 0, [2 1])
+  plot_bbox(bb2, sprintf('Exemplar Image %d',mid), [1 1 0], [1 1 0], 0, [2 1])
   
   id_string = '';
   if isfield(models{abs(mid)},'curid')
