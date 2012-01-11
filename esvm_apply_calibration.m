@@ -150,7 +150,7 @@ if exist('M','var') && length(M)>0 && isfield(M,'betas')
     
     osmat = getosmatrix_bb(bboxes{i},raw_boxes{i});
     for j = 1:size(osmat,1)
-      curscores = (osmat(j,:)>.8) .* beta_scores';
+      curscores = (osmat(j,:)>.5) .* beta_scores';
       [aa,bb] = max(curscores);
       bboxes{i}(j,:) = raw_boxes{i}(bb,:);
       bboxes{i}(j,end) = aa;
