@@ -8,6 +8,12 @@ M = [];
 test_set = {};
 if ~exist(f,'file')
   unix(sprintf('wget http://people.csail.mit.edu/tomasz/exemplarsvm/models/%s',f));
+else
+  fprintf(1,'Found %s, not downloading\n',f);
+end
+
+if nargout == 0
+  return;
 end
 
 load(f);
