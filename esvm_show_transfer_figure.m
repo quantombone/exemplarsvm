@@ -189,7 +189,8 @@ if corr == 0
   curcolor = [1 0 0 ];
 end
 
-plot_bbox(clipped_top,models{1}.cls,curcolor, curcolor,0,[2 1]);
+plot_bbox(clipped_top,sprintf('%s: %.3f',models{1}.cls,clipped_top(end)),...
+          curcolor, curcolor,0,[2 1]);
 
 if 0
   %%NOTE: not sure why this is not working?

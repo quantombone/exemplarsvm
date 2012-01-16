@@ -17,29 +17,21 @@ end
 if ~iscell(imageset) 
   if isnumeric(imageset)
     imageset = {imageset};
-  elseif isdir(imageset)
-    files = dir(imageset);
-    isdirs = arrayfun(@(x)x.isdir,files);
-    files = files(~isdirs);
-    files = {files.name};
-    files = cellfun2(@(x)[imageset '/' x],files);
-    imageset = files;
-  else
-    fprintf(1,['Warning, input is not a cell array, not numeric, and' ...
-               ' not a directory\n']);
-    error('Cannot continue');
   end
 end
 
 params = esvm_get_default_params;
 
 for i = 1:length(imageset)
-  local_detections = esvm_detect_imageset(imageset(i), models, params);
+  local_detections = esvm_detect_imageset(imageset(i), models, ...
+                                          params);
+
   result_struct = esvm_apply_calibration(local_detections, models, M, params);
-  
+
   maxk = 1;
   allbbs = esvm_show_top_dets(result_struct, local_detections, ...
                               imageset(i), models, ...
                               params,  maxk);
   drawnow
+  snapnow
 end

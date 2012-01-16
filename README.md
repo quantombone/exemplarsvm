@@ -91,10 +91,11 @@ $ matlab
 You can alternatively download the pre-trained models individually from [http://people.csail.mit.edu/tomasz/exemplarsvm/models/](http://people.csail.mit.edu/tomasz/exemplarsvm/models/) or a tar file of all models [voc2007-models.tar](http://people.csail.mit.edu/tomasz/exemplarsvm/models/voc2007-models.tar) (NOTE: 449MB)
 
 
-## Apply models to a set of images (test_set)
+## Apply models to a set of images
+
 
 ``` sh
->> esvm_demo_apply_exemplars(test_set, models, M);
+>> esvm_quick_demo
 ```
 
 Or load your own image

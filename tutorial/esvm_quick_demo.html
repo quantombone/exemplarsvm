@@ -1,0 +1,247 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>esvm_quick_demo</title><meta name="generator" content="MATLAB 7.12"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2012-01-16"><meta name="DC.source" content="esvm_quick_demo.m"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Download and load pre-trained VOC2007 bus models</a></li><li><a href="#3">Load one image, and apply bus detector</a></li><li><a href="#4">Create an array of images, and apply bus detector</a></li><li><a href="#5">Create URL-based set of images, and apply bus detector</a></li><li><a href="#6">Set image path directory, and apply bus detector</a></li></ul></div><pre class="codeinput"><span class="comment">% Demo: Applying an ensemble of Exemplar-SVMs</span>
+<span class="comment">% This function can generate a nice HTML page by calling: publish('esvm_quick_demo.m','html')</span>
+<span class="comment">% Copyright (C) 2011-12 by Tomasz Malisiewicz</span>
+<span class="comment">% All rights reserved.</span>
+<span class="comment">%</span>
+<span class="comment">% This file is part of the Exemplar-SVM library and is made</span>
+<span class="comment">% available under the terms of the MIT license (see COPYING file).</span>
+
+addpath(genpath(pwd));
+cls = <span class="string">'voc2007-bus'</span>;
+</pre><h2>Download and load pre-trained VOC2007 bus models<a name="2"></a></h2><pre class="codeinput">[models, M, test_set] = esvm_download_models(cls);
+
+<span class="comment">%If VOC is locally installed, let models point to local images, not URLs</span>
+local_dir = <span class="string">'/Users/tomasz/projects/pascal/VOCdevkit/'</span>;
+<span class="keyword">if</span> isdir(local_dir)
+  [models] = esvm_update_voc_models(models, local_dir);
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Found voc2007-bus.mat, not downloading
+</pre><h2>Load one image, and apply bus detector<a name="3"></a></h2><pre class="codeinput">I1 = imread(<span class="string">'000858.jpg'</span>);
+esvm_demo_apply_exemplars(I1, models, M);
+</pre><pre class="codeoutput"> --image 00001/00001: 229 exemplars took 3.585sec, #windows=00124, max=-0.475 
+Applying M-matrix to 1 images:.took 0.007sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_01.png" alt=""> <h2>Create an array of images, and apply bus detector<a name="4"></a></h2><pre class="codeinput">I2 = imread(<span class="string">'009021.jpg'</span>);
+I3 = imread(<span class="string">'009704.jpg'</span>);
+Iarray = {I2, I3};
+esvm_demo_apply_exemplars(Iarray, models, M);
+</pre><pre class="codeoutput"> --image 00001/00001: 229 exemplars took 4.059sec, #windows=00145, max=-0.679 
+Applying M-matrix to 1 images:.took 0.008sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_02.png" alt=""> <pre class="codeoutput"> --image 00001/00001: 229 exemplars took 3.594sec, #windows=00071, max=-0.747 
+Applying M-matrix to 1 images:.took 0.003sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_03.png" alt=""> <h2>Create URL-based set of images, and apply bus detector<a name="5"></a></h2><pre class="codeinput"><span class="comment">%Show image filepaths</span>
+cat(1,test_set{1:5})
+<span class="comment">%Apply detector</span>
+esvm_demo_apply_exemplars(test_set(1:5), models, M);
+</pre><pre class="codeoutput">
+ans =
+
+http://people.csail.mit.edu/~tomasz/VOCdevkit/VOC2007/JPEGImages/000014.jpg
+http://people.csail.mit.edu/~tomasz/VOCdevkit/VOC2007/JPEGImages/000054.jpg
+http://people.csail.mit.edu/~tomasz/VOCdevkit/VOC2007/JPEGImages/000188.jpg
+http://people.csail.mit.edu/~tomasz/VOCdevkit/VOC2007/JPEGImages/000195.jpg
+http://people.csail.mit.edu/~tomasz/VOCdevkit/VOC2007/JPEGImages/000231.jpg
+
+Warning: loading image from URL
+ --image 00001/00001: 229 exemplars took 3.593sec, #windows=00080, max=-0.823 
+Applying M-matrix to 1 images:.took 0.004sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+Warning: loading image from URL
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_04.png" alt=""> <pre class="codeoutput">Warning: loading image from URL
+ --image 00001/00001: 229 exemplars took 4.022sec, #windows=00144, max=-0.542 
+Applying M-matrix to 1 images:.took 0.007sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+Warning: loading image from URL
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_05.png" alt=""> <pre class="codeoutput">Warning: loading image from URL
+ --image 00001/00001: 229 exemplars took 2.827sec, #windows=00082, max=-0.558 
+Applying M-matrix to 1 images:.took 0.004sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+Warning: loading image from URL
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_06.png" alt=""> <pre class="codeoutput">Warning: loading image from URL
+ --image 00001/00001: 229 exemplars took 3.978sec, #windows=00087, max=-0.793 
+Applying M-matrix to 1 images:.took 0.004sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+Warning: loading image from URL
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_07.png" alt=""> <pre class="codeoutput">Warning: loading image from URL
+ --image 00001/00001: 229 exemplars took 4.018sec, #windows=00098, max=-0.749 
+Applying M-matrix to 1 images:.took 0.005sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+Warning: loading image from URL
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_08.png" alt=""> <h2>Set image path directory, and apply bus detector<a name="6"></a></h2><pre class="codeinput">Idirectory = <span class="string">'/v2/SUN/Images/b/bus_depot/outdoor/'</span>;
+<span class="keyword">if</span> isdir(Idirectory)
+  Ilist = get_file_list(Idirectory);
+  Ilist = Ilist(1:min(5,length(Ilist)));
+
+  <span class="comment">%Virtually resize all images to 200 max dim</span>
+  MAXDIM = 500;
+  Ilist = cellfun2(@(x)(@()imresize_max(convert_to_I(x),MAXDIM)), <span class="keyword">...</span>
+                   Ilist);
+  esvm_demo_apply_exemplars(Ilist, models, M);
+<span class="keyword">else</span>
+  fprintf(1,<span class="string">'Note: not applying because %s is not a directory\n'</span>,<span class="keyword">...</span>
+          Idirectory);
+<span class="keyword">end</span>
+</pre><pre class="codeoutput"> --image 00001/00001: 229 exemplars took 3.065sec, #windows=00029, max=-0.876 
+Applying M-matrix to 1 images:.took 0.002sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_09.png" alt=""> <pre class="codeoutput"> --image 00001/00001: 229 exemplars took 3.253sec, #windows=00124, max=-0.768 
+Applying M-matrix to 1 images:.took 0.006sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_10.png" alt=""> <pre class="codeoutput"> --image 00001/00001: 229 exemplars took 2.995sec, #windows=00082, max=-0.702 
+Applying M-matrix to 1 images:.took 0.004sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_11.png" alt=""> <pre class="codeoutput"> --image 00001/00001: 229 exemplars took 3.600sec, #windows=00122, max=-0.667 
+Applying M-matrix to 1 images:.took 0.006sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_12.png" alt=""> <pre class="codeoutput"> --image 00001/00001: 229 exemplars took 4.035sec, #windows=00281, max=-0.741 
+Applying M-matrix to 1 images:.took 0.016sec
+Applying NMS (OS thresh=0.300)
+Propagating scores onto raw detections
+Showing top detection 1
+</pre><img vspace="5" hspace="5" src="esvm_quick_demo_13.png" alt=""> <p class="footer"><br>
+      Published with MATLAB&reg; 7.12<br></p></div><!--
+##### SOURCE BEGIN #####
+% Demo: Applying an ensemble of Exemplar-SVMs
+% This function can generate a nice HTML page by calling: publish('esvm_quick_demo.m','html')
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+
+addpath(genpath(pwd));
+cls = 'voc2007-bus';
+
+%% Download and load pre-trained VOC2007 bus models
+[models, M, test_set] = esvm_download_models(cls);
+
+%If VOC is locally installed, let models point to local images, not URLs
+local_dir = '/Users/tomasz/projects/pascal/VOCdevkit/';
+if isdir(local_dir)
+  [models] = esvm_update_voc_models(models, local_dir);
+end
+
+%% Load one image, and apply bus detector
+I1 = imread('000858.jpg');
+esvm_demo_apply_exemplars(I1, models, M);
+
+%% Create an array of images, and apply bus detector
+I2 = imread('009021.jpg');
+I3 = imread('009704.jpg');
+Iarray = {I2, I3};
+esvm_demo_apply_exemplars(Iarray, models, M);
+
+%% Create URL-based set of images, and apply bus detector
+%Show image filepaths
+cat(1,test_set{1:5})
+%Apply detector
+esvm_demo_apply_exemplars(test_set(1:5), models, M);
+
+%% Set image path directory, and apply bus detector
+Idirectory = '/v2/SUN/Images/b/bus_depot/outdoor/';
+if isdir(Idirectory)
+  Ilist = get_file_list(Idirectory);
+  Ilist = Ilist(1:min(5,length(Ilist)));
+
+  %Virtually resize all images to 200 max dim
+  MAXDIM = 500;
+  Ilist = cellfun2(@(x)(@()imresize_max(convert_to_I(x),MAXDIM)), ...
+                   Ilist);
+  esvm_demo_apply_exemplars(Ilist, models, M);
+else
+  fprintf(1,'Note: not applying because %s is not a directory\n',...
+          Idirectory);
+end
+
+##### SOURCE END #####
+--></body></html>

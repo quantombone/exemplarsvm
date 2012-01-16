@@ -12,11 +12,18 @@ function I = convert_to_I(I)
 
 %if we have a string, then it is a path
 if isstr(I) 
+  
+  %if string ends in ')', then it is a function call
   if I(end)~=')'
     if (length(I)>=7 && strcmp(I(1:7),'http://'))
       fprintf(1,'Warning: loading image from URL\n');
     end
-    I = imread(I);
+    try
+      I = imread(I);
+    catch
+      fprintf(1,'Cannot load image: %s\n',I);
+      I = zeros(0,0,3);
+    end
   else
     I = eval(I);
   end

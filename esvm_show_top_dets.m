@@ -120,7 +120,7 @@ for k = 1:maxk
       continue
     end
 
-    fprintf(1,'Top det %d\n', k);
+    fprintf(1,'Showing top detection %d\n', k);
     allbbs(k,:) = bbs(bb(counter),:);
     
     curb = bb(counter);
@@ -171,7 +171,7 @@ for k = 1:maxk
     %target_cluster_id = bbs(bb(counter),5);
             
     %USE THE RAW DETECTION
-    fprintf(1,' -- Taking Final det score\n');
+    %fprintf(1,' -- Taking Final det score\n');
     allbb = bbs(bb(counter),:);
     
     %CVPR VERSION: use the top local score within a cluster

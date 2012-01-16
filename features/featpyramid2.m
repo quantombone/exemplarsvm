@@ -30,6 +30,7 @@ sc = 2 ^(1/interval);
 % Start at detect_max_scale, and keep going down by the increment sc, until
 % we reach MAXLEVELS or detect_min_scale
 scale = zeros(1,MAXLEVELS);
+feat = {};
 for i = 1:MAXLEVELS
   scaler = detect_max_scale / sc^(i-1);
   
@@ -64,6 +65,5 @@ for i = 1:MAXLEVELS
   if max([size(feat{i},1) size(feat{i},2)])<=MINDIMENSION
     scale = scale(scale>0);
     return;
-  end
-  
+  end  
 end
