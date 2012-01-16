@@ -98,7 +98,8 @@ You can alternatively download the pre-trained models individually from [http://
 >> esvm_quick_demo
 ```
 
-Or see the file tutorial/esvm_quick_demo.html for a tutorial
+Or see the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_quick_demo.html](tutorial/esvm_quick_demo.html) for a tutorial
+
 
 ---
 
