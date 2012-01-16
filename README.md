@@ -98,34 +98,11 @@ You can alternatively download the pre-trained models individually from [http://
 >> esvm_quick_demo
 ```
 
-Or load your own image
-
-``` sh
->> I = imread('image1.png'); #load your own image
->> esvm_demo_apply_exemplars(I, models, M);
-```
-
-Or load your own set of images
-
-``` sh
->> I1 = imread('image1.png'); #your own image
->> ...
->> IN = imread('imageN.png'); #your own image
->> Iarray = {I1, ..., IN};
->> esvm_demo_apply_exemplars(Iarray, models, M)
-```
-
-Or process a directory of images
-
-``` sh
->> Idirectory = '~/images/';
->> esvm_demo_apply_exemplars(Idirectory, models, M)
-```
+Or see the file tutorial/esvm_quick_demo.html for a tutorial
 
 ---
 
-# Train and Test an Ensemble of Exemplar-SVMs from scratch
-
+# Train and Test a PASCAL VOC Ensemble of Exemplar-SVMs from scratch
 
 The training scripts are designed to work with the PASCAL VOC 2007
 dataset, so we need to download that first.
@@ -174,7 +151,6 @@ and sc.sh at MIT (using the continents).
 $ cd ~/warp_scripts/
 $ ./sc.sh "cd ~/projects/exemplarsvm; addpath(genpath(pwd)); esvm_script_train_voc_class('train');"
 ```
-
 
 --- 
 **Copyright (C) 2011 by Tomasz Malisiewicz**
