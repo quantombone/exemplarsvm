@@ -8,7 +8,7 @@ function esvm_compile
 % available under the terms of the MIT license (see COPYING file).
 
 
-addpath(genpath(pwd))
+addpath(genpath(pwd));
 
 status = test_compiled;
 if status == 1

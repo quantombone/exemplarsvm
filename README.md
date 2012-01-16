@@ -62,7 +62,7 @@ This object recognition library uses some great open-source software:
 
 To get started, you need to install MATLAB and download the code from Github. This code has been tested on Mac OS X and Linux.  Pre-compiled Mex files for Mac OS X and Linux are included.
 
-## Download Exemplar-SVM Library source code (MATLAB and C++) and compiled it (You shouldn't have to do this on Mac OS X or Linux)
+## Download Exemplar-SVM Library source code (MATLAB and C++) and compile it (pre-compiled files available for Mac OS X and Linux)
 ``` sh
 $ cd ~/projects/
 $ git clone git@github.com:quantombone/exemplarsvm.git
@@ -75,14 +75,13 @@ $ matlab
 ``` sh
 $ matlab
 $ addpath(genpath(pwd))
-$ >> esvm_download_models('bus');
-$ >> load voc2007-bus.mat #vars "models", "M" and URL-based "test_set" are loaded
+>> esvm_download_models('bus');
+>> load voc2007-bus.mat #vars "models", "M" and URL-based "test_set" are loaded
 ```
 
 You can alternatively download the pre-trained models individually from [http://people.csail.mit.edu/tomasz/exemplarsvm/models/](http://people.csail.mit.edu/tomasz/exemplarsvm/models/) or a tar file of all models [voc2007-models.tar](http://people.csail.mit.edu/tomasz/exemplarsvm/models/voc2007-models.tar) (NOTE: 449MB)
 
 ``` sh
-$ cd ~/projects/exemplarsvm/
 $ wget http://people.csail.mit.edu/~tomasz/exemplarsvm/voc2007-models.tar
 $ tar -xf voc2007-models.tar
 ```
@@ -91,40 +90,37 @@ then in MATLAB, you can load models by their name:
 
 ``` sh
 $ matlab
-$ >> load voc2007_bus.mat
+>> load voc2007_bus.mat
 ```
 
 ## Apply models to a set of images (test_set)
 
 ``` sh
-$ >> esvm_demo_apply_exemplars(test_set, models, M);
+>> esvm_demo_apply_exemplars(test_set, models, M);
 ```
 
 Or load your own image
 
 ``` sh
-$ matlab
-$ >> I = imread('image1.png'); #load your own image
-$ >> esvm_demo_apply_exemplars(I, models, M);
+>> I = imread('image1.png'); #load your own image
+>> esvm_demo_apply_exemplars(I, models, M);
 ```
 
 Or load your own set of images
 
 ``` sh
-$ matlab
-$ >> I1 = imread('image1.png'); #your own image
-$ >> ...
-$ >> IN = imread('imageN.png'); #your own image
-$ >> Iarray = {I1, ..., IN};
-$ >> esvm_demo_apply_exemplars(Iarray, models, M)
+>> I1 = imread('image1.png'); #your own image
+>> ...
+>> IN = imread('imageN.png'); #your own image
+>> Iarray = {I1, ..., IN};
+>> esvm_demo_apply_exemplars(Iarray, models, M)
 ```
 
 Or process a directory of images
 
 ``` sh
-$ matlab
-$ >> Idirectory = '~/images/';
-$ >> esvm_demo_apply_exemplars(Idirectory, models, M)
+>> Idirectory = '~/images/';
+>> esvm_demo_apply_exemplars(Idirectory, models, M)
 ```
 
 ---
@@ -147,22 +143,15 @@ $ tar xf VOCtrainval_06-Nov-2007.tar
 
 You can also get the VOC 2007 dataset tar files manually, [VOCtrainval_06-Nov-2007.tar](http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) and [VOCtest_06-Nov-2007.tar](http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar)
 
-
-## Edit directories in esvm_script_train_voc_class.m 
-``` sh
-data_directory = '/your/directory/to/pascal/VOCdevkit/';
-results_directory = '/your/results/directory/';
-```
-
 ## Training and Evaluating an Ensemble of "bus" Exemplar-SVMs
 ``` sh
-$ matlab
-$ addpath(genpath(pwd))
-$ >> [models,M] = esvm_script_train_voc_class('bus');
-# All output (models, M-matrix, AP curve) has been written to results_directory
+>> data_dir = '/your/directory/to/pascal/VOCdevkit/';
+>> results_dir = '/your/results/directory/';
+>> [models,M] = esvm_script_train_voc_class('bus',data_dir,results_dir);
+# All output (models, M-matrix, AP curve) has been written to results_dir
 ```
 
-# Extra: How to run the Exemplar-SVM framework on a cluster?
+# Extra: How to run the Exemplar-SVM framework on a cluster
 
 This library was meant to run on a cluster with a shared NFS/AFS file
 structure where all nodes can read/write data from a common data
