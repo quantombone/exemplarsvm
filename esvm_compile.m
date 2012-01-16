@@ -1,5 +1,12 @@
 function esvm_compile
-%Compile everything, must be in exemplarsvm parent directory
+%Compiles everything compile-able, must be in exemplarsvm parent directory
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+
 
 addpath(genpath(pwd))
 

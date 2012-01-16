@@ -62,22 +62,13 @@ This object recognition library uses some great open-source software:
 
 To get started, you need to install MATLAB and download the code from Github. This code has been tested on Mac OS X and Linux.  Pre-compiled Mex files for Mac OS X and Linux are included.
 
-## Download Exemplar-SVM Library source code (MATLAB and C++)
+## Download Exemplar-SVM Library source code (MATLAB and C++) and compiled it (You shouldn't have to do this on Mac OS X or Linux)
 ``` sh
 $ cd ~/projects/
 $ git clone git@github.com:quantombone/exemplarsvm.git
 $ cd ~/projects/exemplarsvm
-```
-
-## Make sure Exemplar-SVM library is compiled and working (You shouldn't have to do this on Mac OS X or Linux)
-``` sh
 $ matlab
-$ >> cd features/
-$ >> features_compile;
-$ >> cd ../util/
-$ >> util_compile;
-$ >> cd ../libsvm/
-$ >> libsvm_compile;
+>> esvm_compile
 ```
 
 ## Download and load pre-trained VOC2007 model(s)
@@ -102,7 +93,6 @@ then in MATLAB, you can load models by their name:
 $ matlab
 $ >> load voc2007_bus.mat
 ```
-
 
 ## Apply models to a set of images (test_set)
 
