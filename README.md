@@ -62,7 +62,7 @@ This object recognition library uses some great open-source software:
 
 To get started, you need to install MATLAB and download the code from Github. This code has been tested on Mac OS X and Linux.  Pre-compiled Mex files for Mac OS X and Linux are included.
 
-## Download Exemplar-SVM Library source code (MATLAB and C++) and compile it (pre-compiled files available for Mac OS X and Linux)
+## Download Exemplar-SVM Library source code (MATLAB and C++) and compile it
 ``` sh
 $ cd ~/projects/
 $ git clone git@github.com:quantombone/exemplarsvm.git
@@ -74,24 +74,22 @@ $ matlab
 ## Download and load pre-trained VOC2007 model(s)
 ``` sh
 $ matlab
-$ addpath(genpath(pwd))
->> esvm_download_models('bus');
->> load voc2007-bus.mat #vars "models", "M" and URL-based "test_set" are loaded
+>> addpath(genpath(pwd))
+>> [models, M, test_set] = esvm_download_models('voc2007-bus');
 ```
 
-You can alternatively download the pre-trained models individually from [http://people.csail.mit.edu/tomasz/exemplarsvm/models/](http://people.csail.mit.edu/tomasz/exemplarsvm/models/) or a tar file of all models [voc2007-models.tar](http://people.csail.mit.edu/tomasz/exemplarsvm/models/voc2007-models.tar) (NOTE: 449MB)
+or
 
 ``` sh
 $ wget http://people.csail.mit.edu/~tomasz/exemplarsvm/voc2007-models.tar
 $ tar -xf voc2007-models.tar
-```
-
-then in MATLAB, you can load models by their name:
-
-``` sh
 $ matlab
 >> load voc2007_bus.mat
+>> [models, M, test_set] = esvm_download_models('voc2007-bus.mat');
 ```
+
+You can alternatively download the pre-trained models individually from [http://people.csail.mit.edu/tomasz/exemplarsvm/models/](http://people.csail.mit.edu/tomasz/exemplarsvm/models/) or a tar file of all models [voc2007-models.tar](http://people.csail.mit.edu/tomasz/exemplarsvm/models/voc2007-models.tar) (NOTE: 449MB)
+
 
 ## Apply models to a set of images (test_set)
 

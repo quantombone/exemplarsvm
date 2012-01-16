@@ -2,7 +2,7 @@ function [models,M,test_set] = esvm_download_models(cls)
 %Download a pre-trained PASCAL VOC2007 model from my MIT CSAIL
 %homepage (http://people.csail.mit.edu/tomasz/)
 
-f = sprintf('voc2007-%s.mat',cls);
+f = sprintf('%s.mat',cls);
 models = [];
 M = [];
 test_set = {};
