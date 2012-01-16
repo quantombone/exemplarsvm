@@ -66,7 +66,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
   // make sure we are dealing with second argument a scalar
   if (mxGetN(prhs[1])*mxGetM(prhs[1]) != 1) {
-    mexErrMsgTxt("Second input argument must be a scalar");
+    mexErrMsgTxt("psort.cpp: Second input argument must be a scalar");
   }
       
   
@@ -77,11 +77,11 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
   // make sure we have been passed a vector
   if ( (N != 1) )
-      mexErrMsgTxt("First argument should be a column vector");
+      mexErrMsgTxt("psort.cpp: First argument should be a column vector");
 
   // make sure K isn't negative, 0 or just simply too big
   if ((K > M) || (K < 1))
-    mexErrMsgTxt("K > M or K<1");
+    mexErrMsgTxt("psort.cpp: K > M or K<1");
 
   // create the inds
   plhs[1] = mxCreateNumericMatrix(K, 1, mxINT32_CLASS, mxREAL);
@@ -114,7 +114,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
   }
   default:
   {
-    mexErrMsgTxt("invalid data type: double or single only!");
+    mexErrMsgTxt("psort.cpp: invalid data type: double or single only!");
   }
   }
 }

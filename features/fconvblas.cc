@@ -80,24 +80,30 @@ void *process(void *thread_arg) {
 // matlab entry point
 // C = fconv(A, cell of B, start, end);
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) { 
-  if (nrhs != 4)
-    mexErrMsgTxt("Wrong number of inputs"); 
+  if (nrhs != 4) {
+    mexErrMsgTxt("fconvblas.cc: Wrong number of inputs"); 
+  }
   if (nlhs != 1)
-    mexErrMsgTxt("Wrong number of outputs");
+    mexErrMsgTxt("fconvblas.cc: Wrong number of outputs");
 
   // get A
   const mxArray *mxA = prhs[0];
   if (mxGetNumberOfDimensions(mxA) != 3 || 
       mxGetClassID(mxA) != mxDOUBLE_CLASS)
-    mexErrMsgTxt("Invalid input: A");
+    mexErrMsgTxt("fconvblas.cc: Invalid input: A");
+  
 
   // get B and start/end
   const mxArray *cellB = prhs[1];
+
+  if (mxGetClassID(cellB) != mxCELL_CLASS)
+    mexErrMsgTxt("fconvblas.cc: Invalid input B, must be a cell array\n");
+
   mwSize num_bs = mxGetNumberOfElements(cellB);  
   int start = (int)mxGetScalar(prhs[2]) - 1;
   int end = (int)mxGetScalar(prhs[3]) - 1;
   if (start < 0 || end >= num_bs || start > end)
-    mexErrMsgTxt("Invalid input: start/end");
+    mexErrMsgTxt("fconvblas.cc Invalid input: start/end");
   int len = end-start+1;
 
   // start threads
@@ -114,8 +120,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     td[i].B = prepare_filter((double *)mxGetPr(mxB), td[i].B_dims);
     if (mxGetNumberOfDimensions(mxB) != 3 ||
         mxGetClassID(mxB) != mxDOUBLE_CLASS ||
-        td[i].A_dims[2] != td[i].B_dims[2])
-      mexErrMsgTxt("Invalid input: B");
+        td[i].A_dims[2] != td[i].B_dims[2]) {
+      char buffer[200];
+      sprintf(buffer,"fconvblas.cc: Invalid input: B. dim[B]=[%d,%d,%d] dim[A]=[%d,%d,%d]",
+              td[i].B_dims[0],td[i].B_dims[1],td[i].B_dims[2],
+              td[i].A_dims[0],td[i].A_dims[1],td[i].A_dims[2]);
+      mexErrMsgTxt(buffer);
+    }
 
     // compute size of output
     int height = td[i].A_dims[0] - td[i].B_dims[0] + 1;
@@ -137,12 +148,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (skips[i] == false)
     {
       if (pthread_create(&ts[i], NULL, process, (void *)&td[i]))
-        mexErrMsgTxt("Error creating thread");  
+        mexErrMsgTxt("fconvblas.cc: Error creating thread");  
 
     }
   }
 
-  //std::cout << "got here" << std::endl;
   // wait for the treads to finish and set return values
   void *status;
   plhs[0] = mxCreateCellMatrix(1, len);
