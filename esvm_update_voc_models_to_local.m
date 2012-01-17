@@ -1,5 +1,6 @@
 function models = esvm_update_voc_models_to_local(models, data_directory)
 %Updates models to internally point to local data
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 for i = 1:length(models)
   models{i}.I = [data_directory '/' ...

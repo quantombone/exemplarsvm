@@ -1,4 +1,5 @@
 function [Ipos,Ineg] = esvm_generate_dataset(Npos,Nneg)  
+%Generate a synthetic dataset of circles
 
 if nargin == 0
   Npos = 3;

@@ -6,6 +6,7 @@ function fg = esvm_get_pascal_stream(stream_params, dataset_params)
 
 if ~exist('dataset_params','var')
   dataset_params.localdir = '';
+  stream_params.cache_file = 0;
 end
 
 if ~isfield(stream_params,'cache_file')

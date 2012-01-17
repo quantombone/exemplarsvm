@@ -7,6 +7,8 @@ function [resstruct,feat_pyramid] = esvm_detect(I, models, params)
 % large, then the BLOCK feature matrix method (with a single matrix
 % multiplication) is used.
 %
+% NOTE: These local detections can be pooled with esvm_pool_exemplars_dets.m
+%
 % I: Input image (or already precomputed pyramid)
 % models: A cell array of models to localize inside this image
 %   models{:}.model.w: Learned template
@@ -23,6 +25,7 @@ function [resstruct,feat_pyramid] = esvm_detect(I, models, params)
 % 
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if isempty(models)
   fprintf(1,'Warning: empty models in esvm_detect\n');
@@ -37,7 +40,7 @@ if ~iscell(models)
 end
 
 if ~exist('params','var')
-  params = esvm_get_default_mining_params;
+  params = esvm_get_default_params;
 end
 
 if ~isfield(params,'nnmode')

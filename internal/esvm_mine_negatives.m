@@ -21,7 +21,7 @@ function [hn, mining_queue, mining_stats] = ...
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 if ~exist('mining_params','var')
-  mining_params = get_default_mining_params;
+  mining_params = esvm_get_default_params;
 end
 
 number_of_violating_images = 0;

@@ -1,15 +1,16 @@
 function [newmodels,new_models_name] = ...
     esvm_train_exemplars(models, train_set, params)
-%% Train models with hard negatives mined from train_set
+% Train models with hard negatives mined from train_set
 % [models]: a cell array of initialized exemplar models
 % [train_set]: a virtual set of images to mine from
-% [params]: esvm localization and training parameters
+% [params]: localization and training parameters
 
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
 % 
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if length(models) == 0
   newmodels = models;

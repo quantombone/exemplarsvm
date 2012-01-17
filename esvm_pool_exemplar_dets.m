@@ -14,7 +14,7 @@ function final = esvm_pool_exemplar_dets(grid, models, M, params)
 % 
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
-
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 %REMOVE FIRINGS ON SELF-IMAGE (these create artificially high
 %scores when evaluating on the training set, but no need to set

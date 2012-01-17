@@ -5,8 +5,8 @@ function grid = esvm_detect_imageset(imageset, models, ...
 %
 % imageset: a (virtual) set of images, such that
 %   convert_to_I(imageset{i}) returns an image
-% models: Input cell array of models
-% dataset_params(optional): detection parameters
+% models: Cell array of models
+% params(optional): detection parameters
 % setname(optional): a name of the set, which lets us cache results
 
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
@@ -14,20 +14,27 @@ function grid = esvm_detect_imageset(imageset, models, ...
 % 
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
-
+% Project homepage: https://github.com/quantombone/exemplarsvm
   
 if ~exist('params','var')
-  params = esvm_get_default_mining_params;
+  params = esvm_get_default_params;
 end
 
 %Only allow display to be enabled on a machine with X
+%NOTE(TJM): this display is always turned off and deprecated
 display = 0;
 
-save_files = 1;
 if ~exist('setname','var')
-  save_files = 0;
   params.detect_images_per_chunk = 1;
   setname = '';
+end
+
+if isfield(params,'dataset_params') && ...
+      isfield(params.dataset_params,'localdir') && ...
+      length(params.dataset_params.localdir)>0 && length(setname)>0
+  save_files = 1;
+else  
+  save_files = 0;
 end
 
 if isempty(imageset)
@@ -57,12 +64,6 @@ if display == 1
   fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
   params.detect_images_per_chunk = 1;
 end
-
-% if ~isfield(params.dataset_params,'params')
-%   params = get_default_mining_params;
-% else
-%   params = params.dataset_params.params;
-% end
 
 if save_files == 1
   baser = sprintf('%s/detections/%s-%s/',params.dataset_params.localdir,setname, ...

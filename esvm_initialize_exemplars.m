@@ -43,11 +43,17 @@ function models = esvm_initialize_exemplars(e_set, params, ...
 %  model = initialize_model_dt(I,bbox,SBIN,hg_size);
 %else
 
-if ~exist('models_name','var')
-  CACHE_FILE = 0;
-  models_name = '';
-else
+if isfield(params,'dataset_params') && ...
+      isfield(params.dataset_params,'localdir') && ...
+      length(params.dataset_params.localdir)>0
   CACHE_FILE = 1;
+else
+  CACHE_FILE = 0;
+  params.dataset_params.localdir = '';
+end
+
+if ~exist('models_name','var')
+  models_name = '';
 end
 
 cache_dir =  ...

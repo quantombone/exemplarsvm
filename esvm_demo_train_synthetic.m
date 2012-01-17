@@ -9,8 +9,10 @@
 
 function [models,M] = esvm_demo_train_synthetic
 
+addpath(genpath(pwd))
+
 %% Create a synthetic dataset of circles on a random background
-Npos = 200;
+Npos = 20;
 Nneg = 50;
 [pos_set,neg_set] = esvm_generate_dataset(Npos,Nneg);
 
@@ -20,15 +22,15 @@ params.init_params.sbin = 4;
 params.init_params.MAXDIM = 6;
 params.model_type = 'exemplar';
 params.dataset_params.display = 1;
-params.dataset_params.localdir = '/nfs/baikal/tmalisie/synthetic/';
+%if localdir is commented out, no local saving happens
+%params.dataset_params.localdir = '/nfs/baikal/tmalisie/synthetic/';
 
 %%Initialize exemplar stream
 stream_params.stream_set_name = 'trainval';
-stream_params.stream_max_ex = 10;
+stream_params.stream_max_ex = 1;
 stream_params.must_have_seg = 0;
 stream_params.must_have_seg_string = '';
-stream_params.model_type = 'exemplar'; %must be scene or exemplar;
-stream_params.cache_file = 1;
+stream_params.model_type = 'exemplar'; %must be scene or exemplar
 %assign pos_set as variable
 stream_params.pos_set = pos_set;
 

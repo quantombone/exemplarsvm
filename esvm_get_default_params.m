@@ -182,6 +182,7 @@ default_params.model_type = 'exemplar';
 
 default_params.SKIP_EVAL = 0;
 
+%Initialize loading/saving directories to being empty (turned off)
 default_params.dataset_params.localdir = '';
 default_params.dataset_params.datadir = '';
 
