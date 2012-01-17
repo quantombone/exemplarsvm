@@ -89,7 +89,7 @@ imagesc(Isv1)
 axis image
 axis off
 iter = length(m.model.wtrace)-1;
-title(sprintf('Ex %s.%d cls=%s SVM_iter=%03d',m.curid,m.objectid,m.cls,iter))
+title(sprintf('Ex %s.%d.%s SVM-iter=%03d',m.curid,m.objectid,m.cls,iter))
 drawnow
 snapnow
 

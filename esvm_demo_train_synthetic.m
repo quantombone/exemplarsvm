@@ -11,8 +11,8 @@ function [models,M] = esvm_demo_train_synthetic
 
 %% Create a synthetic dataset of circles on a random background
 Npos = 1;
-Nneg = 1;
-Ntest = 10;
+Nneg = 50;
+Ntest = 50;
 [e_stream_set,neg_set] = esvm_generate_dataset(Npos,Nneg);
 
 %% Set exemplar-initialization parameters
