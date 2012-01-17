@@ -7,11 +7,15 @@ function [betas] = esvm_perform_platt_calibration(grid, models, ...
 
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
-if length(grid) == 0
+
+
+if length(grid) == 0 || length(models) == 0
   betas = [];
   ALL_bboxes = [];
   return;
 end
+
+
 
 if ~exist('CACHE_FILES','var')
   CACHE_FILES = 0;
@@ -32,9 +36,15 @@ display = params.dataset_params.display;
 % into DUMPDIR
 dump_images = 0;
 
-DUMPDIR = sprintf('%s/www/calib/%s/',params.dataset_params.localdir, ...
-                  params.dataset_params.dataset, ...
-                  models{1}.models_name);
+models_name = '';
+if length(models)>=1 && isfield(models{1},'models_name') && ...
+      isstr(models{1}.models_name)
+  models_name = models{1}.models_name;
+end
+
+
+DUMPDIR = sprintf('%s/www/calib/',params.dataset_params.localdir, ...
+                  models_name);
 
 if dump_images==1 && ~exist(DUMPDIR,'dir')
   mkdir(DUMPDIR);
@@ -47,21 +57,21 @@ if nargin < 1
   return;
 end
 
-setname = 'voc';
+% setname = 'voc';
 
-if strcmp(setname,'voc')
-  target_directory = 'trainval';
-  %target_directory = 'train';
-  fprintf(1,'Using VOC set so performing calibration with set: %s\n',target_directory);
+% if strcmp(setname,'voc')
+%   target_directory = 'trainval';
+%   %target_directory = 'train';
+%   fprintf(1,'Using VOC set so performing calibration with set: %s\n',target_directory);
   
-  %% prune grid to contain only images from target_directory
-  [cur_set, gt] = textread(sprintf(params.dataset_params.imgsetpath,...
-                                   target_directory),['%s' ...
-                    ' %d']);
-  gridids = cellfun2(@(x)x.curid,grid);
-  goods = ismember(gridids,cur_set);
-  grid = grid(goods);
-end
+%   %% prune grid to contain only images from target_directory
+%   [cur_set, gt] = textread(sprintf(params.dataset_params.imgsetpath,...
+%                                    target_directory),['%s' ...
+%                     ' %d']);
+%   gridids = cellfun2(@(x)x.curid,grid);
+%   goods = ismember(gridids,cur_set);
+%   grid = grid(goods);
+% end
 
 final_dir = ...
     sprintf('%s/models',params.dataset_params.localdir);
@@ -73,7 +83,7 @@ end
 final_file = ...
     sprintf('%s/%s-betas.mat',...
             final_dir, ...
-            models{1}.models_name);
+            models_name);
 
 if CACHE_FILES == 1 
   lockfile = [final_file '.lock'];
@@ -96,9 +106,16 @@ end
 
 model_ids = cellfun2(@(x)x.curid,models);
 targets = 1:length(models);
+
 cls = models{1}.cls;
 
-targetc = find(ismember(params.dataset_params.classes,models{1}.cls));
+if isfield(params.dataset_params,'classes')
+  targetc = find(ismember(params.dataset_params.classes, ...
+                          models{1}.cls));
+else
+  targetc = models{1}.cls;
+end
+
 
 %fprintf(1,'Preparing boxes for calibration\n');
 for i = 1:length(grid)    
@@ -122,8 +139,14 @@ for i = 1:length(grid)
     
     if length(cur.extras)>0
       cur.extras.os = cur.extras.maxos(cur.bboxes(:,5));
+      
       cur.extras.os = cur.extras.os.* ...
-          reshape((cur.extras.maxclass(cur.bboxes(:,5))==targetc),size(cur.extras.os));
+          reshape(double(ismember(cur.extras.maxclass,targetc)),...
+                  size(cur.extras.os));
+      
+      % cur.extras.os = cur.extras.os.* ...
+      %     reshape((cur.extras.maxclass(cur.bboxes(:,5)) == ...
+      %              targetc),size(cur.extras.os));
 
     end
   end
@@ -162,6 +185,7 @@ end
 ALL_bboxes = cat(1,bboxes{:});
 ALL_coarse_boxes = cat(1,coarse_boxes{:});
 ALL_os = cat(1,os{:});
+
 
 curids = cellfun2(@(x)x.curid,grid);
 
@@ -219,8 +243,9 @@ for exid = 1:length(models)
   if (sum(ismember(exid,targets))==0)
     continue
   end
-  
-  if 0 %display == 1
+
+
+  if display == 1
     %figure(222)
     %show_calibration_rank(m,ALL_bboxes(hits,:), 
     
@@ -257,11 +282,18 @@ for exid = 1:length(models)
     axis image
     axis off
 
+    title(sprintf('Topdets Calibration Ex %s.%d.%s',...
+                  models{exid}.curid,...
+                  models{exid}.objectid, ...
+                  models{exid}.cls))
+    drawnow
+    snapnow
+    
     bbs=ALL_coarse_boxes(hits,:);
     bbs_os = ALL_os(hits,:);
     [aa,bb] = sort(bbs(:,end),'descend');
     bbs_show = bbs(bb,:);
-    
+
     %models{exid}.model.svids = {};
     %m = try_reshape(models{exid},bbs_show,100);
 
@@ -270,11 +302,23 @@ for exid = 1:length(models)
 
     models{exid}.model.svbbs = bbs_show;
     m2 = models(exid);
-    m2{1}.train_set = val_set;
+    if isfield(params,'val_set')
+      m2{1}.train_set = params.val_set;
+      m2{1}.model.svbbs(:,6) = 1;
+      m2{1}.model.svxs = [];
+      figure(445)
+      clf
+      imagesc(get_sv_stack(m2{1},8))
+      drawnow
+      title(sprintf('Calib Ex %s.%d.%s',...
+                    models{exid}.curid,...
+                    models{exid}.objectid, ...
+                    models{exid}.cls))
+      drawnow
+      snapnow
+    end
 
-    figure(445)
-    clf
-    imagesc(get_sv_stack(m2{1},8))
+
   end
   
 

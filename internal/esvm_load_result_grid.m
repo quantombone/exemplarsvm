@@ -7,10 +7,15 @@ function grid = esvm_load_result_grid(dataset_params,...
 %Tomasz Malisiewicz (tomasz@cmu.edu)
 
 fullsetname = [setname];
+models_name = '';
+if length(models)>=1 && isfield(models{1},'models_name') && ...
+      isstr(models{1}.models_name)
+  models_name = models{1}.models_name;
+end
 
 final_file = sprintf('%s/detections/%s-%s.mat',...
                      dataset_params.localdir,fullsetname, ...
-                     models{1}.models_name);
+                     models_name);
 
 if fileexists(final_file)
   res = load(final_file);
@@ -40,7 +45,7 @@ end
 %to write a lock file successfully
 
 baser = sprintf('%s/detections/%s-%s/',dataset_params.localdir,setname, ...
-                models{1}.models_name);
+                models_name);
 fprintf(1,'base directory: %s\n',baser);
 
 %with the dir command partial results could be loaded 

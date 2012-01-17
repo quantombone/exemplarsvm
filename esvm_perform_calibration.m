@@ -23,6 +23,7 @@ betas = esvm_perform_platt_calibration(grid, models, ...
 if ~(isfield(params,'SKIP_M') && params.SKIP_M==1)
   %% Estimate the co-occurrence matrix M
   [M] = esvm_estimate_M(grid, models, params, CACHE_FILES);
+
 end
 
 M.betas = betas;

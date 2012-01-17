@@ -33,6 +33,8 @@ elseif isa(I,'function_handle')
 elseif isnumeric(I)
   %If we get here, then we have a numeric representation, so it is
   %an image
+elseif isstruct(I) && isfield(I,'I')
+  I = convert_to_I(I.I);
 else
   fprintf(1,['WARNING: convert_to_I given non-image type as input\' ...
              'n']);

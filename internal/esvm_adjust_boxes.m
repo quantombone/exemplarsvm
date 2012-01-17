@@ -21,9 +21,11 @@ function top = esvm_adjust_boxes(boxes, models)
 
 top = boxes;
 
-if strcmp(models{1}.models_name,'dalal') || ...
-      ~isfield(models{1},'gt_box')
-  return;
+if length(models)>=1
+  if strcmp(models{1}.models_name,'dalal') || ...
+        ~isfield(models{1},'gt_box')
+    return;
+  end
 end
 
 if numel(boxes)==0

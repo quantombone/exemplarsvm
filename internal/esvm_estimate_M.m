@@ -53,7 +53,10 @@ maxos = cell(1,length(grid));
 if REMOVE_SELF == 0
   fprintf(1,'Warning: Not removing self-hits\n');
 end
-curcls = find(ismember(params.dataset_params.classes,models{1}.cls));
+
+curcls = models{1}.cls;
+
+%curcls = find(ismember(params.dataset_params.classes,models{1}.cls));
 
 fprintf(1,' -Computing Box Features:');
 starter=tic;
@@ -69,6 +72,9 @@ for i = 1:length(grid)
     continue
   end
 
+  if size(boxes{i},1) > 0
+    
+  end
   %new-method: use calibrated scores (doesn't work too well)
   %calib_boxes = calibrate_boxes(boxes{i},betas);
 
@@ -81,8 +87,10 @@ for i = 1:length(grid)
   boxes{i} = calib_boxes(oks,:);
   if length(grid{i}.extras)>0
     maxos{i} = grid{i}.extras.maxos;
-    maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
+    maxos{i}(find(ismember(grid{i}.extras.maxclass,curcls)==0)) = 0;
     maxos{i} = maxos{i}(oks);
+  else
+    maxos{i} = zeros(size(boxes{i},1),1);
   end
 
   if REMOVE_SELF == 1
@@ -96,6 +104,7 @@ for i = 1:length(grid)
     end
   end
 end
+
 
 
 if 0
@@ -127,6 +136,7 @@ N = sum(cellfun(@(x)size(x,2),maxos));
 y = cat(1,maxos{:});
 os = cat(1,maxos{:})';
 
+
 scores = cellfun2(@(x)x(:,end)',boxes);
 scores = [scores{:}];
 
@@ -147,7 +157,9 @@ fprintf(1,'took %.3fsec\n',toc(starter));
 
 fprintf(1,' -Learning M by counting: ');
 starter=tic;
+
 %This one works best so far
+
 M = learn_M_counting(x, exids, os, count_thresh);
 fprintf(1,'took %.3fsec\n',toc(starter));
 
@@ -173,13 +185,16 @@ if params.dataset_params.display == 1
   figure(4)
   subplot(1,2,1)
   plot(scores,os,'r.')
-  xlabel('Scores without calibration matrix')
-  ylabel('OS with gt')
+  xlabel('Detection Score')
+  ylabel('OS wrt gt')
   
   subplot(1,2,2)
   plot(r,os,'r.')
-  xlabel('Scores with calibration matrix')
-  ylabel('os')
+  xlabel('Detection Score')
+  ylabel('OS wrt gt')
+  title('w/ M-matrx')
+  drawnow
+  snapnow
   
   figure(5)
   clf
@@ -187,9 +202,13 @@ if params.dataset_params.display == 1
   plot(cumsum(os(bb)>.5)./(1:length(os)),'r-','LineWidth',3)
   hold on;
   [aa,bb] = sort(r,'descend');
-  plot(cumsum(os(bb)>.5)./(1:length(os)),'b.-','LineWidth',3)
+  plot(cumsum(os(bb)>.5)./(1:length(os)),'b--','LineWidth',3)
+  xlabel('#instances Recalled')
+  ylabel('Precision')
   title('M-matrix estimation Precision-Recall');
   legend('no matrix','matrix')
+  drawnow
+  snapnow
 end
 
 if CACHE_FILES == 1

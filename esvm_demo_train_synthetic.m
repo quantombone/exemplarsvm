@@ -10,19 +10,37 @@
 function [models,M] = esvm_demo_train_synthetic
 
 %% Create a synthetic dataset of circles on a random background
-Npos = 1;
-Nneg = 50;
-Ntest = 50;
-[e_stream_set,neg_set] = esvm_generate_dataset(Npos,Nneg);
+Npos = 20;
+Nneg = 30;
+[pos_set,neg_set] = esvm_generate_dataset(Npos,Nneg);
 
 %% Set exemplar-initialization parameters
 params = esvm_get_default_params;
 params.init_params.sbin = 4;
 params.model_type = 'exemplar';
 params.dataset_params.display = 1;
+params.dataset_params.localdir = '/nfs/baikal/tmalisie/synthetic/';
+
+%%Initialize exemplar stream
+stream_params.stream_set_name = 'trainval';
+stream_params.stream_max_ex = 1;
+stream_params.must_have_seg = 0;
+stream_params.must_have_seg_string = '';
+stream_params.model_type = 'exemplar'; %must be scene or exemplar;
+stream_params.cache_file = 1;
+%assign pos_set as variable
+stream_params.pos_set = pos_set;
+
+%% Get the positive stream
+e_stream_set = esvm_get_pascal_stream(stream_params, ...
+                                      params.dataset_params);
+
+val_neg_set = neg_set((Nneg/2+1):end);
+neg_set = neg_set(1:((Nneg/2)));
 
 %% Initialize Exemplars
-initial_models = esvm_initialize_exemplars(e_stream_set, params);
+initial_models = esvm_initialize_exemplars(e_stream_set, params, ...
+                                           'initial');
 
 %% Set exemplar-svm training parameters
 train_params = params;
@@ -31,26 +49,30 @@ train_params.train_max_mined_images = 50;
 train_params.detect_exemplar_nms_os_threshold = 1.0; 
 train_params.detect_max_windows_per_exemplar = 100;
 
+train_params.CACHE_FILE = 1;
 %% Perform Exemplar-SVM training
 [models] = esvm_train_exemplars(initial_models, ...
                                 neg_set, train_params);
 
-% val_params = params;
-% val_params.detect_exemplar_nms_os_threshold = 0.5;
-% val_params.gt_function = @get_pascal_anno_function;
-% val_params.CACHE_BETAS = 1;
-% val_set = get_pascal_set(dataset_params, val_set_name);
-% val_set = val_set(1:10);
+val_params = params;
+val_params.detect_exemplar_nms_os_threshold = 0.5;
+val_params.gt_function = @get_pascal_anno_function;
+val_set = cat(1,pos_set(:),val_neg_set(:));
+val_set_name = 'valset';
 
 %% Apply trained exemplars on validation set
-%val_grid = esvm_detect_imageset(val_set, models, val_params, val_set_name);
+val_grid = esvm_detect_imageset(val_set, models, val_params, val_set_name);
 
+
+val_params.val_set = val_set;
 %% Perform Platt calibration and M-matrix estimation
-%M = esvm_perform_calibration(val_grid, models, val_params);
+M = esvm_perform_calibration(val_grid, models, val_params);
+
 
 %% Define test-set
 test_params = params;
 test_params.detect_exemplar_nms_os_threshold = 0.5;
+Ntest = 30;
 [stream_test] = esvm_generate_dataset(Ntest);
 test_set = cellfun2(@(x)x.I,stream_test);
 
@@ -58,7 +80,7 @@ test_set = cellfun2(@(x)x.I,stream_test);
 test_grid = esvm_detect_imageset(test_set, models, test_params);
 
 %% Apply calibration matrix to test-set results
-test_struct = esvm_pool_exemplar_dets(test_grid, models, [], test_params);
+test_struct = esvm_pool_exemplar_dets(test_grid, models, M, test_params);
 
 %% Show top detections
 maxk = 20;

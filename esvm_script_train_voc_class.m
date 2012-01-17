@@ -61,11 +61,16 @@ stream_params.stream_max_ex = 10000;
 stream_params.must_have_seg = 0;
 stream_params.must_have_seg_string = '';
 stream_params.model_type = 'exemplar'; %must be scene or exemplar;
-stream_params.cache_file = 1;
+%automatically happens when dataset_params is defined
+%stream_params.cache_file = 1; 
+
+
 stream_params.cls = cls;
 
 %Create an exemplar stream (list of exemplars)
-e_stream_set = esvm_get_pascal_stream(stream_params, dataset_params);
+e_stream_set = esvm_get_pascal_stream(stream_params, ...
+                                      dataset_params);
+
 
 neg_set = get_pascal_set(dataset_params, ['train-' cls]);
 

@@ -37,9 +37,14 @@ end
 
 if save_files == 1
   
+  models_name = '';
+  if length(models)>=1 && isfield(models{1},'models_name') && ...
+        isstr(models{1}.models_name)
+    models_name = models{1}.models_name;
+  end
   final_file = sprintf('%s/detections/%s-%s.mat',...
                        params.dataset_params.localdir,setname, ...
-                       models{1}.models_name);
+                       models_name);
 
   if fileexists(final_file)
     res = load(final_file);
@@ -61,7 +66,7 @@ end
 
 if save_files == 1
   baser = sprintf('%s/detections/%s-%s/',params.dataset_params.localdir,setname, ...
-                  models{1}.models_name);
+                  models_name);
 else
   baser = '';
 end
@@ -104,7 +109,8 @@ for i = 1:length(ordering)
   %% pre-load all images in a chunk
   %fprintf(1,'Preloading %d images\n',length(inds{ordering(i)}));
   clear Is;
-  Is = cellfun2(@(x)convert_to_I(x),imageset(inds{ordering(i)}));
+  Is = imageset(inds{ordering(i)});
+  %Is = cellfun2(@(x)convert_to_I(x),imageset(inds{ordering(i)}));
 
   %for j = 1:length(inds{ordering(i)})
   %  Is{j} = convert_to_I(imageset{inds{ordering(i)}(j)});
@@ -127,7 +133,7 @@ for i = 1:length(ordering)
       curid = '';
     end
     
-    I = Is{j};
+    I = convert_to_I(Is{j});
        
     starter = tic;
     rs = esvm_detect(I, models, params);
@@ -222,7 +228,8 @@ for i = 1:length(ordering)
     %%%NOTE: the gt-function is well-defined for VOC-exemplars
     if isfield(params,'gt_function') && ...
           ~isempty(params.gt_function)
-      res{j}.extras = params.gt_function(params.dataset_params, Iname, res{j}.bboxes);
+      res{j}.extras = params.gt_function(params.dataset_params, ...
+                                         Iname, res{j}.bboxes);
     end 
   end
 
@@ -256,4 +263,5 @@ end
 grid = esvm_load_result_grid(params.dataset_params, models, ...
                              setname, ...
                              allfiles);
+
 
