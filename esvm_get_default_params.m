@@ -1,6 +1,11 @@
 function mining_params = esvm_get_default_params
 %% Return the default Exemplar-SVM detection/training parameters
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved. 
+%
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Sliding window detection parameters 
