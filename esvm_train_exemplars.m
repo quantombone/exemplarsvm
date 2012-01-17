@@ -75,17 +75,24 @@ end
 
 models = models(ordering);
 allfiles = cell(length(models), 1);
-parfor i = 1:length(models)
+for i = 1:length(models)
   filer = '';
   m = models{i};
    
-  % Create a naming scheme for saving files
-  filer2fill = sprintf('%s/%%s.%s.mat',final_directory, ...
-                       m.name);
-  
-  filer2final = sprintf('%s/%s.mat',final_directory, ...
-                        m.name);
 
+  [complete_file] = sprintf('%s/%s.mat',final_directory,m.name);
+  [basedir, basename, ext] = fileparts(complete_file);
+  
+  % Create a naming scheme for saving files
+  %filer2fill = sprintf('%s/%%s.%s.mat',final_directory, ...
+  %                     m.name);
+  
+  filer2fill = sprintf('%s/%%s.%s.mat',basedir,basename);
+  filer2final = sprintf('%s/%s.mat',basedir,basename);
+  
+  %filer2final = sprintf('%s/%s.mat',final_directory, ...
+  %                      m.name);
+  
   allfiles{i} = filer2final;
   
   % Check if we are ready for an update

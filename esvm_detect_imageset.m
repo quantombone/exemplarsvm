@@ -116,9 +116,13 @@ for i = 1:length(ordering)
     index = inds{ordering(i)}(j);
     fprintf(1,' --image %05d/%05d:',counter+j,length(imageset));
     Iname = imageset{index};
-    %curid = -1;
+
     try
-      [tmp,curid,tmp] = fileparts(Iname);
+      hit = strfind(Iname,'JPEGImages/');
+      curid = Iname((hit+11):end);
+      hit = strfind(curid,'.');
+      curid = curid(1:(hit(end)-1));      
+      %[tmp,curid,tmp] = fileparts(Iname);
     catch
       curid = '';
     end

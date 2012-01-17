@@ -3,10 +3,14 @@ function extras = get_pascal_anno_function(dataset_params, Iname, boxes)
 %boxes inside this image
 
 %extract image id from the filename (this can be done for VOC images)
-[tmp,curid,tmp] = fileparts(Iname);
+%[tmp,curid,tmp] = fileparts(Iname);
 
 % get GT objects for this image
-recs = PASreadrecord(sprintf(dataset_params.annopath,curid));
+[basedir,fname,ext] = fileparts(Iname);
+gtfile = sprintf('%s/%s.xml',strrep(basedir,'JPEGImages', ...
+                                'Annotations'),fname);
+%gtfile = sprintf(dataset_params.annopath,curid);
+recs = PASreadrecord(gtfile);
 
 % get overlaps with all ground-truths (makes sense for VOC
 % images only)
