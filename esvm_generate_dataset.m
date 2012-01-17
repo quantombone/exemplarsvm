@@ -32,7 +32,7 @@ for i = 1:Npos
   I(inds) = 0;
   
   Irand = rand(size(I));
-  I = .8*I+.2*Irand;
+  I = .5*I+.5*Irand;
   
   Ipos{i}.I = I;
   
