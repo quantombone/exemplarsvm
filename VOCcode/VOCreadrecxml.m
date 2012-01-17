@@ -76,7 +76,7 @@ p.bndbox.xmax=str2double(o.bndbox.xmax);
 p.bndbox.ymax=str2double(o.bndbox.ymax);
 
 if isfield(o,'polygon')
-    warning('polygon unimplemented');
+    %warning('polygon unimplemented');
     p.polygon=[];
 else
     p.polygon=[];
