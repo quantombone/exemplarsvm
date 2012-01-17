@@ -78,6 +78,10 @@ end
 if CACHE_FILE == 1
   myRandomize;
   rrr = randperm(length(e_set));
+  
+  if (params.dataset_params.display == 1)
+    rrr = 1:length(rrr);
+  end
   e_set = e_set(rrr);
 end
 

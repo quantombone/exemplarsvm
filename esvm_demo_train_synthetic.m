@@ -10,20 +10,21 @@
 function [models,M] = esvm_demo_train_synthetic
 
 %% Create a synthetic dataset of circles on a random background
-Npos = 20;
-Nneg = 30;
+Npos = 200;
+Nneg = 50;
 [pos_set,neg_set] = esvm_generate_dataset(Npos,Nneg);
 
 %% Set exemplar-initialization parameters
 params = esvm_get_default_params;
 params.init_params.sbin = 4;
+params.init_params.MAXDIM = 6;
 params.model_type = 'exemplar';
 params.dataset_params.display = 1;
 params.dataset_params.localdir = '/nfs/baikal/tmalisie/synthetic/';
 
 %%Initialize exemplar stream
 stream_params.stream_set_name = 'trainval';
-stream_params.stream_max_ex = 1;
+stream_params.stream_max_ex = 10;
 stream_params.must_have_seg = 0;
 stream_params.must_have_seg_string = '';
 stream_params.model_type = 'exemplar'; %must be scene or exemplar;
@@ -72,7 +73,7 @@ M = esvm_perform_calibration(val_grid, models, val_params);
 %% Define test-set
 test_params = params;
 test_params.detect_exemplar_nms_os_threshold = 0.5;
-Ntest = 30;
+Ntest = 200;
 [stream_test] = esvm_generate_dataset(Ntest);
 test_set = cellfun2(@(x)x.I,stream_test);
 
