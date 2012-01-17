@@ -1,8 +1,14 @@
-%This is an Exemplar-SVM training demo
-%Tomasz Malisiewicz (tomasz@cmu.edu)
-function [models,M] = esvm_demo_train_fast(cls, data_directory, ...
-                                           dataset_directory, ...
-                                           results_directory)
+% demo: PASCAL VOC "mini" training/testing script
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved. 
+%
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
+function [models,M] = esvm_demo_train_voc_class_fast(cls, ...
+                                                  data_directory, ...
+                                                  dataset_directory, ...
+                                                  results_directory)
 
 if ~exist('cls','var')
   fprintf(1,'esvm_demo_train_fast: defaulting to class=car\n');

@@ -3,8 +3,6 @@ function [results] = evaluate_pascal_voc_grid(test_struct, grid, ...
                                               target_directory, cls, ...
                                               models_name)
 
-
-
 %% Evaluate PASCAL VOC detection task with the models, their output
 %% firings grid, on the set target_directory which can be either
 %% 'trainval' or 'test'

@@ -10,7 +10,7 @@ function [m] = esvm_mine_train_iteration(m, training_function)
 % 
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
-
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 % Start wtrace (trace of learned classifier parameters across
 % iterations) with first round classifier, if not present already
@@ -88,8 +88,8 @@ Isv1 = get_sv_stack(m,7);
 imagesc(Isv1)
 axis image
 axis off
-iter = length(m.model.wtrace);
-title(sprintf('Ex %s.%d cls=%s SVM-ITER=%03d',m.curid,m.objectid,m.cls,iter))
+iter = length(m.model.wtrace)-1;
+title(sprintf('Ex %s.%d cls=%s SVM_iter=%03d',m.curid,m.objectid,m.cls,iter))
 drawnow
 snapnow
 

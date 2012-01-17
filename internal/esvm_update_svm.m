@@ -1,10 +1,16 @@
 function [m,other] = esvm_update_svm(m)
-%Perform SVM learning for a single exemplar model, we assume that
-%the exemplar has a set of detections loaded in m.model.svxs and m.model.svbbs
-%Durning Learning, we can apply some pre-processing such as PCA or
-%dominant gradient projection
+% Perform SVM learning for a single exemplar model, we assume that
+% the exemplar has a set of detections loaded in m.model.svxs and m.model.svbbs
+% Durning Learning, we can apply some pre-processing such as PCA or
+% dominant gradient projection
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
-%Tomasz Malisiewicz (tomasz@cmu.edu)
 
 other = 'svm';
 %if no inputs are specified, just return the suffix of current method

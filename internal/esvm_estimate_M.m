@@ -9,6 +9,7 @@ function M = esvm_estimate_M(grid,  models, params, ...
 % 
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 neighbor_thresh = params.calibration_neighbor_thresh;
 count_thresh    = params.calibration_count_thresh;

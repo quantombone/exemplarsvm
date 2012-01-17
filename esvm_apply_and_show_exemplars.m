@@ -1,8 +1,15 @@
-function esvm_demo_apply_exemplars(imageset, models, M)
-%In this application demo, we apply the ensemble of Exemplar-SVMs
-%represented by [models,M] onto the sequence of images [imageset]
+function esvm_apply_and_show_exemplars(imageset, models, M)
+% We apply the ensemble of Exemplar-SVMs represented by [models,M] onto
+% the sequence of images [imageset], and display images without
+% saving anything
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
-%see: esvm_quick_demo
+%see: esvm_demo_apply
 
 if nargin < 2
   fprintf(1,'warning: not enough inputs\n');
@@ -34,11 +41,11 @@ params = esvm_get_default_params;
 for i = 1:length(imageset)
   %Get local detections
   local_detections = esvm_detect_imageset(imageset(i), models, ...
-                                          params);
-  
+                                          params);  
   %Pool exemplar detections
   result_struct = esvm_pool_exemplars_dets(local_detections, models, M, params);
 
+  %Show maxk top detections in this image
   maxk = 1;
   allbbs = esvm_show_top_dets(result_struct, local_detections, ...
                               imageset(i), models, ...

@@ -5,6 +5,7 @@
 % 
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 addpath(genpath(pwd));
 cls = 'voc2007-bus';

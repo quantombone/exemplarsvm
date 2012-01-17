@@ -1,6 +1,13 @@
-%This is an Exemplar-SVM training demo
-%Tomasz Malisiewicz (tomasz@cmu.edu)
-function [models,M] = esvm_script_train_voc_class(cls, data_directory, dataset_directory, ...
+% Script: PASCAL VOC training/testing script
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved. 
+%
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
+function [models,M] = esvm_script_train_voc_class(cls, ...
+                                                  data_directory, ...
+                                                  dataset_directory, ...
                                                   results_directory)
 
 %% Initialize dataset parameters
