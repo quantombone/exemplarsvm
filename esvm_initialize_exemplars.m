@@ -19,12 +19,12 @@ function models = esvm_initialize_exemplars(e_set, params, ...
 % allfiles: The names of all outputs (which are .mat model files
 %   containing the initialized exemplars)
 %
-%
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
 % 
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 
 % DTstring = '';

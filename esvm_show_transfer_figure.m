@@ -1,9 +1,14 @@
 function NR = esvm_show_transfer_figure(I, models, topboxes, overlays, ...
                                         current_rank, corr)
-%Show a figure with the detections of the exemplar svm model
-%NOTE(TJM): this function needs cleanup
-%Tomasz Malisiewicz(tomasz@cmu.edu)
+% Show a figure with the detections of the exemplar svm model
+% NOTE(TJM): this function needs cleanup
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
+
 
 topboxes = topboxes(1:min(2,size(topboxes,1)),:);
 

@@ -1,5 +1,11 @@
 function [Ipos,Ineg] = esvm_generate_dataset(Npos,Nneg)  
-%Generate a synthetic dataset of circles
+% Generate a synthetic dataset of circles (see esvm_demo_train_synthetic.m)
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if nargin == 0
   Npos = 3;

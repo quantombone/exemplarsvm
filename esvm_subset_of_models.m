@@ -1,5 +1,11 @@
 function [models,M] = esvm_subset_of_models(models,M,subset)
 %Choose a subset of models and a subset of the calibration matrix
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if ~exist('subset','var')
   s1 = cellfun(@(x)size(x.model.w,1),models);
