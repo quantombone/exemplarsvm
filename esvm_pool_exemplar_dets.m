@@ -139,7 +139,8 @@ for i = 1:length(bboxes)
   end
 end
 
-if exist('M','var') && length(M)>0 && isfield(M,'betas')
+if params.calibration_propagate_onto_raw && ...
+      exist('M','var') && length(M)>0 && isfield(M,'betas')
   fprintf(1,'Propagating scores onto raw detections\n');
   %% propagate scores onto raw boxes
   for i = 1:length(bboxes)
