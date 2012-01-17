@@ -1,8 +1,11 @@
-function [Is,bbs,Ineg] = esvm_generate_dataset(N)
+function [stream,Ineg] = esvm_generate_dataset(Npos,Nneg)  
 
-Npos = N;
-Nneg = N;
-  
+if nargin == 0
+  Npos = 3;
+  Nneg = 10
+elseif nargin == 1
+  Nneg = 10;
+end
 
 A = zeros(39,39);
 A(20,20)=1;
@@ -11,6 +14,7 @@ A = bwmorph(A,'remove');
 A = bwmorph(A,'dilate',2);
 A = repmat(A,[1 1 3]);
 
+stream = cell(Npos,1);
 for i = 1:Npos
   I = rand(100,100,3);
   I = rand(50,50,3);
@@ -24,9 +28,14 @@ for i = 1:Npos
   inds = find(I2);
   I(inds) = 0;
   
-  Is{i} = I;
-  bbs{i} = [sub2 sub1 sub2+size(A,2) sub1+size(A,1) ];
-  
+  stream{i}.I = I;
+  stream{i}.bbox = [sub2 sub1 sub2+size(A,2) sub1+size(A,1) ];
+  stream{i}.cls = 'synthetic';
+  stream{i}.curid = sprintf('%05d',i);
+  filer = sprintf('%s.%d.%s.mat', stream{i}.curid, 1, ...
+                  'synthetic');
+  stream{i}.filer = filer;
+  stream{i}.objectid = 1;
   if 0
   figure(1)
   clf
@@ -37,6 +46,7 @@ for i = 1:Npos
   end
 end
 
+Ineg = cell(Nneg,1);
 for i = 1:Nneg
   I = rand(100,100,3);
   I = rand(50,50,3);

@@ -1,6 +1,6 @@
 function fg = esvm_get_pascal_stream(stream_params, dataset_params)
 %Create an exemplar stream, such that each element fg{i} contains
-%these fields: (I, bbox, cls, curid, [objectid], [anno])
+%these fields: (I, bbox, cls, curid, filer, [objectid], [anno])
 %Make sure the exemplar has a segmentation associated with it if
 %must_have_seg is provided
 

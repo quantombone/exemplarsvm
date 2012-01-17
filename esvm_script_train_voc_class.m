@@ -106,8 +106,7 @@ M = esvm_perform_calibration(val_grid, models, val_params);
 test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);
 
 %% Apply calibration matrix to test-set results
-test_struct = esvm_apply_calibration(test_grid, models, M, test_params);
-
+test_struct = esvm_pool_exemplar_dets(test_grid, models, M, test_params);
 
 maxk = 20;
 allbbs = esvm_show_top_dets(test_struct, test_grid, test_set, models, ...

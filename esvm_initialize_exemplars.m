@@ -45,6 +45,7 @@ function models = esvm_initialize_exemplars(e_set, params, ...
 
 if ~exist('models_name','var')
   CACHE_FILE = 0;
+  models_name = '';
 else
   CACHE_FILE = 1;
 end
@@ -152,6 +153,8 @@ for i = 1:length(e_set)
   %Show the initialized exemplars
   if params.dataset_params.display == 1
     show_exemplar_frames({m}, 1, params.dataset_params);
+    drawnow
+    snapnow;
   end
 end  
 
@@ -165,6 +168,11 @@ end
 
 %Load all of the initialized exemplars
 CACHE_FILE = 1;
+
+if length(models_name) == 0
+  CACHE_FILE = 0;
+end
+
 STRIP_FILE = 0;
 DELETE_INITIAL = 0;
 

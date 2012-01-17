@@ -2,6 +2,7 @@ function allbbs = esvm_show_top_dets(test_struct, grid, ...
                                      test_set, models, params, ...
                                      maxk, set_name)
 
+
 % Show maxk top detections for [models] where [grid] is the set of
 % detections from the set [test_set], [test_struct] contains final
 % boxes after calibration and is obtained from applying calibration
@@ -196,9 +197,11 @@ for k = 1:maxk
     clear overlays
     
     for zzz = 1:min(1,size(allbb,1))
+
       overlays{zzz} = exemplar_inpaint(allbb(zzz,:), ...
                                        models{allbb(zzz,6)}, ...
                                        stuff);
+
     end
 
 

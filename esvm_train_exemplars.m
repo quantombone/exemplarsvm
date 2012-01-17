@@ -16,6 +16,8 @@ else
   CACHE_FILE = 1;
 end
 
+
+
 models_name = models{1}.models_name;
 new_models_name = [models_name params.training_function()];
 
@@ -78,8 +80,7 @@ allfiles = cell(length(models), 1);
 for i = 1:length(models)
   filer = '';
   m = models{i};
-   
-
+  
   [complete_file] = sprintf('%s/%s.mat',final_directory,m.name);
   [basedir, basename, ext] = fileparts(complete_file);
   
@@ -239,6 +240,12 @@ end
 %Load all of the initialized exemplars
 CACHE_FILE = 1;
 STRIP_FILE = 1;
+
+if new_models_name(1) == '-'
+  CACHE_FILE = 0;
+  STRIP_FILE = 0;
+end
+
 DELETE_INITIAL = 0;
 newmodels = esvm_load_models(params.dataset_params, new_models_name, allfiles, ...
                           CACHE_FILE, STRIP_FILE, DELETE_INITIAL);

@@ -88,8 +88,10 @@ Isv1 = get_sv_stack(m,7);
 imagesc(Isv1)
 axis image
 axis off
-title('Exemplar Weights + Sorted Matches')
+iter = length(m.model.wtrace);
+title(sprintf('Ex %s.%d cls=%s SVM-ITER=%03d',m.curid,m.objectid,m.cls,iter))
 drawnow
+snapnow
 
 if (m.mining_params.dump_images == 1) || ...
       (m.mining_params.dump_last_image == 1 && ...
