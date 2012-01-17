@@ -1,4 +1,4 @@
-function models = esvm_update_voc_models(models, data_directory)
+function models = esvm_update_voc_models_to_local(models, data_directory)
 %Updates models to internally point to local data
 
 for i = 1:length(models)
