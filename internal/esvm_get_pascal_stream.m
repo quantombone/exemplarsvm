@@ -10,7 +10,7 @@ if ~exist('dataset_params','var')
 end
 
 if ~isfield(stream_params,'cache_file')
-  stream_params.cache_file = 0
+  stream_params.cache_file = 0;
 end
 
 if ~isfield(stream_params,'cls')
