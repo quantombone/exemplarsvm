@@ -96,7 +96,7 @@ You can alternatively download the pre-trained models individually from [http://
 >> esvm_demo_apply;
 ```
 
-See the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_apply.html](tutorial/esvm_demo_apply.html) for a step-by-step tutorial on what esvm_demo_apply.m produces
+See the file [tutorial/esvm_demo_apply.html](http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_apply.html) for a step-by-step tutorial on what esvm_demo_apply.m produces
 
 
 # Training an Ensemble of Exemplar-SVMs
@@ -107,7 +107,7 @@ See the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_
 >> esvm_demo_train_synthetic;
 ```
 
-See the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_train_synthetic.html](tutorial/esvm_demo_train_synthetic.html) for a step-by-step tutorial on what esvm_demo_apply.m produces
+See the file [tutorial/esvm_demo_train_synthetic.html](http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_train_synthetic.html) for a step-by-step tutorial on what esvm_demo_train_synthetic.m produces
 
 The training scripts are designed to work with the PASCAL VOC 2007
 dataset, so we need to download that first.
@@ -128,9 +128,12 @@ You can also get the VOC 2007 dataset tar files manually, [VOCtrainval_06-Nov-20
 >> data_dir = '/your/directory/to/pascal/VOCdevkit/';
 >> dataset = 'VOC2007';
 >> results_dir = '/your/results/directory/';
->> [models,M] = esvm_demo_train_voc_class_fast('bus', data_dir, dataset, results_dir);
+>> [models,M] = esvm_demo_train_voc_class_fast('car', data_dir, dataset, results_dir);
 # All output (models, M-matrix, AP curve) has been written to results_dir
 ```
+
+See the file [tutorial/esvm_demo_train_voc_class_fast.html](http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_train_voc_class_fast.html) for a step-by-step tutorial on what esvm_demo_train_voc_class_fast.m produces
+
 
 ## Script: Training and Evaluating an Ensemble of "bus" Exemplar-SVMs full script
 ``` sh
