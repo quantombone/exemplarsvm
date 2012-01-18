@@ -1,15 +1,15 @@
-function [models,M] = esvm_demo_train_voc_class_fast(cls, ...
-                                                  data_directory, ...
-                                                  dataset_directory, ...
-                                                  results_directory)
-
-% demo: PASCAL VOC "mini" training/testing script
+%% DEMO: PASCAL VOC "mini" training/testing script
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved. 
 %
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
+function [models,M] = esvm_demo_train_voc_class_fast(cls, ...
+                                                  data_directory, ...
+                                                  dataset_directory, ...
+                                                  results_directory)
+
 
 addpath(genpath(pwd));
 
@@ -27,10 +27,10 @@ if ~exist('dataset_directory','var')
 end
 
 if ~exist('results_directory','var')
-  results_directory = '';
-  %results_directory = sprintf(['/nfs/baikal/tmalisie/esvm-%s-' ...
-  %                  '%s-fast/'], ...
-  %                            dataset_directory, cls);
+  %results_directory = '';
+  results_directory = sprintf(['/nfs/baikal/tmalisie/esvm-%s-' ...
+                    '%s-fast/'], ...
+                              dataset_directory, cls);
 end
 
 %data_directory = '/Users/tomasz/projects/Pascal_VOC/';
@@ -43,10 +43,12 @@ end
 dataset_params = esvm_get_voc_dataset(dataset_directory,...
                                       data_directory,...
                                       results_directory);
+
+
 dataset_params.display = 1;
 %dataset_params.dump_images = 1;
 
-%% Issue warning if lock files are present
+% Issue warning if lock files are present
 lockfiles = check_for_lock_files(results_directory);
 if length(lockfiles) > 0
   fprintf(1,'WARNING: %d lockfiles present in current directory\n', ...

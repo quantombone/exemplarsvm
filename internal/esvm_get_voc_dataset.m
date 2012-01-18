@@ -17,13 +17,17 @@ if ~exist('VOCYEAR','var')
 end
 
 if ~exist('result_dir','var')
-  result_dir = '/tmp/';
+  result_dir = '';
 end
 % Create a root directory
 dataset_params.devkitroot = [result_dir '/'];
 
 % change this path to a writable local directory for the example code
 dataset_params.localdir = [dataset_params.devkitroot];
+
+if length(result_dir) == 0
+  dataset_params.localdir = '';
+end
 
 % change this path to a writable directory for your results
 dataset_params.resdir = [dataset_params.devkitroot ['/' ...
