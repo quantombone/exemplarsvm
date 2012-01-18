@@ -6,7 +6,7 @@ Perform calibration and M-estimation:
 
 Perform Non-Maximum Suppression:
 
-    function top = nms(boxes, overlap)
+    function top = esvm_nms(boxes, overlap)
 
 Collect detections so they are ready for VOC evaluation:
 
