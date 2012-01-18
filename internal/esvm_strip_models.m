@@ -1,7 +1,16 @@
-function models = strip_models(models)
-%Take the models, and strip them of residual training data, only
-%keep the information relevant for detection, this is useful for
-%keeping a stripped version of models around for faster detections
+function models = esvm_strip_models(models)
+% Take the models, and strip them of residual training data, only
+% keep the information relevant for detection, this is useful for
+% keeping a stripped version of models around for faster
+% detections.
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
+
 
 for i = 1:length(models)
   cur = models{i};

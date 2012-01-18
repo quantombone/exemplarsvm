@@ -170,7 +170,7 @@ for k = 1:maxk
     allbb = allbb(goods,:);
     allbb(:,end) = allbb(:,end);
     %allbb = calibrate_boxes(allbb,finalstruct.M.betas);
-    allbb = nms_within_exemplars(allbb,.5);
+    allbb = esvm_nms_within_exemplars(allbb,.5);
     [alpha,beta] = sort(allbb(:,end),'descend');
     allbb = allbb(beta,:);
 

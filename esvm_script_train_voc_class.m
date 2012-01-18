@@ -34,9 +34,9 @@ end
 %data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
 %results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
 
-dataset_params = get_voc_dataset(dataset_directory, ...
-                                 data_directory, ...
-                                 results_directory);
+dataset_params = esvm_get_voc_dataset(dataset_directory, ...
+                                      data_directory, ...
+                                      results_directory);
 %dataset_params.display = 1;
 %dataset_params.dump_images = 1;
 
@@ -74,7 +74,7 @@ e_stream_set = esvm_get_pascal_stream(stream_params, ...
                                       dataset_params);
 
 
-neg_set = get_pascal_set(dataset_params, ['train-' cls]);
+neg_set = esvm_get_pascal_set(dataset_params, ['train-' cls]);
 
 %Choose a models name to indicate the type of training run we are doing
 models_name = ...
@@ -93,18 +93,18 @@ train_params.CACHE_FILE = 1;
 
 val_params = params;
 val_params.detect_exemplar_nms_os_threshold = 0.5;
-val_params.gt_function = @get_pascal_anno_function;
+val_params.gt_function = @esvm_load_gt_function;
 val_params.CACHE_BETAS = 1;
 
 val_set_name = ['trainval'];
 
-val_set = get_pascal_set(dataset_params, val_set_name);
+val_set = esvm_get_pascal_set(dataset_params, val_set_name);
 
 %% Define test-set
 test_params = params;
 test_params.detect_exemplar_nms_os_threshold = 0.5;
 test_set_name = ['test'];
-test_set = get_pascal_set(dataset_params, test_set_name);
+test_set = esvm_get_pascal_set(dataset_params, test_set_name);
 
 %% Train the exemplars and get updated models name
 [models,models_name] = esvm_train_exemplars(initial_models, ...
@@ -122,11 +122,12 @@ test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);
 %% Apply calibration matrix to test-set results
 test_struct = esvm_pool_exemplar_dets(test_grid, models, M, test_params);
 
+%% Show top 20 detections as exemplar-inpainting results
 maxk = 20;
 allbbs = esvm_show_top_dets(test_struct, test_grid, test_set, models, ...
-                       params,  maxk, test_set_name);
+                            params,  maxk, test_set_name);
 
-[results] = evaluate_pascal_voc_grid(test_struct, test_grid,  ...
-                                     params, test_set_name, cls, ...
-                                     models_name);
+%% Perform the exemplar evaluation
+[results] = esvm_evaluate_pascal_voc(test_struct, test_grid, params, ...
+                                     test_set_name, cls, models_name);
 

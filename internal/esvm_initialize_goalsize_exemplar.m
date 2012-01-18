@@ -71,7 +71,7 @@ model.w = reshape(model.x,size(model.w)) - mean(model.x(:));
 if isfield(init_params,'wiggle_number') && ...
       (init_params.wiggle_number > 1)
   savemodel = model;
-  model = populate_wiggles(I, model, init_params.wiggle_number);
+  model = esvm_get_model_wiggles(I, model, init_params.wiggle_number);
 end
 
 

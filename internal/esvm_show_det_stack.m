@@ -1,11 +1,18 @@
-function Isv = get_sv_stack(m, K2, K1)
-% Create a K1xK2 image which visualizes the detection windows, as
-% well as information about the trained exemplar m
+function Isv = esvm_show_det_stack(m, K2, K1)
+% Create a [K1]x[K2] image which visualizes the detection windows, as
+% well as information about the trained exemplar [m].
 % The first shows shows [exemplar image, w+, w- ,
 %    mean0, mean 1, ... ,mean N]
-% Second row first icon starts the top detections
+% Second row first icon starts the top detections. This
+% visualization is used to show top negative support vectors as
+% well as top detection from any set.
 %
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if (sum(m.model.w(:)<0) == 0) || ...
       (sum(m.model.w(:)>0) == 0)
@@ -38,18 +45,9 @@ if isfield(m.model,'svxs') && (numel(m.model.svxs)>0)
   m.model.svbbs = m.model.svbbs(bb, :);
   m.model.svxs = m.model.svxs(:, bb);
 else
-  %[aa,bb] = sort(r,'descend');
-  %m.model.svbbs = m.model.svbbs(bb, :);
-  %fprintf(1,'Not sorting in get_sv_stack\n');
+
 end
 
-%NO NMS
-%inds = nms_objid(m.model.svids);
-%m.model.svids = m.model.svids(inds);
-%m.model.nsv = m.model.nsv(:,inds);
-
-
-%svids = m.model.svids;
 
 if exist('m','var')
   hogpic = (HOGpicture(m.model.w));
@@ -68,9 +66,6 @@ else
 end
 svims = cell(N,1);
 
-%PADDER = 100;
-
-%VOCinit;
 for i = 1:length(ucurids)
 
   Ibase = convert_to_I(m.train_set{ucurids(i)});
@@ -86,10 +81,8 @@ for i = 1:length(ucurids)
     d4 = max(0,cb(4) - size(Ibase,1));
     mypad = max([d1,d2,d3,d4]);
     PADDER = round(mypad)+2;
-
     I = pad_image(Ibase,PADDER);
     
-    %bb = round(svids(hits(j)).bb + PADDER);
     bb = round(cb + PADDER);
     svims{hits(j)} = I(bb(2):bb(4),bb(1):bb(3),:);
    
@@ -111,17 +104,6 @@ newsize = newsize + 10;
 svims = cellfun2(@(x)max(0.0,min(1.0,imresize(x,newsize))),svims);
 
 indicator = ones(length(svims), 1);
-
-% if ~isfield(m.model.svids{1},'set')
-%   [negatives,vals,pos,test,indicator] = ...
-%       find_set_membership(m.model.svids,m.cls);
-% else
-%   indicator = cellfun(@(x)x.set,m.model.svids);
-%   negatives = find(indicator==1);
-%   vals = find(indicator==2);
-%   pos = find(indicator==3);
-%   test = find(indicator==4);
-% end
 
 NSHIFT_BASE = 3;
 
@@ -177,6 +159,7 @@ mx = m.model.w(:)*0;
 raw_picture = HOGpicture(reshape(mx-mean(mx(:)),m.model.hg_size));
 pos_picture = HOGpicture(m.model.w);
 neg_picture = HOGpicture(-m.model.w);
+
 %spatial_picture = sum(m.model.w.*reshape(mean(m.model.x,2), ...
 %                                         size(m.model.w)),3);
 
@@ -196,19 +179,19 @@ NSHIFT = length(mss) + NSHIFT_BASE;
 svims((NSHIFT+1):end) = svims(1:end-NSHIFT);
 
 %ex goes in slot 1
-svims{1} = max(0.0,min(1.0,imresize(Ibase,[size(pos_picture,1),size(pos_picture, ...
-                                                  2)])));
+svims{1} = max(0.0,...
+               min(1.0,imresize(Ibase,...
+                                [size(pos_picture,1),...
+                    size(pos_picture, ...
+                         2)])));
 svims{2} = pos_picture;
 svims{3} = neg_picture;
 
 svims(NSHIFT_BASE+(1:length(mss))) = mss;
 
-
 for q = 1:(NSHIFT_BASE+length(mss))
   svims{q} = pad_image(svims{q},PADSIZE,[1 1 1]);
 end
-
-
 
 svims = reshape(svims,K1,K2)';
 for j = 1:K2

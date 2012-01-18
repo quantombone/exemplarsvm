@@ -83,7 +83,7 @@ function dump_figures(m)
 
 figure(2)
 clf
-Isv1 = get_sv_stack(m,7);
+Isv1 = esvm_show_det_stack(m,7);
 
 imagesc(Isv1)
 axis image

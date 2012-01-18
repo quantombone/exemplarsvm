@@ -186,7 +186,7 @@ for i = 1:length(models)
       
     %   figure(445);
     %   clf;
-    %   showI = get_sv_stack(m,5,5);
+    %   showI = esvm_show_det_stack(m,5,5);
     %   imagesc(showI);
     %   title('Exemplar and Top Dets');
     %   drawnow;

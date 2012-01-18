@@ -25,13 +25,8 @@ end
 %if enabled, do NMS, if disabled return raw detections
 DO_NMS = 0;
 
-%if DO_NMS == 0
-%  fprintf(1,'Inside calibration: disabled NMS!\n');
-%end
-
 % if enabled, display images
 display = params.dataset_params.display;
-%display = 0;
 
 % if display is enabled and dump_images is enabled, then dump images
 % into DUMPDIR
@@ -57,22 +52,6 @@ if nargin < 1
   fprintf(1,'Not enough arguments, need at least the grid\n');
   return;
 end
-
-% setname = 'voc';
-
-% if strcmp(setname,'voc')
-%   target_directory = 'trainval';
-%   %target_directory = 'train';
-%   fprintf(1,'Using VOC set so performing calibration with set: %s\n',target_directory);
-  
-%   %% prune grid to contain only images from target_directory
-%   [cur_set, gt] = textread(sprintf(params.dataset_params.imgsetpath,...
-%                                    target_directory),['%s' ...
-%                     ' %d']);
-%   gridids = cellfun2(@(x)x.curid,grid);
-%   goods = ismember(gridids,cur_set);
-%   grid = grid(goods);
-% end
 
 final_dir = ...
     sprintf('%s/models',params.dataset_params.localdir);
@@ -134,7 +113,7 @@ for i = 1:length(grid)
     cur.bboxes(:,5) = 1:size(cur.bboxes,1);    
     cur.coarse_boxes(:,5) = 1:size(cur.bboxes,1);    
     if DO_NMS == 1
-      cur.bboxes = nms_within_exemplars(cur.bboxes,.5);
+      cur.bboxes = esvm_nms_within_exemplars(cur.bboxes,.5);
       cur.coarse_boxes = cur.coarse_boxes(cur.bboxes(:,5),:);
     end
     
@@ -164,7 +143,6 @@ for i = 1:length(grid)
     %use all objects as ground truth
     %goods = 1:length(cur.extras.cats);
     
-
     %% find the ground truth examples of the right category
     %goods = find(ismember(cur.extras.cats,cls));
     
@@ -187,11 +165,8 @@ ALL_bboxes = cat(1,bboxes{:});
 ALL_coarse_boxes = cat(1,coarse_boxes{:});
 ALL_os = cat(1,os{:});
 
-
 curids = cellfun2(@(x)x.curid,grid);
-
-
-%fprintf(1,'Pre-processing models for calibration: \n');
+% Pre-processing models for calibration
 
 for exid = 1:length(models)
   fprintf(1,'.');
@@ -200,9 +175,7 @@ for exid = 1:length(models)
     sourcegrid = -1;
   end
   
-  %REMOVE SOURCE IMAGE TOO
-  %HACK removed
-  hits = find((ALL_bboxes(:,6)==exid));%% & (ALL_bboxes(:,5) ~= sourcegrid));
+  hits = find((ALL_bboxes(:,6)==exid));
   all_scores = ALL_bboxes(hits,end);
   all_os = ALL_os(hits,:);
   
@@ -236,19 +209,19 @@ for exid = 1:length(models)
     beta = esvm_learn_sigmoid(all_scores, all_os);
   end
 
-  %if beta(1)<.001
-  %  beta(1) = .001;
-  %end  
+  if beta(1)<.001
+    fprintf(1,['warning[esvm_perform_platt_calibration.m]: beta(1)' ...
+               ' is low']);
+    % beta(1) = .001;
+  end
+
   betas(exid,:) = beta;
 
   if (sum(ismember(exid,targets))==0)
     continue
   end
 
-
   if display == 1
-    %figure(222)
-    %show_calibration_rank(m,ALL_bboxes(hits,:), 
     
     figure(1)
     clf
@@ -256,9 +229,6 @@ for exid = 1:length(models)
     plot(all_scores,all_os,'r.')
     xs = linspace(min(all_scores),max(all_scores),1000);
     fx = @(x)(1./(1+exp(-beta(1)*(x-beta(2)))));
-    
-    %[aaa,bbb] = sort(fx(all_scores),'descend');
-    %aaa(aaa>=.5)
     
     hold on
     plot(xs,fx(xs),'b','LineWidth',2)
@@ -269,15 +239,7 @@ for exid = 1:length(models)
     title(sprintf('Learned Sigmoid \\beta=[%.3f %.3f]',beta(1), ...
                   beta(2)))
     subplot(1,2,2)
-    %subplot(2,2,1)
     Iex = convert_to_I(models{exid}.I);
-    % if isfield(models{exid},'I')
-    %   Iex = im2double(models{exid}.I);  
-    % else
-    %   %try pascal VOC image
-    %   Iex = im2double(imread(sprintf(params.dataset_params.imgpath, ...
-    %                                  models{exid}.curid)));
-    % end
     imagesc(Iex)
     plot_bbox(models{exid}.gt_box)
     axis image
@@ -309,7 +271,7 @@ for exid = 1:length(models)
       m2{1}.model.svxs = [];
       figure(445)
       clf
-      imagesc(get_sv_stack(m2{1},8))
+      imagesc(esvm_show_det_stack(m2{1},8))
       drawnow
       title(sprintf('Calib Ex %s.%d.%s',...
                     models{exid}.curid,...
@@ -318,11 +280,8 @@ for exid = 1:length(models)
       drawnow
       snapnow
     end
-
-
   end
   
-
   if (display == 0)
     continue
   end
@@ -340,7 +299,8 @@ for exid = 1:length(models)
 end
 
 if CACHE_FILES == 1
-  fprintf(1,'\nLoaded calibration parameters "betas", saving to %s\n',final_file);
+  fprintf(1,['\nLoaded calibration parameters "betas", saving to' ...
+             ' %s\n'],final_file);
   save(final_file,'betas');
   rmdir(lockfile);
 end

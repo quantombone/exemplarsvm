@@ -1,6 +1,16 @@
-function show_hits_figure(models,topboxes,I,extraI,extraI2)
-%Show a figure with the detections of the exemplar svm model
-%Tomasz Malisiewicz(tomasz@cmu.edu)
+function esvm_show_associations_figure(models, topboxes,...
+                                       I,...
+                                       extraI, ...
+                                       extraI2)
+% Show a figure with the detections of the exemplar svm model.
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
+
+% Note, here we show the parse in terms of exemplar associations.
 
 %only keep 5 boxes
 if numel(topboxes)==0
@@ -23,7 +33,6 @@ topboxes = cat(1,topboxes,others);
 %   end
 % end
 
-%show the parse in terms of exemplar associations
 
 %use colors where 'hot' aka red means high score, and 'cold' aka
 %blue means low score

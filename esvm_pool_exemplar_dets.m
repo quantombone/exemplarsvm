@@ -1,6 +1,6 @@
 function final = esvm_pool_exemplar_dets(grid, models, M, params)
-%% Perform detection post-processing and pool detection boxes
-%(which will then be ready to go into the PASCAL evaluation code)
+% Perform detection post-processing and pool detection boxes
+% (which will then be ready to go into the PASCAL evaluation code)
 % If there are overlap scores associated with boxes, then they are
 % also kept track of propertly, even after NMS.
 % 
@@ -64,21 +64,6 @@ for i = 1:length(grid)
 end
 
 raw_boxes = bboxes;
-
-% perform within-exemplar NMS
-% NOTE: this is already done during detection time
-% if 0 
-%   fprintf(1,'applying exemplar nms\n');
-%   for i = 1:length(bboxes)
-%     if size(bboxes{i},1) > 0
-%       bboxes{i}(:,5) = 1:size(bboxes{i},1);
-%       bboxes{i} = nms_within_exemplars(bboxes{i},.5);
-%       if length(grid{i}.extras)>0 && isfield(grid{i}.extras,'os')
-%         maxos{i} = maxos{i}(bboxes{i}(:,5));
-%       end
-%     end
-%   end
-% end
 
 %Perform score rescaling
 %1. no scaling

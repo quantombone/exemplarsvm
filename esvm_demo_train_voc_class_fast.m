@@ -39,9 +39,9 @@ end
 %results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
 
 
-dataset_params = get_voc_dataset(dataset_directory,...
-                                 data_directory,...
-                                 results_directory);
+dataset_params = esvm_get_voc_dataset(dataset_directory,...
+                                      data_directory,...
+                                      results_directory);
 %dataset_params.display = 1;
 %dataset_params.dump_images = 1;
 
@@ -75,7 +75,7 @@ stream_params.cls = cls;
 e_stream_set = esvm_get_pascal_stream(stream_params, ...
                                       dataset_params);
 
-neg_set = get_pascal_set(dataset_params, ['train-' cls]);
+neg_set = esvm_get_pascal_set(dataset_params, ['train-' cls]);
 
 %Choose a models name to indicate the type of training run we are doing
 models_name = ...
@@ -94,19 +94,19 @@ train_params.CACHE_FILE = 1;
 
 % val_params = params;
 % val_params.detect_exemplar_nms_os_threshold = 0.5;
-% val_params.gt_function = @get_pascal_anno_function;
+% val_params.gt_function = @esvm_load_gt_function;
 % val_params.CACHE_BETAS = 1;
 
 % val_set_name = ['trainval+' cls];
 
-% val_set = get_pascal_set(dataset_params, val_set_name);
+% val_set = esvm_get_pascal_set(dataset_params, val_set_name);
 % val_set = val_set(1:10);
 
 %% Define test-set
 test_params = params;
 test_params.detect_exemplar_nms_os_threshold = 0.5;
 test_set_name = ['trainval+' cls];
-test_set = get_pascal_set(dataset_params, test_set_name);
+test_set = esvm_get_pascal_set(dataset_params, test_set_name);
 test_set = test_set(1:100);
 
 %% Train the exemplars and get updated models name

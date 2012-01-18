@@ -59,7 +59,7 @@ train_params.CACHE_FILE = 1;
 
 val_params = params;
 val_params.detect_exemplar_nms_os_threshold = 0.5;
-val_params.gt_function = @get_pascal_anno_function;
+val_params.gt_function = @esvm_load_gt_function;
 val_set = cat(1, pos_set(:), val_neg_set(:));
 val_params.val_set = val_set;
 val_set_name = 'valset';

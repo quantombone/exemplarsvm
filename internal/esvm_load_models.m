@@ -175,7 +175,7 @@ if CACHE_FILE==1
   
   if STRIP_FILE == 1
     models_save = models;
-    models = strip_models(models);
+    models = esvm_strip_models(models);
     fprintf(1,'Saving stripped to %s\n',cache_file_stripped);
     save(cache_file_stripped,'models');
     models = models_save;

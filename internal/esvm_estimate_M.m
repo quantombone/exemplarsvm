@@ -56,8 +56,6 @@ end
 
 curcls = models{1}.cls;
 
-%curcls = find(ismember(params.dataset_params.classes,models{1}.cls));
-
 fprintf(1,' -Computing Box Features:');
 starter=tic;
 for i = 1:length(grid)
@@ -100,30 +98,9 @@ for i = 1:length(grid)
   end
 end
 
-
-
-if 0
-%% clip boxes to image
-fprintf(1,'clipping boxes\n');
-for i = 1:length(boxes)
-  boxes{i} = clip_to_image(boxes{i},grid{i}.imbb);
-end
-end
-
 lens = cellfun(@(x)size(x,1),boxes);
 boxes(lens==0) = [];
 maxos(lens==0) = [];
-
-%already nms-ed within exemplars (but not within LR flips)
-%%NOTE: should this be turned on?
-if 0
-  for i = 1:length(boxes)
-    boxes{i}(:,5) = 1:size(boxes{i},1);
-    boxes{i} = nms_within_exemplars(boxes{i},.5);
-    maxos{i} = maxos{i}(boxes{i}(:,5));
-    boxes{i}(:,5) = i;
-  end
-end
 
 K = length(models);
 N = sum(cellfun(@(x)size(x,2),maxos));
@@ -225,7 +202,6 @@ for i = 1:N
   %old way: works better!
   C(cur,exids(i)) = C(cur,exids(i)) + os(i)*(os(i) >= count_thresh) / ...
        length(cur);
-
 end
 
 for i = 1:K

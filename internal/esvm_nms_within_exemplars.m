@@ -1,4 +1,4 @@
-function top = nms_within_exemplars(boxes,os_thresh)
+function top = esvm_nms_within_exemplars(boxes,os_thresh)
 % Perform NMS within each exemplar, where the 6th field of each
 % detection indicates the exemplar source id
 % [boxes]: the input bounding boxes

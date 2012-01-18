@@ -1,9 +1,15 @@
-function dataset_params = get_voc_dataset(VOCYEAR,datadir,result_dir)
-%Get the dataset structure for a VOC dataset, given the VOCYEAR
-%string which is something like: VOC2007, VOC2010, ...
-
-%result_dir = load_results_directory;
-%datadir = load_data_directory;
+function dataset_params = esvm_get_voc_dataset(VOCYEAR,datadir,result_dir)
+% Get the dataset structure for a VOC dataset, given the VOCYEAR
+% string which is something like: VOC2007, VOC2010, etc.  This assumes
+% that VOC is locally installed, see Exemplar-SVM project page for
+% instructions if you need to do this.
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if ~exist('VOCYEAR','var')
   fprintf(1,'WARNING: using default VOC2007 dataset\n');

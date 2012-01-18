@@ -1,6 +1,13 @@
-function showM(models,M)
-%Show the M matrix which, as the co-activation matrix, is a type of
-%visual memex matrix
+function esvm_show_M(models, M)
+% Show the M calibration matrix which, as the co-activation matrix, is
+% a type of visual memex matrix.
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 for i = 1:length(models)
   
