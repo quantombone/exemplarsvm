@@ -24,6 +24,9 @@ else
   CACHE_FILES = 0;
 end
 
+if ~exist('set_name','var')
+  set_name = '';
+end
 
 %Default exemplar-inpainting show mode
 %SHOW_MODE = 1;
