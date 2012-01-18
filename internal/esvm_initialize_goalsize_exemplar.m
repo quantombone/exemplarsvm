@@ -3,7 +3,14 @@ function model = esvm_initialize_goalsize_exemplar(I, bbox, init_params)
 % which tries to choose a region which overlaps best with the given
 % bbox and contains roughly init_params.goal_ncells cells, with a
 % maximum dimension of init_params.MAXDIM
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
+
 
 if ~exist('init_params','var')
   init_params.sbin = 8;

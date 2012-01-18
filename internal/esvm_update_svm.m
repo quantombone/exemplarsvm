@@ -11,7 +11,6 @@ function [m,other] = esvm_update_svm(m)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-
 other = 'svm';
 %if no inputs are specified, just return the suffix of current method
 if nargin==0

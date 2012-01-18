@@ -1,11 +1,19 @@
 function model = esvm_initialize_fixedframe_exemplar(I, bbox, ...
                                                   init_params)
-%% Initialize exemplars using a Fixed Frame as defined by
+% Initialize exemplars using a Fixed Frame as defined by
 % init_params.hg_size.  The fixedframe mode also needs to compute a
 % template-mask, which will indicate which part of the square
 % template is actually being used.  This mask will in general have
-% zero regions because we enforce the mask to be square (via padding).
-% Tomasz Malisiewcz (tomasz@csail.mit.edu)
+% zero regions because we enforce the mask to be square (via
+% padding).
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
+
 
 sbin = init_params.sbin;
 hg_size = init_params.hg_size;

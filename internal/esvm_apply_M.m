@@ -5,11 +5,13 @@ function r = esvm_apply_M(x, boxes, M)
 % Apply the multiplexer matrix M which boosts the scores of a
 % window based on its friends and their scores embedded in the
 % context feature vector x
+%
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
 % 
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if prod(size(x))==0
   r = zeros(1,0);

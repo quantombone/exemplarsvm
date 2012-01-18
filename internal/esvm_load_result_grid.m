@@ -1,10 +1,16 @@
 function grid = esvm_load_result_grid(dataset_params,...
                                       models,setname,files,curthresh)
-%Given a set of models, return a grid of results from those models' firings
-%on the subset of images (target_directory is 'trainval' or 'test')
-%[curthresh]: only keep detections above this number (-1.1 for
-%esvm, .5 for vis-reg)
-%Tomasz Malisiewicz (tomasz@cmu.edu)
+% Given a set of models, return a grid of results from those models' firings
+% on the subset of images (target_directory is 'trainval' or 'test')
+% [curthresh]: only keep detections above this number (-1.1 for
+% esvm, .5 for vis-reg)
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 fullsetname = [setname];
 models_name = '';

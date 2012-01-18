@@ -17,8 +17,13 @@ function [hn, mining_queue, mining_stats] = ...
 % hn contains:
 %   hn{:}.xs "features"
 %   hn{:}.bbs "bounding boxes"
-
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if ~exist('mining_params','var')
   mining_params = esvm_get_default_params;

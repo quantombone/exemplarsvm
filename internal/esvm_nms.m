@@ -1,5 +1,5 @@
-function top = nms(boxes, overlap)
-% top = nms_fast(boxes, overlap)
+function top = esvm_nms(boxes, overlap)
+% top = esvm_nms(boxes, overlap)
 % Non-maximum suppression. (FAST VERSION)
 % Greedily select high-scoring detections and skip detections
 % that are significantly covered by a previously selected
@@ -7,7 +7,14 @@ function top = nms(boxes, overlap)
 % NOTE: This is adapted from Pedro Felzenszwalb's version (nms.m),
 % but an inner loop has been eliminated to significantly speed it
 % up in the case of a large number of boxes
-% Tomasz Maliseiwicz (tomasz@cmu.edu)
+
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
+
 
 if isempty(boxes)
   top = [];

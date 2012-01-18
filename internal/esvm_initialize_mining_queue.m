@@ -6,6 +6,8 @@ function mining_queue = esvm_initialize_mining_queue(imageset, ordering)
 % 
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
+
 
 if ~exist('ordering','var')
   fprintf(1,'Randomizing mining queue\n');

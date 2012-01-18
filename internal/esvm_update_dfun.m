@@ -5,7 +5,14 @@ function [m,other] = esvm_update_dfun(m)
 % Returns: model [m] with updated classifier
 % If no arguments are given returns the suffix '-dfun' and
 % classifier type 'dfun'
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
+
 
 other = 'dfun';
 %if no inputs are specified, just return the suffix of current method

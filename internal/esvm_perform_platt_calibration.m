@@ -4,8 +4,15 @@ function [betas] = esvm_perform_platt_calibration(grid, models, ...
 % transformation of svm scores) for each model independently. If we
 % perform an operation such as NMS, we will now have "comparable"
 % scores.  This is performed on the 'trainval' set for PASCAL VOC.
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+
 
 
 
