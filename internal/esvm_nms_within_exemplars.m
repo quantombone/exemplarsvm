@@ -3,6 +3,13 @@ function top = esvm_nms_within_exemplars(boxes,os_thresh)
 % detection indicates the exemplar source id
 % [boxes]: the input bounding boxes
 % [os_thresh]: the overlap_threshold given to esvm_nms
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if length(boxes) == 0
   top = boxes;

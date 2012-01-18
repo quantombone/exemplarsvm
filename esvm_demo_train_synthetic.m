@@ -1,13 +1,13 @@
+function [models,M] = esvm_demo_train_synthetic
 % Demo: Training Exemplar-SVMs from synthetic data
 % This function can generate a nice HTML page by calling: publish('esvm_demo_train_synthetic.m','html')
+%
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved. 
 %
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
-
-function [models,M] = esvm_demo_train_synthetic
 
 addpath(genpath(pwd))
 

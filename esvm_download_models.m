@@ -1,6 +1,6 @@
 function [models,M,test_set] = esvm_download_models(cls)
-%Download a pre-trained PASCAL VOC2007 model from my MIT CSAIL
-%homepage (http://people.csail.mit.edu/tomasz/)
+% Download a pre-trained PASCAL VOC2007 model from my MIT CSAIL
+% homepage (http://people.csail.mit.edu/tomasz/)
 %
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.

@@ -3,9 +3,17 @@ function [results] = esvm_evaluate_pascal_voc(test_struct, grid, ...
                                               target_directory, cls, ...
                                               models_name)
 
-%% Evaluate PASCAL VOC detection task with the models, their output
-%% firings grid, on the set target_directory which can be either
-%% 'trainval' or 'test'
+% Evaluate PASCAL VOC detection task with the models, their output
+% firings grid, on the set target_directory which can be either
+% 'trainval' or 'test'
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
+
 
 if params.SKIP_EVAL == 1
   results = [];

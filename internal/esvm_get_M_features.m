@@ -14,7 +14,12 @@ function [x,nbrids] = esvm_get_M_features(boxes, N, neighbor_thresh)
 % nbrids: [1 x K] cell array indicating the raw box ids belonging
 %   to each context feature
 %
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 K = size(boxes,1);
 x = sparse(N*2, K);

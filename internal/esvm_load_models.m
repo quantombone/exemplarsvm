@@ -1,12 +1,11 @@
 function [models] = esvm_load_models(dataset_params, models_name, files, ...
                                     CACHE_FILE, STRIP_FILE, DELETE_INITIAL)
-%Load all trained models of a specified class 'cls' and
-%type 'DET_TYPE' from a models directory.  If CACHE_FILE is enabled
-%(defaults to turned off), then will try to load/save a cached
-%file. if STRIP_FILE is enabled, then save a stripped file (raw
-%detectors only saved)
-
-
+% Load all trained models of a specified class 'cls' and
+% type 'DET_TYPE' from a models directory.  If CACHE_FILE is enabled
+% (defaults to turned off), then will try to load/save a cached
+% file. if STRIP_FILE is enabled, then save a stripped file (raw
+% detectors only saved)
+%
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
 % 

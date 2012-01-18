@@ -8,9 +8,9 @@ function allbbs = esvm_show_top_dets(test_struct, grid, ...
 % boxes after calibration and is obtained from applying calibration
 % If [set_name] is present, then results are saved based on naming
 % convention into www/ subfolder
-
+%
 % NOTE: this function requires some cleanup, but is functional
-
+%
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
 % 

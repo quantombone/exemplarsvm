@@ -1,10 +1,12 @@
-function [Iex,Iexmask] = get_seg_icon(models,index,flip,subind,VOCopts)
-
-% %% FUNCTION DISABLED
-% fprintf(1,'get seg icon disabled\n');
-% Iex = [];
-% alphamask = [];
-% return;
+function [Iex,Iexmask] = esvm_get_seg_icon(models,index,flip,subind,VOCopts)
+% get the segmentation icon, used to transfer segmentation 
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 model = models{index};
 

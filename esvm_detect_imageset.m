@@ -9,7 +9,7 @@ function grid = esvm_detect_imageset(imageset, models, ...
 % params(optional): detection parameters
 % setname(optional): a name of the set, which lets us cache results
 %   on disk
-
+%
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
 % 

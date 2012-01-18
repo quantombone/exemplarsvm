@@ -1,5 +1,5 @@
 function default_params = esvm_get_default_params
-%% Return the default Exemplar-SVM detection/training parameters
+% Return the default Exemplar-SVM detection/training parameters
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved. 
 %

@@ -1,5 +1,13 @@
 function model = esvm_get_model_wiggles(I, model, NWIGGLES)
-%Get wiggles of a model and populate model with them
+% Get wiggles of a model's bounding box and populate model with
+% them.  Wiggles are also known as "perturbations."
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 xxx = replica_hits(I, model.init_params.sbin, model.bb(1,:), ...
                    model.hg_size, NWIGGLES, model);

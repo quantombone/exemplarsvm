@@ -8,6 +8,7 @@ function exemplar_overlay = esvm_exemplar_inpaint(detection_box, ...
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
+%
 % NOTE: this function is functional in the pipeline, but needs some
 % serious work to be used for other applications
 

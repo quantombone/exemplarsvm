@@ -2,7 +2,7 @@ Here are the features used in the Exemplar-SVM framework.
 
 Compile with **features_compile.m** script
 
-** features.m: a Matlab function which calles one of the mexed functions. It returns the dimensionality of the per-cell features when called without arguments.  The idea is that you can add your own features and 31 is never hard-coded in the codebase.
+** esvm_features.m: a Matlab function which calles one of the mexed functions. It returns the dimensionality of the per-cell features when called without arguments.  The idea is that you can add your own features and 31 is never hard-coded in the codebase.
 
 ** features_pedro.cc: the 31-D features from voc-release-3.1
 

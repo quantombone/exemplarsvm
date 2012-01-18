@@ -1,8 +1,15 @@
 function fg = esvm_get_pascal_stream(stream_params, dataset_params)
-%Create an exemplar stream, such that each element fg{i} contains
-%these fields: (I, bbox, cls, curid, filer, [objectid], [anno])
-%Make sure the exemplar has a segmentation associated with it if
-%must_have_seg is provided
+% Create an exemplar stream, such that each element fg{i} contains
+% these fields: (I, bbox, cls, curid, filer, [objectid], [anno])
+% Make sure the exemplar has a segmentation associated with it if
+% must_have_seg is provided
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if ~exist('dataset_params','var')
   dataset_params.localdir = '';
