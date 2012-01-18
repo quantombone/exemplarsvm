@@ -128,7 +128,7 @@ fprintf(1, 'Applying NMS (OS thresh=%.3f)\n',os_thresh);
 for i = 1:length(bboxes)
   if size(bboxes{i},1) > 0
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
-    bboxes{i} = nms(bboxes{i},os_thresh);
+    bboxes{i} = esvm_nms(bboxes{i},os_thresh);
     if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
       maxos{i} = maxos{i}(bboxes{i}(:,5));
     end

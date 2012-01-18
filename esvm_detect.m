@@ -422,7 +422,7 @@ if ~isfield(params,'detect_exemplar_nms_os_threshold') || (params.detect_exempla
   return;
 end
 
-rs.bbs = cellfun2(@(x)nms(x,params.detect_exemplar_nms_os_threshold),rs.bbs);
+rs.bbs = cellfun2(@(x)esvm_nms(x,params.detect_exemplar_nms_os_threshold),rs.bbs);
 
 if ~isempty(rs.xs)
   for i = 1:length(rs.bbs)
