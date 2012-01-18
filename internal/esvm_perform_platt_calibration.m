@@ -1,9 +1,12 @@
-function [betas] = esvm_perform_platt_calibration(grid, models, ...
-                                                  params, CACHE_FILES)
+function [betas] = esvm_perform_platt_calibration(grid, imageset, models, ...
+                                                  params)
 % Perform calibration by learning the sigmoid parameters (linear
-% transformation of svm scores) for each model independently. If we
-% perform an operation such as NMS, we will now have "comparable"
-% scores.  This is performed on the 'trainval' set for PASCAL VOC.
+% transformation of svm scores) for each model independently. This
+% type of SVM classifier calibration is due to John Platt who used
+% this trick to convert SVM output scors into probabilities for
+% comparison.  If we perform an operation such as NMS, we will now
+% have "comparable" scores.  This is performed on the 'trainval' set
+% for PASCAL VOC.
 %
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
@@ -18,7 +21,9 @@ if length(grid) == 0 || length(models) == 0
   return;
 end
 
-if ~exist('CACHE_FILES','var')
+if length(params.dataset_params.localdir) > 0
+  CACHE_FILES = 1;
+else
   CACHE_FILES = 0;
 end
 
@@ -226,18 +231,21 @@ for exid = 1:length(models)
     figure(1)
     clf
     subplot(1,2,1)  
-    plot(all_scores,all_os,'r.')
+
     xs = linspace(min(all_scores),max(all_scores),1000);
     fx = @(x)(1./(1+exp(-beta(1)*(x-beta(2)))));
     
-    hold on
     plot(xs,fx(xs),'b','LineWidth',2)
+    hold on
+    plot(all_scores,all_os,'r.','MarkerSize',14)
+    
     axis([min(xs) max(xs) 0 1])
     xlabel('SVM score')
     ylabel(sprintf('Max Overlap Score with %s',models{exid}.cls))
     
     title(sprintf('Learned Sigmoid \\beta=[%.3f %.3f]',beta(1), ...
                   beta(2)))
+    
     subplot(1,2,2)
     Iex = convert_to_I(models{exid}.I);
     imagesc(Iex)
@@ -245,7 +253,7 @@ for exid = 1:length(models)
     axis image
     axis off
 
-    title(sprintf('Topdets Calibration Ex %s.%d.%s',...
+    title(sprintf('Exemplar %s.%d.%s',...
                   models{exid}.curid,...
                   models{exid}.objectid, ...
                   models{exid}.cls))
@@ -265,15 +273,17 @@ for exid = 1:length(models)
 
     models{exid}.model.svbbs = bbs_show;
     m2 = models(exid);
-    if isfield(params,'val_set')
-      m2{1}.train_set = params.val_set;
+    if length(imageset) > 0
+      m2{1}.train_set = imageset;
       m2{1}.model.svbbs(:,6) = 1;
       m2{1}.model.svxs = [];
       figure(445)
       clf
       imagesc(esvm_show_det_stack(m2{1},8))
+      axis image
+      axis off
       drawnow
-      title(sprintf('Calib Ex %s.%d.%s',...
+      title(sprintf('Topdets Ex %s.%d.%s',...
                     models{exid}.curid,...
                     models{exid}.objectid, ...
                     models{exid}.cls))

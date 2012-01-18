@@ -41,7 +41,9 @@ ARTPAD = 0;
 I_real_pad = pad_image(I, ARTPAD);
 
 %Get the hog feature pyramid for the entire image
+clear params;
 params.detect_levels_per_octave = 10;
+params.init_params = init_params;
 [f_real,scales] = esvm_pyramid(I_real_pad, params);
 
 %Extract the regions most overlapping with Ibox from each level in the pyramid
@@ -63,7 +65,7 @@ model.b = 0;
 model.x = curfeats;
 
 %Fire inside self-image to get detection location
-[model.bb, model.x] = get_target_bb(model, I);
+[model.bb, model.x] = get_target_bb(model, I, init_params);
 
 %Normalized-HOG initialization
 model.w = reshape(model.x,size(model.w)) - mean(model.x(:));
@@ -145,8 +147,9 @@ for expandloop = 1:10000
 end
 
 
-function [target_bb,target_x] = get_target_bb(model,I)
-%Get the id of the top detection
+function [target_bb,target_x] = get_target_bb(model, I, init_params)
+%Get the bounding box of the top detection
+
 mmm{1}.model = model;
 mmm{1}.model.hg_size = size(model.w);
 localizeparams.detect_keep_threshold = -100000.0;
@@ -156,7 +159,7 @@ localizeparams.detect_save_features = 1;
 localizeparams.detect_add_flip = 0;
 localizeparams.detect_pyramid_padding = 5;
 localizeparams.dfun = 0;
-
+localizeparams.init_params = init_params;
 
 [rs,t] = esvm_detect(I,mmm,localizeparams);
 target_bb = rs.bbs{1}(1,:);

@@ -1,13 +1,11 @@
 function allbbs = esvm_show_top_dets(test_struct, grid, ...
                                      test_set, models, params, ...
                                      maxk, set_name)
-
-
 % Show maxk top detections for [models] where [grid] is the set of
 % detections from the set [test_set], [test_struct] contains final
-% boxes after calibration and is obtained from applying calibration
-% If [set_name] is present, then results are saved based on naming
-% convention into www/ subfolder
+% boxes after pooling and calibration. If [dataset_params.localdir] is
+% present, then results are saved based on naming convention into a
+% "www" subfolder. maxk is the number of top detections we show
 %
 % NOTE: this function requires some cleanup, but is functional
 %
@@ -20,12 +18,12 @@ function allbbs = esvm_show_top_dets(test_struct, grid, ...
 
 allbbs = [];
 
-if exist('set_name','var') && length(set_name)>0
+if length(params.dataset_params.localdir) > 0
   CACHE_FILES = 1;
 else
   CACHE_FILES = 0;
-  set_name = '';
 end
+
 
 %Default exemplar-inpainting show mode
 %SHOW_MODE = 1;
@@ -111,18 +109,20 @@ for k = 1:maxk
     wwwdir = sprintf('%s/www/%s.%s%s/',params.dataset_params.localdir,...
                      set_name, ...
                      models{1}.models_name,test_struct.calib_string);
-    if ~exist(wwwdir,'dir') && exist('CACHE_FILES','var') && (CACHE_FILES == 1)
+    if ~exist(wwwdir,'dir') && (CACHE_FILES == 1)
       mkdir(wwwdir);
     end
     
-    filer = sprintf('%s/%05d%s',wwwdir,k,suffix);
+    filer = sprintf('%s/%05d%s.png',wwwdir,k,suffix);
     filerlock = [filer '.lock'];
-    if 0 %fileexists(filer) || (mymkdir_dist(filerlock) == 0)
+
+    if CACHE_FILES && (fileexists(filer) || (mymkdir_dist(filerlock) == 0))
       counter = counter + 1;
+      fprintf(1,'Already showed detection # %d, score=%.3f\n', k, bbs(bb(counter),end));
       continue
     end
 
-    fprintf(1,'Showing top detection %d\n', k);
+    fprintf(1,'Showing detection # %d, score=%.3f\n', k, bbs(bb(counter),end));
     allbbs(k,:) = bbs(bb(counter),:);
     
     curb = bb(counter);
@@ -235,9 +235,9 @@ for k = 1:maxk
     drawnow
     snapnow
     
-    if exist('CACHE_FILES','var') && CACHE_FILES == 1
+    if CACHE_FILES == 1
       %print(gcf,'-depsc2',filer);
-      print(gcf,'-dpng',[filer '.png']);
+      print(gcf,'-dpng',filer);
       %finalfile = strrep(filer,'.eps','.pdf');
       %unix(sprintf('zsh "ps2pdf -dEPSCrop -dPDFSETTINGS=/prepress %s %s"',...
       %             filer,finalfile));
@@ -246,7 +246,7 @@ for k = 1:maxk
       %  unix(sprintf('rm %s',filer));
       %end
       
-      if exist(filerlock,'dir')
+      if CACHE_FILES && exist(filerlock,'dir')
         rmdir(filerlock);
       end
     end

@@ -1,14 +1,15 @@
-function show_exemplar_frames(allmodels, N_PER_PAGE, dataset_params)
-%% Draw the initialized exemplar frames as a 1x3 row of 3 images 
+function esvm_show_exemplar_frames(allmodels, N_PER_PAGE, dataset_params)
+% Draw the initialized exemplar frames as a 1x3 row of 3 images 
 % Shows these 3 fields: input+gtbb+template, template mask+gtbb, HOG descriptor
 % The visualization really shows what the template region is, and
 % its relation to the ground-truth selection region
-
-% if ~iscell(models)
-%   m = models;
-%   clear models;
-%   models{1} = m;
-% end
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if ~exist('dataset_params','var')
   dataset_params = [];
@@ -63,7 +64,7 @@ for i = 1:length(pinds)
                   curos,range(u)+1,range(v)+1));
     
     subplot(N,3,o+3)
-    hogim = HOGpicture(repmat(m.model.mask,[1 1 features]).* ...
+    hogim = HOGpicture(repmat(m.model.mask,[1 1 size(m.model.w,3)]).* ...
                        m.model.w);
     imagesc(hogim)
     axis image
@@ -71,6 +72,5 @@ for i = 1:length(pinds)
     grid on
     title('HOG features')
     drawnow
-    
   end
 end

@@ -254,22 +254,23 @@ sizes1 = cellfun(@(x)x.model.hg_size(1),models);
 sizes2 = cellfun(@(x)x.model.hg_size(2),models);
 
 S = [max(sizes1(:)) max(sizes2(:))];
-templates = zeros(S(1),S(2),features,length(models));
-templates_x = zeros(S(1),S(2),features,length(models));
-template_masks = zeros(S(1),S(2),features,length(models));
+fsize = params.init_params.features();
+templates = zeros(S(1),S(2),fsize,length(models));
+templates_x = zeros(S(1),S(2),fsize,length(models));
+template_masks = zeros(S(1),S(2),fsize,length(models));
 
 for i = 1:length(models)
-  t = zeros(S(1),S(2),features);
+  t = zeros(S(1),S(2),fsize);
   t(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
       models{i}.model.w;
 
   templates(:,:,:,i) = t;
-  template_masks(:,:,:,i) = repmat(double(sum(t.^2,3)>0),[1 1 features]);
+  template_masks(:,:,:,i) = repmat(double(sum(t.^2,3)>0),[1 1 fsize]);
 
   if (~isempty(params.nnmode)) || ...
         (isfield(params,'wtype') && ...
          strcmp(params.wtype,'dfun')==1)
-    x = zeros(S(1),S(2),features);
+    x = zeros(S(1),S(2),fsize);
     x(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
         reshape(models{i}.model.x(:,1),models{i}.model.hg_size);
     templates_x(:,:,:,i) = x;
@@ -277,7 +278,7 @@ for i = 1:length(models)
   end
 end
 
-%maskmat = repmat(template_masks,[1 1 1 features]);
+%maskmat = repmat(template_masks,[1 1 1 fsize]);
 %maskmat = permute(maskmat,[1 2 4 3]);
 %templates_x  = templates_x .* maskmat;
 
@@ -288,7 +289,7 @@ resstruct.padder = t.padder;
 pyr_N = cellfun(@(x)prod([size(x,1) size(x,2)]-S+1),t.hog);
 sumN = sum(pyr_N);
 
-X = zeros(S(1)*S(2)*features,sumN);
+X = zeros(S(1)*S(2)*fsize,sumN);
 offsets = cell(length(t.hog), 1);
 uus = cell(length(t.hog),1);
 vvs = cell(length(t.hog),1);
@@ -298,7 +299,7 @@ for i = 1:length(t.hog)
   s = size(t.hog{i});
   NW = s(1)*s(2);
   ppp = reshape(1:NW,s(1),s(2));
-  curf = reshape(t.hog{i},[],features);
+  curf = reshape(t.hog{i},[],fsize);
   b = im2col(ppp,[S(1) S(2)]);
 
   offsets{i} = b(1,:);
@@ -317,7 +318,7 @@ offsets = cat(2,offsets{:});
 uus = cat(2,uus{:});
 vvs = cat(2,vvs{:});
 
-% m.model.w = zeros(S(1),S(2),features);
+% m.model.w = zeros(S(1),S(2),fsize);
 % m.model.b = 0;
 % temp_params = params;
 % temp_params.detect_save_features = 1;

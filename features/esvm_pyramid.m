@@ -9,15 +9,13 @@ function [feat, scale] = esvm_pyramid(im, params)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-
-if isscalar(params)
+if isnumeric(params)
   sbin = params;
 elseif isfield(params,'sbin') 
   sbin = params.sbin;
 elseif isfield(params,'init_params') && ...
-      isfield(params.init_params,'params') && ...
-      isscalar(params.init_params.params)
-  
+      isfield(params.init_params,'sbin') && ...
+      isnumeric(params.init_params.sbin)
   sbin = params.init_params.sbin;
 else
   error('esvm_pyramid: cannot find sbin inside params');
@@ -69,7 +67,7 @@ for i = 1:MAXLEVELS
     return;
   end
 
-  feat{i} = params.features(scaled,sbin);
+  feat{i} = params.init_params.features(scaled,sbin);
 
   %if we get zero size feature, backtrack one, and dont produce any
   %more levels

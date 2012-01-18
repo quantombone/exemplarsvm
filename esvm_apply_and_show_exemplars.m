@@ -1,7 +1,9 @@
-function esvm_apply_and_show_exemplars(imageset, models, M)
+function esvm_apply_and_show_exemplars(imageset, models, M, params)
 % We apply the ensemble of Exemplar-SVMs represented by [models,M] onto
 % the sequence of images [imageset], and display images without
-% saving anything
+% saving anything.  Takes as input optional [params], which default
+% to the default ones.
+%
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
 % 
@@ -36,7 +38,10 @@ if ~iscell(imageset)
   end
 end
 
-params = esvm_get_default_params;
+if ~exist('params','var')
+  params = esvm_get_default_params;
+end
+
 params.calibration_propagate_onto_raw = 1;
 for i = 1:length(imageset)
   %Get local detections

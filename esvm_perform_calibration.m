@@ -1,4 +1,4 @@
-function M = esvm_perform_calibration(grid, models, params, CACHE_FILES)
+function M = esvm_perform_calibration(grid, val_set, models, params)
 % 1. Perform LABOO calibration procedure and 2. Learn a combination
 % matrix M which multiplexes the detection results (by compiling
 % co-occurrence statistics on true positives) 
@@ -10,20 +10,14 @@ function M = esvm_perform_calibration(grid, models, params, CACHE_FILES)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-if isfield(params,'CACHE_BETAS') && params.CACHE_BETAS==1%~exist('CACHE_FILES','var')
-  CACHE_FILES = 1;
-else
-  CACHE_FILES = 0;
-end
-
 %% Perform calibration
-betas = esvm_perform_platt_calibration(grid, models, ...
-                                       params, CACHE_FILES);
+betas = esvm_perform_platt_calibration(grid, val_set, models, ...
+                                       params);
 
+%% Estimate the co-occurrence matrix M
 if ~(isfield(params,'SKIP_M') && params.SKIP_M==1)
-  %% Estimate the co-occurrence matrix M
-  [M] = esvm_estimate_M(grid, models, params, CACHE_FILES);
-
+  M = esvm_estimate_M(grid, models, params);
 end
 
+%concatenate results
 M.betas = betas;

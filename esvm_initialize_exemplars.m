@@ -150,7 +150,6 @@ for i = 1:length(e_set)
     allfiles{i} = m;
   end
 
-
   % %Print the bounding box overlap between the initial window and
   % %the final window
   % finalos = getosmatrix_bb(m.gt_box, m.model.bb(1,:));
@@ -162,7 +161,7 @@ for i = 1:length(e_set)
 
   %Show the initialized exemplars
   if params.dataset_params.display == 1
-    show_exemplar_frames({m}, 1, params.dataset_params);
+    esvm_show_exemplar_frames({m}, 1, params.dataset_params);
     drawnow
     snapnow;
   end

@@ -23,7 +23,7 @@ if ~isfield(m.model,'mask') | length(m.model.mask)==0
 end
 
 if length(m.model.mask(:)) ~= numel(m.model.w)
-  m.model.mask = repmat(m.model.mask,[1 1 features]);
+  m.model.mask = repmat(m.model.mask,[1 1 m.model.hg_size(3)]);
   m.model.mask = logical(m.model.mask(:));
 end
 

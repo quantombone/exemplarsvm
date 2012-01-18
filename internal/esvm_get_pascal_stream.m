@@ -13,20 +13,21 @@ function fg = esvm_get_pascal_stream(stream_params, dataset_params)
 
 if ~exist('dataset_params','var')
   dataset_params.localdir = '';
-  stream_params.cache_file = 0;
-end
-
-if ~isfield(stream_params,'cache_file')
-  stream_params.cache_file = 0;
+  CACHE_FILE = 0;
+elseif exist('dataset_params','var') && isfield(dataset_params,'localdir') ...
+      && length(dataset_params.localdir)>0
+  CACHE_FILE = 1;
+else
+  dataset_params.localdir = '';
+  CACHE_FILE = 0;
 end
 
 if ~isfield(stream_params,'cls')
-  stream_params.cls='';
+  stream_params.cls = '';
 end
 
-
 basedir = sprintf('%s/models/streams/',dataset_params.localdir);
-if stream_params.cache_file == 1 && ~exist(basedir,'dir')
+if CACHE_FILE == 1 && ~exist(basedir,'dir')
   mkdir(basedir);
 end
 streamname = sprintf('%s/%s-%s-%d-%s%s.mat',...
@@ -36,14 +37,15 @@ streamname = sprintf('%s/%s-%s-%d-%s%s.mat',...
                      stream_params.model_type,...
                      stream_params.must_have_seg_string);
 
-if stream_params.cache_file && fileexists(streamname)
+if CACHE_FILE && fileexists(streamname)
   fprintf(1,'Loading %s\n',streamname);
   load(streamname);
   return;
 end
 
 
-if length(stream_params.cls)>0
+if length(stream_params.cls)>0 && isfield(dataset_params,'clsimgsetpath') ...
+      && isfield(stream_params,'stream_set_name')
 
   %% Load ids of all images in trainval that contain cls
   [ids,gt] = textread(sprintf(dataset_params.clsimgsetpath,stream_params.cls,...
@@ -51,19 +53,16 @@ if length(stream_params.cls)>0
                       '%s %d');
   ids = ids(gt==1);
   all_recs = cellfun2(@(x)sprintf(dataset_params.annopath,x),ids);
-  %BUG: make sure this works on voc training regular style
-  
-
+  %BUG(TJM):??? make sure this works on voc training regular style
 else
+  
   %assume that we don't have cls, we have a cell array of these
-
   all_recs = cellfun2(@(x)x.recs,stream_params.pos_set);
   all_I = cellfun2(@(x)x.I,stream_params.pos_set);
   ids = cell(size(all_recs));
   for i = 1:length(ids)
     ids{i} = sprintf('%08d',i);
   end
-  
 end
 
 
@@ -77,9 +76,9 @@ for i = 1:length(all_recs)
   else
     recs = all_recs{i};
   end
-  %recs = PASreadrecord(sprintf(dataset_params.annopath,curid));
+
   if stream_params.must_have_seg && (recs.segmented == 0)
-    %SKip over unsegmented images
+    %skip over unsegmented images
     continue
   end
     
@@ -89,7 +88,6 @@ for i = 1:length(all_recs)
     filename = all_I{i};
   end
   
-
   if strcmp(stream_params.model_type,'exemplar')
     for objectid = 1:length(recs.objects)
       isinclass = ismember({recs.objects(objectid).class},{stream_params.cls});
@@ -100,9 +98,7 @@ for i = 1:length(all_recs)
       if (recs.objects(objectid).difficult==1) | ...
             ~isinclass
         continue
-      end
-      
-      
+      end      
       fprintf(1,'.');
       
       res.I = filename;
@@ -119,7 +115,7 @@ for i = 1:length(all_recs)
       fg{end+1} = res;
       
       if length(fg) == stream_params.stream_max_ex
-        if stream_params.cache_file == 1
+        if CACHE_FILE == 1
           save(streamname,'fg');
         end
         return;
@@ -146,7 +142,7 @@ for i = 1:length(all_recs)
     fg{end+1} = res;
     
     if length(fg) == stream_params.stream_max_ex
-      if stream_params.cache_file == 1
+      if CACHE_FILE == 1
         save(streamname,'fg');
       end
       return; 
@@ -156,6 +152,6 @@ for i = 1:length(all_recs)
   end
 end
 
-if stream_params.cache_file == 1
+if CACHE_FILE == 1
   save(streamname,'fg');
 end

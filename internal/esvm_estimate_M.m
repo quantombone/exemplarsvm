@@ -1,5 +1,4 @@
-function M = esvm_estimate_M(grid,  models, params, ...
-                             CACHE_FILES)
+function M = esvm_estimate_M(grid, models, params)
 % Given a bunch of detections, learn the M boosting matrix, which
 % makes a final boxes's score depend on the co-occurrence of certain
 % "friendly" detections
@@ -14,7 +13,9 @@ function M = esvm_estimate_M(grid,  models, params, ...
 neighbor_thresh = params.calibration_neighbor_thresh;
 count_thresh    = params.calibration_count_thresh;
 
-if ~exist('CACHE_FILES','var')
+if length(params.dataset_params.localdir) > 0
+  CACHE_FILES = 1;
+else
   CACHE_FILES = 0;
 end
 
@@ -159,12 +160,13 @@ if params.dataset_params.display == 1
   plot(scores,os,'r.')
   xlabel('Detection Score')
   ylabel('OS wrt gt')
+  title('w/o calibration')
   
   subplot(1,2,2)
   plot(r,os,'r.')
   xlabel('Detection Score')
   ylabel('OS wrt gt')
-  title('w/ M-matrx')
+  title('w/ M-matrix')
   drawnow
   snapnow
   

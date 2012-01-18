@@ -52,9 +52,10 @@ end
 DUMPDIR = sprintf('%s/www/svs/%s/',params.dataset_params.localdir, ...
                   new_models_name);
 
-if CACHE_FILE==1 && params.dataset_params.display ==1 && ~exist(DUMPDIR,'dir')
-  mkdir(DUMPDIR);
-end
+%display of SV pdfs disabled
+%if CACHE_FILE==1 && params.dataset_params.display ==1 && ~exist(DUMPDIR,'dir')
+%  mkdir(DUMPDIR);
+%end
 
 final_directory = ...
     sprintf('%s/models/%s/',params.dataset_params.localdir,...
@@ -65,9 +66,6 @@ if CACHE_FILE == 1 && ~exist(final_directory,'dir')
   mkdir(final_directory);
 end
 
-%NOTE: why was this here?
-%mining_params.final_directory = final_directory;
-
 % randomize chunk orderings
 if CACHE_FILE == 1
   myRandomize;
@@ -75,11 +73,6 @@ if CACHE_FILE == 1
 else
   ordering = 1:length(models);
 end
-
-%always use random ordering
-%if params.dataset_params.display == 1
-%  ordering = 1:length(ordering);
-%end
 
 models = models(ordering);
 allfiles = cell(length(models), 1);
@@ -89,23 +82,14 @@ for i = 1:length(models)
   
   [complete_file] = sprintf('%s/%s.mat',final_directory,m.name);
   [basedir, basename, ext] = fileparts(complete_file);
-  
-  % Create a naming scheme for saving files
-  %filer2fill = sprintf('%s/%%s.%s.mat',final_directory, ...
-  %                     m.name);
-  
   filer2fill = sprintf('%s/%%s.%s.mat',basedir,basename);
-  filer2final = sprintf('%s/%s.mat',basedir,basename);
-  
-  %filer2final = sprintf('%s/%s.mat',final_directory, ...
-  %                      m.name);
+  filer2final = sprintf('%s/%s.mat',basedir,basename);  
   
   allfiles{i} = filer2final;
   
   % Check if we are ready for an update
   filerlock = [filer2final '.mining.lock'];
 
-  
   if CACHE_FILE == 1
     if fileexists(filer2final) || (mymkdir_dist(filerlock) == 0)
       continue
@@ -147,8 +131,6 @@ for i = 1:length(models)
     end
     m.total_mines = total_mines;
     m = esvm_mine_train_iteration(m, params.training_function);
-
-    %total_mines = m.mining_stats{end}.total_mines;
 
     if ((total_mines >= params.train_max_mined_images) || ...
           (isempty(m.mining_queue))) || ...

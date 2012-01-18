@@ -49,10 +49,9 @@ end
 
 %if we got here, then the final file isn't there, and we were able
 %to write a lock file successfully
-
 baser = sprintf('%s/detections/%s-%s/',dataset_params.localdir,setname, ...
                 models_name);
-fprintf(1,'base directory: %s\n',baser);
+%fprintf(1,'base directory: %s\n',baser);
 
 %with the dir command partial results could be loaded 
 %files = dir([baser 'result*mat']);
