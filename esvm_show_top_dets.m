@@ -126,7 +126,9 @@ for k = 1:maxk
     allbbs(k,:) = bbs(bb(counter),:);
     
     curb = bb(counter);
-    curid = grid{imids(curb)}.curid;
+
+    %curid = grid{imids(curb)}.curid;
+
     I = (convert_to_I(test_set{bbs(bb(counter),11)}));
     
     TARGET_BUS = -1;
@@ -153,7 +155,6 @@ for k = 1:maxk
       stuff.os = 0;
     end
     stuff.score = bbs(curb,end);
-    stuff.curid = curid;
     stuff.rank = counter;
    
     extra = '';
@@ -210,7 +211,7 @@ for k = 1:maxk
       %gtfiles = dir(sprintf(['/nfs/baikal/tmalisie/buslabeling/' ...
       %                '%s*mat'],curid));
       gtmat = load(sprintf(['/nfs/baikal/tmalisie/finalbuslabeling/' ...
-                    '%s.%d.mat'],curid,TARGET_BUS));
+                    '%s.%d.mat'], curid, TARGET_BUS));
       seg = gtmat.res.seg;
       gtim = esvm_faces2colors(seg);
       

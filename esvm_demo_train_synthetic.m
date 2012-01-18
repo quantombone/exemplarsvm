@@ -13,7 +13,7 @@ addpath(genpath(pwd))
 
 %% Create a synthetic dataset of circles on a random background
 Npos = 20;
-Nneg = 20;
+Nneg = 50;
 [pos_set,neg_set] = esvm_generate_dataset(Npos,Nneg);
 
 models_name = 'circle';
@@ -23,10 +23,12 @@ params = esvm_get_default_params;
 params.init_params.sbin = 4;
 params.init_params.MAXDIM = 6;
 params.model_type = 'exemplar';
+
+%enable display so that nice visualizations pop up during learning
 params.dataset_params.display = 1;
 
-%if localdir is commented out, no local saving happens
-params.dataset_params.localdir = '/nfs/baikal/tmalisie/synthetic/';
+%if localdir is not set, we do not dump files
+%params.dataset_params.localdir = '/nfs/baikal/tmalisie/synthetic/';
 
 %%Initialize exemplar stream
 stream_params.stream_set_name = 'trainval';
@@ -77,10 +79,9 @@ M = esvm_perform_calibration(val_grid, val_set, models, val_params);
 
 %% Define test-set
 Ntest = 20;
+test_set = esvm_generate_dataset(Ntest);
 test_params = params;
 test_params.detect_exemplar_nms_os_threshold = 0.5;
-[stream_test] = esvm_generate_dataset(Ntest);
-test_set = cellfun2(@(x)x.I, stream_test);
 test_set_name = 'testset';
 
 %% Apply on test set
