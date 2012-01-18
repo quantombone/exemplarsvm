@@ -90,7 +90,7 @@ $ matlab
 
 You can alternatively download the pre-trained models individually from [http://people.csail.mit.edu/tomasz/exemplarsvm/models/](http://people.csail.mit.edu/tomasz/exemplarsvm/models/) or a tar file of all models [voc2007-models.tar](http://people.csail.mit.edu/tomasz/exemplarsvm/models/voc2007-models.tar) (NOTE: tar file is 450MB)
 
-## Apply models to a set of images
+## Demo: Apply models to a set of images
 
 ``` sh
 >> esvm_demo_apply;
@@ -101,13 +101,13 @@ See the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_
 
 # Train and Test a PASCAL VOC Ensemble of Exemplar-SVMs from scratch
 
-## Synthetic-data demo
+## Demo: Synthetic-data training and testing
 
 ``` sh
 >> esvm_demo_train_synthetic;
 ```
 
-See the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo__train_synthetic.html](tutorial/esvm_demo_train_synthetic.html) for a step-by-step tutorial on what esvm_demo_apply.m produces
+See the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_train_synthetic.html](tutorial/esvm_demo_train_synthetic.html) for a step-by-step tutorial on what esvm_demo_apply.m produces
 
 
 The training scripts are designed to work with the PASCAL VOC 2007
