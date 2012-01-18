@@ -1,5 +1,6 @@
-%% DEMO: Training Exemplar-SVMs from synthetic data
-% This function can generate a nice HTML page by calling: publish('esvm_demo_train_synthetic.m','html')
+% DEMO: Training Exemplar-SVMs from synthetic data
+% This function can generate a nice HTML page by calling: 
+% publish('esvm_demo_train_synthetic.m','html')
 %
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved. 
@@ -79,7 +80,7 @@ M = esvm_perform_calibration(val_grid, val_set, models, val_params);
 
 %% Define test-set
 Ntest = 50;
-Test_set = esvm_generate_dataset(Ntest);
+test_set = esvm_generate_dataset(Ntest);
 test_params = params;
 test_params.detect_exemplar_nms_os_threshold = 0.5;
 test_set_name = 'testset';

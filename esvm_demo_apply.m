@@ -1,5 +1,7 @@
-%% DEMO: Applying an ensemble of Exemplar-SVMs
-% This function can generate a nice HTML page by calling: publish('esvm_quick_demo.m','html')
+% DEMO: Applying an ensemble of Exemplar-SVMs
+% This function can generate a nice HTML page by calling: 
+% publish('esvm_quick_demo.m','html')
+%
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
 % 

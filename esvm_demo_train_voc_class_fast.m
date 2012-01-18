@@ -1,4 +1,7 @@
-%% DEMO: PASCAL VOC "mini" training/testing script
+% DEMO: PASCAL VOC "mini" training/testing script
+% This function can generate a nice HTML page by calling:
+% publish('esvm_demo_train_voc_class_fast.m','html')
+%
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved. 
 %

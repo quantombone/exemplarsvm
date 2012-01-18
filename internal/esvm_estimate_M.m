@@ -157,13 +157,13 @@ fprintf(1,'took %.3fsec\n',toc(starter));
 if params.dataset_params.display == 1
   figure(4)
   subplot(1,2,1)
-  plot(scores,os,'r.')
+  plot(scores,os,'r.','MarkerSize',12)
   xlabel('Detection Score')
   ylabel('OS wrt gt')
   title('w/o calibration')
   
   subplot(1,2,2)
-  plot(r,os,'r.')
+  plot(r,os,'r.','MarkerSize',12)
   xlabel('Detection Score')
   ylabel('OS wrt gt')
   title('w/ M-matrix')
