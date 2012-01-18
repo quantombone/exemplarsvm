@@ -12,9 +12,6 @@ function [models,M] = esvm_script_train_voc_class(cls, ...
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
 
-%% Initialize dataset parameters
-%data_directory = '/Users/tomasz/projects/Pascal_VOC/';
-%results_directory = '/nfs/baikal/tmalisie/esvm-data/';
 if ~exist('cls','var')
   cls = 'bus';
 end
@@ -32,6 +29,10 @@ if ~exist('results_directory','var')
       sprintf(['/nfs/baikal/tmalisie/esvm-%s-%s/'], ...
               dataset_directory, cls);
 end
+
+%% Initialize dataset parameters
+%data_directory = '/Users/tomasz/projects/Pascal_VOC/';
+%results_directory = '/nfs/baikal/tmalisie/esvm-data/';
 
 %data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
 %results_directory = sprintf('/csail/vision-videolabelme/people/tomasz/esvm-%s/',cls);
@@ -64,17 +65,13 @@ stream_params.stream_set_name = 'trainval';
 stream_params.stream_max_ex = 10000;
 stream_params.must_have_seg = 0;
 stream_params.must_have_seg_string = '';
-stream_params.model_type = 'exemplar'; %must be scene or exemplar;
-%automatically happens when dataset_params is defined
-%stream_params.cache_file = 1; 
-
-
+%must be scene or exemplar;
+stream_params.model_type = 'exemplar'; 
 stream_params.cls = cls;
 
 %Create an exemplar stream (list of exemplars)
 e_stream_set = esvm_get_pascal_stream(stream_params, ...
                                       dataset_params);
-
 
 neg_set = esvm_get_pascal_set(dataset_params, ['train-' cls]);
 
@@ -83,7 +80,6 @@ models_name = ...
     [cls '-' params.init_params.init_type ...
      '.' params.model_type];
 
-
 initial_models = esvm_initialize_exemplars(e_stream_set, params, models_name);
 
 %% Perform Exemplar-SVM training
@@ -91,15 +87,11 @@ train_params = params;
 train_params.detect_max_scale = 0.5;
 train_params.detect_exemplar_nms_os_threshold = 1.0; 
 train_params.detect_max_windows_per_exemplar = 100;
-train_params.CACHE_FILE = 1;
 
 val_params = params;
 val_params.detect_exemplar_nms_os_threshold = 0.5;
 val_params.gt_function = @esvm_load_gt_function;
-val_params.CACHE_BETAS = 1;
-
 val_set_name = ['trainval'];
-
 val_set = esvm_get_pascal_set(dataset_params, val_set_name);
 
 %% Define test-set
@@ -116,7 +108,7 @@ test_set = esvm_get_pascal_set(dataset_params, test_set_name);
 val_grid = esvm_detect_imageset(val_set, models, val_params, val_set_name);
                        
 %% Perform Platt calibration and M-matrix estimation
-M = esvm_perform_calibration(val_grid, models, val_params);
+M = esvm_perform_calibration(val_grid, val_set, models, val_params);
 
 %% Apply on test set
 test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);

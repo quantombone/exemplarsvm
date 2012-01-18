@@ -17,20 +17,18 @@ if ~exist('cls','var')
 end
 
 if ~exist('data_directory','var')
-  data_directory = '/Users/tmalisie/projects/pascal/VOCdevkit/';
+  data_directory = '/Users/tomasz/projects/pascal/';
 end
 
 if ~exist('dataset_directory','var')
   dataset_directory = 'VOC2007';
 end
 
-
 if ~exist('results_directory','var')
   results_directory = sprintf(['/nfs/baikal/tmalisie/esvm-%s-' ...
-                    '%s/'], ...
+                    '%s-fast/'], ...
                               dataset_directory, cls);
 end
-
 
 %data_directory = '/Users/tomasz/projects/Pascal_VOC/';
 %results_directory = '/nfs/baikal/tmalisie/esvm-data/';
@@ -42,7 +40,7 @@ end
 dataset_params = esvm_get_voc_dataset(dataset_directory,...
                                       data_directory,...
                                       results_directory);
-%dataset_params.display = 1;
+dataset_params.display = 1;
 %dataset_params.dump_images = 1;
 
 %% Issue warning if lock files are present
@@ -68,7 +66,6 @@ stream_params.stream_max_ex = 1;
 stream_params.must_have_seg = 0;
 stream_params.must_have_seg_string = '';
 stream_params.model_type = 'exemplar'; %must be scene or exemplar;
-stream_params.cache_file = 1;
 stream_params.cls = cls;
 
 %Create an exemplar stream (list of exemplars)
@@ -90,44 +87,46 @@ train_params.detect_max_scale = 0.5;
 train_params.train_max_mined_images = 50;
 train_params.detect_exemplar_nms_os_threshold = 1.0; 
 train_params.detect_max_windows_per_exemplar = 100;
-train_params.CACHE_FILE = 1;
-
-% val_params = params;
-% val_params.detect_exemplar_nms_os_threshold = 0.5;
-% val_params.gt_function = @esvm_load_gt_function;
-% val_params.CACHE_BETAS = 1;
-
-% val_set_name = ['trainval+' cls];
-
-% val_set = esvm_get_pascal_set(dataset_params, val_set_name);
-% val_set = val_set(1:10);
-
-%% Define test-set
-test_params = params;
-test_params.detect_exemplar_nms_os_threshold = 0.5;
-test_set_name = ['trainval+' cls];
-test_set = esvm_get_pascal_set(dataset_params, test_set_name);
-test_set = test_set(1:100);
 
 %% Train the exemplars and get updated models name
 [models,models_name] = esvm_train_exemplars(initial_models, ...
                                             neg_set, train_params);
 
 
+val_params = params;
+val_params.detect_exemplar_nms_os_threshold = 0.5;
+val_params.gt_function = @esvm_load_gt_function;
+
+val_set_name = ['trainval+' cls];
+
+val_set = esvm_get_pascal_set(dataset_params, val_set_name);
+val_set = val_set(1:40);
+
 %% Apply trained exemplars on validation set
-%val_grid = esvm_detect_imageset(val_set, models, val_params, val_set_name);
+val_grid = esvm_detect_imageset(val_set, models, val_params, val_set_name);
 
 %% Perform Platt calibration and M-matrix estimation
-%M = esvm_perform_calibration(val_grid, models, val_params);
+M = esvm_perform_calibration(val_grid, val_set, models, ...
+                             val_params);
+
+%% Define test-set
+test_params = params;
+test_params.detect_exemplar_nms_os_threshold = 0.5;
+test_set_name = ['test+' cls];
+test_set = esvm_get_pascal_set(dataset_params, test_set_name);
+test_set = test_set(1:100);
 
 %% Apply on test set
 test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);
 
 %% Apply calibration matrix to test-set results
-test_struct = esvm_pool_exemplar_detses(test_grid, models, [], test_params);
+test_struct = esvm_pool_exemplar_dets(test_grid, models, M, test_params);
 
 %% Show top detections
 maxk = 20;
 allbbs = esvm_show_top_dets(test_struct, test_grid, test_set, models, ...
                        params,  maxk, test_set_name);
 
+%% Perform the exemplar evaluation
+[results] = esvm_evaluate_pascal_voc(test_struct, test_grid, params, ...
+                                     test_set_name, cls, models_name);

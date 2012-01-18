@@ -94,12 +94,12 @@ targets = 1:length(models);
 
 cls = models{1}.cls;
 
-if isfield(params.dataset_params,'classes')
-  targetc = find(ismember(params.dataset_params.classes, ...
-                          models{1}.cls));
-else
-  targetc = models{1}.cls;
-end
+%if isfield(params.dataset_params,'classes')
+%  targetc = find(ismember(params.dataset_params.classes, ...
+%                          models{1}.cls));
+%else
+targetc = models{1}.cls;
+%end
 
 
 %fprintf(1,'Preparing boxes for calibration\n');
@@ -124,10 +124,13 @@ for i = 1:length(grid)
     
     if length(cur.extras)>0
       cur.extras.os = cur.extras.maxos(cur.bboxes(:,5));
-      
+      try
       cur.extras.os = cur.extras.os.* ...
           reshape(double(ismember(cur.extras.maxclass,targetc)),...
                   size(cur.extras.os));
+      catch
+        keyboard
+      end
       
       % cur.extras.os = cur.extras.os.* ...
       %     reshape((cur.extras.maxclass(cur.bboxes(:,5)) == ...

@@ -40,9 +40,10 @@ else
   gtbb = cat(1,recs.objects.bbox);
   os = getosmatrix_bb(boxes,gtbb);
   cats = {recs.objects.class};
-  if isfield(dataset_params,'classes')
-    [tmp,cats] = ismember(cats,dataset_params.classes);
-  end
+  %cats1 = cats;
+  %if isfield(dataset_params,'classes')
+  %  [tmp,cats] = ismember(cats,dataset_params.classes);
+  %end
   
   [alpha,beta] = max(os,[],2);
   extras.maxos = alpha;
