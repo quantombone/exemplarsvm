@@ -131,7 +131,7 @@ for i = 1:N
   % axis off
   
   subplot(N,4,4*(i-1)+4)  
-  Iex = get_exemplar_icon(models,mid);
+  Iex = esvm_get_exemplar_icon(models,mid);
   if topboxes(i,7) == 1
     Iex = flip_image(Iex);
   end

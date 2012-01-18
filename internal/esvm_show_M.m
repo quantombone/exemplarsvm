@@ -16,7 +16,7 @@ for i = 1:length(models)
   figure(1)
   clf
   subplot(4,4,1)
-  imagesc(get_exemplar_icon(models,i))
+  imagesc(esvm_get_exemplar_icon(models,i))
   axis image
   axis off
   title(sprintf('Source exemplar %d',i))
@@ -31,9 +31,9 @@ for i = 1:length(models)
     if bb(q) > length(models)
       bb(q) = bb(q) - length(models);
       flipper = 1;
-      I=flip_image(get_exemplar_icon(models,bb(q)));
+      I=flip_image(esvm_get_exemplar_icon(models,bb(q)));
     else
-      I=get_exemplar_icon(models,bb(q));
+      I=esvm_get_exemplar_icon(models,bb(q));
     end
     imagesc(I)
     axis image

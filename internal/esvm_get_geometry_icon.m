@@ -1,7 +1,15 @@
-function [Iex,alphamask,faces] = get_geometry_icon(models,index,flip)
-%Given a cell array of models and the appropriate index, extract
-%the qualitative geometry for the object
-%NOTE: only defined for buses
+function [Iex,alphamask,faces] = esvm_get_geometry_icon(models,index,flip)
+% Given a cell array of models and the appropriate index, extract
+% the qualitative geometry for the exemplar.  if flip is enabled,
+% flip the data.
+% NOTE: only defined for buses
+%
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if ~exist('flip','var')
   flip = 0;
@@ -55,14 +63,12 @@ if isfield(models{index},'detect_add_flip') && models{index}.detect_add_flip==1
     cur2=find(res.res.seg==2);
     res.res.seg(cur2) = new2;
   end
-
-  
 end
-seg2 = faces2colors(res.res.seg);
+
+seg2 = esvm_faces2colors(res.res.seg);
 Iex = seg2;
 
 faces = res.res.faces;
-
 
 %return;
 %Iex = flip_image(Iex);

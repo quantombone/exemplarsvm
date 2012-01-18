@@ -60,7 +60,7 @@ loadseg = 1;
 %NOTE: do not display bus geometries
 if 0 %strcmp(model.cls,'bus')
   [mini_overlay.I,mini_overlay.alphamask,mini_overlay.faces] = ...
-      get_geometry_icon({model}, 1, detection_box(7));
+      esvm_get_geometry_icon({model}, 1, detection_box(7));
   
   % gtbb = model.gt_box;
   % mini_overlay.I = (mini_overlay.I(gtbb(2):gtbb(4),gtbb(1):gtbb(3), ...
@@ -69,13 +69,13 @@ if 0 %strcmp(model.cls,'bus')
   %                                                 gtbb(4),gtbb(1):gtbb(3),:));
 else
   [mini_overlay.I, mini_overlay.alphamask] = ...
-      get_exemplar_icon({model},1,detection_box(7),1,...
-                                loadseg,stuff.dataset_params);
+      esvm_get_exemplar_icon({model},1,detection_box(7),1,...
+                             loadseg,stuff.dataset_params);
 
 end
 
 %[mini_overlay.I, mini_overlay.alphamask] = ...
-%    get_seg_icon({model},1,stuff.dataset_params);
+%    esvm_get_seg_icon({model},1,stuff.dataset_params);
 
 [exemplar_overlay.I, exemplar_overlay.alphamask] = ...
     insert_exemplar(I, mini_overlay, detection_box);
@@ -83,7 +83,7 @@ end
 exemplar_overlay.mini_overlay = mini_overlay;
 
 % if strcmp(model.cls,'bus')
-%   [Iex2,alphamask2,faces] = get_geometry_icon({model},1);
+%   [Iex2,alphamask2,faces] = esvm_get_geometry_icon({model},1);
 
 %   %keyboard
   
@@ -101,7 +101,7 @@ exemplar_overlay.mini_overlay = mini_overlay;
   
 % else
   
-%   [Iexs,alphamasks] = get_seg_icon({model},1,stuff.dataset_params);
+%   [Iexs,alphamasks] = esvm_get_seg_icon({model},1,stuff.dataset_params);
 %   if length(Iexs) > 0
 %     [exemplar_overlay2] = ...
 %         load_exemplar_overlay(model, Iexs, alphamasks,detection_box(7));

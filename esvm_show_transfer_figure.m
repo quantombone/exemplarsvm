@@ -1,14 +1,14 @@
 function NR = esvm_show_transfer_figure(I, models, topboxes, overlays, ...
                                         current_rank, corr)
 % Show a figure with the detections of the exemplar svm model
-% NOTE(TJM): this function needs cleanup
+% NOTE(TJM): this function needs cleanup, but works in the pipeline
+%
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
 % 
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
-
 
 topboxes = topboxes(1:min(2,size(topboxes,1)),:);
 
@@ -67,7 +67,7 @@ for i = 1:N
     hogpic = flip_image(hogpic);
   end
   
-  Iex = get_exemplar_icon(models, mid, topboxes(i,7));
+  Iex = esvm_get_exemplar_icon(models, mid, topboxes(i,7));
   
   Iex1 = imresize(chunks{i},[size(Iex,1) size(Iex,2)]);
   Iex1 = max(0.0,min(1.0,Iex1));

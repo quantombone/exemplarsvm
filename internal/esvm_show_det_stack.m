@@ -94,7 +94,7 @@ for i = 1:length(ucurids)
 end
 
 %Get the exemplar frame icon
-[tmp,tmp,Ibase] = get_exemplar_icon({m},1);
+[tmp,tmp,Ibase] = esvm_get_exemplar_icon({m},1);
 
 newsize = [size(Ibase,1) size(Ibase,2)];
 newsize = 100/newsize(1) * newsize;

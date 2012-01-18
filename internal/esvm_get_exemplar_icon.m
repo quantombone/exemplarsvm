@@ -1,12 +1,17 @@
-function [Iex,Iexmask,Icb,Icbmask] = get_exemplar_icon(models, ...
+function [Iex,Iexmask,Icb,Icbmask] = esvm_get_exemplar_icon(models, ...
                                                   index,flip,subind, ...
                                                   loadseg, VOCopts)
-%Extract an exemplar visualization image (one from gt box, one from
-%cb box) [and does flip if specified]
-%Allows allows for the loading of a segmentation too
-% NOTE: this function works, but needs cleanup
+% Extract an exemplar visualization image (one from gt box, one from
+% cb box) [and does flip if specified]
+% Allows allows for the loading of a segmentation too
+% NOTE(TJM): this function works, but needs cleanup
 %
-%Tomasz Malisiewicz (tomasz@cmu.edu)
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if ~isfield(models{index}.model,'bb')
   Iex = ones(10,10,3);

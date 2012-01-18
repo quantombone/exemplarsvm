@@ -198,14 +198,11 @@ for k = 1:maxk
     clear overlays
     
     for zzz = 1:min(1,size(allbb,1))
-
       overlays{zzz} = esvm_exemplar_inpaint(allbb(zzz,:), ...
                                             models{allbb(zzz,6)}, ...
                                             stuff);
-
     end
-
-
+    
     %sumI = sumI ./ repmat(countI,[1 1 3]);
     
     if TARGET_BUS > -1
@@ -215,7 +212,7 @@ for k = 1:maxk
       gtmat = load(sprintf(['/nfs/baikal/tmalisie/finalbuslabeling/' ...
                     '%s.%d.mat'],curid,TARGET_BUS));
       seg = gtmat.res.seg;
-      gtim = faces2colors(seg);
+      gtim = esvm_faces2colors(seg);
       
       shower = I;
       test_set = repmat(double(seg~=0),[1 1 3]);
