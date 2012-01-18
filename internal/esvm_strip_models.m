@@ -11,6 +11,11 @@ function models = esvm_strip_models(models)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
+if ~iscell(models)
+  models = esvm_strip_models({models});
+  models = models{1};
+  return;
+end
 
 for i = 1:length(models)
   cur = models{i};
