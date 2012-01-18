@@ -99,7 +99,7 @@ You can alternatively download the pre-trained models individually from [http://
 See the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_apply.html](tutorial/esvm_demo_apply.html) for a step-by-step tutorial on what esvm_demo_apply.m produces
 
 
-# Train and Test a PASCAL VOC Ensemble of Exemplar-SVMs from scratch
+# Training an Ensemble of Exemplar-SVMs
 
 ## Demo: Synthetic-data training and testing
 
@@ -109,11 +109,10 @@ See the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_
 
 See the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_train_synthetic.html](tutorial/esvm_demo_train_synthetic.html) for a step-by-step tutorial on what esvm_demo_apply.m produces
 
-
 The training scripts are designed to work with the PASCAL VOC 2007
 dataset, so we need to download that first.
 
-## Install PASCAL VOC 2007 trainval/test sets
+## Prerequsite: Install PASCAL VOC 2007 trainval/test sets
 ``` sh
 $ mkdir /nfs/baikal/tmalisie/pascal #Make a directory for the PASCAL VOC data
 $ cd /nfs/baikal/tmalisie/pascal
@@ -124,7 +123,7 @@ $ tar xf VOCtrainval_06-Nov-2007.tar
 ``` 
 You can also get the VOC 2007 dataset tar files manually, [VOCtrainval_06-Nov-2007.tar](http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) and [VOCtest_06-Nov-2007.tar](http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar)
 
-## Training and Evaluating an Ensemble of "bus" Exemplar-SVMs quick-demo
+## Demo: Training and Evaluating an Ensemble of "bus" Exemplar-SVMs quick-demo
 ``` sh
 >> data_dir = '/your/directory/to/pascal/VOCdevkit/';
 >> dataset = 'VOC2007';
@@ -133,7 +132,7 @@ You can also get the VOC 2007 dataset tar files manually, [VOCtrainval_06-Nov-20
 # All output (models, M-matrix, AP curve) has been written to results_dir
 ```
 
-## Training and Evaluating an Ensemble of "bus" Exemplar-SVMs full script
+## Script: Training and Evaluating an Ensemble of "bus" Exemplar-SVMs full script
 ``` sh
 >> data_dir = '/your/directory/to/pascal/VOCdevkit/';
 >> dataset = 'VOC2007';
@@ -163,7 +162,11 @@ and sc.sh at MIT (using the continents).
 
 ### Here is the command I often use at MIT to start Exemplar-SVM runs, where machine_list.sh contains computer names
 ``` sh
+$ cd ~
+$ git clone git@github.com:quantombone/warp_scripts.git
 $ cd ~/warp_scripts/
+$ cp machine_list.sh-example machine_list.sh
+$ nano machine_list.sh #now edit the file to point to your cluster CPUs
 $ ./sc.sh "cd ~/projects/exemplarsvm; addpath(genpath(pwd)); esvm_script_train_voc_class('train');"
 ```
 
