@@ -37,13 +37,13 @@ if ~iscell(imageset)
 end
 
 params = esvm_get_default_params;
-
+params.calibration_propagate_onto_raw = 1;
 for i = 1:length(imageset)
   %Get local detections
   local_detections = esvm_detect_imageset(imageset(i), models, ...
                                           params);  
   %Pool exemplar detections
-  result_struct = esvm_pool_exemplars_dets(local_detections, models, M, params);
+  result_struct = esvm_pool_exemplar_dets(local_detections, models, M, params);
 
   %Show maxk top detections in this image
   maxk = 1;

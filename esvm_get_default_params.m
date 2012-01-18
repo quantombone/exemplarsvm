@@ -151,6 +151,9 @@ default_params.calibration_threshold = -1;
 %The M-matrix estimation parameters
 default_params.calibration_count_thresh = .5;
 default_params.calibration_neighbor_thresh = .5;
+
+%If enabled, use M-matrix calibration, but then propagate results
+%onto best local "raw" exemplar-based detection
 default_params.calibration_propagate_onto_raw = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

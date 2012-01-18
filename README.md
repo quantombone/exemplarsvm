@@ -4,7 +4,7 @@ in Robotics.
   -- Tomasz Malisiewicz
 
 The code is written in Matlab and is the basis of the following two
-projects:
+projects, as well as my doctoral dissertation:
 
 ## [Tomasz Malisiewicz](http://www.cs.cmu.edu/~tmalisie/), [Abhinav Gupta](http://www.cs.cmu.edu/~abhinavg), [Alexei A. Efros](http://www.cs.cmu.edu/~efros). **Ensemble of Exemplar-SVMs for Object Detection and Beyond.** In ICCV, 2011. [PDF](http://www.cs.cmu.edu/~tmalisie/projects/iccv11/exemplarsvm-iccv11.pdf) | [Project Page](http://www.cs.cmu.edu/~tmalisie/projects/iccv11/) 
 
@@ -88,22 +88,27 @@ $ matlab
 >> [models, M, test_set] = esvm_download_models('voc2007-bus.mat');
 ```
 
-You can alternatively download the pre-trained models individually from [http://people.csail.mit.edu/tomasz/exemplarsvm/models/](http://people.csail.mit.edu/tomasz/exemplarsvm/models/) or a tar file of all models [voc2007-models.tar](http://people.csail.mit.edu/tomasz/exemplarsvm/models/voc2007-models.tar) (NOTE: 449MB)
-
+You can alternatively download the pre-trained models individually from [http://people.csail.mit.edu/tomasz/exemplarsvm/models/](http://people.csail.mit.edu/tomasz/exemplarsvm/models/) or a tar file of all models [voc2007-models.tar](http://people.csail.mit.edu/tomasz/exemplarsvm/models/voc2007-models.tar) (NOTE: tar file is 450MB)
 
 ## Apply models to a set of images
 
-
 ``` sh
->> esvm_quick_demo
+>> esvm_demo_apply;
 ```
 
-Or see the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_quick_demo.html](tutorial/esvm_quick_demo.html) for a tutorial
+See the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_apply.html](tutorial/esvm_demo_apply.html) for a step-by-step tutorial on what esvm_demo_apply.m produces
 
-
----
 
 # Train and Test a PASCAL VOC Ensemble of Exemplar-SVMs from scratch
+
+## Synthetic-data demo
+
+``` sh
+>> esvm_demo_train_synthetic;
+```
+
+See the file [http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo__train_synthetic.html](tutorial/esvm_demo_train_synthetic.html) for a step-by-step tutorial on what esvm_demo_apply.m produces
+
 
 The training scripts are designed to work with the PASCAL VOC 2007
 dataset, so we need to download that first.
@@ -117,14 +122,23 @@ $ wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-20
 $ tar xf VOCtest_06-Nov-2007.tar 
 $ tar xf VOCtrainval_06-Nov-2007.tar 
 ``` 
-
 You can also get the VOC 2007 dataset tar files manually, [VOCtrainval_06-Nov-2007.tar](http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) and [VOCtest_06-Nov-2007.tar](http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar)
 
-## Training and Evaluating an Ensemble of "bus" Exemplar-SVMs
+## Training and Evaluating an Ensemble of "bus" Exemplar-SVMs quick-demo
 ``` sh
 >> data_dir = '/your/directory/to/pascal/VOCdevkit/';
+>> dataset = 'VOC2007';
 >> results_dir = '/your/results/directory/';
->> [models,M] = esvm_script_train_voc_class('bus',data_dir,results_dir);
+>> [models,M] = esvm_demo_train_voc_class_fast('bus', data_dir, dataset, results_dir);
+# All output (models, M-matrix, AP curve) has been written to results_dir
+```
+
+## Training and Evaluating an Ensemble of "bus" Exemplar-SVMs full script
+``` sh
+>> data_dir = '/your/directory/to/pascal/VOCdevkit/';
+>> dataset = 'VOC2007';
+>> results_dir = '/your/results/directory/';
+>> [models,M] = esvm_script_train_voc_class('bus', data_dir, dataset, results_dir);
 # All output (models, M-matrix, AP curve) has been written to results_dir
 ```
 

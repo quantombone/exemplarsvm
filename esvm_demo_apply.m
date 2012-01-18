@@ -16,24 +16,24 @@ cls = 'voc2007-bus';
 %If VOC is locally installed, let models point to local images, not URLs
 local_dir = '/Users/tomasz/projects/pascal/VOCdevkit/';
 if isdir(local_dir)
-  [models] = esvm_update_voc_models(models, local_dir);
+  [models] = esvm_update_voc_models_to_local(models, local_dir);
 end
 
 %% Load one image, and apply bus detector
 I1 = imread('000858.jpg');
-esvm_demo_apply_exemplars(I1, models, M);
+esvm_apply_and_show_exemplars(I1, models, M);
 
 %% Create an array of images, and apply bus detector
 I2 = imread('009021.jpg');
 I3 = imread('009704.jpg');
 Iarray = {I2, I3};
-esvm_demo_apply_exemplars(Iarray, models, M);
+esvm_apply_and_show_exemplars(Iarray, models, M);
 
 %% Create URL-based set of images, and apply bus detector
 %Show image filepaths
 cat(1,test_set{1:5})
 %Apply detector
-esvm_demo_apply_exemplars(test_set(1:5), models, M);
+esvm_apply_and_show_exemplars(test_set(1:5), models, M);
 
 %% Set image path directory, and apply bus detector
 Idirectory = '/v2/SUN/Images/b/bus_depot/outdoor/';
@@ -45,7 +45,7 @@ if isdir(Idirectory)
   MAXDIM = 500;
   Ilist = cellfun2(@(x)(@()imresize_max(convert_to_I(x),MAXDIM)), ...
                    Ilist);
-  esvm_demo_apply_exemplars(Ilist, models, M);
+  esvm_apply_and_show_exemplars(Ilist, models, M);
 else
   fprintf(1,'Note: not applying because %s is not a directory\n',...
           Idirectory);

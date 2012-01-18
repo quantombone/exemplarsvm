@@ -26,7 +26,9 @@ if ~exist('dataset_directory','var')
 end
 
 if ~exist('results_directory','var')
-  results_directory = sprintf('/nfs/baikal/tmalisie/esvm-%s/',cls);
+  results_directory = ...
+      sprintf(['/nfs/baikal/tmalisie/esvm-%s-%s/'], ...
+              dataset_directory, cls);
 end
 
 %data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
