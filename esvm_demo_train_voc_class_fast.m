@@ -11,6 +11,8 @@ function [models,M] = esvm_demo_train_voc_class_fast(cls, ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
+addpath(genpath(pwd));
+
 if ~exist('cls','var')
   fprintf(1,'esvm_demo_train_fast: defaulting to class=car\n');
   cls = 'car';
@@ -25,9 +27,10 @@ if ~exist('dataset_directory','var')
 end
 
 if ~exist('results_directory','var')
-  results_directory = sprintf(['/nfs/baikal/tmalisie/esvm-%s-' ...
-                    '%s-fast/'], ...
-                              dataset_directory, cls);
+  results_directory = '';
+  %results_directory = sprintf(['/nfs/baikal/tmalisie/esvm-%s-' ...
+  %                  '%s-fast/'], ...
+  %                            dataset_directory, cls);
 end
 
 %data_directory = '/Users/tomasz/projects/Pascal_VOC/';

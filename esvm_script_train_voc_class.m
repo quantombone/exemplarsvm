@@ -11,6 +11,7 @@ function [models,M] = esvm_script_train_voc_class(cls, ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
+addpath(genpath(pwd));
 
 if ~exist('cls','var')
   cls = 'bus';
