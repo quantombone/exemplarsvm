@@ -1,8 +1,8 @@
 function M = esvm_estimate_M(grid,  models, params, ...
                              CACHE_FILES)
-%Given a bunch of detections, learn the M boosting matrix, which
-%makes a final boxes's score depend on the co-occurrence of certain
-%"friendly" detections
+% Given a bunch of detections, learn the M boosting matrix, which
+% makes a final boxes's score depend on the co-occurrence of certain
+% "friendly" detections
 %
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
@@ -72,13 +72,8 @@ for i = 1:length(grid)
     continue
   end
 
-  if size(boxes{i},1) > 0
-    
-  end
-  %new-method: use calibrated scores (doesn't work too well)
-  %calib_boxes = calibrate_boxes(boxes{i},betas);
-
-  %old-method: use raw SVM scores + 1 (works better!)
+  %old-method: use raw SVM scores + 1 (works better!)  NOTE: this
+  %works better than using calibrated scores (doesn't work too well)
   calib_boxes = boxes{i};
   calib_boxes(:,end) = calib_boxes(:,end)+1;
   
@@ -145,7 +140,7 @@ allboxes = cat(1,boxes{:});
 
 for i = 1:length(boxes)
   fprintf(1,'.');
-  xraw{i} = get_box_features(boxes{i}, K, neighbor_thresh);
+  xraw{i} = esvm_get_M_features(boxes{i}, K, neighbor_thresh);
 end
 x = [xraw{:}];
 

@@ -8,6 +8,7 @@ function grid = esvm_detect_imageset(imageset, models, ...
 % models: Cell array of models
 % params(optional): detection parameters
 % setname(optional): a name of the set, which lets us cache results
+%   on disk
 
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
@@ -20,9 +21,6 @@ if ~exist('params','var')
   params = esvm_get_default_params;
 end
 
-%Only allow display to be enabled on a machine with X
-%NOTE(TJM): this display is always turned off and deprecated
-display = 0;
 
 if ~exist('setname','var')
   params.detect_images_per_chunk = 1;
@@ -60,10 +58,6 @@ if save_files == 1
   end
 end
 
-if display == 1
-  fprintf(1,'DISPLAY ENABLED, NOT SAVING RESULTS!\n');
-  params.detect_images_per_chunk = 1;
-end
 
 if save_files == 1
   baser = sprintf('%s/detections/%s-%s/',params.dataset_params.localdir,setname, ...
@@ -72,7 +66,7 @@ else
   baser = '';
 end
 
-if (save_files==1) && (display == 0) && (~exist(baser,'dir'))
+if (save_files==1) && (~exist(baser,'dir'))
   fprintf(1,'Making directory %s\n',baser);
   mkdir(baser);
 end
@@ -85,9 +79,6 @@ inds = do_partition(1:length(imageset),params.detect_images_per_chunk);
 % randomize chunk orderings
 myRandomize;
 ordering = randperm(length(inds));
-if (display) == 1 || (save_files == 0)
-  ordering = 1:length(ordering);
-end
 
 %[v,host_string]=unix('hostname');
 
@@ -101,7 +92,7 @@ for i = 1:length(ordering)
   filerlock = [filer '.lock'];
 
   if save_files == 1
-    if ~display && (fileexists(filer) || (mymkdir_dist(filerlock) == 0))
+    if (fileexists(filer) || (mymkdir_dist(filerlock) == 0))
       continue
     end
   end
@@ -170,53 +161,6 @@ for i = 1:length(ordering)
       coarse_boxes = coarse_boxes(goods,:);
     end
     
-    if display == 1       
-      %extract detection box vectors from the localization results
-      saveboxes = boxes;
-      if size(boxes,1)>=1
-        boxes(:,5) = 1:size(boxes,1);
-      end
-      
-      % if exist('M','var') && length(M)>0
-      %   boxes = calibrate_boxes(boxes, M.betas);
-      % end
-
-      if numel(boxes)>0
-        [aa,bb] = sort(boxes(:,end),'descend');
-        boxes = boxes(bb,:);
-      end
- 
-      %already nmsed (but not for LRs)
-      boxes = nms_within_exemplars(boxes,.5);
-
-
-      %% ONLY SHOW TOP 5 detections or fewer
-      boxes = boxes(1:min(size(boxes,1),5),:);
-      
-      if 1% size(boxes,1) >=1
-        figure(53)
-        clf
-        % stuff.filer = '';               
-        % exemplar_overlay = exemplar_inpaint(boxes(1,:), ...
-        %                                     models{boxes(1,6)}, ...
-        %                                     stuff);
-
-        % show_hits_figure_iccv(models,boxes,I,I,exemplar_overlay,I);
-
-        show_hits_figure(models, boxes, I);
-        drawnow
-        %pause(.1)
-%       else
-%         figure(1)
-%         clf
-%         imagesc(I)
-%         drawnow
-%         fprintf(1,'No detections in this Image\n');
-%         pause(.1)
-      end
-      boxes = saveboxes;
-    end
-
     extras = [];
     res{j}.coarse_boxes = coarse_boxes;
     res{j}.bboxes = boxes;
@@ -234,12 +178,7 @@ for i = 1:length(ordering)
     end 
   end
 
-
   counter = counter + L;
-
-  if display == 1
-    continue
-  end
   
   % save results into file and remove lock file
   

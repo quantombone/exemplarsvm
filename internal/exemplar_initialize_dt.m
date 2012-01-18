@@ -1,5 +1,6 @@
 function allfiles = exemplar_initialize_dt(dataset_params, e_set, ...
                                         models_name, init_params)
+error('deprecated')
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
 % NOTE: this function is parallelizable (and dalalizable!)  
@@ -63,7 +64,7 @@ for i = 1:length(e_set)
   I = convert_to_I(e_set{i}.I);
 
   warped = mywarppos(hg_size, I, init_params.sbin, bbox);
-  curfeats{i} = features(warped, init_params.sbin);
+  curfeats{i} = init_params.features(warped, init_params);
   fprintf(1,'.');
 end  
 

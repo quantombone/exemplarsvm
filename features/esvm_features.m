@@ -1,4 +1,4 @@
-function x = features(I, sbin)
+function x = esvm_features(I, sbin)
 %Return the current feature function
 
 if nargin == 0

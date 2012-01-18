@@ -1,4 +1,4 @@
-function [x,nbrids] = get_box_features(boxes, N, neighbor_thresh)
+function [x,nbrids] = esvm_get_M_features(boxes, N, neighbor_thresh)
 %% Get the contextual "box features" for a set of detection boxes
 % Turns a detection box into a contextual feature by stacking the
 % scores of nearby (highly overlapping) detections.

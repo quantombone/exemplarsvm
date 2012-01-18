@@ -14,7 +14,6 @@ function model = esvm_initialize_fixedframe_exemplar(I, bbox, ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-
 sbin = init_params.sbin;
 hg_size = init_params.hg_size;
 
@@ -63,7 +62,7 @@ bbox = squareize_bbox(bbox);
 %Compute pyramid 
 clear t
 params.detect_levels_per_octave = 10;
-[t.hog, t.scales] = featpyramid2(I, sbin, params);  
+[t.hog, t.scales] = esvm_pyramid(I, params);
 t.padder = 2;
 
 %Pad pyramid and compute all bounding boxes, and their levels

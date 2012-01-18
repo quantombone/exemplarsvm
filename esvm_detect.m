@@ -448,7 +448,7 @@ if isnumeric(I)
   t.size = size(I);
 
   %Compute pyramid
-  [t.hog,t.scales] = featpyramid2(I, sbin, params);  
+  [t.hog, t.scales] = esvm_pyramid(I, params);
   t.padder = params.detect_pyramid_padding;
   for level = 1:length(t.hog)
     t.hog{level} = padarray(t.hog{level}, [t.padder t.padder 0], 0);

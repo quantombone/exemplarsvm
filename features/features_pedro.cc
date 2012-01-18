@@ -220,7 +220,7 @@ mxArray *process(const mxArray *mximage, const mxArray *mxsbin) {
 }
 
 // matlab entry point
-// F = features(image, bin)
+// F = features_pedro(image, bin)
 // image should be color with double values
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) { 
   if (nrhs != 2)

@@ -21,7 +21,8 @@ if bb(7) == 1
 end
 
 lilI = resize(I,bb(8));
-f = features(lilI,sbin);
+fprintf(1,'Warning: using esvm_features directly\n');
+f = esvm_features(lilI,sbin);
 f = padarray(f,[NEWPAD NEWPAD 0]);
 xxx_base = f(u-2+(1:hg_size(1)),v-2+(1:hg_size(2)),:);
 
@@ -58,7 +59,7 @@ for iii = 2:N_WIGGLES
   %   curI(:,end-RIGHT:end,:) = 0;
   % end
   
-  f = features(curI,sbin);
+  f = esvm_features(curI,sbin);
   f = padarray(f,[NEWPAD NEWPAD 0]);
   x = f(u-2+(1:hg_size(1)),v-2+(1:hg_size(2)),:);
   xxx(:,iii) = x(:);

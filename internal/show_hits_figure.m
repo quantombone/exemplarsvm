@@ -182,7 +182,7 @@ for i = 1:N
   
   
   %subplot(N,3,3*i);
-  %exemplar_inpaint(I, topboxes(i,:), models{mid});
+  %esvm_exemplar_inpaint(I, topboxes(i,:), models{mid});
   
   %axis image
   %axis off

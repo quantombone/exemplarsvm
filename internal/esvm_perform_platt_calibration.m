@@ -12,17 +12,11 @@ function [betas] = esvm_perform_platt_calibration(grid, models, ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-
-
-
-
 if length(grid) == 0 || length(models) == 0
   betas = [];
   ALL_bboxes = [];
   return;
 end
-
-
 
 if ~exist('CACHE_FILES','var')
   CACHE_FILES = 0;
@@ -305,7 +299,7 @@ for exid = 1:length(models)
     %m = try_reshape(models{exid},bbs_show,100);
 
     %[models{exid}.model.svids,models{exid}.model.nsv] = ...
-    %    extract_svs(bbs_show,100);%,'trainval','');
+    %    esvm_reconstruct_features(bbs_show,100);%,'trainval','');
 
     models{exid}.model.svbbs = bbs_show;
     m2 = models(exid);

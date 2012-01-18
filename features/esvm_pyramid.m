@@ -1,5 +1,27 @@
-function [feat, scale] = featpyramid2(im, sbin, params)
-% [feat, scale] = featpyramid2(im, sbin, params);
+function [feat, scale] = esvm_pyramid(im, params)
+% [feat, scale] = esvm_pyramid(im, params);
+% Compute a pyramid worth of features by calling resize/features in
+% over a set of scales defined inside params
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
+
+
+if isscalar(params)
+  sbin = params;
+elseif isfield(params,'sbin') 
+  sbin = params.sbin;
+elseif isfield(params,'init_params') && ...
+      isfield(params.init_params,'params') && ...
+      isscalar(params.init_params.params)
+  
+  sbin = params.init_params.sbin;
+else
+  error('esvm_pyramid: cannot find sbin inside params');
+end
 
 %Make sure image is in double format
 im = double(im);
@@ -47,7 +69,7 @@ for i = 1:MAXLEVELS
     return;
   end
 
-  feat{i} = features(scaled,sbin);
+  feat{i} = params.features(scaled,sbin);
 
   %if we get zero size feature, backtrack one, and dont produce any
   %more levels

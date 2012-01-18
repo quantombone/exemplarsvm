@@ -42,7 +42,7 @@ I_real_pad = pad_image(I, ARTPAD);
 
 %Get the hog feature pyramid for the entire image
 params.detect_levels_per_octave = 10;
-[f_real,scales] = featpyramid2(I_real_pad, init_params.sbin, params);
+[f_real,scales] = esvm_pyramid(I_real_pad, params);
 
 %Extract the regions most overlapping with Ibox from each level in the pyramid
 [masker,sizer] = get_matching_masks(f_real, Ibox);

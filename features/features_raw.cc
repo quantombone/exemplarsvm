@@ -1,6 +1,8 @@
 #include <math.h>
 #include <iostream>
 #include "mex.h"
+// Note: this is just like features_pedro.cc (the 31-D per cell HOG feature from voc-release-3.1) but without any sort of bin normalization
+// change by Tomasz Malisiewicz
 
 // small value, used to avoid division by zero
 #define eps 0.0001
@@ -175,7 +177,7 @@ mxArray *process(const mxArray *mximage, const mxArray *mxsbin) {
 }
 
 // matlab entry point
-// F = features(image, bin)
+// F = features_raw(image, bin)
 // image should be color with double values
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) { 
   if (nrhs != 2)

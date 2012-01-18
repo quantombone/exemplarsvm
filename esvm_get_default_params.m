@@ -174,6 +174,7 @@ default_params.nnmode = '';
 default_params.dfun = 0;
 
 %Initialize framing function
+init_params.features = @esvm_features;
 init_params.sbin = 8;
 init_params.goal_ncells = 100;
 init_params.MAXDIM = 12;

@@ -94,7 +94,7 @@ if (exist('M','var') && (~isempty(M)) && isfield(M,'betas') && ...
     if size(bboxes{i},1) == 0
       continue
     end
-    calib_boxes = calibrate_boxes(bboxes{i},M.betas); 
+    calib_boxes = esvm_calibrate_boxes(bboxes{i},M.betas); 
     oks = find(calib_boxes(:,end) > params.calibration_threshold);
     calib_boxes = calib_boxes(oks,:);
     bboxes{i} = calib_boxes;
@@ -112,8 +112,8 @@ elseif exist('M','var') && ~isempty(M) && isfield(M,'neighbor_thresh')
     
     bboxes{i}(:,end) = bboxes{i}(:,end)+1;
 
-    [xraw,nbrlist{i}] = get_box_features(bboxes{i},length(models), ...
-                                                   M.neighbor_thresh);
+    [xraw,nbrlist{i}] = esvm_get_M_features(bboxes{i},length(models), ...
+                                            M.neighbor_thresh);
     r2 = esvm_apply_M(xraw,bboxes{i},M);
     bboxes{i}(:,end) = r2;
   end
@@ -146,7 +146,7 @@ if params.calibration_propagate_onto_raw && ...
   for i = 1:length(bboxes)
     if size(bboxes{i},1) > 0
       allMscores = bboxes{i}(:,end);
-      calib_boxes = calibrate_boxes(raw_boxes{i},M.betas);
+      calib_boxes = esvm_calibrate_boxes(raw_boxes{i},M.betas);
       beta_scores = calib_boxes(:,end);
       
       osmat = getosmatrix_bb(bboxes{i},raw_boxes{i});

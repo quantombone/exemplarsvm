@@ -1,12 +1,18 @@
-function [target_id, target_x] = extract_svs(cb, N, set1, set2)
-% Extract top N detection feature vectors from the feature
-% pyramid. This allows us to only store (flip,scale,offset)
-% information instead of the 8*8*31 numbers for the feature vector.
-% To reconstruct the feature, we load the image, and follow the
-% exact step of flip,scale,offset operations and only extract
-% features from a single level of the pyramid (the target level)
+function [target_id, target_x] = esvm_reconstruct_features(cb, N, set1, set2)
+% Extract top N detection feature vectors from bounding boxes and the
+% to be-computed feature pyramid. This allows us to only store
+% (flip,scale,offset) information instead of the 8*8*31 numbers for
+% the feature vector.  To reconstruct the feature, we load the image,
+% and follow the exact step of flip,scale,offset operations and only
+% extract features from a single level of the pyramid (the target
+% level)
 %
-% Tomasz Malisiewicz (tomasz@cmu.edu)
+% Copyright (C) 2011-12 by Tomasz Malisiewicz
+% All rights reserved.
+% 
+% This file is part of the Exemplar-SVM library and is made
+% available under the terms of the MIT license (see COPYING file).
+% Project homepage: https://github.com/quantombone/exemplarsvm
 
 if ~exist('set1','var')
   set1 = 'trainval';
@@ -64,7 +70,8 @@ for i = 1:N
   I = resize(I,target_id{i}.scale);
   
   %%NOTE: both sbin=8 and padder=5 are hard-coded here
-  full = features(I,8);
+  fprintf(1,'Note: hardcoded esvm_features\n');
+  full = esvm_features(I,8);
   f = padarray(full,[6 6 0]);
 
   f = f(target_id{i}.offset(1)+6+(0:7)-1,...
@@ -72,4 +79,4 @@ for i = 1:N
 
   target_x(:,i) = f(:);
 end
-fprintf(1,'Extract_svs took: %.3fsec\n',toc(starter));
+fprintf(1,'esvm_reconstruct_features took: %.3fsec\n',toc(starter));
