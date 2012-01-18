@@ -1,6 +1,6 @@
-function allfiles = exemplar_initialize_dt(dataset_params, e_set, ...
+function allfiles = esvm_initialize_exemplars_dt(dataset_params, e_set, ...
                                         models_name, init_params)
-error('deprecated')
+error('Deprecated Function, needs fixing')
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
 % NOTE: this function is parallelizable (and dalalizable!)  

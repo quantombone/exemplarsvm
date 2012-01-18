@@ -80,3 +80,7 @@ for i = 1:N
   target_x(:,i) = f(:);
 end
 fprintf(1,'esvm_reconstruct_features took: %.3fsec\n',toc(starter));
+
+function id = get_file_id(filer)
+[tmp,curid,tmp] = fileparts(filer);
+id = str2num(curid);

@@ -233,7 +233,7 @@ for exid = 1:length(models)
     %bbb = bbb(1:min(1000,length(bbb)));
     %all_scores = all_scores(bbb);
     %all_os = all_os(bbb);
-    beta = learn_sigmoid(all_scores, all_os);
+    beta = esvm_learn_sigmoid(all_scores, all_os);
   end
 
   %if beta(1)<.001
