@@ -13,6 +13,8 @@ function Isv = esvm_show_det_stack(m, K2, K1)
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
+% NOTE(TJM): there is a bug when K2=15, K1=20, with the averages
+% not being only in the first row of the image
 
 if (sum(m.model.w(:)<0) == 0) || ...
       (sum(m.model.w(:)>0) == 0)
