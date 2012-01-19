@@ -49,7 +49,7 @@ esvm_apply_and_show_exemplars(test_set(1:5), models, M, params);
 %% Set image path directory, and apply bus detector
 Idirectory = '/v2/SUN/Images/b/bus_depot/outdoor/';
 if isdir(Idirectory)
-  Ilist = get_file_list(Idirectory);
+  Ilist = list_files_in_directory(Idirectory);
   Ilist = Ilist(1:min(5,length(Ilist)));
 
   %Virtually resize all images to 200 max dim
