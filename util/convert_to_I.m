@@ -35,10 +35,16 @@ elseif isnumeric(I)
   %an image
 elseif isstruct(I) && isfield(I,'I')
   I = convert_to_I(I.I);
+elseif iscell(I)
+  try
+    I = convert_to_I(I{1});
+  catch
+    error('convert_to_I: invalid input');
+  end
 else
   fprintf(1,['WARNING: convert_to_I given non-image type as input\' ...
              'n']);
-  error('Invalid image type');
+  error('convert_to_I: invalid input');
 end
 
 %now we have a real image
