@@ -4,7 +4,9 @@ function transformed_c = apply_xform(c, xform)
 % bounding box c to get a new bounding box transformed_c
 % if input is a matrix of bb's, then apply xform to all bbs
 % bb must have 4 numbers (or just 2 numbers to map a point)
-% transformed_c will be same size as c, with all non-bb fields left intact
+% transformed_c will be same size as c, with all non-bb fields left
+% intact
+
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 transformed_c = c;
