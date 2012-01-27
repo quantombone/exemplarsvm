@@ -8,8 +8,9 @@ function files = list_files_in_directory(dirpath, extensions)
 % - if it is a string, only return files with this extension
 % - if it is not given, return all files
 %
-% NOTE: this can be used with convert_to_I, as follows >> files =
-% list_files_in_directory('~/myimages/'); >> imagesc(convert_to_I(files{10}))
+% NOTE: this can be used with convert_to_I, as follows:
+% >> files = % list_files_in_directory('~/myimages/');
+% >> imagesc(convert_to_I(files{10}))
 
 if ~isstr(dirpath)
   fprintf(1,'list_files_in_directory: Warning, not a directory\n');
