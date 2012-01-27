@@ -4,13 +4,17 @@ function files = list_files_in_directory(dirpath, extensions)
 %
 % extensions is optional and can take a variety of types:
 % - if it is a cell array, only return files with extensions in this array
+%     >> files = list_files_in_directory('~/myimages/',{'.jpg','.png'});
 % - if it is the string 'images', only return images
+%     >> files = list_files_in_directory('~/myimages/','images')
 % - if it is a string, only return files with this extension
+%     >> files = list_files_in_directory('~/myimages/','.jpg')
 % - if it is not given, return all files
+%     >> files = list_files_in_directory('~/myimages/','.jpg')
 %
 % NOTE: this can be used with convert_to_I, as follows:
-% >> files = % list_files_in_directory('~/myimages/');
-% >> imagesc(convert_to_I(files{10}))
+%     >> files = list_files_in_directory('~/myimages/');
+%     >> imagesc(convert_to_I(files{10}))
 
 if ~isstr(dirpath)
   fprintf(1,'list_files_in_directory: Warning, not a directory\n');
