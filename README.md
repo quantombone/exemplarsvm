@@ -90,24 +90,25 @@ $ matlab
 
 You can alternatively download the pre-trained models individually from [http://people.csail.mit.edu/tomasz/exemplarsvm/models/](http://people.csail.mit.edu/tomasz/exemplarsvm/models/) or a tar file of all models [voc2007-models.tar](http://people.csail.mit.edu/tomasz/exemplarsvm/models/voc2007-models.tar) (NOTE: tar file is 450MB)
 
-## Demo: Apply models to a set of images
+## Demo: Example of applying models to a single image or a set of images
+
+See the demo walk-through [tutorial/esvm_demo_apply.html](http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_apply.html) for a step-by-step tutorial on applying Exemplar-SVMs to images.
+Or you can just run the demo:
 
 ``` sh
 >> esvm_demo_apply;
 ```
 
-See the file [tutorial/esvm_demo_apply.html](http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_apply.html) for a step-by-step tutorial on what esvm_demo_apply.m produces
-
-
 # Training an Ensemble of Exemplar-SVMs
 
-## Demo: Synthetic-data training and testing
+## Toy Demo: Exemplar-SVM training and testing on a set of synthetic images
+
+See the synthetic training demo walk-through [tutorial/esvm_demo_train_synthetic.html](http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_train_synthetic.html) for a step-by-step tutorial on how to set-up images and bounding boxes for a training experiment.
+Or you can run the synthetic training demo:
 
 ``` sh
 >> esvm_demo_train_synthetic;
 ```
-
-See the file [tutorial/esvm_demo_train_synthetic.html](http://people.csail.mit.edu/tomasz/exemplarsvm/tutorial/esvm_demo_train_synthetic.html) for a step-by-step tutorial on what esvm_demo_train_synthetic.m produces
 
 The training scripts are designed to work with the PASCAL VOC 2007
 dataset, so we need to download that first.
