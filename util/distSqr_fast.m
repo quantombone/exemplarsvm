@@ -20,6 +20,10 @@ function z = distSqr_fast(x,y,x2,y2) %x2 = sum(x.^2,1)'; %y2 = sum(y.^2,1);
 % Based on dist2.m code,
 % Copyright (c) Christopher M Bishop, Ian T Nabney (1996, 1997)
 
+if ~exist('y','var')
+  y = x;
+end
+
 if ~exist('x2','var')
   x2 = sum(x.^2,1)';
 end
