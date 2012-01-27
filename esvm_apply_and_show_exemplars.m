@@ -44,10 +44,10 @@ end
 
 params.calibration_propagate_onto_raw = 1;
 for i = 1:length(imageset)
-  %Get local detections
+  %Get local detections (no M-matrix)
   local_detections = esvm_detect_imageset(imageset(i), models, ...
                                           params);  
-  %Pool exemplar detections
+  %Pool exemplar detections using M-matrix
   result_struct = esvm_pool_exemplar_dets(local_detections, models, M, params);
 
   %Show maxk top detections in this image
