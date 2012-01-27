@@ -34,7 +34,7 @@ if exist('extensions', 'var'),
     end
   end
   ext = cellfun2(@(x)get_extension(x), files);
-  ext = cellfun2(@(x)any(strcmp(x, extensions)), ext);
+  ext = cellfun2(@(x)any(strcmpi(x, extensions)), ext);
   ext = arrayfun(@(x)x{1}, ext);
   files = files(find(ext));
 end
