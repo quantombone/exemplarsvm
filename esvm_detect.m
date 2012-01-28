@@ -39,7 +39,7 @@ if ~iscell(models)
   models = {models};
 end
 
-if isfield(models{1},'mining_params')
+if isfield(models{1},'mining_params') && ~exist('params','var')
   params = models{1}.mining_params;
 elseif ~exist('params','var')
   params = esvm_get_default_params;
