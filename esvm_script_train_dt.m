@@ -84,7 +84,7 @@ models_name = ...
 
 initial_models = esvm_initialize_exemplars_dt(e_stream_set, params, ...
                                               models_name);
-initial_models{1}.objectid = -1;
+
 %initial_models = esvm_initialize_exemplars(e_stream_set, params, models_name);
 
 %% Perform Exemplar-SVM training
