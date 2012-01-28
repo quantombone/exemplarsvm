@@ -1,12 +1,12 @@
-function allfiles = esvm_initialize_exemplars_dt(dataset_params, e_set, ...
-                                        models_name, init_params)
-error('Deprecated Function, needs fixing')
+function models = esvm_initialize_exemplars_dt(e_set, params, ...
+                                            models_name)
+
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)
 % NOTE: this function is parallelizable (and dalalizable!)  
 % 
 % INPUTS:
-% dataset_params: the parameters of the current dataset
+% params.dataset_params: the parameters of the current dataset
 % e_set: the exemplar stream set which contains
 %   e_set{i}.I, e_set{i}.cls, e_set{i}.objectid, e_set{i}.bbox
 % models_name: model name
@@ -14,7 +14,7 @@ error('Deprecated Function, needs fixing')
 % init_params.init_function: a function which takes as input (I,bbox,params)
 %   and returns a model structure [if not specified, then just dump
 %   out names of resulting files]
-
+%
 % OUTPUTS:
 % allfiles: The names of all outputs (which are .mat model files
 %   containing the initialized exemplars)
@@ -26,59 +26,65 @@ error('Deprecated Function, needs fixing')
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
+if isfield(params,'dataset_params') && ...
+      isfield(params.dataset_params,'localdir') && ...
+      length(params.dataset_params.localdir)>0
+  CACHE_FILE = 1;
+else
+  CACHE_FILE = 0;
+  params.dataset_params.localdir = '';
+end
 
+if ~exist('models_name','var')
+  models_name = '';
+end
 
-% DTstring = '';
-% if dalalmode == 1
-%   %Find the best window size from taking statistics over all
-%   %training instances of matching class
-%   hg_size = get_hg_size(cls);
-%   DTstring = '-dt';
-% elseif dalalmode == 2
-%   hg_size = [8 8];
-%   DTstring = '-gt';
-% end
-  
-%if (dalalmode == 1) || (dalalmode == 2)
-%  %Do the dalal-triggs anisotropic warping initialization
-%  model = initialize_model_dt(I,bbox,SBIN,hg_size);
-%else
+cache_dir =  ...
+    sprintf('%s/models/',params.dataset_params.localdir);
+
+cache_file = ...
+    sprintf('%s/%s.mat',cache_dir,models_name);
+
+if CACHE_FILE ==1 && fileexists(cache_file)
+  models = load(cache_file);
+  models = models.models;
+  return;
+end
 
 results_directory = ...
-    sprintf('%s/models/%s-%s/',dataset_params.localdir, e_set{1}.cls, ...
+    sprintf('%s/models/%s/',params.dataset_params.localdir, ...
             models_name);
 
-if ~exist(results_directory,'dir')
+if CACHE_FILE==1 && ~exist(results_directory,'dir')
   fprintf(1,'Making directory %s\n',results_directory);
   mkdir(results_directory);
 end
 
-filer = sprintf('%s/%s-dt.mat',results_directory, e_set{1}.cls);
-%filerlock = [filer '.lock'];
+filer = sprintf('%s/%s-dt.mat',results_directory, e_set{1}.cls');
+filerlock = [filer '.lock'];
 
-if fileexists(filer) 
-  allfiles{1} = filer;
-  return;
+
+if CACHE_FILE == 1
+  if fileexists(filer) 
+    m = load(filer);
+    models{1} = m.m;
+    return;
+  end
 end
-%  || (mymkdir_dist(filerlock)==0)
-%  return;
-%end
 
-hg_size = get_hg_size(e_set, init_params.sbin);
-
-for i = 1:length(e_set)  
-  bbox = e_set{i}.bbox;  
-  I = convert_to_I(e_set{i}.I);
-
-  warped = mywarppos(hg_size, I, init_params.sbin, bbox);
-  curfeats{i} = init_params.features(warped, init_params);
+hg_size = get_hg_size(e_set, params.init_params.sbin);
+for j = 1:length(e_set)  
+  bbox = e_set{j}.bbox;  
+  I = convert_to_I(e_set{j}.I);
+  warped = mywarppos(hg_size, I, params.init_params.sbin, bbox);
+  curfeats{j} = params.init_params.features(warped, params.init_params.sbin);
   fprintf(1,'.');
 end  
 
 curfeats = cellfun2(@(x)reshape(x,[],1),curfeats);
 curfeats = cat(2,curfeats{:});
-m.model.init_params = init_params;
-m.model.hg_size = [hg_size features];
+m.model.init_params = params.init_params;
+m.model.hg_size = [hg_size params.init_params.features()];
 m.model.mask = ones(hg_size(1),hg_size(2));
 m.model.w = mean(curfeats,2);
 m.model.w = m.model.w - mean(m.model.w(:));
@@ -90,13 +96,14 @@ m.model.svxs = [];
 m.cls = e_set{1}.cls;
 m.models_name = models_name;
 m.name = sprintf('dt-%s',m.cls);
-
+m.curid = m.cls;
+m.objectid = -1;
+models{1} = m;
 save(filer,'m');
-%if exist(filerlock,'dir')
-%  rmdir(filerlock);
-%end
-allfiles{1} = filer;
-  
+if fileexists(filerlock)
+  rmdir(filerlock);
+end
+
 function [hg_size] = get_hg_size(e_set, sbin)
 %% Load ids of all images in trainval that contain cls
 
