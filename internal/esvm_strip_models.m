@@ -38,7 +38,9 @@ for i = 1:length(models)
   if isfield(cur,'cls')
     m.cls = cur.cls;
   end
-  m.gt_box = cur.gt_box;
+  if isfield(cur,'gt_box')
+    m.gt_box = cur.gt_box;
+  end
   m.sizeI = cur.sizeI;
   m.models_name = cur.models_name;
   
