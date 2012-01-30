@@ -135,12 +135,20 @@ test_struct = esvm_pool_exemplar_dets(test_grid, models, [], ...
 
 %% Perform the exemplar evaluation
 [results] = esvm_evaluate_pascal_voc(test_struct, test_grid, params, ...
-                                     test_set_name, cls, models_name);
+                                     test_set_name, cls, ...
+                                     models_name);
 
+for mind = 1:length(models)
+  I = esvm_show_top_exemplar_dets(test_struct, test_set, ...
+                                  models, mind,10,10);
+  imagesc(I)
+
+end
 
 %% Show top 20 detections as exemplar-inpainting results
 maxk = 20;
 allbbs = esvm_show_top_dets(test_struct, test_grid, test_set, models, ...
                             params,  maxk, test_set_name);
+
 
 
