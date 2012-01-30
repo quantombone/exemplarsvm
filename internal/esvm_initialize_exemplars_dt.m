@@ -75,6 +75,8 @@ end
 hg_size = get_hg_size(e_set, params.init_params.sbin);
 
 curfeats = cell(0,1);
+fprintf(1,['esvm_initialize_exemplars_dt: initializing features by' ...
+           ' warping to a canonical size\n']);
 for j = 1:length(e_set)  
   bbox = e_set{j}.bbox;  
   I = convert_to_I(e_set{j}.I);
@@ -83,12 +85,12 @@ for j = 1:length(e_set)
                                                 params.init_params.sbin);
 
   warped = mywarppos(hg_size, flip_image(I), params.init_params.sbin, ...
-                     flip_bbox(bbox));
+                     flip_box(bbox,size(I)));
   curfeats{end+1} = params.init_params.features(warped, ...
                                                 params.init_params.sbin);
   fprintf(1,'.');
 end  
-
+fprintf(1,'esvm_initialize_exemplars: finished with %d windows\n',length(curfeats));
 curfeats = cellfun2(@(x)reshape(x,[],1),curfeats);
 curfeats = cat(2,curfeats{:});
 m.model.init_params = params.init_params;
