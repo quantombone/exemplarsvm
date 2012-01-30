@@ -152,10 +152,11 @@ filer
   
 end
 
-%NOTE: this doesn't even work for dalaltriggs (but we can apply NN
+return;
+
+%NOTE: the show_top_dets functions doesn't even work for dalaltriggs (but we can apply NN
 %hack! if we want to)
 
-return;
 
 %% Show top 20 detections as exemplar-inpainting results
 maxk = 20;
