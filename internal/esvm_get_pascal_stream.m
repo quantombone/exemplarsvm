@@ -40,6 +40,7 @@ streamname = sprintf('%s/%s-%s-%d-%s%s.mat',...
 if CACHE_FILE && fileexists(streamname)
   fprintf(1,'Loading %s\n',streamname);
   load(streamname);
+  fprintf(1,'esvm_get_pascal_stream: length of stream=%05d\n',length(fg));
   return;
 end
 
@@ -118,6 +119,7 @@ for i = 1:length(all_recs)
         if CACHE_FILE == 1
           save(streamname,'fg');
         end
+        fprintf(1,'esvm_get_pascal_stream: length of stream=%05d\n',length(fg));
         return;
       end
     end
@@ -145,6 +147,7 @@ for i = 1:length(all_recs)
       if CACHE_FILE == 1
         save(streamname,'fg');
       end
+      fprintf(1,'esvm_get_pascal_stream: length of stream=%05d\n',length(fg));
       return; 
     end
   else
@@ -155,3 +158,5 @@ end
 if CACHE_FILE == 1
   save(streamname,'fg');
 end
+
+fprintf(1,'esvm_get_pascal_stream: length of stream=%05d\n',length(fg));
