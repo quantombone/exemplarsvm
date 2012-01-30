@@ -93,6 +93,7 @@ m.model.b = 0;
 m.model.x = curfeats;
 m.model.bb = [];
 m.model.svxs = [];
+m.model.svbbs = [];
 m.cls = e_set{1}.cls;
 m.models_name = models_name;
 m.name = sprintf('dt-%s',m.cls);
