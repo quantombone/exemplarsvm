@@ -143,7 +143,8 @@ else
 end
 
 maxpos = max(wex'*m.model.x - b);
-fprintf(1,' --- Max positive is %.3f\n',maxpos);
+maxneg = max(wex'*m.model.svxs - b);
+fprintf(1,' --- Max positive/negative is %.3f/%.3f\n',maxpos,maxneg);
 fprintf(1,'SVM iteration took %.3f sec, ',toc(starttime));
 
 m.model.w = reshape(wex, size(m.model.w));
