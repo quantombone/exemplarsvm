@@ -141,10 +141,13 @@ test_struct = esvm_pool_exemplar_dets(test_grid, models, [], ...
 for mind = 1:length(models)
   I = esvm_show_top_exemplar_dets(test_struct, test_set, ...
                                   models, mind,10,10);
-  imagesc(I)
-
+  filer = sprintf('%s/www/aicon.%s-%d.png',...
+                  results_directory, models_name, mind);
+filer
+  imwrite(I,filer);
+  
 end
-
+return;
 %% Show top 20 detections as exemplar-inpainting results
 maxk = 20;
 allbbs = esvm_show_top_dets(test_struct, test_grid, test_set, models, ...
