@@ -19,6 +19,8 @@ end
 
 if ~exist('data_directory','var')
   data_directory = '/Users/tomasz/projects/pascal/';
+  data_directory = '/csail/vision-videolabelme/databases/';
+  data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
 end
 
 if ~exist('dataset_directory','var')
@@ -26,9 +28,10 @@ if ~exist('dataset_directory','var')
 end
 
 if ~exist('results_directory','var')
-  results_directory = ...
-      sprintf(['/nfs/baikal/tmalisie/dt-%s-%s/'], ...
-              dataset_directory, cls);
+
+  results_directory = sprintf(['/csail/vision-videolabelme/people/tomasz/dts/dt-%s-' ...
+                    '%s/'], ...
+                              dataset_directory, cls);
 end
 
 %% Initialize dataset parameters
@@ -82,36 +85,27 @@ models_name = ...
     [cls '-' params.init_params.init_type ...
      '.' params.model_type];
 
-initial_models = esvm_initialize_exemplars_dt(e_stream_set, params, ...
-                                              models_name);
-
-%initial_models = esvm_initialize_exemplars(e_stream_set, params, models_name);
-
 %% Perform Exemplar-SVM training
 train_params = params;
-train_params.detect_max_scale = 0.5;
 train_params.detect_exemplar_nms_os_threshold = 1.0; 
 train_params.detect_max_windows_per_exemplar = 100;
+train_params.train_max_negatives_in_cache = 5000;
+train_params.train_max_mined_images = 500;
 
-
-%% Define test-set
-test_params = params;
-test_params.detect_exemplar_nms_os_threshold = 0.5;
-test_set_name = ['test'];
-test_set = esvm_get_pascal_set(dataset_params, test_set_name);
+initial_models = esvm_initialize_exemplars_dt(e_stream_set, params, ...
+                                              models_name);
 
 %% Train the exemplars and get updated models name
 [models,models_name] = esvm_train_exemplars(initial_models, ...
                                             neg_set, train_params);
 
-for niter = 1:2
+for niter = 1:5
   models_name = [models_name '-latent2'];
   updated_models = esvm_update_exemplars_dt(e_stream_set, params, ...
                                             models_name, models);
   
   [models,models_name] = esvm_train_exemplars(updated_models, ...
                                               neg_set, train_params);
-  
 end
 
 % val_params = params;
@@ -124,7 +118,15 @@ end
 %val_grid = esvm_detect_imageset(val_set, models, val_params, val_set_name);
                        
 %% Perform Platt calibration and M-matrix estimation
-%M = esvm_perform_calibration(val_grid, val_set, models, val_params);
+%M = esvm_perform_calibration(val_grid, val_set, models,
+%val_params);
+
+%% Define test-set
+test_params = params;
+test_params.detect_exemplar_nms_os_threshold = 0.5;
+test_set_name = ['test'];
+test_set = esvm_get_pascal_set(dataset_params, test_set_name);
+
 
 %% Apply on test set
 test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);
@@ -138,6 +140,8 @@ test_struct = esvm_pool_exemplar_dets(test_grid, models, [], ...
                                      test_set_name, cls, ...
                                      models_name);
 
+return;
+
 for mind = 1:length(models)
   I = esvm_show_top_exemplar_dets(test_struct, test_set, ...
                                   models, mind,10,10);
@@ -145,6 +149,8 @@ for mind = 1:length(models)
 
 end
 
+%NOTE: this doesn't even work for dalaltriggs (but we can apply NN
+%hack! if we want to)
 %% Show top 20 detections as exemplar-inpainting results
 maxk = 20;
 allbbs = esvm_show_top_dets(test_struct, test_grid, test_set, models, ...
