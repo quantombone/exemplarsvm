@@ -35,7 +35,7 @@ display = params.dataset_params.display;
 
 % if display is enabled and dump_images is enabled, then dump images
 % into DUMPDIR
-dump_images = 0;
+dump_images = params.dump_images;
 
 models_name = '';
 if length(models)>=1 && isfield(models{1},'models_name') && ...
@@ -250,18 +250,20 @@ for exid = 1:length(models)
                   beta(2)))
     
     subplot(1,2,2)
-    Iex = convert_to_I(models{exid}.I);
-    imagesc(Iex)
-    plot_bbox(models{exid}.gt_box)
-    axis image
-    axis off
+    if isfield(models{exid},'I') && isfield(models{exid},'gt_box')
+      Iex = convert_to_I(models{exid}.I);
+      imagesc(Iex)
+      plot_bbox(models{exid}.gt_box)
+      axis image
+      axis off
 
-    title(sprintf('Exemplar %s.%d.%s',...
-                  models{exid}.curid,...
-                  models{exid}.objectid, ...
-                  models{exid}.cls))
-    drawnow
-    snapnow
+      title(sprintf('Exemplar %s.%d.%s',...
+                    models{exid}.curid,...
+                    models{exid}.objectid, ...
+                    models{exid}.cls))
+      drawnow
+      snapnow
+    end
     
     bbs=ALL_coarse_boxes(hits,:);
     bbs_os = ALL_os(hits,:);
@@ -300,7 +302,7 @@ for exid = 1:length(models)
   end
     
   if dump_images == 1
-    figure(2)
+
     filer = sprintf('%s/result.%d.%s.%s.png', DUMPDIR, ...
                     exid,models{exid}.cls,models{exid}.models_name);
     set(gcf,'PaperPosition',[0 0 20 20]);
