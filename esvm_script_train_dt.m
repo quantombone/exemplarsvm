@@ -93,11 +93,6 @@ train_params.detect_max_scale = 0.5;
 train_params.detect_exemplar_nms_os_threshold = 1.0; 
 train_params.detect_max_windows_per_exemplar = 100;
 
-val_params = params;
-val_params.detect_exemplar_nms_os_threshold = 0.5;
-val_params.gt_function = @esvm_load_gt_function;
-val_set_name = ['trainval'];
-val_set = esvm_get_pascal_set(dataset_params, val_set_name);
 
 %% Define test-set
 test_params = params;
@@ -109,24 +104,43 @@ test_set = esvm_get_pascal_set(dataset_params, test_set_name);
 [models,models_name] = esvm_train_exemplars(initial_models, ...
                                             neg_set, train_params);
 
+for niter = 1:2
+  models_name = [models_name '-latent2'];
+  updated_models = esvm_update_exemplars_dt(e_stream_set, params, ...
+                                            models_name, models);
+  
+  [models,models_name] = esvm_train_exemplars(updated_models, ...
+                                              neg_set, train_params);
+  
+end
+
+% val_params = params;
+% val_params.detect_exemplar_nms_os_threshold = 0.5;
+% val_params.gt_function = @esvm_load_gt_function;
+% val_set_name = ['trainval'];
+% val_set = esvm_get_pascal_set(dataset_params, val_set_name);
+
 %% Apply trained exemplars on validation set
-val_grid = esvm_detect_imageset(val_set, models, val_params, val_set_name);
+%val_grid = esvm_detect_imageset(val_set, models, val_params, val_set_name);
                        
 %% Perform Platt calibration and M-matrix estimation
-M = esvm_perform_calibration(val_grid, val_set, models, val_params);
+%M = esvm_perform_calibration(val_grid, val_set, models, val_params);
 
 %% Apply on test set
 test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);
 
 %% Apply calibration matrix to test-set results
-test_struct = esvm_pool_exemplar_dets(test_grid, models, M, test_params);
+test_struct = esvm_pool_exemplar_dets(test_grid, models, [], ...
+                                      test_params);
+
+%% Perform the exemplar evaluation
+[results] = esvm_evaluate_pascal_voc(test_struct, test_grid, params, ...
+                                     test_set_name, cls, models_name);
+
 
 %% Show top 20 detections as exemplar-inpainting results
 maxk = 20;
 allbbs = esvm_show_top_dets(test_struct, test_grid, test_set, models, ...
                             params,  maxk, test_set_name);
 
-%% Perform the exemplar evaluation
-[results] = esvm_evaluate_pascal_voc(test_struct, test_grid, params, ...
-                                     test_set_name, cls, models_name);
 
