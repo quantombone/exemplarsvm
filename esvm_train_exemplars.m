@@ -36,8 +36,8 @@ cache_file = ...
 cache_file_stripped = ...
     sprintf('%s/%s-stripped.mat',cache_dir,new_models_name);
 
-if CACHE_FILE == 1 && fileexists(cache_file_stripped)
-  newmodels = load(cache_file_stripped);
+if CACHE_FILE == 1 && fileexists(cache_file)
+  newmodels = load(cache_file);
   newmodels = newmodels.models;
   return;
 end
@@ -79,6 +79,7 @@ allfiles = cell(length(models), 1);
 for i = 1:length(models)
   filer = '';
   m = models{i};
+
   
   [complete_file] = sprintf('%s/%s.mat',final_directory,m.name);
   [basedir, basename, ext] = fileparts(complete_file);
@@ -107,6 +108,21 @@ for i = 1:length(models)
   % Append '-svm' to the mode to create the models name
   m.models_name = new_models_name;
   m.iteration = 1;
+  m.total_mines = 0;
+  if isfield(m,'mining_stats')
+    m = rmfield(m,'mining_stats');
+  end
+
+  m.model.wtrace = cell(0,1);
+  m.model.btrace = {};
+
+
+
+  if isfield(m.model,'svxs') && numel(m.model.svxs)>0
+    fprintf(1,'Pre-SVMing');
+    m = params.training_function(m);
+  end
+
   
   %if we are a distance function, initialize to uniform weights
   if isfield(params,'wtype') && ...
@@ -227,7 +243,7 @@ end
 
 %Load all of the initialized exemplars
 CACHE_FILE = 1;
-STRIP_FILE = 1;
+STRIP_FILE = 0;
 
 if new_models_name(1) == '-'
   CACHE_FILE = 0;
