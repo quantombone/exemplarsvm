@@ -30,7 +30,7 @@ default_params.detect_save_features = 0;
 default_params.detect_keep_threshold = -1;
 
 %Maximum #windows per exemplar (per image) to keep
-default_params.detect_max_windows_per_exemplar = 10;
+default_params.detect_max_windows_per_exemplar = 100;
 
 %Determines if NMS (Non-maximum suppression) should be used to
 %prune highly overlapping, redundant, detections.
