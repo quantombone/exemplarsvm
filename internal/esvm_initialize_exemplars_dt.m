@@ -73,11 +73,19 @@ if CACHE_FILE == 1
 end
 
 hg_size = get_hg_size(e_set, params.init_params.sbin);
+
+curfeats = cell(0,1);
 for j = 1:length(e_set)  
   bbox = e_set{j}.bbox;  
   I = convert_to_I(e_set{j}.I);
   warped = mywarppos(hg_size, I, params.init_params.sbin, bbox);
-  curfeats{j} = params.init_params.features(warped, params.init_params.sbin);
+  curfeats{end+1} = params.init_params.features(warped, ...
+                                                params.init_params.sbin);
+
+  warped = mywarppos(hg_size, flip_image(I), params.init_params.sbin, ...
+                     flip_bbox(bbox));
+  curfeats{end+1} = params.init_params.features(warped, ...
+                                                params.init_params.sbin);
   fprintf(1,'.');
 end  
 
