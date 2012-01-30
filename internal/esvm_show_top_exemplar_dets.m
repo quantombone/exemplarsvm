@@ -1,5 +1,5 @@
 function I = esvm_show_top_exemplar_dets(test_struct, test_set, ...
-                                         models, index)
+                                         models, index, A, B)
 % function I = esvm_show_top_exemplar_dets(test_struct, test_set, ...
 %                                          models, index)
 % Given the results of a detector, show the top exemplar detectiosn
@@ -20,12 +20,20 @@ bbs = bbs(bb,:);
 m = models{index};
 m.model.svbbs = bbs;
 
-m.model.svbbs = m.model.svbbs(m.model.svbbs(:,6)==index);
+m.model.svbbs = m.model.svbbs(m.model.svbbs(:,6)==index,:);
+
 try
   m.model = rmfield(m.model,'svxs');
 catch
 end
 m.train_set = test_set;
 
-I = esvm_show_det_stack(m,4,4);
+if ~exist('A','var')
+  A = 4;
+end
+if ~exist('B','var')
+  B = 4;
+end
+
+I = esvm_show_det_stack(m,A,B);
 
