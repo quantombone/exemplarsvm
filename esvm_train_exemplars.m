@@ -1,8 +1,12 @@
-function [newmodels,new_models_name] = ...
-    esvm_train_exemplars(models, train_set, params)
-% Train models with hard negatives mined from train_set
+function newmodels = esvm_train_exemplars(pos_set, neg_set, params)
+% Train models with hard negatives mined from neg_set
+% Usage:
+% >> models = esvm_train_exemplars(pos_set, neg_set);
+% >> models = esvm_train_exemplars(pos_set, neg_set);
+% >> models = initialize_models_dt(pos_set)
+% >> models = esvm_train_exemplars(models, 
 % [models]: a cell array of initialized exemplar models
-% [train_set]: a virtual set of images to mine from
+% [neg_set]: a virtual set of images to mine from
 % [params]: localization and training parameters
 
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
@@ -12,11 +16,18 @@ function [newmodels,new_models_name] = ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-if length(models) == 0
-  newmodels = models;
-  new_models_name = '';
+if length(pos_set) == 0
+  newmodels = [];
   return;
 end
+
+if ~isfield(pos_set{1},'model')
+  models = esvm_initialize_dt(pos_set, params);
+  % models = cellfun(@(x)setfield(x,'models_name',models_name),models,'UniformOutput',false);
+else
+  models = pos_set;
+end
+
 
 if length(params.dataset_params.localdir)==0
   CACHE_FILE = 0;
@@ -98,7 +109,7 @@ for i = 1:length(models)
   end
   
   % Add training set and training set's mining queue 
-  m.train_set = train_set;
+  m.train_set = neg_set;
   m.mining_queue = esvm_initialize_mining_queue(m.train_set);
   
   % Add mining_params, and params.dataset_params to this exemplar
@@ -157,7 +168,7 @@ for i = 1:length(models)
       filer2 = filer2final;
     end
     
-    %HACK: remove train_set which causes save issue when it is a
+    %HACK: remove neg_set which causes save issue when it is a
     %cell array of function pointers
     msave = m;
     m = rmfield(m,'train_set');
