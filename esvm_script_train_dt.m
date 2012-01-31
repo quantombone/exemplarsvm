@@ -1,7 +1,7 @@
 function [models,M] = esvm_script_train_dt(cls, ...
-                                                  data_directory, ...
-                                                  dataset_directory, ...
-                                                  results_directory)
+                                           data_directory, ...
+                                           dataset_directory, ...
+                                           results_directory)
 
 % Script: PASCAL VOC training/testing script
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
@@ -29,7 +29,7 @@ end
 
 if ~exist('results_directory','var')
 
-  results_directory = sprintf(['/csail/vision-videolabelme/people/tomasz/dts/dt-%s-' ...
+  results_directory = sprintf(['/csail/vision-videolabelme/people/tomasz/newdt/dt-%s-' ...
                     '%s/'], ...
                               dataset_directory, cls);
 end
@@ -59,53 +59,40 @@ end
 %   unix(sprintf('rmdir %s',lockfiles{i}));
 % end
 
-%% Set exemplar-initialization parameters
+%% Get default parameters
 params = esvm_get_default_params;
-params.train_positives_constant = 1;
-params.model_type = 'exemplar';
 params.dataset_params = dataset_params;
 
-%Initialize exemplar stream
-stream_params.stream_set_name = 'trainval';
-stream_params.stream_max_ex = 10000;
-stream_params.must_have_seg = 0;
-stream_params.must_have_seg_string = '';
-%must be scene or exemplar;
-stream_params.model_type = 'exemplar'; 
-stream_params.cls = cls;
+% for dalaltriggs, it seams having same constant on positives is better
+params.train_positives_constant = 1;
 
-%Create an exemplar stream (list of exemplars)
-e_stream_set = esvm_get_pascal_stream(stream_params, ...
-                                      dataset_params);
 
-neg_set = esvm_get_pascal_set(dataset_params, ['train-' cls]);
+%% Get positive set
+pos_set = esvm_get_pascal_set(dataset_params, ['trainval+' cls]);
+pos_annos = emap(@(x)PASreadrecord(strrep(strrep(x,'JPEGImages','Annotations'),'.jpg','.xml')),pos_set);
+pos_set = cellfun(@(x,y)setfield(x,'I',y),pos_annos,pos_set, ...
+                  'UniformOutput',false);
+goods = cellfun(@(x)find((ismember({x.objects.class},cls) & ([x.objects.difficult]==0))),pos_set, ...
+                'UniformOutput',false);
+pos_set = cellfun(@(x,y)setfield(x,'objects',x.objects(y)),pos_set,goods,'UniformOutput',false);
 
-%Choose a models name to indicate the type of training run we are doing
-models_name = ...
-    [cls '-' params.init_params.init_type ...
-     '.' params.model_type];
+%% Get negative set
+neg_set = esvm_get_pascal_set(dataset_params, ['trainval-' cls]);
 
 %% Perform Exemplar-SVM training
 train_params = params;
+train_params.detect_max_scale = 0.5;
 train_params.detect_exemplar_nms_os_threshold = 1.0; 
 train_params.detect_max_windows_per_exemplar = 100;
 train_params.train_max_negatives_in_cache = 5000;
 train_params.train_max_mined_images = 500;
 
-initial_models = esvm_initialize_exemplars_dt(e_stream_set, params, ...
-                                              models_name);
-
-%% Train the exemplars and get updated models name
-[models,models_name] = esvm_train_exemplars(initial_models, ...
-                                            neg_set, train_params);
+models = esvm_initialize_dt(pos_set, params);
+models = esvm_train_exemplars(models, neg_set, train_params);
 
 for niter = 1:5
-  models_name = [models_name '-latent2'];
-  updated_models = esvm_update_exemplars_dt(e_stream_set, params, ...
-                                            models_name, models);
-  
-  [models,models_name] = esvm_train_exemplars(updated_models, ...
-                                              neg_set, train_params);
+  models = esvm_latent_update_dt(models, train_params);
+  models = esvm_train_exemplars(models, neg_set, train_params);
 end
 
 % val_params = params;
@@ -126,7 +113,6 @@ test_params = params;
 test_params.detect_exemplar_nms_os_threshold = 0.5;
 test_set_name = ['test'];
 test_set = esvm_get_pascal_set(dataset_params, test_set_name);
-
 
 %% Apply on test set
 test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);
