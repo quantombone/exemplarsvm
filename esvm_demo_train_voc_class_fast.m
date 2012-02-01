@@ -97,9 +97,8 @@ train_params.detect_exemplar_nms_os_threshold = 1.0;
 train_params.detect_max_windows_per_exemplar = 100;
 
 %% Train the exemplars and get updated models name
-[models,models_name] = esvm_train_exemplars(initial_models, ...
-                                            neg_set, train_params);
-
+[models,models_name] = esvm_train(initial_models, neg_set, ...
+                                  train_params);
 
 val_params = params;
 val_params.detect_exemplar_nms_os_threshold = 0.5;

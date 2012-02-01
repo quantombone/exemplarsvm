@@ -11,8 +11,8 @@ function [resstruct,feat_pyramid] = esvm_detect(I, models, params)
 %
 % I: Input image (or already precomputed pyramid)
 % models: A cell array of models to localize inside this image
-%   models{:}.model.w: Learned template
-%   models{:}.model.b: Learned template's offset
+%   models{:}.w: Learned template
+%   models{:}.b: Learned template's offset
 % params: Localization parameters (see esvm_get_default_params.m)
 %
 % resstruct: Sliding window output struct with 
@@ -39,15 +39,17 @@ if ~iscell(models)
   models = {models};
 end
 
-if isfield(models{1},'mining_params') && ~exist('params','var')
-  params = models{1}.mining_params;
+if exist('params','var')
+  models = cellfun2(@(x)setfield(x,'params',params),models);
+elseif isfield(models{1},'params')
+  params = models{1}.params;
 elseif ~exist('params','var')
   params = esvm_get_default_params;
 end
 
-if ~isfield(params,'nnmode')
- params.nnmode = '';
-end
+%if ~isfield(params,'nnmode')
+%  params.nnmode = '';
+%end
 
 doflip = params.detect_add_flip;
 
@@ -95,20 +97,20 @@ if (length(models) > params.max_models_before_block_method) ...
 end
 
 N = length(models);
-ws = cellfun2(@(x)x.model.w,models);
-bs = cellfun2(@(x)x.model.b,models);
+ws = cellfun2(@(x)x.w,models);
+bs = cellfun2(@(x)x.b,models);
 
 %NOTE: all exemplars in this set must have the same sbin
 luq = 1;
 
-if isfield(models{1}.model,'init_params')
-  sbins = cellfun(@(x)x.model.init_params.sbin,models);
+if isfield(models{1}.params,'init_params')
+  sbins = cellfun(@(x)x.params.init_params.sbin,models);
   luq = length(unique(sbins));
 end
 
-if isfield(models{1}.model,'init_params') && luq == 1
-  sbin = models{1}.model.init_params.sbin;
-elseif ~isfield(models{1}.model,'init_params')
+if isfield(models{1}.params,'init_params') && luq == 1
+  sbin = models{1}.params.init_params.sbin;
+elseif ~isfield(models{1},'init_params')
   if isfield(params,'init_params')
     sbin = params.init_params.sbin;
   else
@@ -119,7 +121,7 @@ elseif ~isfield(models{1}.model,'init_params')
 else
   fprintf(1,['Warning: not all exemplars have save sbin, using' ...
              ' first]\n']);
-  sbin = models{1}.model.init_params.sbin;
+  sbin = models{1}.params.init_params.sbin;
 end
 
 
@@ -137,13 +139,13 @@ end
 
 
 if params.dfun == 1
-  wxs = cellfun2(@(x)reshape(x.model.x(:,1),size(x.model.w)), ...
+  wxs = cellfun2(@(x)reshape(x.x(:,1),size(x.w)), ...
                  models);
   ws2 = ws;
   special_offset = zeros(length(ws2),1);
   for q = 1:length(ws2)
     ws2{q} = -2*ws{q}.*wxs{q};
-    special_offset(q) = ws{q}(:)'*(models{q}.model.x(:,1).^2);
+    special_offset(q) = ws{q}(:)'*(models{q}.x(:,1).^2);
   end
 end
 
@@ -249,11 +251,11 @@ function [resstruct,t] = esvm_detectdriverBLOCK(I, models, ...
 %%HERE is the chunk version of exemplar localization
 
 N = length(models);
-ws = cellfun2(@(x)x.model.w,models);
-bs = cellfun(@(x)x.model.b,models)';
+ws = cellfun2(@(x)x.w,models);
+bs = cellfun(@(x)x.b,models)';
 bs = reshape(bs,[],1);
-sizes1 = cellfun(@(x)x.model.hg_size(1),models);
-sizes2 = cellfun(@(x)x.model.hg_size(2),models);
+sizes1 = cellfun(@(x)x.hg_size(1),models);
+sizes2 = cellfun(@(x)x.hg_size(2),models);
 
 S = [max(sizes1(:)) max(sizes2(:))];
 fsize = params.init_params.features();
@@ -263,8 +265,8 @@ template_masks = zeros(S(1),S(2),fsize,length(models));
 
 for i = 1:length(models)
   t = zeros(S(1),S(2),fsize);
-  t(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
-      models{i}.model.w;
+  t(1:models{i}.hg_size(1),1:models{i}.hg_size(2),:) = ...
+      models{i}.w;
 
   templates(:,:,:,i) = t;
   template_masks(:,:,:,i) = repmat(double(sum(t.^2,3)>0),[1 1 fsize]);
@@ -273,8 +275,8 @@ for i = 1:length(models)
         (isfield(params,'wtype') && ...
          strcmp(params.wtype,'dfun')==1)
     x = zeros(S(1),S(2),fsize);
-    x(1:models{i}.model.hg_size(1),1:models{i}.model.hg_size(2),:) = ...
-        reshape(models{i}.model.x(:,1),models{i}.model.hg_size);
+    x(1:models{i}.hg_size(1),1:models{i}.hg_size(2),:) = ...
+        reshape(models{i}.x(:,1),models{i}.hg_size);
     templates_x(:,:,:,i) = x;
 
   end
@@ -284,7 +286,7 @@ end
 %maskmat = permute(maskmat,[1 2 4 3]);
 %templates_x  = templates_x .* maskmat;
 
-sbin = models{1}.model.init_params.sbin;
+sbin = models{1}.params.init_params.sbin;
 t = get_pyramid(I, sbin, params);
 resstruct.padder = t.padder;
 

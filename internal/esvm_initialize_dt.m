@@ -1,21 +1,16 @@
-function models = esvm_initialize_dt(pos_set, params)
-% Initialize script which writes out initial model files for all
-% exemplars in an exemplar stream pos_set (see get_pascal_stream)
-% NOTE: this function is parallelizable (and dalalizable!)  
-% 
+function models = esvm_initialize_dt(data_set, cls, params)
+% DalalTriggs initialize script which  creates an initial
+% positive set and initial classifier by warping positives into a
+% canonical position
+%
 % INPUTS:
-% params.dataset_params: the parameters of the current dataset
-% pos_set: the exemplar stream set which contains
-%   pos_set{i}.I, pos_set{i}.cls, pos_set{i}.objectid, pos_set{i}.bbox
-% models_name: model name
-% init_params: a structure of initialization parameters
-% init_params.init_function: a function which takes as input (I,bbox,params)
-%   and returns a model structure [if not specified, then just dump
-%   out names of resulting files]
+% data_set: the training set of objects
+% cls: the target category from which we extract positives and
+%   define negative images
+% params [optional]: the parameters
 %
 % OUTPUTS:
-% allfiles: The names of all outputs (which are .mat model files
-%   containing the initialized exemplars)
+% models: the DalalTriggs model
 %
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
@@ -25,15 +20,13 @@ function models = esvm_initialize_dt(pos_set, params)
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
 %save with dt as the model name
-models_name = 'dt';
+models_name = [cls '-dt'];
   
-if isfield(params,'dataset_params') && ...
-      isfield(params.dataset_params,'localdir') && ...
-      length(params.dataset_params.localdir)>0
+if length(params.localdir)>0
   CACHE_FILE = 1;
 else
   CACHE_FILE = 0;
-  params.dataset_params.localdir = '';
+  params.localdir = '';
 end
 
 if ~exist('models_name','var')
@@ -41,7 +34,7 @@ if ~exist('models_name','var')
 end
 
 cache_dir =  ...
-    sprintf('%s/models/',params.dataset_params.localdir);
+    sprintf('%s/models/',params.localdir);
 
 cache_file = ...
     sprintf('%s/%s.mat',cache_dir,models_name);
@@ -53,90 +46,129 @@ if CACHE_FILE ==1 && fileexists(cache_file)
 end
 
 results_directory = ...
-    sprintf('%s/models/%s/',params.dataset_params.localdir, ...
-            models_name);
+    sprintf('%s/models/',params.localdir);
 
 if CACHE_FILE==1 && ~exist(results_directory,'dir')
   fprintf(1,'Making directory %s\n',results_directory);
   mkdir(results_directory);
 end
 
-filer = sprintf('%s/dt.mat',results_directory);
+filer = sprintf('%s/%s.mat', results_directory, models_name);
 filerlock = [filer '.lock'];
 
 if CACHE_FILE == 1
   if fileexists(filer) 
     m = load(filer);
-    models{1} = m.m;
+    models = m.models;
     return;
   end
 end
 
-hg_size = get_hg_size(pos_set, params.init_params.sbin);
+tic
+[cur_pos_set, ~, data_set] = get_objects_set(data_set, cls);
+toc
+
+%Set dataset to be the pruned dataset with only positives loaded
+data_set = cur_pos_set(1:10);
+cur_pos_set = cur_pos_set(1:10);
+
+hg_size = get_hg_size(cur_pos_set, params.init_params.sbin);
 
 curfeats = cell(0,1);
+bbs = cell(0,1);
 fprintf(1,['esvm_initialize_dt: initializing features by' ...
            ' warping to a canonical size\n']);
-for j = 1:length(pos_set)  
-  obj = {pos_set{j}.objects};
-  I = convert_to_I(pos_set{j}.I);
-  for k = 1:length(obj)
 
-    bbox = obj{k}.bbox;
-    
+for j = 1:length(data_set)  
+  obj = {data_set{j}.objects};
+  if length(data_set{j}.objects) == 0
+    continue
+  end
+  I = toI(data_set{j}.I);
+  flipI = flip_image(I);
+  
+  for k = 1:length(obj)
+    bbox = obj{k}.bbox;    
     warped1 = mywarppos(hg_size, I, params.init_params.sbin, bbox);
     curfeats{end+1} = params.init_params.features(warped1, ...
-                                                  params.init_params.sbin);
+                                                  params ...
+                                                  .init_params.sbin);
+    bbox(11) = j;
+    bbox(12) = 0;
+    bbs{end+1} = bbox;
     
-    warped2 = mywarppos(hg_size, flip_image(I), params.init_params.sbin, ...
-                       flip_box(bbox,size(I)));
+    
+    bbox2 = flip_box(bbox,size(I));
+    warped2 = mywarppos(hg_size, flipI, params.init_params.sbin, bbox2);
     curfeats{end+1} = params.init_params.features(warped2, ...
-                                                params.init_params ...
+                                                  params.init_params ...
                                                   .sbin);
+    bbox2(11) = j;
+    bbox2(12) = 0;
+    bbs{end+1} = bbox2;
+    
     fprintf(1,'.');
   end
 end  
+
 fprintf(1,'esvm_initialize_dt: finished with %d windows\n',length(curfeats));
 curfeats = cellfun2(@(x)reshape(x,[],1),curfeats);
 curfeats = cat(2,curfeats{:});
-m.model.init_params = params.init_params;
-m.model.hg_size = [hg_size params.init_params.features()];
-m.model.mask = ones(hg_size(1),hg_size(2));
-m.model.w = mean(curfeats,2);
-m.model.w = m.model.w - mean(m.model.w(:));
-m.model.w = reshape(m.model.w, m.model.hg_size);
-m.model.b = 0;
-m.model.x = curfeats;
-m.model.bb = [];
-m.model.svxs = [];
-m.model.svbbs = [];
-m.cls = pos_set{1}.objects(1).class;
+m.cls = cls;
 m.models_name = models_name;
-m.name = sprintf('dt-%s',m.cls);
-m.curid = m.cls;
-m.objectid = -1;
+m.params = params;
+
+fprintf(1,'HACK choosing solo positive set\n');
+m.data_set = cur_pos_set;
+
+m.hg_size = [hg_size params.init_params.features()];
+m.mask = ones(m.hg_size(1),m.hg_size(2));
+
+%positive features: x
+m.x = curfeats;
+
+%positive windows: bb
+m.bb = cat(1,bbs{:});
+
+%negative features: svxs
+m.svxs = [];
+
+%negative windows: svbbs
+m.svbbs = [];
+
+%create an initial classifier
+m.w = mean(curfeats,2);
+m.w = m.w - mean(m.w(:));
+m.w = reshape(m.w, m.hg_size);
+m.b = 0;
+
+%m.name = sprintf('dt-%s',m.cls);
+%m.curid = m.cls;
+%m.objectid = -1;
+%m.data_set = data_set;
 models = {m};
 
-save(filer,'m');
-if fileexists(filerlock)
-  rmdir(filerlock);
+if CACHE_FILE == 1
+  save(filer,'models');
+  if fileexists(filerlock)
+    rmdir(filerlock);
+  end
 end
 
 function [hg_size] = get_hg_size(pos_set, sbin)
 %% Load ids of all images in trainval that contain cls
 
-r=cellfun2(@(x)cat(1,x.objects.bbox),pos_set);
-bbs=cat(1,r{:});
-
-%bbs = cellfun2(@(x)x.bbox,pos_set);
-%bbs = cat(1,bbs{:});
+r =cellfun2(@(x)cat(1,x.objects.bbox),pos_set);
+bbs =cat(1,r{:});
 
 W = bbs(:,3)-bbs(:,1)+1;
 H = bbs(:,4)-bbs(:,2)+1;
 
-[hg_size] = get_bb_stats(H, W, sbin);
+[hg_size,aspect_ratio_histogram] = get_bb_stats(H, W, sbin);
 
-function modelsize = get_bb_stats(h,w, sbin)
+
+function [modelsize,aspects] = get_bb_stats(h,w, sbin)
+% Following Felzenszwalb's formula
 
 xx = -2:.02:2;
 filter = exp(-[-100:100].^2/400);
@@ -159,10 +191,10 @@ h = w*aspect;
 modelsize = [round(h/sbin) round(w/sbin)];
 
 function warped = mywarppos(hg_size, I, sbin, bbox)
-
-% warped = warppos(name, model, c, pos)
+% warped = mywarppos(name, model, c, pos)
 % Warp positive examples to fit model dimensions.
 % Used for training root filters from positive bounding boxes.
+% Taken from Felzenszwalb et al's code
 
 pixels = hg_size * sbin;
 h = bbox(4) - bbox(2) + 1;
@@ -178,3 +210,4 @@ y1 = round(bbox(2)-pady);
 y2 = round(bbox(4)+pady);
 window = subarray(I, y1, y2, x1, x2, 1);
 warped = imresize(window, cropsize(1:2), 'bilinear');
+

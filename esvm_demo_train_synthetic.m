@@ -86,8 +86,7 @@ train_params.detect_max_windows_per_exemplar = 100;
 % part, w's negative part, and four mean support vector images,
 % where the means are computed with the first 1:N/4, 1:N/2, .. ,
 % 1:N support vectors.
-[models] = esvm_train_exemplars(initial_models, ...
-                                neg_set, train_params);
+models = esvm_train(initial_models, neg_set, train_params);
 
 %% Create validation set from positives and extra negatives
 val_params = params;

@@ -21,15 +21,12 @@ if ~exist('params','var')
   params = esvm_get_default_params;
 end
 
-
 if ~exist('setname','var')
   params.detect_images_per_chunk = 1;
   setname = '';
 end
 
-if isfield(params,'dataset_params') && ...
-      isfield(params.dataset_params,'localdir') && ...
-      length(params.dataset_params.localdir)>0 && length(setname)>0
+if length(params.localdir)>0 && length(setname)>0
   save_files = 1;
 else  
   save_files = 0;
@@ -48,7 +45,7 @@ if save_files == 1
     models_name = models{1}.models_name;
   end
   final_file = sprintf('%s/detections/%s-%s.mat',...
-                       params.dataset_params.localdir,setname, ...
+                       params.localdir,setname, ...
                        models_name);
 
   if fileexists(final_file)
@@ -60,7 +57,7 @@ end
 
 
 if save_files == 1
-  baser = sprintf('%s/detections/%s-%s/',params.dataset_params.localdir,setname, ...
+  baser = sprintf('%s/detections/%s-%s/',params.localdir,setname, ...
                   models_name);
 else
   baser = '';
@@ -171,11 +168,11 @@ for i = 1:length(ordering)
     res{j}.curid = curid;
 
     %%%NOTE: the gt-function is well-defined for VOC-exemplars
-    if isfield(params,'gt_function') && ...
-          ~isempty(params.gt_function)
-      res{j}.extras = params.gt_function(params.dataset_params, ...
-                                         Iname, res{j}.bboxes);
-    end 
+    % if isfield(params,'gt_function') && ...
+    %       ~isempty(params.gt_function)
+    %   res{j}.extras = params.gt_function(params.dataset_params, ...
+    %                                      Iname, res{j}.bboxes);
+    % end 
   end
 
   counter = counter + L;
@@ -200,8 +197,4 @@ if save_files == 0
 end
 
 [allfiles] = sort(allfiles);
-grid = esvm_load_result_grid(params.dataset_params, models, ...
-                             setname, ...
-                             allfiles);
-
-
+grid = esvm_load_result_grid(params, models, setname, allfiles);

@@ -1,5 +1,5 @@
 function [hn, mining_queue, mining_stats] = ...
-    esvm_mine_negatives(models, mining_queue, imageset, mining_params)
+    esvm_mine_negatives(models, mining_queue, imageset, params)
 % Compute detections "aka Hard-Negatives" hn for the images in the
 % stream/queue [imageset/mining_queue] when given K classifiers [models]
 % 
@@ -9,7 +9,7 @@ function [hn, mining_queue, mining_stats] = ...
 %    esvm_initialize_mining_queue(imageset)
 % imageset: the source of images (potentially already in pyramid feature
 %   format)
-% mining_params: the parameters of the mining/localization
+% params: the parameters of the mining/localization
 % procedure
 % 
 % Returned Data: 
@@ -25,8 +25,8 @@ function [hn, mining_queue, mining_stats] = ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-if ~exist('mining_params','var')
-  mining_params = esvm_get_default_params;
+if ~exist('params','var')
+  params = esvm_get_default_params;
 end
 
 number_of_violating_images = 0;
@@ -35,7 +35,8 @@ number_of_windows = zeros(length(models),1);
 violating_images = zeros(0,1);
 empty_images = zeros(0,1);
 
-mining_params.detect_save_features = 1;
+% Force feature saving because we need features for training
+params.detect_save_features = 1;
 
 numpassed = 0;
 
@@ -47,30 +48,45 @@ end
 
 for i = 1:length(mining_queue)
   index = mining_queue{i}.index;
-  I = convert_to_I(imageset{index});
+  I = toI(imageset{index});
 
   %HACK ROTATE UPSIDE DOWN
   %fprintf(1,'HACK: rotate upside down negatives\n');
   %I = imrotate(I,180);
 
   %starter = tic;
-  % if isfield(mining_params,'wtype') && strcmp(mining_params.wtype, ...
+  % if isfield(params,'wtype') && strcmp(params.wtype, ...
   %                                              'dfun')
 
-  %   [rs,t] = localizemeHOG_dfun(I, models, mining_params);
+  %   [rs,t] = localizemeHOG_dfun(I, models, params);
   
   %   %plot(rs.bbs{1}(:,end))
   %   %keyboard
   % else
-  [rs,t] = esvm_detect(I, models, mining_params);
+  [rs,t] = esvm_detect(I, models, params);
 
-  if isfield(models{1}.mining_params,'SOFT_NEGATIVE_MINING') && ...
-        (models{1}.mining_params.SOFT_NEGATIVE_MINING==1)
+  if isstruct(imageset{index}) ...
+        && isfield(imageset{index},'objects') ...
+        && length(imageset{index}.objects) > 0 ...
+        && params.mine_skip_objects == 1
+    gtbbs = cat(1,imageset{index}.objects.bbox);
+
+    os = getosmatrix_bb(rs.bbs{1},gtbbs);
+    os = max(os,[],2);
+    goods = find(os < params.mine_skip_objects_os);
+    rs.bbs{1} = rs.bbs{1}(goods,:);
+    rs.xs{1} = rs.xs{1}(goods);
+
+  end
+  
+
+  if isfield(models{1}.params,'SOFT_NEGATIVE_MINING') && ...
+        (models{1}.params.SOFT_NEGATIVE_MINING==1)
     for j=1:length(rs.bbs)
       if size(rs.bbs{j},1) > 0
         top_det = rs.bbs{j}(1,:);
         os = getosmatrix_bb(rs.bbs{j},top_det);
-        goods = find(os<models{j}.mining_params.SOFT_NEGATIVE_MINING_OS);
+        goods = find(os<models{j}.params.SOFT_NEGATIVE_MINING_OS);
         rs.bbs{j} = rs.bbs{j}(goods,:);
         rs.xs{j} = rs.xs{j}(goods);
       end
@@ -95,7 +111,7 @@ for i = 1:length(mining_queue)
       nviol = sum(s >= -1);
       [aa,bb] = sort(s,'descend');
       bb = bb(1:min(length(bb),...
-                    ceil(nviol*mining_params.train_keep_nsv_multiplier)));
+                    ceil(nviol*params.train_keep_nsv_multiplier)));
       
 
       rs.xs{q} = rs.xs{q}(bb);    
@@ -109,9 +125,10 @@ for i = 1:length(mining_queue)
     addon=sprintf(', max = %.3f',max(cellfun(@(x)max_or_this(x,-1000),scores)));
   end
   total = sum(cellfun(@(x)x.num_visited,mining_queue));
+
   fprintf(1,'Found %04d windows, image:%05d (#seen=%05d/%05d%s)\n',...
           supersize, index, ...
-          length(imageset)-length(mining_queue)+i, length(imageset), addon);
+          total+1, length(mining_queue), addon);
 
   %increment how many times we processed this image
   mining_queue{i}.num_visited = mining_queue{i}.num_visited + 1;
@@ -154,9 +171,9 @@ for i = 1:length(mining_queue)
 
   
   if (numpassed + models{1}.total_mines >= ...
-      mining_params.train_max_mined_images) || ...
-        (max(number_of_windows) >= mining_params.train_max_windows_per_iteration) || ...
-        (numpassed >= mining_params.train_max_images_per_iteration)
+      params.train_max_mined_images) || ...
+        (max(number_of_windows) >= params.train_max_windows_per_iteration) || ...
+        (numpassed >= params.train_max_images_per_iteration)
     fprintf(1,['Stopping mining because we have %d windows from' ...
                                                 ' %d new violators\n'],...
             max(number_of_windows), number_of_violating_images);
@@ -191,15 +208,15 @@ mining_stats.total_mines = mining_stats.num_violating + mining_stats.num_empty;
 %b.) place violating images at end of queue, eliminate free ones
 %c.) place violating images at start of queue, eliminate free ones
 
-if strcmp(mining_params.queue_mode,'onepass') == 1
+if strcmp(params.queue_mode,'onepass') == 1
   %% MINING QUEUE UPDATE by removing already seen images
   mining_queue = update_mq_onepass(mining_queue, violating_images, ...
                                    empty_images);
-elseif strcmp(mining_params.queue_mode,'cycle-violators') == 1
+elseif strcmp(params.queue_mode,'cycle-violators') == 1
   %% MINING QUEUE update by cycling violators to end of queue
   %mining_queue = update_mq_cycle_violators(mining_queue, violating_images, ...
   %                                 empty_images);
-elseif strcmp(mining_params.queue_mode,'front-violators') == 1
+elseif strcmp(params.queue_mode,'front-violators') == 1
   %% MINING QUEUE UPDATE by removing already seen images, and
   %front-placing violators (used in CVPR11)
   %mining_queue = update_mq_front_violators(mining_queue, ...
@@ -207,7 +224,7 @@ elseif strcmp(mining_params.queue_mode,'front-violators') == 1
   %                                         empty_images);
 else
   error(sprintf('Invalid queue mode: %s\n', ...
-                mining_params.queue_mode));
+                params.queue_mode));
 end
 
 

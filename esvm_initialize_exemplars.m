@@ -1,5 +1,7 @@
 function models = esvm_initialize_exemplars(e_set, params, ...
                                             models_name)
+% Function needs update
+error('needs update');
 
 % Initialize script which writes out initial model files for all
 % exemplars in an exemplar stream e_set (see get_pascal_stream)

@@ -1,4 +1,4 @@
-function [models] = esvm_load_models(dataset_params, models_name, files, ...
+function [models] = esvm_load_models(params, models_name, files, ...
                                     CACHE_FILE, STRIP_FILE, DELETE_INITIAL)
 % Load all trained models of a specified class 'cls' and
 % type 'DET_TYPE' from a models directory.  If CACHE_FILE is enabled
@@ -46,12 +46,9 @@ if ~exist('STRIP_FILE','var')
   STRIP_FILE = 0;
 end
 
-
-
-
 if CACHE_FILE == 1
   cache_dir =  ...
-      sprintf('%s/models/',dataset_params.localdir);
+      sprintf('%s/models/',params.localdir);
   
   if ~exist(cache_dir,'dir')
     mkdir(cache_dir);
@@ -85,7 +82,7 @@ end
 
 if ~exist('files','var') || isempty(files)
   results_directory = ...
-    sprintf('%s/models/%s/',dataset_params.localdir,models_name);
+    sprintf('%s/models/%s/',params.localdir,models_name);
 
   dirstring = [results_directory '*.mat'];
   files = dir(dirstring);

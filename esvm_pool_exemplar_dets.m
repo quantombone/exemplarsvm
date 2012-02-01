@@ -30,12 +30,12 @@ end
 bboxes = cell(1,length(grid));
 maxos = cell(1,length(grid));
 
-try
-  curcls = find(ismember(params.dataset_params.classes, ...
-                         models{1}.cls));
-catch
-  %dataset_params is missing
-end
+% try
+%   curcls = find(ismember(params.dataset_params.classes, ...
+%                          models{1}.cls));
+% catch
+%   %dataset_params is missing
+% end
 
 for i = 1:length(grid)  
   curid = grid{i}.curid;
@@ -44,10 +44,10 @@ for i = 1:length(grid)
     continue
   end
   
-  if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
-    maxos{i} = grid{i}.extras.maxos;
-    maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
-  end
+  % if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
+  %   maxos{i} = grid{i}.extras.maxos;
+  %   maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
+  % end
   
   if REMOVE_SELF == 1
     exes = bboxes{i}(:,6);
@@ -55,11 +55,11 @@ for i = 1:length(grid)
     badex = find(ismember(excurids,{curid}));
     bboxes{i}(badex,:) = [];
     
-    if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
-      if ~isempty(maxos{i})
-        maxos{i}(badex) = [];
-      end
-    end
+    % if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
+    %   if ~isempty(maxos{i})
+    %     maxos{i}(badex) = [];
+    %   end
+    % end
   end
 end
 

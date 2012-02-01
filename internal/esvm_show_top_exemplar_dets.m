@@ -18,15 +18,7 @@ bbs = cat(1,test_struct.unclipped_boxes{:});
 bbs = bbs(bb,:);
 
 m = models{index};
-m.model.svbbs = bbs;
-
-m.model.svbbs = m.model.svbbs(m.model.svbbs(:,6)==index,:);
-
-try
-  m.model = rmfield(m.model,'svxs');
-catch
-end
-m.train_set = test_set;
+bbs = bbs(bbs(:,6)==index,:);
 
 if ~exist('A','var')
   A = 4;
@@ -35,5 +27,5 @@ if ~exist('B','var')
   B = 4;
 end
 
-I = esvm_show_det_stack(m,A,B);
+I = esvm_show_det_stack(bbs, test_set, A, B, m);
 

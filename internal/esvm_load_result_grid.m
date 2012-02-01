@@ -1,4 +1,4 @@
-function grid = esvm_load_result_grid(dataset_params,...
+function grid = esvm_load_result_grid(params,...
                                       models,setname,files,curthresh)
 % Given a set of models, return a grid of results from those models' firings
 % on the subset of images (target_directory is 'trainval' or 'test')
@@ -12,7 +12,7 @@ function grid = esvm_load_result_grid(dataset_params,...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-fullsetname = [setname];
+
 models_name = '';
 if length(models)>=1 && isfield(models{1},'models_name') && ...
       isstr(models{1}.models_name)
@@ -20,7 +20,7 @@ if length(models)>=1 && isfield(models{1},'models_name') && ...
 end
 
 final_file = sprintf('%s/detections/%s-%s.mat',...
-                     dataset_params.localdir,fullsetname, ...
+                     params.localdir,setname, ...
                      models_name);
 
 if fileexists(final_file)
@@ -49,7 +49,7 @@ end
 
 %if we got here, then the final file isn't there, and we were able
 %to write a lock file successfully
-baser = sprintf('%s/detections/%s-%s/',dataset_params.localdir,setname, ...
+baser = sprintf('%s/detections/%s-%s/',params.localdir,setname, ...
                 models_name);
 %fprintf(1,'base directory: %s\n',baser);
 
@@ -59,7 +59,7 @@ grid = cell(1,length(files));
 
 for i = 1:length(files)
   if mod(i,100) == 0
-    fprintf(1,'%d/%d\n',i,length(files));
+    fprintf(1,'esvm_load_result_grid: %d/%d\n',i,length(files));
   end
   
   %filer = sprintf('%s/%s', ...

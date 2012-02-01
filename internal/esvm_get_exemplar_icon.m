@@ -13,7 +13,7 @@ function [Iex,Iexmask,Icb,Icbmask] = esvm_get_exemplar_icon(models, ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-if ~isfield(models{index}.model,'gt_box') || ~isfield(models{index}.model,'bb') || numel(models{index}.model.bb)==0
+if ~isfield(models{index},'gt_box') || ~isfield(models{index},'bb') || numel(models{index}.bb)==0
   Iex = ones(10,10,3);
   Iexmask = ones(10,10,1);
   Icb = ones(10,10,3);
@@ -50,7 +50,7 @@ if isfield(models{index},'I')
   I = convert_to_I(models{index}.I);
 else
   I = ...
-      convert_to_I(models{index}.train_set{models{index}.model.bb(subind,11)});
+      convert_to_I(models{index}.data_set{models{index}.bb(subind,11)});
 end
 %pre-pad mask because GT region can be outside image
 mask = pad_image(zeros(size(I,1),size(I,2)),PADDER);
@@ -79,7 +79,7 @@ cb = round(cb + PADDER);
 Iex = Iex(cb(2):cb(4),cb(1):cb(3),:);
 Iexmask = Iexmask(cb(2):cb(4),cb(1):cb(3));
 
-cb = models{index}.model.bb(subind,1:4);
+cb = models{index}.bb(subind,1:4);
 Icb = pad_image(I, PADDER);
 cb = round(cb + PADDER);
 Icb = Icb(cb(2):cb(4),cb(1):cb(3),:);

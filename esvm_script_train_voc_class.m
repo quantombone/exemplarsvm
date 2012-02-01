@@ -102,7 +102,7 @@ test_set_name = ['test'];
 test_set = esvm_get_pascal_set(dataset_params, test_set_name);
 
 %% Train the exemplars and get updated models name
-[models,models_name] = esvm_train_exemplars(initial_models, ...
+[models,models_name] = esvm_train(initial_models, ...
                                             neg_set, train_params);
 
 %% Apply trained exemplars on validation set

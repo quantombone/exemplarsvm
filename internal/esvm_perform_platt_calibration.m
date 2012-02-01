@@ -284,7 +284,7 @@ for exid = 1:length(models)
       m2{1}.model.svxs = [];
       figure(445)
       clf
-      imagesc(esvm_show_det_stack(m2{1},8))
+      imagesc(esvm_show_det_stack(m2{1}.svbbs,m2{1}.train_set,8,8,m2))
       axis image
       axis off
       drawnow

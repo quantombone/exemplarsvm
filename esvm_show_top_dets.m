@@ -3,9 +3,9 @@ function allbbs = esvm_show_top_dets(test_struct, grid, ...
                                      maxk, set_name)
 % Show maxk top detections for [models] where [grid] is the set of
 % detections from the set [test_set], [test_struct] contains final
-% boxes after pooling and calibration. If [dataset_params.localdir] is
+% boxes after pooling and calibration. If [params.localdir] is
 % present, then results are saved based on naming convention into a
-% "www" subfolder. maxk is the number of top detections we show
+% "results" subfolder. maxk is the number of top detections we show
 %
 % NOTE: this function requires some cleanup, but is functional
 %
@@ -18,7 +18,7 @@ function allbbs = esvm_show_top_dets(test_struct, grid, ...
 
 allbbs = [];
 
-if length(params.dataset_params.localdir) > 0
+if length(params.localdir) > 0
   CACHE_FILES = 1;
 else
   CACHE_FILES = 0;
@@ -109,14 +109,14 @@ for k = 1:maxk
       break;
     end
     
-    wwwdir = sprintf('%s/www/%s.%s%s/',params.dataset_params.localdir,...
+    results_dir = sprintf('%s/results/%s.%s%s/',params.localdir,...
                      set_name, ...
                      models{1}.models_name,test_struct.calib_string);
-    if ~exist(wwwdir,'dir') && (CACHE_FILES == 1)
-      mkdir(wwwdir);
+    if ~exist(results_dir,'dir') && (CACHE_FILES == 1)
+      mkdir(results_dir);
     end
     
-    filer = sprintf('%s/%05d%s.png',wwwdir,k,suffix);
+    filer = sprintf('%s/%05d%s.png',results_dir,k,suffix);
     filerlock = [filer '.lock'];
 
     if CACHE_FILES && (fileexists(filer) || (mymkdir_dist(filerlock) == 0))
@@ -137,7 +137,7 @@ for k = 1:maxk
     TARGET_BUS = -1;
 
     if TARGET_BUS > 0
-      gtrecs = PASreadrecord(sprintf(params.dataset_params.annopath,curid));
+      gtrecs = PASreadrecord(sprintf(params.annopath,curid));
       businds = find(ismember({gtrecs.objects.class},{'bus'}) & ~[gtrecs.objects.difficult]);
       gtbbs = cat(1,gtrecs.objects.bbox);
       gtbbs = gtbbs(businds,:);
@@ -197,7 +197,7 @@ for k = 1:maxk
     %curoses = getosmatrix_bb(mean0(1,:),allbb);
     
     stuff.I = I;
-    stuff.dataset_params = params.dataset_params;
+    stuff.params = params;
     
     clear overlays
     
