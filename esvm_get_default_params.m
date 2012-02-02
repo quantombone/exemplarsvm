@@ -170,7 +170,10 @@ params.dump_last_image = 1;
 %default, NN mode is turned off and we assume per-exemplar SVMs
 params.nnmode = '';
 
-%Be default, we use an SVM
+%By default, we use an SVM, dfun flag means we perform learning in
+%distance to mean space and thus learn a distance function
+%NOTE: this feature is commented out in lots of places, so it
+%probably doesn't work as intended
 params.dfun = 0;
 
 %Set feature-computation function function
@@ -195,11 +198,11 @@ params.latent_iterations = 10;
 params.mine_from_negatives = 0;
 params.mine_from_positives = 1;
 
-%If enabled, skips objects durning mining
+% If enabled, skips objects durning mining when mining from positives
 params.mine_skip_objects = 1;
-params.mine_skip_objects_os = .5;
 
-%params.skip_self_mine = 1;
+% Skips any object which overlaps with GT by more than this amount
+params.mine_skip_objects_os = .5;
 
 %The threshold for evaluation
 params.evaluation_minoverlap = .5;

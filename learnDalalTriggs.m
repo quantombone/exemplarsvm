@@ -1,5 +1,4 @@
-function [models,results] = learnDT(cls, data_set, test_set, params, ...
-                            results_directory)
+function [models,results] = learnDalalTriggs(cls, data_set, test_set, params)
 % Learn a DalalTriggs template detector
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved. 
@@ -16,8 +15,6 @@ end
 
 data_directory = '/Users/tomasz/projects/pascal/';
 dataset_directory = 'VOC2007';
-%data_directory = '/csail/vision-videolabelme/databases/';
-%data_directory = '/csail/vision-videolabelme/people/tomasz/VOCdevkit/';
 
 if ~exist('data_set','var')
   load(sprintf('%s/%s/trainval.mat',...
@@ -41,14 +38,14 @@ if ~exist('params','var')
   params.detect_pyramid_padding = 0;
 end
 
-if ~exist('results_directory','var')
-  results_directory = '/nfs/baikal/tmalisie/esvm-dt/';
-end
+% if ~exist('localdir','var')
+%   localdir = '/nfs/baikal/tmalisie/esvm-dt/';
+% end
 
-params.localdir = ''; %results_directory;
+% params.localdir = ''; 
 
 %% Issue warning if lock files are present
-% lockfiles = check_for_lock_files(results_directory);
+% lockfiles = check_for_lock_files(localdir);
 % if length(lockfiles) > 0
 %   fprintf(1,'WARNING: %d lockfiles present in current directory\n', ...
 %           length(lockfiles));
@@ -67,11 +64,17 @@ for niter = 1:params.latent_iterations
   models = esvm_train(models);
 end
 
+if ~exist('test_set','var')
+  results = [];
+  return;
+end
+
 %% Perform Platt calibration and M-matrix estimation
 %M = esvm_perform_calibration(val_grid, val_set, models,val_params);
 
 %% Apply trained exemplars on validation set
-%val_grid = esvm_detect_imageset(val_set, models, val_params, val_set_name);
+%val_grid = esvm_detect_imageset(val_set, models, val_params,
+%val_set_name);
                        
 %% Define test-set
 test_params = params;
@@ -103,13 +106,13 @@ if params.display
                                     models, mind,10,10);
     figure(45)
     imagesc(I)
-    title('Top detections');
+    title('Top detections','FontSize',18);
     drawnow
     snapnow
     
     if params.dump_images == 1 && length(params.localdir)>0
       filer = sprintf('%s/results/topdet.%s-%04d-%s.png',...
-                      results_directory, models{mind}.models_name, mind, test_set_name);
+                      localdir, models{mind}.models_name, mind, test_set_name);
       
       imwrite(I,filer);
     end 

@@ -1,12 +1,23 @@
 function [positive_set,negative_set,stripped_set] = get_objects_set(data_set, cls)
 %Extract positives from the data set
 
-good_objects = cellfun(@(x)find(( ismember({x.objects.class},cls) & ...
-                                  ([x.objects.truncated]==0) & ...
-                                  ([x.objects.difficult]==0))),...
-                       data_set,'UniformOutput',false);
+%Skip truncated and difficult ones
+
+has_truncated = cellfun(@(x)isfield(x.objects,'truncated'),data_set);
+has_difficult = cellfun(@(x)isfield(x.objects,'difficult'),data_set);
+
+if any(has_truncated)  || any(has_difficult)
+  good_objects = cellfun(@(x)find(( ismember({x.objects.class},cls) & ...
+                                    ([x.objects.truncated]==0) & ...
+                                    ([x.objects.difficult]==0))),...
+                         data_set,'UniformOutput',false);
+else
+  good_objects = cellfun(@(x)find(ismember({x.objects.class},cls)),...
+                                  data_set,'UniformOutput',false);
+end
 
 bads = find(cellfun(@(x)length(x)==0,good_objects));
+
 for j = 1:length(bads)
   good_objects{bads(j)} = [];
 end

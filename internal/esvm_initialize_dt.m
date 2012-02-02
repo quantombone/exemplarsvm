@@ -1,16 +1,17 @@
 function models = esvm_initialize_dt(data_set, cls, params)
-% DalalTriggs initialize script which  creates an initial
-% positive set and initial classifier by warping positives into a
-% canonical position
+% DalalTriggs model creation which creates an initial positive set and
+% by warping positives into a single canonical position, where the
+% canonical position is the obtained from statistics of bounding box
+% aspect ratios
 %
 % INPUTS:
 % data_set: the training set of objects
 % cls: the target category from which we extract positives and
-%   define negative images
+%   use remaining images to define negatives
 % params [optional]: the parameters
 %
 % OUTPUTS:
-% models: the DalalTriggs model
+% models: A single DalalTriggs model, so length(models)==1
 %
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
@@ -68,9 +69,15 @@ tic
 [cur_pos_set, ~, data_set] = get_objects_set(data_set, cls);
 toc
 
-%Set dataset to be the pruned dataset with only positives loaded
-data_set = cur_pos_set(1:10);
-cur_pos_set = cur_pos_set(1:10);
+% fprintf(1,['TJM(HACK) choosing subset of 10 instances to make things' ...
+%            ' faster \n']);
+
+% %Set dataset to be the pruned dataset with only positives loaded
+% data_set = cur_pos_set(1:10);
+% cur_pos_set = cur_pos_set(1:10);
+
+fprintf(1,'HACK choosing solo positive set\n');
+m.data_set = cur_pos_set;
 
 hg_size = get_hg_size(cur_pos_set, params.init_params.sbin);
 
@@ -81,6 +88,8 @@ fprintf(1,['esvm_initialize_dt: initializing features by' ...
 
 for j = 1:length(data_set)  
   obj = {data_set{j}.objects};
+  
+  %Skip positive generation if there are no objects
   if length(data_set{j}.objects) == 0
     continue
   end
@@ -88,6 +97,8 @@ for j = 1:length(data_set)
   flipI = flip_image(I);
   
   for k = 1:length(obj)
+    
+    % Warp original bounding box
     bbox = obj{k}.bbox;    
     warped1 = mywarppos(hg_size, I, params.init_params.sbin, bbox);
     curfeats{end+1} = params.init_params.features(warped1, ...
@@ -96,8 +107,8 @@ for j = 1:length(data_set)
     bbox(11) = j;
     bbox(12) = 0;
     bbs{end+1} = bbox;
-    
-    
+
+    % Warp LR flipped version
     bbox2 = flip_box(bbox,size(I));
     warped2 = mywarppos(hg_size, flipI, params.init_params.sbin, bbox2);
     curfeats{end+1} = params.init_params.features(warped2, ...
@@ -117,9 +128,6 @@ curfeats = cat(2,curfeats{:});
 m.cls = cls;
 m.models_name = models_name;
 m.params = params;
-
-fprintf(1,'HACK choosing solo positive set\n');
-m.data_set = cur_pos_set;
 
 m.hg_size = [hg_size params.init_params.features()];
 m.mask = ones(m.hg_size(1),m.hg_size(2));
@@ -210,4 +218,3 @@ y1 = round(bbox(2)-pady);
 y2 = round(bbox(4)+pady);
 window = subarray(I, y1, y2, x1, x2, 1);
 warped = imresize(window, cropsize(1:2), 'bilinear');
-
