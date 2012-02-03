@@ -55,11 +55,19 @@ for i=1:length(test_set)
     if numel(test_set{i})==0
       continue
     end
-    clsinds=strmatch(cls,{test_set{i}.objects(:).class},'exact');
-    gt(i).BB=cat(1,test_set{i}.objects(clsinds).bbox)';
-    gt(i).diff=[test_set{i}.objects(clsinds).difficult];
-    gt(i).det=false(length(clsinds),1);
-    npos=npos+sum(~gt(i).diff);
+
+    if ~isfield(test_set{i},'objects') || ...
+          length(test_set{i}.objects)==0
+      %dont do anything if no objects, no gt!
+    else
+      clsinds=strmatch(cls,{test_set{i}.objects(:).class},'exact');
+      gt(i).BB=cat(1,test_set{i}.objects(clsinds).bbox)';
+      gt(i).diff=[test_set{i}.objects(clsinds).difficult];
+      gt(i).det=false(length(clsinds),1);
+      %skip difficult ones in evaluation
+      npos=npos+sum(~gt(i).diff);
+    end
+
 end
 
 % if isfield(VOCopts,'filename')

@@ -1,5 +1,10 @@
 function [positive_set,negative_set,stripped_set] = get_objects_set(data_set, cls)
-%Extract positives from the data set
+%Extract positive and negative datasets from the data_set variable
+%according to the class specified in cls
+
+nonempties = cellfun(@(x)isfield(x,'objects'),data_set);
+negative_set = data_set(~logical(nonempties));
+data_set = data_set(logical(nonempties));
 
 %Skip truncated and difficult ones
 
@@ -23,12 +28,13 @@ for j = 1:length(bads)
 end
 
 good_images = cellfun(@(x)numel(x)>0, good_objects);
-stripped_set = cellfun(@(x,y)setfield(x,'objects',x.objects(y)),...
+stripped_set = [cellfun(@(x,y)setfield(x,'objects',x.objects(y)),...
                        data_set, ...
                        good_objects,'UniformOutput', ...
-                       false);
+                       false) negative_set];
+
 positive_set = stripped_set(good_images);
 
 bad_images = cellfun(@(x)length(find(( ismember({x.objects.class},cls)))==0)>0,data_set);
 
-negative_set = data_set(bad_images);
+negative_set = [data_set(bad_images); negative_set];

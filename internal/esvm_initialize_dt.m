@@ -85,6 +85,7 @@ curfeats = cell(0,1);
 bbs = cell(0,1);
 fprintf(1,['esvm_initialize_dt: initializing features by' ...
            ' warping to a canonical size\n']);
+allwarps = cell(0,1);
 
 for j = 1:length(data_set)  
   obj = {data_set{j}.objects};
@@ -95,27 +96,34 @@ for j = 1:length(data_set)
   end
   I = toI(data_set{j}.I);
   flipI = flip_image(I);
+
   
   for k = 1:length(obj)
     
     % Warp original bounding box
     bbox = obj{k}.bbox;    
     warped1 = mywarppos(hg_size, I, params.init_params.sbin, bbox);
+    allwarps{end+1} = warped1;
     curfeats{end+1} = params.init_params.features(warped1, ...
                                                   params ...
-                                                  .init_params.sbin);
+                                                  .init_params ...
+                                                  .sbin);
+
     bbox(11) = j;
     bbox(12) = 0;
     bbs{end+1} = bbox;
 
     % Warp LR flipped version
     bbox2 = flip_box(bbox,size(I));
-    warped2 = mywarppos(hg_size, flipI, params.init_params.sbin, bbox2);
+    warped2 = mywarppos(hg_size, flipI, params.init_params.sbin, ...
+                        bbox2);
+    allwarps{end+1} = warped2;
     curfeats{end+1} = params.init_params.features(warped2, ...
                                                   params.init_params ...
                                                   .sbin);
     bbox2(11) = j;
     bbox2(12) = 0;
+    bbox2(7) = 1; %indicate the flip
     bbs{end+1} = bbox2;
     
     fprintf(1,'.');
@@ -155,6 +163,20 @@ m.b = 0;
 %m.objectid = -1;
 %m.data_set = data_set;
 models = {m};
+
+if params.display == 1
+  Is = cat(4,allwarps{:});
+  Imean = mean(Is,4);
+  s = [size(Imean,1) size(Imean,2)];
+  Iwpos = imresize(jettify(HOGpicture(m.w)),s);
+  Iwneg = imresize(jettify(HOGpicture(-m.w)),s);
+  Is = cat(4,Imean,Iwpos,Iwneg,Is);
+  figure(1)
+  clf
+  montage(Is)
+  title('Dalal initialization');
+  drawnow
+end
 
 if CACHE_FILE == 1
   save(filer,'models');

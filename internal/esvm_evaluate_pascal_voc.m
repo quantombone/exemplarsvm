@@ -12,7 +12,9 @@ function results = esvm_evaluate_pascal_voc(test_struct, test_set, ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-params.set_name = test_set_name;
+if ~exist('test_set_name','var')
+  test_set_name = '';
+end
 
 models_name = models{1}.models_name;
 cls = models{1}.cls;

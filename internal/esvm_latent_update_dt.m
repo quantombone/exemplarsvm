@@ -109,106 +109,65 @@ for j = 1:length(data_set)
   end
 end
 
-%now we are onto finding the best assignments
+USE_ALL_POTENTIALS = 0;
 
-best_model=models{1};
-best_score = evaluate_obj(best_model);
-
-for z = 1:50
-  fprintf(1,' ---###--- trying configuration %d\n',z);
-  scores = cellfun2(@(x)best_model.w(:)'*x-best_model.b, ...
-                    potentialx);
-  clear ass
-  for i = 1:length(scores)
-    [aa,bb] = sort(scores{i},'descend');
-    r = randperm(min(3,length(bb)));
-    ass(i) = bb(r(1));
+if USE_ALL_POTENTIALS == 1
+ models{1}.x = cat(2,potentialx{:});
+ models{1}.bb = cat(1,potentialbb{:});
+ [~,bb] = sort(models{1}.w(:)'*models{1}.x,'descend');
+ models{1}.x = models{1}.x(:,bb);
+ models{1}.bb = models{1}.bb(bb,:);
+else
+  
+  best_model = models{1};
+  best_score = evaluate_obj(best_model);
+  
+  %now we are onto finding the best assignments  
+  %we always do first iterations, because it is greedy
+  for z = 1:max(1,params.latent_perturb_assignment_iterations)
+    fprintf(1,' ---###--- trying configuration %d\n',z);
+    scores = cellfun2(@(x)best_model.w(:)'*x-best_model.b, ...
+                      potentialx);
+    clear ass
+    for i = 1:length(scores)
+      [aa,bb] = sort(scores{i},'descend');
+      r = randperm(min(3,length(bb)));
+      ass(i) = bb(r(1));
+    end
+    
+    %First iteration is greedy (which is the classical latent update step)
+    if (z == 1)
+      ass = ass*0+1;
+    end
+    
+    curx = cellfun(@(x,y)x(:,y),potentialx,num2cell(ass), ...
+                   'UniformOutput',false);
+    curx = cat(2,curx{:});
+    
+    curbb = cellfun(@(x,y)x(y,:),potentialbb,num2cell(ass), ...
+                    'UniformOutput',false);
+    curbb = cat(1,curbb{:});
+    
+    curm = best_model;
+    curm.x = curx;
+    curm.bb = curbb;
+    curm = params.training_function(curm);
+    cur_score = evaluate_obj(curm);
+    if cur_score < best_score
+      best_model = curm;
+      
+      fprintf(1,'+ Good objective = %.5f, old = %.5f\n',cur_score,best_score);
+      best_score = cur_score;
+    else
+      fprintf(1,'- Bad  objective = %.5f, old = %.5f\n',cur_score,best_score);
+    end
   end
   
-  if (z == 1)
-    ass = ass*0+1;
-  end
-  
-  curx = cellfun(@(x,y)x(:,y),potentialx,num2cell(ass), ...
-                 'UniformOutput',false);
-  curx = cat(2,curx{:});
-  
-  curbb = cellfun(@(x,y)x(y,:),potentialbb,num2cell(ass), ...
-                  'UniformOutput',false);
-  curbb = cat(1,curbb{:});
-  
-  curm = best_model;
-  curm.x = curx;
-  curm.bb = curbb;
-  curm = params.training_function(curm);
-  cur_score = evaluate_obj(curm);
-  if cur_score < best_score
-    best_model = curm;
-
-    fprintf(1,'+ Good objective = %.5f, old = %.5f\n',cur_score,best_score);
-    best_score = cur_score;
-  else
-    fprintf(1,'- Bad  objective = %.5f, old = %.5f\n',cur_score,best_score);
-  end
+  models{1} = best_model;
 end
 
-models{1} = best_model;
+%Update name with proper suffix being concatenated
 models{1}.models_name = [models_name];
-
-% if 0
-% ass_models = cell(0,1);
-% ass_scores = zeros(0,1);
-% asses = zeros(0,1);
-% rses = zeros(0,1);
-
-% for z = 1:30
-%   fprintf(1,' $$ trying configuration %d\n',z);
-%   scores = cellfun2(@(x)models{1}.model.w(:)'*x-models{1}.model.b, ...
-%                     potentialx);
-%   clear rs;
-%   for i = 1:length(scores)
-%     [aa,bb] = sort(scores{i},'descend');
-%     r = randperm(min(3,length(bb)));
-%     ass(i) = bb(r(1));
-%     rs(i)=r(1);
-%   end
-  
-%   if (z == 1)
-%     ass = ass*0+1;
-%   end
-  
-%   curx = cellfun(@(x,y)x(:,y),potentialx,num2cell(ass), ...
-%                  'UniformOutput',false);
-%   curx = cat(2,curx{:});
-  
-%   curbb = cellfun(@(x,y)x(y,:),potentialbb,num2cell(ass), ...
-%                   'UniformOutput',false);
-%   curbb = cat(1,curbb{:});
-  
-%   curm = models{1};
-%   curm.model.x = curx;
-%   curm.model.bb = curbb;
-%   curm = params.training_function(curm);
-%   ass_scores(end+1) = evaluate_obj(curm);
-%   ass_models{end+1} = curm;
-%   asses{end+1} = ass;
-%   rses{end+1} = rs;
-%   fprintf(1,' ---##---sc is %.3f\n',ass_scores(end));
-% end
-% [alpha,beta] = min(ass_scores);
-
-% beta
-% fprintf(1,'current assignment is\n');
-% rses{beta}
-
-% models{1} = ass_models{beta};
-% models{1}.models_name = [models_name];
-% end
-
-
-% models{1}.model.x = cat(2,curx{:});
-% models{1}.model.bb = cat(1,curbb{:});
-
 
 fprintf(1,'Got latent updates for %d examples\n',size(models{1}.bb,1));
 
@@ -249,3 +208,4 @@ if params.display == 1
     end
   end
 end
+

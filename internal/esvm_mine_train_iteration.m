@@ -67,7 +67,31 @@ m.btrace{end+1} = m.b;
 % m.model.svbbs(:,end) = r;
 
 function show_figures(m)
+%Show the current model and top negative support vectors
+Isv1 = esvm_show_det_stack(m.svbbs,m.data_set,7,7,m);
+figure(2)
+clf
+imagesc(Isv1)
+axis image
+axis off
+iter = length(m.wtrace)-1;
+title(sprintf('Hard Negative Mining iter %03d\n %s iter=%03d',iter,m.models_name,iter),'FontSize',20)
+drawnow
+snapnow
 
+% if there is a local directory, and dump images was enabled, or
+% dump_last_image and we are on the last iteration
+if (length(m.params.localdir)>0) && ...
+      ((m.params.dump_images == 1) || ...
+       ((m.params.dump_last_image == 1) && ...
+        (m.iteration == m.params.train_max_mine_iterations)))
+
+  imwrite(Isv1,sprintf('%s/models/%s.%d_mineiter_I=%05d.png', ...
+                    m.params.localdir, m.models_name, ...
+                    m.identifier, m.iteration), 'png');
+end
+
+%old code: also show the SVM scores
 % figure(1)
 % clf
 % show_cool_os(m)
@@ -81,32 +105,10 @@ function show_figures(m)
 %                     m.objectid,m.iteration),'-dpng'); 
 % end
 
-Isv1 = esvm_show_det_stack(m.svbbs,m.data_set,7,7,m);
-figure(2)
-clf
-imagesc(Isv1)
-axis image
-axis off
-iter = length(m.wtrace)-1;
-title(sprintf('%s SVM iter=%03d',m.models_name,iter),'FontSize',20)
-drawnow
-snapnow
-
-if (length(m.params.localdir)>0) && ...
-      ((m.params.dump_images == 1) || ...
-       ((m.params.dump_last_image == 1) && ...
-        (m.iteration == m.params.train_max_mine_iterations)))
-
-  imwrite(Isv1,sprintf('%s/models/%s.%d_iter_I=%05d.png', ...
-                    m.params.localdir, m.models_name, ...
-                    m.identifier, m.iteration), 'png');
-end
-
 function m = add_new_detections(m, xs, bbs)
 % Add current detections (xs,bbs) to the model struct (m)
 % making sure we prune away duplicates, and then sort by score
 %
-% Tomasz Malisiewicz (tomasz@cmu.edu)
 
 %First iteration might not have support vector information stored
 if ~isfield(m, 'svxs') || isempty(m.svxs)
@@ -117,7 +119,8 @@ end
 m.svxs = cat(2, m.svxs, xs);
 m.svbbs = cat(1, m.svbbs, bbs);
 
-%Create a unique string identifier for each of the supports
+%Create a unique string identifier for each of the support vectors,
+%so we can run 'unique' on them
 names = cell(size(m.svbbs, 1), 1);
 for i = 1:length(names)
   bb = m.svbbs(i,:);

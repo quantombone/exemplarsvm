@@ -1,4 +1,4 @@
-function [models,results] = learnDalalTriggs(cls, data_set, test_set, params)
+function [models,results] = learnDalalTriggs(data_set, cls, params,test_set)
 % Learn a DalalTriggs template detector
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved. 
@@ -21,7 +21,7 @@ if ~exist('data_set','var')
                data_directory, dataset_directory),'data_set');
 end
 
-if ~exist('params','var')
+if ~exist('params','var') || length(params) == 0
   %% Get default parameters
   params = esvm_get_default_params;
   params.display = 1;  
@@ -57,17 +57,27 @@ end
 % end
 
 models = esvm_initialize_dt(data_set, cls, params);
-models = esvm_train(models);
 
-for niter = 1:params.latent_iterations
-  models = esvm_latent_update_dt(models);
-  models = esvm_train(models);
-end
+models{1}.b = -10;
+models = esvm_train(models);
+%models = esvm_train(models);
+%models = esvm_train(models);
+
+%for niter = 1:params.latent_iterations
+%  models = esvm_latent_update_dt(models);
+%  models = esvm_train(models);
+%end
 
 if ~exist('test_set','var')
   results = [];
   return;
+else
+
+  %evaluate on training data
+  test_struct = applyModel(models, data_set);
+  results = evaluateModel(data_set, test_struct, models);
 end
+
 
 %% Perform Platt calibration and M-matrix estimation
 %M = esvm_perform_calibration(val_grid, val_set, models,val_params);
@@ -76,48 +86,49 @@ end
 %val_grid = esvm_detect_imageset(val_set, models, val_params,
 %val_set_name);
                        
-%% Define test-set
-test_params = params;
-test_params.detect_exemplar_nms_os_threshold = 1.0;
-test_params.detect_max_windows_per_exemplar = 500;
-test_params.detect_keep_threshold = -2.0;
+% %% Define test-set
+% test_params = params;
+% test_params.detect_exemplar_nms_os_threshold = 1.0;
+% test_params.detect_max_windows_per_exemplar = 500;
+% test_params.detect_keep_threshold = -2.0;
 
-test_set = load(sprintf('%s/%s/trainval.mat',...
-             data_directory, dataset_directory),'data_set');
-test_set = test_set.data_set;
+% %test_set = load(sprintf('%s/%s/test.mat',...
+% %             data_directory, dataset_directory),'data_set');
+% %test_set = test_set.data_set;
 
-test_set = get_objects_set(test_set, cls);
-test_set_name = ['trainval+' cls];
+% test_set = get_objects_set(test_set, cls);
+% test_set_name = ['test+' cls];
 
-%% Apply on test set
-test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);
+% %% Apply on test set
+% test_grid = esvm_detect_imageset(test_set, models, test_params, test_set_name);
 
-%% Apply calibration matrix to test-set results
-test_struct = esvm_pool_exemplar_dets(test_grid, models, [], ...
-                                      test_params);
+% %% Apply calibration matrix to test-set results
+% test_struct = esvm_pool_exemplar_dets(test_grid, models, [], ...
+%                                       test_params);
 
-%% Perform the exemplar evaluation
-results = esvm_evaluate_pascal_voc(test_struct, test_set, models, params, ...
-                                     test_set_name);
+% %% Perform the exemplar evaluation
+% results = esvm_evaluate_pascal_voc(test_struct, test_set, models, params, ...
+%                                      test_set_name);
 
-if params.display
-  for mind = 1:length(models)
-    I = esvm_show_top_exemplar_dets(test_struct, test_set, ...
-                                    models, mind,10,10);
-    figure(45)
-    imagesc(I)
-    title('Top detections','FontSize',18);
-    drawnow
-    snapnow
+% if params.display
+%   for mind = 1:length(models)
+%     I = esvm_show_top_exemplar_dets(test_struct, test_set, ...
+%                                     models, mind,10,10);
+%     figure(45)
+%     imagesc(I)
+%     title('Top detections','FontSize',18);
+%     drawnow
+%     snapnow
     
-    if params.dump_images == 1 && length(params.localdir)>0
-      filer = sprintf('%s/results/topdet.%s-%04d-%s.png',...
-                      localdir, models{mind}.models_name, mind, test_set_name);
+%     if params.dump_images == 1 && length(params.localdir)>0
+%       filer = sprintf('%s/results/topdet.%s-%04d-%s.png',...
+%                       localdir, models{mind}.models_name, mind, test_set_name);
       
-      imwrite(I,filer);
-    end 
-  end
-end
+%       imwrite(I,filer);
+%     end 
+%   end
+% end
+
 
 % return;
 

@@ -171,7 +171,6 @@ for level = length(t.hog):-1:1
   
   rmsizes = cellfun2(@(x)size(x), ...
                      rootmatch);
-  
   for exid = 1:N
     if prod(rmsizes{exid}) == 0
       continue

@@ -189,9 +189,11 @@ params.model_type = 'exemplar';
 %Initialize loading/saving directories to being empty (turned off)
 params.localdir = '';
 
-% For dalal triggs, we need an update threshold
+% For dalal triggs, we need an update threshold (we only keep
+% detections which have above this overlap with a ground-truth region)
 params.latent_os_thresh = 0.7;
 params.latent_iterations = 10;
+params.latent_perturb_assignment_iterations = 0;
 
 %Information about where we mine images from
 %TODO(TJM): these need to be utilized
@@ -202,7 +204,10 @@ params.mine_from_positives = 1;
 params.mine_skip_objects = 1;
 
 % Skips any object which overlaps with GT by more than this amount
-params.mine_skip_objects_os = .5;
+params.mine_skip_objects_os = .2;
 
 %The threshold for evaluation
 params.evaluation_minoverlap = .5;
+
+%Display flag if enabled will show lots of things
+params.display = 0;
