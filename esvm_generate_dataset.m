@@ -1,4 +1,4 @@
-function [data_set] = esvm_generate_dataset(Npos, Nneg, draw)
+function [data_set] = esvm_generate_dataset(Npos, Nneg, cls)
 % Generate a synthetic dataset of circles (see esvm_demo_train_synthetic.m)
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
@@ -10,12 +10,10 @@ function [data_set] = esvm_generate_dataset(Npos, Nneg, draw)
 if nargin == 0
   Npos = 3;
   Nneg = 10
+  cls = 'circle';
 elseif nargin == 1
   Nneg = Npos;
-end
-
-if ~exist('draw','var')
-draw = 0;
+  cls = 'circle'
 end
 
 %size of pattern to inpaint to the image
@@ -24,14 +22,16 @@ pattern_size = 200;
 %size of real image
 image_size = 400;
 
+%NOTE: if the image is too small, then we will not be able to
+% detect those instances
 Apattern = generate_pattern(pattern_size);
 
 N = Npos + Nneg;
 data_set = cell(N,1);
 fprintf(1,'Generating dataset of size %d posititives, %d negatives\n',...
         Npos, Nneg);
-for i = 1:N
-  
+
+for i = 1:N  
   %Generate a background image of goal size
   I = generate_random_image(image_size);
   %I = max(0.0,min(1.0,imresize(I,[image_size image_size], ...
@@ -54,7 +54,7 @@ for i = 1:N
   data_set{i}.I = I;
   
   if i <= Npos
-    object.class = 'circle';
+    object.class = cls;
     object.view = '';
     object.truncated = 0;
     object.occluded = 0;
@@ -63,26 +63,12 @@ for i = 1:N
     object.polygon = [];    
     data_set{i}.objects = [object];
   end
-  
-  if draw
-    figure(1)
-    clf
-    imagesc(I)
-    plot_bbox(bb);
-    title(sprintf('Image %d/%d',i,N));
-    pause
-  end
 end
 
-% Ineg = cell(Nneg,1);
-% for i = 1:Nneg
-%   I = rand(100,100,3);
-%   I = rand(50,50,3);
-%   I = max(0.0,min(1.0,imresize(I,[100 100],'bicubic')));
-%   Ineg{i} = I;
-% end
-
-% data_set = cat(1,data_set,Ineg);
+figure(1)
+clf
+vis_box_tiles(data_set);
+title('DataSet')
 
 function Apattern = generate_pattern(pattern_size)
 % Generate a pattern
@@ -91,7 +77,7 @@ A = zeros(pattern_size-1,pattern_size-1);
 A(ceil(pattern_size/2),ceil(pattern_size/2)) = 1;
 A = double(bwdist(A)<ceil(pattern_size*.4));
 A = bwmorph(A,'remove');
-A = bwmorph(A,'dilate',2);
+A = bwmorph(A,'dilate',ceil(pattern_size*.04));
 [us,vs] = find(A);
 A = A(min(us):max(us),min(vs):max(vs));
 Apattern = repmat(A,[1 1 3]);
@@ -119,6 +105,3 @@ bb = [sub2 sub1 sub2+size(A,2) sub1+size(A,1) ];
 % I2(find(inds))=0;
 
 I2 = (I.*(~Ipattern));
-
-
-
