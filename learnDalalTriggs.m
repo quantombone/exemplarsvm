@@ -1,4 +1,5 @@
-function [models,results] = learnDalalTriggs(data_set, cls, params,test_set)
+function [models,results] = learnDalalTriggs(data_set, cls, params, ...
+                                             test_set)
 % Learn a DalalTriggs template detector
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved. 
@@ -63,19 +64,18 @@ models = esvm_train(models);
 %models = esvm_train(models);
 %models = esvm_train(models);
 
-%for niter = 1:params.latent_iterations
-%  models = esvm_latent_update_dt(models);
-%  models = esvm_train(models);
-%end
+for niter = 1:params.latent_iterations
+  models = esvm_latent_update_dt(models);
+  models = esvm_train(models);
+end
 
 if ~exist('test_set','var')
   results = [];
   return;
 else
-
   %evaluate on training data
-  test_struct = applyModel(models, data_set);
-  results = evaluateModel(data_set, test_struct, models);
+  test_struct = applyModel(models, test_set);
+  results = evaluateModel(test_set, test_struct, models);
 end
 
 
