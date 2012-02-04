@@ -80,6 +80,8 @@ fprintf(1,'HACK choosing solo positive set\n');
 m.data_set = cur_pos_set;
 
 hg_size = get_hg_size(cur_pos_set, params.init_params.sbin);
+hg_size = hg_size * params.init_params.MAXDIM/max(hg_size);
+hg_size = max(1,round(hg_size));
 
 curfeats = cell(0,1);
 bbs = cell(0,1);
