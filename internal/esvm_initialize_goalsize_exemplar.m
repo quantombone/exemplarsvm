@@ -159,6 +159,7 @@ localizeparams.detect_save_features = 1;
 localizeparams.detect_add_flip = 0;
 localizeparams.detect_pyramid_padding = 5;
 localizeparams.dfun = 0;
+localizeparams.nnmode = 0;
 localizeparams.init_params = init_params;
 
 [rs,t] = esvm_detect(I,mmm,localizeparams);
