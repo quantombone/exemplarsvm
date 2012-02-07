@@ -22,6 +22,11 @@ Is = cat(1,Is,repmat({Is{1}*0+0},fillmore,1));
 PAD = 10;
 Is = cellfun2(@(x)pad_image(x,PAD,[1 1 1]),Is);
 
+m1 = mean(cellfun(@(x)size(x,1),Is));
+m2 = mean(cellfun(@(x)size(x,2),Is));
+Is = cellfun2(@(x)max(0.0,min(1.0,imresize(x,round([m1 m2]), ...
+                                                  'bicubic'))),Is);
+
 Is = reshape(Is,[S S])';
 for i = 1:S
   Irow{i} = cat(2,Is{i,:});
