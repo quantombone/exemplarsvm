@@ -1,4 +1,4 @@
-function [betas] = esvm_perform_platt_calibration(grid, imageset, models, ...
+function [betas] = esvm_perform_platt_calibration(grid, imageset, model, ...
                                                   params)
 % Perform calibration by learning the sigmoid parameters (linear
 % transformation of svm scores) for each model independently. This
@@ -15,13 +15,12 @@ function [betas] = esvm_perform_platt_calibration(grid, imageset, models, ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-if length(grid) == 0 || length(models) == 0
+if length(grid) == 0 || length(model) == 0
   betas = [];
-  ALL_bboxes = [];
   return;
 end
 
-if length(params.dataset_params.localdir) > 0
+if length(params.localdir) > 0
   CACHE_FILES = 1;
 else
   CACHE_FILES = 0;
@@ -31,25 +30,25 @@ end
 DO_NMS = 0;
 
 % if enabled, display images
-display = params.dataset_params.display;
+display = params.display;
 
 % if display is enabled and dump_images is enabled, then dump images
 % into DUMPDIR
 dump_images = params.dump_images;
 
-models_name = '';
-if length(models)>=1 && isfield(models{1},'models_name') && ...
-      isstr(models{1}.models_name)
-  models_name = models{1}.models_name;
+model_name = '';
+if length(model)>=1 && isfield(model,'model_name') && ...
+      isstr(model.model_name)
+  model_name = model.model_name;
 end
 
-
-DUMPDIR = sprintf('%s/www/calib/',params.dataset_params.localdir, ...
-                  models_name);
+DUMPDIR = sprintf('%s/www/calib/',params.localdir, ...
+                  model_name);
 
 if dump_images==1 && ~exist(DUMPDIR,'dir')
   mkdir(DUMPDIR);
 end
+
 % show A NxN grid of top detections (if display is turned on)
 SHOW_TOP_N_SVS = 10;
 
@@ -59,7 +58,7 @@ if nargin < 1
 end
 
 final_dir = ...
-    sprintf('%s/models',params.dataset_params.localdir);
+    sprintf('%s/models/',params.localdir);
 
 if CACHE_FILES == 1 && ~exist(final_dir','dir')
   mkdir(final_dir);
@@ -68,7 +67,7 @@ end
 final_file = ...
     sprintf('%s/%s-betas.mat',...
             final_dir, ...
-            models_name);
+            model_name);
 
 if CACHE_FILES == 1 
   lockfile = [final_file '.lock'];
@@ -83,26 +82,18 @@ if CACHE_FILES == 1
   end
 end
 
-for i = 1:length(models)
-  if ~isfield(models{i},'curid')
-    models{i}.curid = '-1';
+for i = 1:length(model.models)
+  if ~isfield(model.models{i},'curid')
+    model.models{i}.curid = '-1';
   end
 end
 
-model_ids = cellfun2(@(x)x.curid,models);
-targets = 1:length(models);
+model_ids = cellfun2(@(x)x.curid,model.models);
+targets = 1:length(model.models);
 
-cls = models{1}.cls;
+cls = model.cls;
+targetc = model.cls;
 
-%if isfield(params.dataset_params,'classes')
-%  targetc = find(ismember(params.dataset_params.classes, ...
-%                          models{1}.cls));
-%else
-targetc = models{1}.cls;
-%end
-
-
-%fprintf(1,'Preparing boxes for calibration\n');
 for i = 1:length(grid)    
   if mod(i,100)==0
     fprintf(1,'.');
@@ -129,6 +120,7 @@ for i = 1:length(grid)
           reshape(double(ismember(cur.extras.maxclass,targetc)),...
                   size(cur.extras.os));
       catch
+        fprintf(1,'curos bug\n');
         keyboard
       end
       
@@ -176,12 +168,13 @@ ALL_os = cat(1,os{:});
 curids = cellfun2(@(x)x.curid,grid);
 % Pre-processing models for calibration
 
-for exid = 1:length(models)
+
+for exid = 1:length(model.models)
   fprintf(1,'.');
-  sourcegrid = find(ismember(curids,models{exid}.curid));
-  if length(sourcegrid) == 0
-    sourcegrid = -1;
-  end
+  %sourcegrid = find(ismember(curids,model.models{exid}.curid));
+  %if length(sourcegrid) == 0
+  %  sourcegrid = -1;
+  %end
   
   hits = find((ALL_bboxes(:,6)==exid));
   all_scores = ALL_bboxes(hits,end);
@@ -244,23 +237,23 @@ for exid = 1:length(models)
     
     axis([min(xs) max(xs) 0 1])
     xlabel('SVM score')
-    ylabel(sprintf('Max Overlap Score with %s',models{exid}.cls))
+    ylabel(sprintf('Max Overlap Score with %s',model.models{exid}.cls))
     
     title(sprintf('Learned Sigmoid \\beta=[%.3f %.3f]',beta(1), ...
                   beta(2)))
     
     subplot(1,2,2)
-    if isfield(models{exid},'I') && isfield(models{exid},'gt_box')
-      Iex = convert_to_I(models{exid}.I);
+    if isfield(model.models{exid},'I') && isfield(model.models{exid},'gt_box')
+      Iex = convert_to_I(model.models{exid}.I);
       imagesc(Iex)
-      plot_bbox(models{exid}.gt_box)
+      plot_bbox(model.models{exid}.gt_box)
       axis image
       axis off
 
       title(sprintf('Exemplar %s.%d.%s',...
-                    models{exid}.curid,...
-                    models{exid}.objectid, ...
-                    models{exid}.cls))
+                    model.models{exid}.curid,...
+                    model.models{exid}.objectid, ...
+                    model.models{exid}.cls))
       drawnow
       snapnow
     end
@@ -276,22 +269,22 @@ for exid = 1:length(models)
     %[models{exid}.model.svids,models{exid}.model.nsv] = ...
     %    esvm_reconstruct_features(bbs_show,100);%,'trainval','');
 
-    models{exid}.model.svbbs = bbs_show;
-    m2 = models(exid);
+    model.models{exid}.svbbs = bbs_show;
+    m2 = model.models(exid);
     if length(imageset) > 0
       m2{1}.train_set = imageset;
       m2{1}.model.svbbs(:,6) = 1;
       m2{1}.model.svxs = [];
       figure(445)
       clf
-      imagesc(esvm_show_det_stack(m2{1}.svbbs,m2{1}.train_set,8,8,m2))
+      imagesc(esvm_show_det_stack(m2{1}.svbbs,m2{1}.train_set,8,8,m2{1}))
       axis image
       axis off
       drawnow
       title(sprintf('Topdets Ex %s.%d.%s',...
-                    models{exid}.curid,...
-                    models{exid}.objectid, ...
-                    models{exid}.cls))
+                    model.models{exid}.curid,...
+                    model.models{exid}.objectid, ...
+                    model.models{exid}.cls))
       drawnow
       snapnow
     end
@@ -303,8 +296,8 @@ for exid = 1:length(models)
     
   if dump_images == 1
 
-    filer = sprintf('%s/result.%d.%s.%s.png', DUMPDIR, ...
-                    exid,models{exid}.cls,models{exid}.models_name);
+    filer = sprintf('%s/result.%d.%s.%s.png', DUMPDIR, exid, ...
+                    model.models{exid}.cls, model_name);
     set(gcf,'PaperPosition',[0 0 20 20]);
     print(gcf,filer,'-dpng');
     

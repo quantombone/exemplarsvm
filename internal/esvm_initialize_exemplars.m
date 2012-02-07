@@ -1,16 +1,15 @@
-function models = esvm_initialize_exemplars(data_set, cls, params)
-% Initialize examplars for training by setting initial features
+function model = esvm_initialize_exemplars(data_set, cls, params)
+% Initialize examplars for training by setting initial features and
+% initial detectors
 % 
 % INPUTS:
-% params.dataset_params: the parameters of the current dataset
 % data_set: some sort of dataset
 % cls: we treat all instances in data_set which are of this class
-% as positives, and everything else is negatives
+%      as positives, and everything else is negatives
 % params: a structure of initialization parameters [optional]
 %
 % OUTPUTS:
-% models: The names of all outputs (which are .mat model files
-%   containing the initialized exemplars)
+% model: The initialized ExemplarSVMs
 %
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
@@ -26,31 +25,30 @@ else
   params.localdir = '';
 end
 
-if ~exist('models_name','var')
-  models_name = '';
+if ~exist('model_name','var')
+  model_name = '';
 end
 
 cache_dir =  ...
     sprintf('%s/models/',params.localdir);
 
 cache_file = ...
-    sprintf('%s/%s.mat',cache_dir,models_name);
+    sprintf('%s/%s.mat',cache_dir,model_name);
 
 if CACHE_FILE ==1 && fileexists(cache_file)
-  models = load(cache_file);
-  models = models.models;
+  model = load(cache_file);
+  model = model.model;
   return;
 end
 
 results_directory = ...
     sprintf('%s/models/%s/',params.localdir, ...
-            models_name);
+            model_name);
 
 if CACHE_FILE==1 && ~exist(results_directory,'dir')
   fprintf(1,'Making directory %s\n',results_directory);
   mkdir(results_directory);
 end
-
 
 %Randomize creation order
 if CACHE_FILE == 1
@@ -66,10 +64,13 @@ tic
 [cur_pos_set, ~, data_set] = get_objects_set(data_set, cls);
 toc
 fprintf(1,'HACK choosing solo positive set\n');
-m.data_set = cur_pos_set;
+model.data_set = cur_pos_set;
+model.cls = cls;
+model.model_name = model_name;
+model.params = params;
 
 %Create an array of all final file names
-allfiles = cell(length(data_set), 1);
+allfiles = cell(1,length(data_set));
 
 for j = 1:length(data_set)  
   curid = j;
@@ -109,23 +110,19 @@ for j = 1:length(data_set)
     I = toI(data_set{j});
     
     %Call the init function which is a mapping from (I,bbox) to (model)
-    [model] = params.init_params.init_function(I, bbox, params.init_params);
-    
-    keyboard
-    clear m
-    m.model = model;    
-    
+    m = params.init_params.init_function(I, bbox, params.init_params);
+
+    %m.model = model;        
     %Save filename (or original image)
-    m.I = e_set{i}.I;
+    m.I = data_set{j}.I;
     m.curid = curid;
     m.objectid = objectid;
     m.cls = cls;    
     m.gt_box = gt_box;
     
     m.sizeI = size(I);
-    m.models_name = models_name;
+    m.model_name = model_name;
     m.name = sprintf('%s.%d.%s',m.curid,m.objectid,m.cls);
-
 
     if CACHE_FILE == 1
       save(filer,'m');
@@ -133,7 +130,7 @@ for j = 1:length(data_set)
         rmdir(filerlock);
       end
     else
-      allfiles{i} = m;
+      allfiles{j} = m;
     end
     
     % %Print the bounding box overlap between the initial window and
@@ -155,7 +152,7 @@ for j = 1:length(data_set)
 end
 
 if CACHE_FILE == 0
-  models = allfiles;
+  model.models = allfiles;
   return;
 end
 
@@ -165,14 +162,14 @@ end
 %Load all of the initialized exemplars
 CACHE_FILE = 1;
 
-if length(models_name) == 0
+if length(model_name) == 0
   CACHE_FILE = 0;
 end
 
 STRIP_FILE = 0;
 DELETE_INITIAL = 0;
 
-models = esvm_load_models(params, models_name, allfiles, ...
+model = esvm_load_models(params, model_name, allfiles, ...
                           CACHE_FILE, STRIP_FILE, DELETE_INITIAL);
 
 

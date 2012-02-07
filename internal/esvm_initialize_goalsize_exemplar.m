@@ -11,7 +11,6 @@ function model = esvm_initialize_goalsize_exemplar(I, bbox, init_params)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-
 if ~exist('init_params','var')
   init_params.sbin = 8;
   init_params.hg_size = [8 8];
@@ -62,7 +61,8 @@ model.mask = logical(ones(model.hg_size(1),model.hg_size(2)));
 fprintf(1,'initialized with HOG_size = [%d %d]\n',model.hg_size(1),model.hg_size(2));
 model.w = curfeats - mean(curfeats(:));
 model.b = 0;
-model.x = curfeats;
+model.x = curfeats(:);;
+model.hg_size = size(model.w);
 
 %Fire inside self-image to get detection location
 [model.bb, model.x] = get_target_bb(model, I, init_params);
@@ -150,19 +150,16 @@ end
 function [target_bb,target_x] = get_target_bb(model, I, init_params)
 %Get the bounding box of the top detection
 
-mmm{1}.model = model;
-mmm{1}.model.hg_size = size(model.w);
-localizeparams.detect_keep_threshold = -100000.0;
-localizeparams.detect_max_windows_per_exemplar = 1;
-localizeparams.detect_levels_per_octave = 10;
-localizeparams.detect_save_features = 1;
-localizeparams.detect_add_flip = 0;
-localizeparams.detect_pyramid_padding = 5;
-localizeparams.dfun = 0;
-localizeparams.nnmode = 0;
-localizeparams.init_params = init_params;
+params.detect_keep_threshold = -100000.0;
+params.detect_max_windows_per_exemplar = 1;
+params.detect_levels_per_octave = 10;
+params.detect_save_features = 1;
+params.detect_add_flip = 0;
+params.detect_pyramid_padding = 5;
+params.dfun = 0;
+params.nnmode = 0;
+params.init_params = init_params;
 
-[rs,t] = esvm_detect(I,mmm,localizeparams);
+[rs,t] = esvm_detect(I,{model},params);
 target_bb = rs.bbs{1}(1,:);
 target_x = rs.xs{1}{1};
-

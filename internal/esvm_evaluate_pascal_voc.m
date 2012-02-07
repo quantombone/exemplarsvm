@@ -1,7 +1,7 @@
 function results = esvm_evaluate_pascal_voc(test_struct, test_set, ...
-                                            models, params, test_set_name)
+                                            model, params, test_set_name)
 
-% Evaluate PASCAL VOC detection task with the models, their output
+% Evaluate PASCAL VOC detection task with the model, their output
 % firings grid, on the set target_directory which can be either
 % 'trainval' or 'test'
 %
@@ -16,8 +16,8 @@ if ~exist('test_set_name','var')
   test_set_name = '';
 end
 
-models_name = models{1}.models_name;
-cls = models{1}.cls;
+model_name = model.model_name;
+cls = model.cls;
 
 %VOCopts = params.dataset_params;
 
@@ -30,14 +30,14 @@ cls = models{1}.cls;
 %   grid{i}.extras.os = grid{i}.extras.os(goods,:);
 % end
 
-if ~exist('models_name','var')
+if ~exist('model_name','var')
   CACHE_FILE = 0;
-  models_name = '';
+  model_name = '';
 elseif length(params.localdir)>0
   CACHE_FILE = 1;
 else
   CACHE_FILE = 0;
-  models_name = '';
+  model_name = '';
 end
 
 % has_marker = (target_directory=='+') + ...
@@ -51,7 +51,7 @@ end
 % end
 
 resfile = sprintf('%s/results/%s_%s_results.mat',...
-                  params.localdir, models_name, test_set_name);
+                  params.localdir, model_name, test_set_name);
 
 if CACHE_FILE == 1
   reslock = [resfile '.lock'];
@@ -143,7 +143,7 @@ drawnow
 
 filer = sprintf(['%s/results/pr.%s-on-%s.pdf'], ...
                 params.localdir, ...
-                models_name, ...
+                model_name, ...
                 test_set_name);
 
 [basedir,tmp,tmp] = fileparts(filer);

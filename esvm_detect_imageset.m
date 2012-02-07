@@ -1,11 +1,11 @@
-function grid = esvm_detect_imageset(imageset, models, ...
+function grid = esvm_detect_imageset(imageset, model, ...
                                      params, setname)
-% Apply a set of models (raw exemplars, trained exemplars, dalals,
-% poselets, components, etc) to a set of images.  
+% Apply a model (ExemplarSVMs, Mixture Models, or DalalTriggs) to a
+% set of images.
 %
 % imageset: a (virtual) set of images, such that
-%   convert_to_I(imageset{i}) returns an image
-% models: Cell array of models
+%   toI(imageset{i}) returns an image
+% model: A model
 % params(optional): detection parameters
 % setname(optional): a name of the set, which lets us cache results
 %   on disk
@@ -16,7 +16,7 @@ function grid = esvm_detect_imageset(imageset, models, ...
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
-  
+
 if ~exist('params','var')
   params = esvm_get_default_params;
 end
@@ -39,14 +39,14 @@ end
 
 if save_files == 1
   
-  models_name = '';
-  if length(models)>=1 && isfield(models{1},'models_name') && ...
-        isstr(models{1}.models_name)
-    models_name = models{1}.models_name;
+  model_name = '';
+  if length(model)>=1 && isfield(model{1},'model_name') && ...
+        isstr(model{1}.model_name)
+    model_name = model{1}.model_name;
   end
   final_file = sprintf('%s/detections/%s-%s.mat',...
                        params.localdir,setname, ...
-                       models_name);
+                       model_name);
 
   if fileexists(final_file)
     res = load(final_file);
@@ -58,7 +58,7 @@ end
 
 if save_files == 1
   baser = sprintf('%s/detections/%s-%s/',params.localdir,setname, ...
-                  models_name);
+                  model_name);
 else
   baser = '';
 end
@@ -95,15 +95,8 @@ for i = 1:length(ordering)
   end
   res = cell(0,1);
 
-  %% pre-load all images in a chunk
-  %fprintf(1,'Preloading %d images\n',length(inds{ordering(i)}));
   clear Is;
   Is = imageset(inds{ordering(i)});
-  %Is = cellfun2(@(x)convert_to_I(x),imageset(inds{ordering(i)}));
-
-  %for j = 1:length(inds{ordering(i)})
-  %  Is{j} = convert_to_I(imageset{inds{ordering(i)}(j)});
-  %end
   L = length(inds{ordering(i)});
 
   for j = 1:L
@@ -122,21 +115,11 @@ for i = 1:length(ordering)
       curid = '';
     end
     
-    I = convert_to_I(Is{j});
+    I = toI(Is{j});
        
     starter = tic;
-    rs = esvm_detect(I, models, params);
-
+    rs = esvm_detect(I, model, params);
     
-    % for q = 1:length(rs.bbs)
-    %   if ~isempty(rs.bbs{q})
-    %     rs.bbs{q}(:,11) = index;
-    %     if length(rs.bbs{q}(1,:))~=12
-    %       error('BUG: Invalid length bb');
-    %     end
-    %   end
-    % end
-
     coarse_boxes = cat(1,rs.bbs{:});
     if ~isempty(coarse_boxes)
       coarse_boxes(:,11) = index;
@@ -145,11 +128,11 @@ for i = 1:length(ordering)
       scores = [];
     end
     [aa,bb] = max(scores);
-    fprintf(1,' %d exemplars took %.3fsec, #windows=%05d, max=%.3f \n',...
-            length(models),toc(starter),length(scores),aa);
+    fprintf(1,' %d w''s took %.3fsec, #windows=%05d, max=%.3f \n',...
+            length(model.models),toc(starter),length(scores),aa);
     
-    % Transfer GT boxes from models onto the detection windows
-    boxes = esvm_adjust_boxes(coarse_boxes,models);
+    % Transfer GT boxes from model onto the detection windows
+    boxes = esvm_adjust_boxes(coarse_boxes, model);
 
     if (params.detect_min_scene_os > 0.0)
       os = getosmatrix_bb(boxes,[1 1 size(I,2) size(I,1)]);
@@ -197,4 +180,4 @@ if save_files == 0
 end
 
 [allfiles] = sort(allfiles);
-grid = esvm_load_result_grid(params, models, setname, allfiles);
+grid = esvm_load_result_grid(params, model, setname, allfiles);

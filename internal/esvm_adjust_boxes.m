@@ -1,4 +1,4 @@
-function top = esvm_adjust_boxes(boxes, models)
+function top = esvm_adjust_boxes(boxes, model)
 %Adjust coarse-frame detections into ground-truth frames.
 %function top = esvm_adjust_boxes(boxes, models)
 %
@@ -18,14 +18,11 @@ function top = esvm_adjust_boxes(boxes, models)
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 
-
 top = boxes;
 
-if length(models)>=1
-  if strcmp(models{1}.models_name,'dalal') || ...
-        ~isfield(models{1},'gt_box')
-    return;
-  end
+if strcmp(model.model_name,'dalal') || ...
+      ~isfield(model.models{1},'gt_box')
+  return;
 end
 
 if numel(boxes)==0
@@ -36,8 +33,8 @@ top(:,1:4) = 0;
 
 for i = 1:size(boxes,1)
   d = boxes(i,:);
-  c = models{boxes(i,6)}.model.bb(1,1:4); %(1,:);
-  gt = models{boxes(i,6)}.gt_box;
+  c = model.models{boxes(i,6)}.bb(1,1:4);
+  gt = model.models{boxes(i,6)}.gt_box;
   
   %find the xform from c to d
   xform = find_xform(c, d(1:4));

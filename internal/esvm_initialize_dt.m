@@ -1,4 +1,4 @@
-function models = esvm_initialize_dt(data_set, cls, params)
+function model = esvm_initialize_dt(data_set, cls, params)
 % DalalTriggs model creation which creates an initial positive set and
 % by warping positives into a single canonical position, where the
 % canonical position is the obtained from statistics of bounding box
@@ -8,10 +8,10 @@ function models = esvm_initialize_dt(data_set, cls, params)
 % data_set: the training set of objects
 % cls: the target category from which we extract positives and
 %   use remaining images to define negatives
-% params [optional]: the parameters
+% params [optional]: ESVM parameters
 %
 % OUTPUTS:
-% models: A single DalalTriggs model, so length(models)==1
+% model: A single DalalTriggs model for the category cls
 %
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
@@ -21,7 +21,7 @@ function models = esvm_initialize_dt(data_set, cls, params)
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
 %save with dt as the model name
-models_name = [cls '-dt'];
+model_name = [cls '-dt'];
   
 if length(params.localdir)>0
   CACHE_FILE = 1;
@@ -30,19 +30,19 @@ else
   params.localdir = '';
 end
 
-if ~exist('models_name','var')
-  models_name = '';
+if ~exist('model_name','var')
+  model_name = '';
 end
 
 cache_dir =  ...
     sprintf('%s/models/',params.localdir);
 
 cache_file = ...
-    sprintf('%s/%s.mat',cache_dir,models_name);
+    sprintf('%s/%s.mat',cache_dir,model_name);
 
 if CACHE_FILE ==1 && fileexists(cache_file)
-  models = load(cache_file);
-  models = models.models;
+  model = load(cache_file,'model');
+  model = model.model;
   return;
 end
 
@@ -54,13 +54,13 @@ if CACHE_FILE==1 && ~exist(results_directory,'dir')
   mkdir(results_directory);
 end
 
-filer = sprintf('%s/%s.mat', results_directory, models_name);
+filer = sprintf('%s/%s.mat', results_directory, model_name);
 filerlock = [filer '.lock'];
 
 if CACHE_FILE == 1
   if fileexists(filer) 
-    m = load(filer);
-    models = m.models;
+    model = load(filer,'model');
+    model = model.model;
     return;
   end
 end
@@ -75,9 +75,6 @@ toc
 % %Set dataset to be the pruned dataset with only positives loaded
 % data_set = cur_pos_set(1:10);
 % cur_pos_set = cur_pos_set(1:10);
-
-fprintf(1,'HACK choosing solo positive set\n');
-m.data_set = cur_pos_set;
 
 hg_size = get_hg_size(cur_pos_set, params.init_params.sbin);
 hg_size = hg_size * params.init_params.MAXDIM/max(hg_size);
@@ -135,9 +132,12 @@ end
 fprintf(1,'esvm_initialize_dt: finished with %d windows\n',length(curfeats));
 curfeats = cellfun2(@(x)reshape(x,[],1),curfeats);
 curfeats = cat(2,curfeats{:});
-m.cls = cls;
-m.models_name = models_name;
-m.params = params;
+
+fprintf(1,'HACK choosing solo positive set\n');
+model.data_set = cur_pos_set;
+model.cls = cls;
+model.model_name = model_name;
+model.params = params;
 
 m.hg_size = [hg_size params.init_params.features()];
 m.mask = ones(m.hg_size(1),m.hg_size(2));
@@ -160,11 +160,14 @@ m.w = m.w - mean(m.w(:));
 m.w = reshape(m.w, m.hg_size);
 m.b = 0;
 
+m.params = params;
+model.models{1} = m;
+
 %m.name = sprintf('dt-%s',m.cls);
 %m.curid = m.cls;
 %m.objectid = -1;
 %m.data_set = data_set;
-models = {m};
+
 
 if params.display == 1
   Is = cat(4,allwarps{:});

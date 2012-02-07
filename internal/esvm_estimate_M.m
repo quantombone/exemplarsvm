@@ -1,4 +1,4 @@
-function M = esvm_estimate_M(grid, models, params)
+function M = esvm_estimate_M(grid, model, params)
 % Given a bunch of detections, learn the M boosting matrix, which
 % makes a final boxes's score depend on the co-occurrence of certain
 % "friendly" detections
@@ -10,21 +10,23 @@ function M = esvm_estimate_M(grid, models, params)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
+
+
 neighbor_thresh = params.calibration_neighbor_thresh;
 count_thresh    = params.calibration_count_thresh;
 
-if length(params.dataset_params.localdir) > 0
+if length(params.localdir) > 0
   CACHE_FILES = 1;
 else
   CACHE_FILES = 0;
 end
 
 final_dir = ...
-    sprintf('%s/models',params.dataset_params.localdir);
+    sprintf('%s/models/',params.localdir);
 
 final_file = ...
     sprintf('%s/%s-M.mat',...
-            final_dir, models{1}.models_name);
+            final_dir, model.model_name);
 
 if CACHE_FILES == 1 
   lockfile = [final_file '.lock'];
@@ -45,9 +47,9 @@ end
 %REMOVE FIRINGS ON SELF-IMAGE (these create artificially high scores)
 REMOVE_SELF = 1;
 
-cls = models{1}.cls;
+cls = model.cls;
 
-excurids = cellfun2(@(x)x.curid,models);
+excurids = cellfun(@(x)x.curid,model.models);
 boxes = cell(1,length(grid));
 maxos = cell(1,length(grid));
 
@@ -55,13 +57,12 @@ if REMOVE_SELF == 0
   fprintf(1,'Warning: Not removing self-hits\n');
 end
 
-curcls = models{1}.cls;
-
 fprintf(1,' -Computing Box Features:');
 starter=tic;
 for i = 1:length(grid)
   
-  curid = grid{i}.curid;
+  %curid = grid{i}.curid;
+  curid = grid{i}.index;
   boxes{i} = grid{i}.bboxes;
   
   if size(boxes{i},1) == 0
@@ -81,7 +82,7 @@ for i = 1:length(grid)
   boxes{i} = calib_boxes(oks,:);
   if length(grid{i}.extras)>0
     maxos{i} = grid{i}.extras.maxos;
-    maxos{i}(find(ismember(grid{i}.extras.maxclass,curcls)==0)) = 0;
+    maxos{i}(find(ismember(grid{i}.extras.maxclass,cls)==0)) = 0;
     maxos{i} = maxos{i}(oks);
   else
     maxos{i} = zeros(size(boxes{i},1),1);
@@ -91,6 +92,7 @@ for i = 1:length(grid)
     %% remove self from this detection image!!! LOO stuff!
     %fprintf(1,'hack not removing self!\n');
     badex = find(ismember(excurids,curid));
+
     badones = ismember(boxes{i}(:,6),badex);
     boxes{i}(badones,:) = [];
     if length(maxos{i})>0
@@ -103,7 +105,7 @@ lens = cellfun(@(x)size(x,1),boxes);
 boxes(lens==0) = [];
 maxos(lens==0) = [];
 
-K = length(models);
+K = length(model.models);
 N = sum(cellfun(@(x)size(x,2),maxos));
 
 y = cat(1,maxos{:});
@@ -123,7 +125,7 @@ end
 x = [xraw{:}];
 
 exids = allboxes(:,6);
-exids(allboxes(:,7)==1)= exids(allboxes(:,7)==1) + length(models);
+exids(allboxes(:,7)==1)= exids(allboxes(:,7)==1) + length(model.models);
 imids = allboxes(:,5);
 fprintf(1,'took %.3fsec\n',toc(starter));
 
@@ -154,7 +156,7 @@ res = (cumsum(goods(bb))./(1:length(bb)));
 M.score = mean(res);
 fprintf(1,'took %.3fsec\n',toc(starter));
 
-if params.dataset_params.display == 1
+if params.display == 1
   figure(4)
   subplot(1,2,1)
   plot(scores,os,'r.','MarkerSize',12)

@@ -14,9 +14,9 @@ function [m,mining_queue] = esvm_mine_train_iteration(m, mining_queue)
 
 % Start wtrace (trace of learned classifier parameters across
 % iterations) with first round classifier, if not present already
-if ~isfield(m,'wtrace')
-  m.wtrace{1} = m.w;
-  m.btrace{1} = m.b;
+if ~isfield(m.models{1}, 'wtrace')
+  m.models{1}.wtrace{1} = m.models{1}.w;
+  m.models{1}.btrace{1} = m.models{1}.b;
 end
 
 if length(mining_queue) == 0
@@ -24,20 +24,14 @@ if length(mining_queue) == 0
   return;
 end
 
-%If the skip is enabled, we just update the model
-%if m.params.train_skip_mining == 0
-  [hn, mining_queue, mining_stats] = ...
-      esvm_mine_negatives({m}, mining_queue, m.data_set, ...
-                     m.params);
+[hn, mining_queue, mining_stats] = ...
+    esvm_mine_negatives(m, mining_queue);
 
-  m = add_new_detections(m, cat(2,hn.xs{1}{:}), cat(1,hn.bbs{1}{: ...
-                   }));
-%else
-%  mining_stats.num_visited = 0;
-%  fprintf(1,'WARNING: train_skip_mining==0, just updating model\n');  
-%end
+m.models{1} = add_new_detections(m.models{1}, ...
+                                 cat(2,hn.xs{1}{:}), ...
+                                 cat(1,hn.bbs{1}{:}));
    
-m = update_the_model(m, mining_stats);
+m.models{1} = update_the_model(m.models{1}, mining_stats);
 
 if m.params.display == 1
   show_figures(m);
@@ -68,14 +62,14 @@ m.btrace{end+1} = m.b;
 
 function show_figures(m)
 %Show the current model and top negative support vectors
-Isv1 = esvm_show_det_stack(m.svbbs,m.data_set,7,7,m);
+Isv1 = esvm_show_det_stack(m.models{1}.svbbs,m.data_set,7,7,m.models{1});
 figure(2)
 clf
 imagesc(Isv1)
 axis image
 axis off
-iter = length(m.wtrace)-1;
-title(sprintf('Hard Negative Mining iter %03d\n %s iter=%03d',iter,m.models_name,iter),'FontSize',20)
+iter = length(m.models{1}.wtrace)-1;
+title(sprintf('Hard Negative Mining iter %03d\n %s iter=%03d',iter,m.model_name,iter),'FontSize',20)
 drawnow
 snapnow
 
@@ -87,7 +81,7 @@ if (length(m.params.localdir)>0) && ...
         (m.iteration == m.params.train_max_mine_iterations)))
 
   imwrite(Isv1,sprintf('%s/models/%s.%d_mineiter_I=%05d.png', ...
-                    m.params.localdir, m.models_name, ...
+                    m.params.localdir, m.model_name, ...
                     m.identifier, m.iteration), 'png');
 end
 

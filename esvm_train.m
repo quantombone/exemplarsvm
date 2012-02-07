@@ -1,21 +1,14 @@
-function models = esvm_train(models, params)
+function model = esvm_train(model, params)
 % Train models with hard negatives mined from the data_set with the
 % parameters in params
 % Usage:
-% >> models = esvm_train(pos_set, neg_set);
+% >> models = esvm_train(model, params);
 %
-% >> models = esvm_train(pos_set, neg_set);
+% >> models = esvm_train(model);
 %
-% >> dt_models = esvm_initialize_dt(pos_set);
-% >> models = esvm_train(dt_models,neg_set);
-%
-% >> e_models = esvm_initialize_exemplars(pos_set);
-% >> models = esvm_train(e_models,neg_set);
-%
-% [models]: a cell array of initialized exemplar models
-% [neg_set]: a virtual set of images to mine from
+% [model]: an initialized model
 % [params]: localization and training parameters
-
+%
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
 % 
@@ -30,9 +23,10 @@ function models = esvm_train(models, params)
 % end
 
 if ~exist('params','var')
-  params = models{1}.params;
+  params = model.params;
 else
-  models =cellfun(@(x)setfield(x,'params',params),models,'UniformOutput',false);
+  model.params = params;
+  %models = cellfun(@(x)setfield(x,'params',params),models,'UniformOutput',false);
 end
 
 if length(params.localdir)==0
@@ -41,66 +35,69 @@ else
   CACHE_FILE = 1;
 end
 
-models_name = models{1}.models_name;
-new_models_name = [models_name params.training_function()];
+model_name = model.model_name;
+new_model_name = [model_name params.training_function()];
 
 cache_dir =  ...
     sprintf('%s/models/',params.localdir);
 
 cache_file = ...
-    sprintf('%s/%s.mat',cache_dir,new_models_name);
+    sprintf('%s/%s.mat',cache_dir,new_model_name);
 
 cache_file_stripped = ...
-    sprintf('%s/%s-stripped.mat',cache_dir,new_models_name);
+    sprintf('%s/%s-stripped.mat',cache_dir,new_model_name);
 
 if CACHE_FILE == 1 && fileexists(cache_file)
-  load(cache_file,'models');
+  load(cache_file,'model');
   return;
 end
 
 if CACHE_FILE == 1 && fileexists(cache_file)
-  load(cache_file,'models');
+  load(cache_file,'model');
   return;
 end
 
 %DUMPDIR = sprintf('%s/results/svs/%s/',params.localdir, ...
-%                  new_models_name);
+%                  new_model_name);
 
 %display of SV pdfs disabled
 %if CACHE_FILE==1 && params.display ==1 && ~exist(DUMPDIR,'dir')%  mkdir(DUMPDIR);
 %end
 
 final_directory = ...
-    sprintf('%s/models/%s/',params.localdir,new_models_name);
+    sprintf('%s/models/%s/',params.localdir,new_model_name);
 
 %make results directory if needed
 %if CACHE_FILE == 1 && ~exist(final_directory,'dir')
 %  mkdir(final_directory);
 %end
 
+
+%Assign unique identifiers to all of the models
+model.models = cellfun(@(x,y)setfield(x,'identifier',y),...
+                       model.models,num2cell(1:length(model.models)),...
+                       'UniformOutput',false);
+
 % randomize chunk orderings
 if CACHE_FILE == 1
   myRandomize;
-  ordering = randperm(length(models));
+  ordering = randperm(length(model.models));
 else
-  ordering = 1:length(models);
+  ordering = 1:length(model.models);
 end
+model.models = model.models(ordering);
 
-models = cellfun(@(x,y)setfield(x,'identifier',y),...
-                 models,num2cell(1:length(models)),...
-                 'UniformOutput',false);
-
-models = models(ordering);
-allfiles = cell(length(models), 1);
-for i = 1:length(models)
-  filer = '';
-  m = models{i};
+allfiles = cell(1,length(model.models));
+for i = 1:length(model.models)
   
+  m = model;
+  m.models = m.models(i);
+  m.models{1}.params = params;
   [complete_file] = sprintf('%s/%s_%04d.mat', ...
-                            final_directory, new_models_name,...
-                            m.identifier);
+                            final_directory, new_model_name,...
+                            m.models{1}.identifier);
   [basedir, basename, ext] = fileparts(complete_file);
-  %filer2fill = sprintf('%s/%%s.%s.mat',basedir,basename);
+
   filer2final = sprintf('%s/%s.mat',basedir,basename);  
   
   allfiles{i} = filer2final;
@@ -114,9 +111,8 @@ for i = 1:length(models)
     end
   end
   
-  
   % Append '-svm' to the mode to create the models name
-  m.models_name = new_models_name;
+  m.model_name = new_model_name;
   m.iteration = 1;
   m.total_mines = 0;
   
@@ -125,8 +121,8 @@ for i = 1:length(models)
   end
 
   %save a trace of variables during learning
-  m.wtrace = cell(0,1);
-  m.btrace = {};
+  m.models{1}.wtrace = cell(0,1);
+  m.models{1}.btrace = {};
 
   if isfield(m,'svxs') && numel(m.svxs)>0
     fprintf(1,'Pre-SVMing');
@@ -145,19 +141,19 @@ for i = 1:length(models)
   
   % Add training set and training set's mining queue 
   %m.train_set = neg_set;
-  mining_queue = esvm_initialize_mining_queue(m, models{1}.cls);
+  mining_queue = esvm_initialize_mining_queue(model, model.cls);
   
   while keep_going == 1
-  
-    %Get the name of the next chunk file to write
-    %filer2 = sprintf(filer2fill,num2str(m.iteration));
-
     if ~isfield(m,'mining_stats')
       total_mines = 0;
     else
       total_mines = sum(cellfun(@(x)x.total_mines, m.mining_stats));
     end
     m.total_mines = total_mines;
+
+    m.data_set = model.data_set;
+    m.params = model.params;
+    m.model_name = model.model_name;
 
     [m,mining_queue] = esvm_mine_train_iteration(m, mining_queue);
 
@@ -264,7 +260,8 @@ for i = 1:length(models)
 end
 
 if CACHE_FILE == 0
-  models = allfiles;
+  %model = allfiles;
+  model.models = cellfun(@(x)x.models,allfiles);
   return;
 end
 
@@ -274,14 +271,14 @@ allfiles = sort(allfiles);
 CACHE_FILE = 1;
 STRIP_FILE = 0;
 
-if new_models_name(1) == '-'
+if new_model_name(1) == '-'
   CACHE_FILE = 0;
   STRIP_FILE = 0;
 end
 
 DELETE_INITIAL = 1;
 
-models = esvm_load_models(params, new_models_name, allfiles, ...
+model = esvm_load_models(params, new_model_name, allfiles, ...
                           CACHE_FILE, STRIP_FILE, DELETE_INITIAL);
 
 

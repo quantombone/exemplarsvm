@@ -27,6 +27,20 @@ function [resstruct,feat_pyramid] = esvm_detect(I, models, params)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
+if exist('params','var')
+  if isstruct(models)
+    models.params = params;
+  else
+    models = cellfun2(@(x)setfield(x,'params',params),models);
+  end
+elseif isstruct(models) && isfield(models,'params')
+  params = models.params;
+elseif iscell(models) && isfield(models{1},'params')
+  params = models{1}.params;
+else 
+  params = esvm_get_default_params;
+end
+
 if isempty(models)
   fprintf(1,'Warning: empty models in esvm_detect\n');
   resstruct.bbs{1} = zeros(0,0);
@@ -35,16 +49,15 @@ if isempty(models)
   return;
 end
 
-if ~iscell(models)
-  models = {models};
+if isstruct(models) && isfield(models,'models')
+  [resstruct,feat_pyramid] = esvm_detect(I,models.models,params);
+  return;
 end
 
-if exist('params','var')
-  models = cellfun2(@(x)setfield(x,'params',params),models);
-elseif isfield(models{1},'params')
-  params = models{1}.params;
-elseif ~exist('params','var')
-  params = esvm_get_default_params;
+if ~iscell(models) && ~isfield(models,'models')
+  models = {models};
+  [resstruct,feat_pyramid] = esvm_detect(I,models,params);
+  return;
 end
 
 %if ~isfield(params,'nnmode')
@@ -89,12 +102,13 @@ if ~isfield(params,'max_models_before_block_method')
 end
 
 if (length(models) > params.max_models_before_block_method) ...
-      || (~isempty(params.nnmode))
+      || (~isempty(params.nnmode) && params.nnmode~=0)
 
   [resstruct,t] = esvm_detectdriverBLOCK(I, models, ...
                                          params);
   return;
 end
+
 
 N = length(models);
 ws = cellfun2(@(x)x.w,models);

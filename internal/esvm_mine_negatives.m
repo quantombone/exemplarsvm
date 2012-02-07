@@ -1,16 +1,13 @@
 function [hn, mining_queue, mining_stats] = ...
-    esvm_mine_negatives(models, mining_queue, imageset, params)
-% Compute detections "aka Hard-Negatives" hn for the images in the
-% stream/queue [imageset/mining_queue] when given K classifiers [models]
+    esvm_mine_negatives(model, mining_queue)
+% Compute "Hard-Negatives" for the images in the
+% stream/queue [imageset/mining_queue] for the current model
 % 
 % Input Data:
-% models: Kx1 cell array of models
+% model: the input model
 % mining_queue: the mining queue create from
 %    esvm_initialize_mining_queue(imageset)
-% imageset: the source of images (potentially already in pyramid feature
-%   format)
-% params: the parameters of the mining/localization
-% procedure
+% params: esvm parameters
 % 
 % Returned Data: 
 % hn: Kx1 cell array where hn{i} contains info for model i
@@ -25,12 +22,11 @@ function [hn, mining_queue, mining_stats] = ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-if ~exist('params','var')
-  params = esvm_get_default_params;
-end
+imageset = model.data_set; 
+params = model.params;
 
 number_of_violating_images = 0;
-number_of_windows = zeros(length(models),1);
+number_of_windows = zeros(1,1);
 
 violating_images = zeros(0,1);
 empty_images = zeros(0,1);
@@ -40,30 +36,13 @@ params.detect_save_features = 1;
 
 numpassed = 0;
 
-for i = 1:length(models)
-  if ~isfield(models{i},'total_mines')
-    models{i}.total_mines = 0;
-  end
-end
+model.total_mines = 0;
 
 for i = 1:length(mining_queue)
   index = mining_queue{i}.index;
   I = toI(imageset{index});
 
-  %HACK ROTATE UPSIDE DOWN
-  %fprintf(1,'HACK: rotate upside down negatives\n');
-  %I = imrotate(I,180);
-
-  %starter = tic;
-  % if isfield(params,'wtype') && strcmp(params.wtype, ...
-  %                                              'dfun')
-
-  %   [rs,t] = localizemeHOG_dfun(I, models, params);
-  
-  %   %plot(rs.bbs{1}(:,end))
-  %   %keyboard
-  % else
-  [rs,t] = esvm_detect(I, models, params);
+  [rs,t] = esvm_detect(I, model, params);
 
   if isstruct(imageset{index}) ...
         && isfield(imageset{index},'objects') ...
@@ -76,17 +55,16 @@ for i = 1:length(mining_queue)
     goods = find(os < params.mine_skip_objects_os);
     rs.bbs{1} = rs.bbs{1}(goods,:);
     rs.xs{1} = rs.xs{1}(goods);
-
   end
   
 
-  if isfield(models{1}.params,'SOFT_NEGATIVE_MINING') && ...
-        (models{1}.params.SOFT_NEGATIVE_MINING==1)
+  if isfield(params,'SOFT_NEGATIVE_MINING') && ...
+        (params.SOFT_NEGATIVE_MINING==1)
     for j=1:length(rs.bbs)
       if size(rs.bbs{j},1) > 0
         top_det = rs.bbs{j}(1,:);
         os = getosmatrix_bb(rs.bbs{j},top_det);
-        goods = find(os<models{j}.params.SOFT_NEGATIVE_MINING_OS);
+        goods = find(os<params.SOFT_NEGATIVE_MINING_OS);
         rs.bbs{j} = rs.bbs{j}(goods,:);
         rs.xs{j} = rs.xs{j}(goods);
       end
@@ -105,7 +83,7 @@ for i = 1:length(mining_queue)
   %% Make sure we only keep 3 times the number of violating windows
   clear scores
   scores{1} = [];
-  for q = 1:length(models)
+  for q = 1:1
     if ~isempty(rs.bbs{q})
       s = rs.bbs{q}(:,end);
       nviol = sum(s >= -1);
@@ -136,7 +114,7 @@ for i = 1:length(mining_queue)
   number_of_windows = number_of_windows + cellfun(@(x)length(x),scores)';
   
   clear curxs curbbs
-  for q = 1:length(models)
+  for q = 1:1 
     curxs{q} = [];
     curbbs{q} = [];
     if isempty(rs.xs{q})
@@ -163,14 +141,13 @@ for i = 1:length(mining_queue)
     end 
     violating_images(end+1) = index;
   end
-  
-  for a = 1:length(models)
+
+  for a = 1:1 
     xs{a}{i} = curxs{a};
     bbs{a}{i} = curbbs{a};
   end
-
   
-  if (numpassed + models{1}.total_mines >= ...
+  if (numpassed + model.total_mines >= ...
       params.train_max_mined_images) || ...
         (max(number_of_windows) >= params.train_max_windows_per_iteration) || ...
         (numpassed >= params.train_max_images_per_iteration)
@@ -183,8 +160,8 @@ end
 
 if ~exist('xs','var')
   %If no detections from from anymodels, return an empty matrix
-  for i = 1:length(models)
-    hn.xs{i} = zeros(prod(size(models{i}.model.w)),0);
+  for i = 1:1 
+    hn.xs{i} = zeros(prod(size(model.model.w)),0);
     hn.bbs{i} = [];
   end
   mining_stats.num_violating = 0;

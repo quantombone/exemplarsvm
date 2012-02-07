@@ -1,4 +1,4 @@
-function models = esvm_latent_update_dt(models, params)
+function model = esvm_latent_update_dt(model, params)
 % Updates positives with latent placements which pass os threshold test
 % 
 % INPUTS:
@@ -15,15 +15,15 @@ function models = esvm_latent_update_dt(models, params)
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
 if exist('params','var')
-  models = cellfun(@(x)setfield(x,'params',params),models,'UniformOutput',false);
-elseif isfield(models{1},'params')
-  params = models{1}.params;
+  model.params = params;
+elseif isfield(model, 'params')
+  params = model.params;
 else
   params = esvm_get_default_params;
-  models = cellfun(@(x)setfield(x,'params',params),models,'UniformOutput',false);
+  model.params = params;  
 end
 
-if length(models) > 1
+if length(model.models) > 1
   fprintf(1,'WARNING: latent update has more than one model\n');
 end
 
@@ -34,23 +34,23 @@ else
 end
 
 
-models_name = [models{1}.models_name '-L'];
+model_name = [model.model_name '-L'];
 
 cache_dir =  ...
     sprintf('%s/models/',params.localdir);
 
 cache_file = ...
-    sprintf('%s/%s.mat',cache_dir,models_name);
+    sprintf('%s/%s.mat',cache_dir,model_name);
 
 if CACHE_FILE ==1 && fileexists(cache_file)
-  models = load(cache_file);
-  models = models.models;
+  model = load(cache_file);
+  model = model.model;
   return;
 end
 
 % results_directory = ...
 %     sprintf('%s/models/%s/',params.dataset_params.localdir, ...
-%             models_name);
+%             model_name);
 
 % if CACHE_FILE==1 && ~exist(results_directory,'dir')
 %   fprintf(1,'Making directory %s\n',results_directory);
@@ -71,8 +71,7 @@ p.detect_max_windows_per_exemplar = 300;
 curx = cell(0,1);
 curbb = cell(0,1);
 
-data_set = models{1}.data_set;
-%pos_set = data_set(find(cellfun(@(x)length(x.objects)>0,data_set)));
+data_set = model.data_set;
 
 potentialx = cell(0,1);
 potentialbb = cell(0,1);
@@ -85,8 +84,8 @@ for j = 1:length(data_set)
   end
   
   I = toI(data_set{j});
-  rs = esvm_detect(I, models, p);
-   
+  rs = esvm_detect(I, model, p);
+  
   if size(rs.bbs{1})~=0
     rs.bbs{1}(:,11) = j;
     gt_bbs = cat(1,data_set{j}.objects.bbox);
@@ -112,14 +111,14 @@ end
 USE_ALL_POTENTIALS = 0;
 
 if USE_ALL_POTENTIALS == 1
- models{1}.x = cat(2,potentialx{:});
- models{1}.bb = cat(1,potentialbb{:});
- [~,bb] = sort(models{1}.w(:)'*models{1}.x,'descend');
- models{1}.x = models{1}.x(:,bb);
- models{1}.bb = models{1}.bb(bb,:);
+  model.models{1}.x = cat(2,potentialx{:});
+  model.models{1}.bb = cat(1,potentialbb{:});
+  [~,bb] = sort(model.models{1}.w(:)'*model.models{1}.x,'descend');
+  model.models{1}.x = model.models{1}.x(:,bb);
+  model.models{1}.bb = model.models{1}.bb(bb,:);
 else
   
-  best_model = models{1};
+  best_model = model.models{1};
   best_score = evaluate_obj(best_model);
   
   %now we are onto finding the best assignments  
@@ -167,7 +166,7 @@ else
 end
 
 %Update name with proper suffix being concatenated
-models{1}.models_name = [models_name];
+models{1}.model_name = [model_name];
 
 fprintf(1,'Got latent updates for %d examples\n',size(models{1}.bb,1));
 
@@ -180,18 +179,18 @@ end
 %        m.iteration == m.params.train_max_mine_iterations)
 
 %   imwrite(Isv1,sprintf('%s/%s.%d_iter_I=%05d.png', ...
-%                     m.params.localdir, m.models_name, ...
+%                     m.params.localdir, m.model_name, ...
 %                     m.identifier, m.iteration), 'png');
 % end
 
 if params.display == 1    
   [aa,bb] = sort(models{1}.w(:)'*models{1}.x,'descend');
-  Icur = esvm_show_det_stack(models{1}.bb(bb,:),models{1}.data_set, ...
+  Icur = esvm_show_det_stack(models{1}.bb(bb,:),model.data_set, ...
                              10,10,models{1});
   
   [aa,bb] = sort(models{1}.w(:)'*models{1}.svxs,'descend');
   Icur2 = esvm_show_det_stack(models{1}.svbbs(bb,:), ...
-                              models{1}.data_set, 10,10, ...
+                              model.data_set, 10,10, ...
                               models{1});
   Ipad = zeros(size(Icur,1),10,3);
   Ipad(:,:,1) = 1;
