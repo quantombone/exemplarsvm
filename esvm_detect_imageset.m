@@ -150,6 +150,14 @@ for i = 1:length(ordering)
     res{j}.imbb = [1 1 size(I,2) size(I,1)];
     res{j}.curid = curid;
 
+    if params.display_detections == 1
+      figure(1)
+      imagesc(toI(I))
+      plot_bbox(boxes(1,:))
+      title(num2str(boxes(1,end)))
+      drawnow
+    end
+    
     %%%NOTE: the gt-function is well-defined for VOC-exemplars
     % if isfield(params,'gt_function') && ...
     %       ~isempty(params.gt_function)
