@@ -1,14 +1,14 @@
 %% A showcase of the ExemplarSVM Library 1.0
 
 %Generate a training data set with class name 'circle'
-%data_set = esvm_generate_dataset(2,2,'circle');
+data_set = esvm_generate_dataset(50,50,'circle');
 
 %Learn an ensemble of ExemplarSVMs
-model = learnExemplarSVMs(data_set,'circle');
-%model = learnDalalTriggs(data_set,'circle');
+%model = learnExemplarSVMs(data_set,'circle');
+model = learnDalalTriggs(data_set,'circle');
 
 %Create a held-out test-set
-test_set = esvm_generate_dataset(2,2,'circle');
+test_set = esvm_generate_dataset(200,200,'circle');
 
 %Get detection boxes by applying model to test_set
 boxes = applyModel(test_set, model);
