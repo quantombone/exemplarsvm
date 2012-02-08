@@ -34,15 +34,13 @@ if ~exist('params','var') || length(params) == 0
   params.train_max_mined_images = 50;
   params.detect_pyramid_padding = 0;
 end
-if 0
+
 %should be esvm_initialize_exemplarSVMs
 model = esvm_initialize_exemplars(data_set, cls, params);
 
 %perform training
 model = esvm_train(model);
-end
 
-load model.mat
 %% Apply trained exemplars on validation set
 val_grid = esvm_detect_imageset(data_set, model, params);%, val_set_name);
                        
