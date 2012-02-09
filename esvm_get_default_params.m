@@ -211,3 +211,5 @@ params.evaluation_minoverlap = .5;
 
 %Display flag if enabled will show lots of things
 params.display = 0;
+
+params.display_detections = 0;
