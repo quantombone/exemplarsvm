@@ -7,13 +7,15 @@ function [hn, mining_queue, mining_stats] = ...
 % model: the input model
 % mining_queue: the mining queue create from
 %    esvm_initialize_mining_queue(imageset)
-% params: esvm parameters
 % 
 % Returned Data: 
 % hn: Kx1 cell array where hn{i} contains info for model i
 % hn contains:
 %   hn{:}.xs "features"
 %   hn{:}.bbs "bounding boxes"
+% mining_queue: the updated mining queue taking care of images we
+%   already visited
+% mining_stats: statistics about the number of detections, etc
 %
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
@@ -34,6 +36,10 @@ empty_images = zeros(0,1);
 % Force feature saving because we need features for training
 params.detect_save_features = 1;
 
+params.detect_exemplar_nms_os_threshold = ...
+    params.train_exemplar_nms_os_threshold;
+params.detect_max_scale = params.train_max_scale;
+
 numpassed = 0;
 
 model.total_mines = 0;
@@ -47,17 +53,19 @@ for i = 1:length(mining_queue)
   if isstruct(imageset{index}) ...
         && isfield(imageset{index},'objects') ...
         && length(imageset{index}.objects) > 0 ...
-        && params.mine_skip_objects == 1
+        && params.mine_skip_positive_objects == 1
     gtbbs = cat(1,imageset{index}.objects.bbox);
 
     os = getosmatrix_bb(rs.bbs{1},gtbbs);
     os = max(os,[],2);
-    goods = find(os < params.mine_skip_objects_os);
+    goods = find(os < params.mine_skip_positive_objects_os);
     rs.bbs{1} = rs.bbs{1}(goods,:);
     rs.xs{1} = rs.xs{1}(goods);
   end
   
 
+  %NOTE(TJM): soft negative mining was experimental and is not used
+  %anymore
   if isfield(params,'SOFT_NEGATIVE_MINING') && ...
         (params.SOFT_NEGATIVE_MINING==1)
     for j=1:length(rs.bbs)

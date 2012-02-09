@@ -1,6 +1,6 @@
 function [III, locations] = vis_box_tiles(Is,L)
 % Given a bunch of images (all of same size) and a bb per image
-% Create a visualization
+% Create a visualization with one box per image
 
 if nargin == 1
   L = extract_bbs(Is);
@@ -19,7 +19,7 @@ start_length = length(Is);
 S = ceil(sqrt(length(Is)));
 fillmore = S*S-length(Is);
 
-Is = cat(1,Is,repmat({Is{1}*0+0},fillmore,1));
+Is = cat(1,Is(:),repmat({toI(Is{1})*0+0},fillmore,1));
 PAD = 10;
 Is = cellfun2(@(x)pad_image(x,PAD,[1 1 1]),Is);
 
@@ -58,7 +58,7 @@ end
 if nargout == 0
   imagesc(III)
   for i = 1:size(locations,1)
-    plot_bbox(locations(i,:),num2str(locations(i,end)),[1 0 0],[1 0 ...
+    plot_bbox(locations(i,:),'',[1 0 0],[1 0 ...
                     0])
   end
 end

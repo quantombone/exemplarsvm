@@ -60,11 +60,10 @@ if CACHE_FILE == 1
   data_set = data_set(rrr);
 end
 
-tic
-[cur_pos_set, ~, data_set] = get_objects_set(data_set, cls);
-toc
-fprintf(1,'HACK choosing solo positive set\n');
-model.data_set = cur_pos_set;
+[cur_pos_set, cur_neg_set] = get_positive_negative_sets(data_set, cls);
+data_set = [cur_pos_set cur_neg_set];
+
+model.data_set = data_set;
 model.cls = cls;
 model.model_name = model_name;
 model.params = params;
@@ -75,11 +74,12 @@ allfiles = cell(1,length(data_set));
 for j = 1:length(data_set)  
   curid = j;
   
-  obj = {data_set{j}.objects};
   %Skip positive generation if there are no objects
-  if length(data_set{j}.objects) == 0
+  if ~isfield(data_set{j},'objects') || length(data_set{j}.objects) == 0
     continue
   end
+
+  obj = {data_set{j}.objects};
   I = toI(data_set{j}.I);
   
   for k = 1:length(obj)  
@@ -89,15 +89,12 @@ for j = 1:length(data_set)
 
     filer = sprintf('%s/%d.%d.%s.mat',...
                     results_directory, curid, objectid, cls);
-  
-    %filer = sprintf('%s/%s',results_directory, e_set{i}.filer);
     
     allfiles{j} = filer;
     if ~isfield(params,'init_params')
       error('Warning, cannot initialize without params.init_params\n');
     end
     filerlock = [filer '.lock'];
-
 
     if CACHE_FILE == 1
       if fileexists(filer) || (mymkdir_dist(filerlock)==0)

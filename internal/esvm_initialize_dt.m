@@ -66,9 +66,8 @@ if CACHE_FILE == 1
   end
 end
 
-tic
-[cur_pos_set, ~, data_set] = get_objects_set(data_set, cls);
-toc
+[cur_pos_set, cur_neg_set] = get_positive_negative_sets(data_set, cls);
+data_set = [cur_pos_set cur_neg_set];
 
 % fprintf(1,['TJM(HACK) choosing subset of 10 instances to make things' ...
 %            ' faster \n']);
@@ -78,7 +77,7 @@ toc
 % cur_pos_set = cur_pos_set(1:10);
 
 hg_size = get_hg_size(cur_pos_set, params.init_params.sbin);
-hg_size = hg_size * params.init_params.MAXDIM/max(hg_size);
+hg_size = hg_size * min(1,params.init_params.MAXDIM/max(hg_size));
 hg_size = max(1,round(hg_size));
 
 curfeats = cell(0,1);
@@ -88,12 +87,12 @@ fprintf(1,['esvm_initialize_dt: initializing features by' ...
 allwarps = cell(0,1);
 
 for j = 1:length(data_set)  
-  obj = {data_set{j}.objects};
-  
   %Skip positive generation if there are no objects
-  if length(data_set{j}.objects) == 0
+  if ~isfield(data_set{j},'objects') || length(data_set{j}.objects) == 0
     continue
   end
+  obj = {data_set{j}.objects};
+    
   I = toI(data_set{j}.I);
   flipI = flip_image(I);
 
@@ -103,20 +102,21 @@ for j = 1:length(data_set)
     % Warp original bounding box
     bbox = obj{k}.bbox;    
     warped1 = mywarppos(hg_size, I, params.init_params.sbin, bbox);
+
     allwarps{end+1} = warped1;
     curfeats{end+1} = params.init_params.features(warped1, ...
                                                   params ...
                                                   .init_params ...
                                                   .sbin);
-
     bbox(11) = j;
     bbox(12) = 0;
     bbs{end+1} = bbox;
-
+    
     % Warp LR flipped version
     bbox2 = flip_box(bbox,size(I));
     warped2 = mywarppos(hg_size, flipI, params.init_params.sbin, ...
                         bbox2);
+    
     allwarps{end+1} = warped2;
     curfeats{end+1} = params.init_params.features(warped2, ...
                                                   params.init_params ...
@@ -134,8 +134,8 @@ fprintf(1,'esvm_initialize_dt: finished with %d windows\n',length(curfeats));
 curfeats = cellfun2(@(x)reshape(x,[],1),curfeats);
 curfeats = cat(2,curfeats{:});
 
-fprintf(1,'HACK choosing solo positive set\n');
-model.data_set = cur_pos_set;
+
+model.data_set = data_set;
 model.cls = cls;
 model.model_name = model_name;
 model.params = params;
@@ -180,7 +180,7 @@ if params.display == 1
   figure(1)
   clf
   montage(Is)
-  title('Dalal initialization');
+  title('DalalTriggs initialization','FontSize',20);
   drawnow
 end
 
@@ -215,6 +215,7 @@ aspect = exp(xx(I));
 
 % pick 20 percentile area
 areas = sort(h.*w);
+
 %TJM: make sure we index into first element if not enough are
 %present to take the 20 percentile area
 area = areas(max(1,floor(length(areas) * 0.2)));
@@ -246,3 +247,4 @@ y1 = round(bbox(2)-pady);
 y2 = round(bbox(4)+pady);
 window = subarray(I, y1, y2, x1, x2, 1);
 warped = imresize(window, cropsize(1:2), 'bilinear');
+

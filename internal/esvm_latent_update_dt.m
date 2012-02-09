@@ -62,7 +62,7 @@ filer = cache_file;
 
 %NOTE BUG (TJM): no filerlock locking here
 
-p = esvm_get_default_params;
+p = params;%esvm_get_default_params;
 p.detect_save_features = 1;
 p.detect_keep_threshold = -1.0;
 p.detect_exemplar_nms_os_threshold = 1.0;
@@ -85,7 +85,7 @@ for j = 1:length(data_set)
   
   I = toI(data_set{j});
   rs = esvm_detect(I, model, p);
-  
+
   if size(rs.bbs{1})~=0
     rs.bbs{1}(:,11) = j;
     gt_bbs = cat(1,data_set{j}.objects.bbox);

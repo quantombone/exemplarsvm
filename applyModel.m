@@ -1,6 +1,6 @@
 function boxes = applyModel(data_set, model, test_set_name)
 
-data_set = get_screenshot_bg(1000);
+data_set = get_screenshot_bg(1000,@(x)imresize_max(x,400));
 
 %% Define test-set parameters
 test_params = model.params;

@@ -24,19 +24,22 @@ end
 if ~exist('params','var') || length(params) == 0
   %% Get default parameters
   params = esvm_get_default_params;
-  params.display = 1;  
-  params.dump_images = 1;
-  params.detect_max_scale = 0.5;
-  params.detect_exemplar_nms_os_threshold = 1.0; 
-  params.detect_max_windows_per_exemplar = 100;
-  params.train_max_negatives_in_cache = 5000;
-  params.train_max_mined_images = 500;
-  params.latent_iterations = 2;
-  % for dalaltriggs, it seams having same constant on positives as
-  % negatives is better than using 50
-  params.train_positives_constant = 1;
-  params.detect_pyramid_padding = 0;
 end
+
+params.display = 1;  
+params.dump_images = 0;
+params.detect_max_windows_per_exemplar = 100;
+params.train_max_negatives_in_cache = 5000;
+%params.train_max_mined_images = 500;
+params.latent_iterations = 2;
+% for dalaltriggs, it seams having same constant on positives as
+% negatives is better than using 50
+params.train_positives_constant = 1;
+params.mine_from_negatives = 1;
+params.mine_from_positives = 1;
+params.mine_skip_positive_objects_os = .5;
+
+%params.detect_pyramid_padding = 0;
 
 % if ~exist('localdir','var')
 %   localdir = '/nfs/baikal/tmalisie/esvm-dt/';

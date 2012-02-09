@@ -153,8 +153,10 @@ for i = 1:length(ordering)
     if params.display_detections == 1
       figure(1)
       imagesc(toI(I))
-      plot_bbox(boxes(1,:))
-      title(num2str(boxes(1,end)))
+      if size(boxes,1) > 0
+        plot_bbox(boxes(1,:))
+        title(num2str(boxes(1,end)))
+      end
       drawnow
     end
     

@@ -74,6 +74,12 @@ params.max_models_before_block_method = 20;
 %% Training/Mining parameters %%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%For training, use .5 the resolution of images
+params.train_max_scale = 0.5;
+
+%For training, do not do NMS
+params.train_exemplar_nms_os_threshold = 1.0;
+
 %The maximum number of negatives to keep in the cache while training.
 params.train_max_negatives_in_cache = 2000;
 
@@ -192,19 +198,21 @@ params.localdir = '';
 % For dalal triggs, we need an update threshold (we only keep
 % detections which have above this overlap with a ground-truth region)
 params.latent_os_thresh = 0.7;
-params.latent_iterations = 10;
+params.latent_iterations = 2;
+
+%experimental flag which lets us perturb assignments during the
+%latent update step
 params.latent_perturb_assignment_iterations = 0;
 
 %Information about where we mine images from
-%TODO(TJM): these need to be utilized
-params.mine_from_negatives = 0;
-params.mine_from_positives = 1;
+params.mine_from_negatives = 1;
+params.mine_from_positives = 0;
 
 % If enabled, skips objects durning mining when mining from positives
-params.mine_skip_objects = 1;
+params.mine_skip_positive_objects = 1;
 
 % Skips any object which overlaps with GT by more than this amount
-params.mine_skip_objects_os = .2;
+params.mine_skip_positive_objects_os = .2;
 
 %The threshold for evaluation
 params.evaluation_minoverlap = .5;
