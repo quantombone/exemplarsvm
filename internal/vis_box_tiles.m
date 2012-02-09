@@ -1,6 +1,6 @@
-function [III,locations] = vis_box_tiles(Is,L)
-%Given a bunch of images (all of same size) and a bb per image
-%Create a visualization
+function [III, locations] = vis_box_tiles(Is,L)
+% Given a bunch of images (all of same size) and a bb per image
+% Create a visualization
 
 if nargin == 1
   L = extract_bbs(Is);
@@ -12,6 +12,7 @@ Is = Is(uL);
 
 [tmp,ids] = ismember(L(:,11),uL);
 L(:,11) = ids;
+
 
 Is = cellfun2(@(x)toI(x),Is);
 start_length = length(Is);
@@ -46,11 +47,10 @@ for i = 1:S
     cur = L(counter,:);
     cur([1 3]) = cur([1 3])+(j-1)*size(Is{1},2);
     cur([2 4]) = cur([2 4])+(i-1)*size(Is{1},1);
-    cur = cur + PAD;
+    cur(1:4) = cur(1:4) + PAD;
     
     locations(counter,:) = cur;
     counter = counter + 1;
-
   end
 end
 
@@ -62,5 +62,3 @@ if nargout == 0
                     0])
   end
 end
-
-%L(:,end)

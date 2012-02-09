@@ -1,5 +1,10 @@
 function [data_set] = esvm_generate_dataset(Npos, Nneg, cls)
-% Generate a synthetic dataset of circles (see esvm_demo_train_synthetic.m)
+% Generate a synthetic dataset of circle patterns over a random
+% background of noise (a very easy example) and assign the class
+% name 'cls' to those instances.  The first Npos images in the data
+% will have one positive bounding box per image, and second Nneg
+% images will not have any objects.
+
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved.
 % 
@@ -28,8 +33,9 @@ Apattern = generate_pattern(pattern_size);
 
 N = Npos + Nneg;
 data_set = cell(N,1);
-fprintf(1,'Generating dataset of size %d posititives, %d negatives\n',...
-        Npos, Nneg);
+fprintf(1,['Generating synthetic dataset of size: %d posititives,' ...
+                                                  ' %d negatives\n'], ...
+           Npos, Nneg);
 
 for i = 1:N  
   %Generate a background image of goal size
@@ -68,11 +74,12 @@ end
 figure(1)
 clf
 vis_box_tiles(data_set);
-title('DataSet')
+title('Synthetic Data Set','FontSize',20)
+axis image
+axis off
 
 function Apattern = generate_pattern(pattern_size)
-% Generate a pattern
-
+% Generate a circular pattern of size pattern_size
 A = zeros(pattern_size-1,pattern_size-1);
 A(ceil(pattern_size/2),ceil(pattern_size/2)) = 1;
 A = double(bwdist(A)<ceil(pattern_size*.4));
@@ -83,15 +90,21 @@ A = A(min(us):max(us),min(vs):max(vs));
 Apattern = repmat(A,[1 1 3]);
 
 function I = generate_random_image(image_size)
-%generate a random image, which can be load from disk too!
+% Generate a random image
+% Note, loading a random image from disk might be a better
+% background pattern
 I = rand(image_size,image_size,3);
 
 function [I,bb] = post_process(I,bb)
-%perform additional post processing
+%perform additional post processing such as adding noise to the
+%image to make the detection problem more difficult
 
 I = .4*I+.6*rand(size(I));
 
 function [I2,bb] = inpaint_pattern(I, A)
+%Inpaint pattern A into image I at some random location where the
+%pattern fully fits
+
 %find locations of where we can inpaint the pattern
 sub1 = ceil(rand.*(size(I,1)-size(A,1)-1));
 sub2 = ceil(rand.*(size(I,2)-size(A,2)-1));
@@ -99,9 +112,5 @@ sub2 = ceil(rand.*(size(I,2)-size(A,2)-1));
 Ipattern = zeros(size(I));
 Ipattern(sub1+(1:size(A,1)),sub2+(1:size(A,2)),:) = A;
 bb = [sub2 sub1 sub2+size(A,2) sub1+size(A,1) ];
-
-% inds = find(Ipattern);
-% I2 = I;
-% I2(find(inds))=0;
 
 I2 = (I.*(~Ipattern));

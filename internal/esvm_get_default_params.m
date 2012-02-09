@@ -29,14 +29,15 @@ params.detect_save_features = 0;
 %that fall above this threshold.
 params.detect_keep_threshold = -1;
 
-%Maximum #windows per exemplar (per image) to keep
+%Maximum #windows per template (per image) to keep.  In
+%DalalTriggs, there is only one template which represents a
+%category, and in ExemplarSVMs there are N templates
 params.detect_max_windows_per_exemplar = 100;
 
 %Determines if NMS (Non-maximum suppression) should be used to
 %prune highly overlapping, redundant, detections.
 %If less than 1.0, then we apply nms to detections so that we don't have
 %too many redundant windows [defaults to 0.5]
-%NOTE: mining is much faster if this is turned off!
 params.detect_exemplar_nms_os_threshold = 0.5;
 
 %How much we pad the pyramid (to let detections fall outside the image)
@@ -49,19 +50,24 @@ params.detect_max_scale = 1.0;
 params.detect_min_scale = .01;
 
 %Only keep detections that have sufficient overlap with the input's
-%global bounding box.  If greater than 0, then only keep detections
-%that have this OS with the entire input image.
+%global bounding box.  If greater than 0, then we only keep detections
+%that have this OS or greater with the entire input image.
 params.detect_min_scene_os = 0.0;
 
 % Choose the number of images to process in each chunk for detection.
 % This parameters tells us how many images each core will process at
 % at time before saving results.  A higher number of images per chunk
 % means there will be less constant access to hard disk by separate
-% processes than if images per chunk was 1.
+% processes than if images per chunk was 1.  This is a caching
+% parameter and plays no effect on the learning if everything is
+% processed on a single machine.
 params.detect_images_per_chunk = 4;
 
-%NOTE: If the number of specified models is greater than 20, use the
-%BLOCK-based method
+% Determines when we switch from doing per-exemplar convolutions to
+% doing the block method (which pre-computes the large matrix of
+% descriptors for every single window in the image).
+% NOTE: If the number of specified models is greater than 20, use the
+% BLOCK-based method
 params.max_models_before_block_method = 20;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -76,14 +82,15 @@ params.train_max_negatives_in_cache = 2000;
 %max_windows_before_svm images have been processed
 params.train_max_mine_iterations = 100;
 
-%Maximum TOTAL number of image accesses from the mining queue
+%Maximum TOTAL number of images to mine from the mining queue
 params.train_max_mined_images = 2500;
 
 %Maximum number of negatives to mine before SVM kicks in (this
-%defines one iteration)
+%defines one iteration of learning)
 params.train_max_windows_per_iteration = 1000;
 
-%Maximum number of violating images before SVM is trained with current cache
+%Maximum number of images with a detection before one iteration of
+%learning completes
 params.train_max_images_per_iteration = 400;
 
 %NOTE: I don't think these fields are being used since I set the
@@ -93,18 +100,25 @@ params.train_max_images_per_iteration = 400;
 %1000, where alpha is the "keep nsv multiplier"
 params.train_keep_nsv_multiplier = 3;
 
-%ICCV11 constant for SVM learning
+%ICCV11 constant for SVM learning is .01
 params.train_svm_c = .01; %% regularize more with .0001;
 
 %The constant which tells us the weight in front of the positives
 %during SVM learning
 params.train_positives_constant = 50;
 
+%NOTE: I'm not sure in which sections should this be defined.  By
+%default, NN mode is turned off and we assume per-exemplar SVMs
+params.nnmode = '';
+
+%By default, we use an SVM, dfun flag means we perform learning in
+%distance to mean space and thus learn a distance function
+%NOTE: this feature is commented out in lots of places, so it
+%probably doesn't work as intended
+params.dfun = 0;
+
 %The svm update equation
 params.training_function = @esvm_update_svm;
-
-%experimental flag to skip the mining process
-%params.train_skip_mining = 0;
 
 %Mining Queue mode can be one of:
 % {'onepass','cycle-violators','front-violators'}
@@ -118,10 +132,6 @@ params.training_function = @esvm_update_svm;
 % (train_max_mined_images) so that learning doesn't loop
 % indefinitely
 params.queue_mode = 'onepass';
-
-% if non-zero, sets weight of positives such that positives and
-%negatives are treated equally
-%params.BALANCE_POSITIVES = 0;
 
 % % NOTE: this stuff is experimental and currently disabled (see
 % % do_svm.m). The goal was to perform dimensionality reduction
@@ -144,37 +154,27 @@ params.queue_mode = 'onepass';
 %% Cross-Validation(Calibration) parameters %%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%By default perform calibration with matrix method
+params.calibration_platt = 0;
+
 %The default calibration threshold (will prune away all windows
 %that score below this number)
 params.calibration_threshold = -1;
 
+%By default perform calibration with matrix method
+params.calibration_matrix = 1;
+
 %The M-matrix estimation parameters
-params.calibration_count_thresh = .5;
-params.calibration_neighbor_thresh = .5;
+params.calibration_matrix_count_thresh = .5;
+params.calibration_matrix_neighbor_thresh = .5;
 
 %If enabled, use M-matrix calibration, but then propagate results
 %onto best local "raw" exemplar-based detection
-params.calibration_propagate_onto_raw = 0;
+params.calibration_matrix_propagate_onto_raw = 0;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Saving and Output parameters %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%if enabled, we dump learning images into results directory
-params.dump_images = 0;
-
-%if enabled, we dump the last image
-params.dump_last_image = 1;
-
-%NOTE: I'm not sure in which sections should this be defined.  By
-%default, NN mode is turned off and we assume per-exemplar SVMs
-params.nnmode = '';
-
-%By default, we use an SVM, dfun flag means we perform learning in
-%distance to mean space and thus learn a distance function
-%NOTE: this feature is commented out in lots of places, so it
-%probably doesn't work as intended
-params.dfun = 0;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Intialization parameters %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Set feature-computation function function
 init_params.features = @esvm_hog;
@@ -209,7 +209,18 @@ params.mine_skip_objects_os = .2;
 %The threshold for evaluation
 params.evaluation_minoverlap = .5;
 
-%Display flag if enabled will show lots of things
+%If display flag is enabled, then we will show lots of things
 params.display = 0;
 
+%If enabled, we display detections during applyModel
 params.display_detections = 0;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Saving and Output parameters %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%If enabled, we dump learning into results directory
+params.dump_images = 0;
+
+%if enabled, we dump the last image of learning only
+params.dump_last_image = 1;

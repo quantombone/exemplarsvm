@@ -72,7 +72,6 @@ raw_boxes = bboxes;
 
 if (exist('M','var') && (~isempty(M)) && isfield(M,'betas') && ...
     ~isfield(M,'neighbor_thresh'))
-  
   fprintf(1,'Applying betas to %d images:',length(bboxes));
   for i = 1:length(bboxes)
     %if neighbor thresh is defined, then we are in M-mode boosting
@@ -124,7 +123,7 @@ for i = 1:length(bboxes)
   end
 end
 
-if params.calibration_propagate_onto_raw && ...
+if params.calibration_matrix_propagate_onto_raw && ...
       exist('M','var') && length(M)>0 && isfield(M,'betas')
   fprintf(1,'Propagating scores onto raw detections\n');
   %% propagate scores onto raw boxes

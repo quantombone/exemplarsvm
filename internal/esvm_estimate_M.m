@@ -10,10 +10,8 @@ function M = esvm_estimate_M(grid, model, params)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-
-
-neighbor_thresh = params.calibration_neighbor_thresh;
-count_thresh    = params.calibration_count_thresh;
+neighbor_thresh = params.calibration_matrix_neighbor_thresh;
+count_thresh    = params.calibration_matrix_count_thresh;
 
 if length(params.localdir) > 0
   CACHE_FILES = 1;

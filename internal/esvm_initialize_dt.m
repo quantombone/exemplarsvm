@@ -1,8 +1,9 @@
 function model = esvm_initialize_dt(data_set, cls, params)
-% DalalTriggs model creation which creates an initial positive set and
+% DalalTriggs model creation which creates an initial positive set
 % by warping positives into a single canonical position, where the
 % canonical position is the obtained from statistics of bounding box
-% aspect ratios
+% aspect ratios. The variable params.init_params defines the
+% initialization function
 %
 % INPUTS:
 % data_set: the training set of objects
