@@ -66,8 +66,10 @@ if CACHE_FILE == 1
   end
 end
 
-[cur_pos_set, cur_neg_set] = get_positive_negative_sets(data_set, cls);
-data_set = [cur_pos_set cur_neg_set];
+[cur_pos_set, cur_neg_set] = get_positive_negative_sets(data_set, ...
+                                                  cls);
+
+data_set = cat(1,cur_pos_set(:),cur_neg_set(:));
 
 % fprintf(1,['TJM(HACK) choosing subset of 10 instances to make things' ...
 %            ' faster \n']);
@@ -82,58 +84,65 @@ hg_size = max(1,round(hg_size));
 
 curfeats = cell(0,1);
 bbs = cell(0,1);
-fprintf(1,['esvm_initialize_dt: initializing features by' ...
-           ' warping to a canonical size\n']);
+fprintf(1,['esvm_initialize_dt(%s): warping to size [%d x %d]\n'],...
+        cls,hg_size(1),hg_size(2));
 allwarps = cell(0,1);
 
+total = 0;
 for j = 1:length(data_set)  
   %Skip positive generation if there are no objects
   if ~isfield(data_set{j},'objects') || length(data_set{j}.objects) == 0
     continue
   end
-  obj = {data_set{j}.objects};
+  obj = data_set{j}.objects;
     
   I = toI(data_set{j}.I);
   flipI = flip_image(I);
-
   
-  for k = 1:length(obj)
-    
+  for k = 1:length(obj)    
     % Warp original bounding box
-    bbox = obj{k}.bbox;    
-    warped1 = mywarppos(hg_size, I, params.init_params.sbin, bbox);
+    bbox = obj(k).bbox;    
+    UUU = bbox(3)-bbox(1)+1;
+    VVV = bbox(4)-bbox(2)+1;
+    total = total + 2;
+    angle = abs((atan2(VVV,UUU) - atan2(hg_size(1),hg_size(2))));
 
-    allwarps{end+1} = warped1;
-    curfeats{end+1} = params.init_params.features(warped1, ...
-                                                  params ...
-                                                  .init_params ...
-                                                  .sbin);
-    bbox(11) = j;
-    bbox(12) = 0;
-    bbs{end+1} = bbox;
-    
-    % Warp LR flipped version
-    bbox2 = flip_box(bbox,size(I));
-    warped2 = mywarppos(hg_size, flipI, params.init_params.sbin, ...
-                        bbox2);
-    
-    allwarps{end+1} = warped2;
-    curfeats{end+1} = params.init_params.features(warped2, ...
-                                                  params.init_params ...
-                                                  .sbin);
-    bbox2(11) = j;
-    bbox2(12) = 0;
-    bbox2(7) = 1; %indicate the flip
-    bbs{end+1} = bbox2;
-    
-    fprintf(1,'.');
+    if (angle < pi/6) && (obj(k).truncated==0)
+      warped1 = mywarppos(hg_size, I, params.init_params.sbin, bbox);
+      
+      allwarps{end+1} = warped1;
+      curfeats{end+1} = params.init_params.features(warped1, ...
+                                                    params ...
+                                                    .init_params ...
+                                                    .sbin);
+      bbox(11) = j;
+      bbox(12) = 0;
+      bbs{end+1} = bbox;
+      
+      % Warp LR flipped version
+      bbox2 = flip_box(bbox,size(I));
+      warped2 = mywarppos(hg_size, flipI, params.init_params.sbin, ...
+                          bbox2);
+      
+      allwarps{end+1} = warped2;
+      curfeats{end+1} = params.init_params.features(warped2, ...
+                                                    params.init_params ...
+                                                    .sbin);
+      bbox2(11) = j;
+      bbox2(12) = 0;
+      bbox2(7) = 1; %indicate the flip
+      bbs{end+1} = bbox2;
+      fprintf(1,'++');
+    else
+      fprintf(1,'--');
+    end
   end
-end  
+end
 
-fprintf(1,'esvm_initialize_dt: finished with %d windows\n',length(curfeats));
+fprintf(1,'\nesvm_initialize_dt(%s): %d out of %d positives\n',...
+        cls,length(curfeats), total);
 curfeats = cellfun2(@(x)reshape(x,[],1),curfeats);
 curfeats = cat(2,curfeats{:});
-
 
 model.data_set = data_set;
 model.cls = cls;
@@ -162,7 +171,6 @@ m.w = reshape(m.w, m.hg_size);
 m.b = 0;
 
 m.params = params;
-model.models{1} = m;
 
 %m.name = sprintf('dt-%s',m.cls);
 %m.curid = m.cls;
@@ -170,9 +178,21 @@ model.models{1} = m;
 %m.data_set = data_set;
 
 
+[~,order] = sort(m.w(:)'*m.x,'descend');
+allwarps = allwarps(order);
+Is = cat(4,allwarps{:});
+Imean = mean(Is,4);
+
+m.icon = Imean;
+model.models{1} = m;
+
 if params.display == 1
-  Is = cat(4,allwarps{:});
-  Imean = mean(Is,4);
+  %allwarps = cellfun2(@(x)repmat(edge(rgb2gray(x),'canny'),[1 1
+  %3]),allwarps);
+
+  %Imean(:,:,1) = median(squeeze(Is(:,:,1,:)),3);
+  %Imean(:,:,2) = median(squeeze(Is(:,:,2,:)),3);
+  %Imean(:,:,3) = median(squeeze(Is(:,:,3,:)),3);
   s = [size(Imean,1) size(Imean,2)];
   Iwpos = imresize(jettify(HOGpicture(m.w)),s);
   Iwneg = imresize(jettify(HOGpicture(-m.w)),s);
@@ -185,7 +205,7 @@ if params.display == 1
 end
 
 if CACHE_FILE == 1
-  save(filer,'models');
+  save(filer,'model');
   if fileexists(filerlock)
     rmdir(filerlock);
   end
@@ -201,7 +221,6 @@ W = bbs(:,3)-bbs(:,1)+1;
 H = bbs(:,4)-bbs(:,2)+1;
 
 [hg_size,aspect_ratio_histogram] = get_bb_stats(H, W, sbin);
-
 
 function [modelsize,aspects] = get_bb_stats(h,w, sbin)
 % Following Felzenszwalb's formula
@@ -220,6 +239,10 @@ areas = sort(h.*w);
 %present to take the 20 percentile area
 area = areas(max(1,floor(length(areas) * 0.2)));
 area = max(min(area, 5000), 3000);
+
+if area==3000
+  fprintf(1,'WARNING: esvm_initialize_dt has tiny objects\n');
+end
 
 % pick dimensions
 w = sqrt(area/aspect);
@@ -245,6 +268,7 @@ x1 = round(bbox(1)-padx);
 x2 = round(bbox(3)+padx);
 y1 = round(bbox(2)-pady);
 y2 = round(bbox(4)+pady);
+
 window = subarray(I, y1, y2, x1, x2, 1);
 warped = imresize(window, cropsize(1:2), 'bilinear');
 

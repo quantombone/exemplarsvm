@@ -90,15 +90,14 @@ model.models = model.models(ordering);
 allfiles = cell(1,length(model.models));
 for i = 1:length(model.models)
   
-  m = model;
-  m.models = m.models(i);
+  m = rmfield(model,'models');
+  m.models = model.models(i);
   m.models{1}.params = params;
-  [complete_file] = sprintf('%s/%s_%04d.mat', ...
+  filer2final = sprintf('%s/%s_%04d.mat', ...
                             final_directory, new_model_name,...
                             m.models{1}.identifier);
-  [basedir, basename, ext] = fileparts(complete_file);
-
-  filer2final = sprintf('%s/%s.mat',basedir,basename);  
+  %[basedir, basename, ext] = fileparts(complete_file);
+  %filer2final = sprintf('%s/%s.mat',basedir,basename);  
   
   allfiles{i} = filer2final;
   
@@ -132,8 +131,9 @@ for i = 1:length(model.models)
   %if we are a distance function, initialize to uniform weights
   if isfield(params,'wtype') && ...
         strcmp(params.wtype,'dfun')==1
-    m.w = m.w*0-1;
-    m.b = -1000;
+    fprintf(1,'WARNING: initializing a dfun, not SVM\n');
+    m.models{1}.w = m.w*0-1;
+    m.models{1}.b = -1000;
   end
 
   % The mining queue is the ordering in which we process new images  
@@ -141,7 +141,7 @@ for i = 1:length(model.models)
   
   % Add training set and training set's mining queue 
   %m.train_set = neg_set;
-  mining_queue = esvm_initialize_mining_queue(model, model.cls);
+  mining_queue = esvm_initialize_mining_queue(m, model.cls);
   
   while keep_going == 1
     if ~isfield(m,'mining_stats')
@@ -175,7 +175,7 @@ for i = 1:length(model.models)
     
     %Save the current result
     if CACHE_FILE == 1
-      %savem(filer2,m);
+      %savem(filer2final,m);
       
       %filerpng = [filer2 '.png'];
       % if ~fileexists(filerpng)

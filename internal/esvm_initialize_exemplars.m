@@ -79,13 +79,17 @@ for j = 1:length(data_set)
     continue
   end
 
-  obj = {data_set{j}.objects};
+  obj = data_set{j}.objects;
   I = toI(data_set{j}.I);
   
   for k = 1:length(obj)  
     objectid = k;
     % Warp original bounding box
-    bbox = obj{k}.bbox;    
+    bbox = obj(k).bbox; 
+    
+    if (obj(k).truncated==0)
+      continue
+    end
 
     filer = sprintf('%s/%d.%d.%s.mat',...
                     results_directory, curid, objectid, cls);

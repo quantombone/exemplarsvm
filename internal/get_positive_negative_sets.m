@@ -16,14 +16,16 @@ negative_set = data_set(~logical(nonempties));
 data_set = data_set(logical(nonempties));
 
 %Skip truncated and difficult objects
-has_truncated = cellfun(@(x)isfield(x.objects,'truncated'),data_set);
+%has_truncated = cellfun(@(x)isfield(x.objects,'truncated'),data_set);
 has_difficult = cellfun(@(x)isfield(x.objects,'difficult'),data_set);
 
-if any(has_truncated)  || any(has_difficult)
+if  any(has_difficult)
+  %do not use truncated and difficult objects
   good_objects = cellfun(@(x)find(( ismember({x.objects.class},cls) & ...
-                                    ([x.objects.truncated]==0) & ...
                                     ([x.objects.difficult]==0))),...
                          data_set,'UniformOutput',false);
+  
+  %                                    ([x.objects.truncated]==0) & ...
 else
   good_objects = cellfun(@(x)find(ismember({x.objects.class},cls)),...
                                   data_set,'UniformOutput',false);

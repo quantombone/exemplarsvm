@@ -13,11 +13,16 @@ function [Iex,Iexmask,Icb,Icbmask] = esvm_get_exemplar_icon(models, ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-if ~isfield(models{index},'gt_box') || ~isfield(models{index},'bb') || numel(models{index}.bb)==0
+if ~isfield(models{index},'gt_box') || ~isfield(models{index},'bb') ...
+      || numel(models{index}.bb)==0
+  
   Iex = ones(10,10,3);
   Iexmask = ones(10,10,1);
   Icb = ones(10,10,3);
   Icbmask = ones(10,10,1);
+  if isfield(models{index},'icon')
+    Iex = models{index}.icon;
+  end
   return;
 end
 

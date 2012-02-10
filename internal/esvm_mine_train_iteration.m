@@ -63,13 +63,14 @@ m.btrace{end+1} = m.b;
 function show_figures(m)
 %Show the current model and top negative support vectors
 Isv1 = esvm_show_det_stack(m.models{1}.svbbs,m.data_set,7,7,m.models{1});
-figure(2)
+figure(1)
 clf
 imagesc(Isv1)
 axis image
 axis off
-iter = length(m.models{1}.wtrace)-1;
-title(sprintf('Hard Negative Mining iter %03d\n %s iter=%03d',iter,m.model_name,iter),'FontSize',20)
+iter = length(m.models{1}.wtrace);
+title(sprintf('%s: Negative Mining iter %03d',...
+              m.model_name,iter),'FontSize',14)
 drawnow
 snapnow
 
@@ -82,7 +83,7 @@ if (length(m.params.localdir)>0) && ...
 
   imwrite(Isv1,sprintf('%s/models/%s.%d_mineiter_I=%05d.png', ...
                     m.params.localdir, m.model_name, ...
-                    m.identifier, m.iteration), 'png');
+                    m.models{1}.identifier, m.iteration), 'png');
 end
 
 %old code: also show the SVM scores

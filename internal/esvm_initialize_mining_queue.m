@@ -22,7 +22,7 @@ if m.params.mine_from_positives == 0
 end
 
 
-indices = indices([negatives positives]);
+indices = indices(cat(1,negatives(:), positives(:)));
 
 mining_queue = cell(0,1);
 for zzz = 1:length(indices)

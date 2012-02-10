@@ -132,15 +132,17 @@ end
 PADSIZE = 5;
 
 for i = 1:length(cuts)
+  %NOTE(TJM): mss is turned off because of times 0
   if SSS > 0
-    mss{i} = mean(imstack(:,:,:,1:cuts(i)),4);
+    mss{i} = mean(imstack(:,:,:,1:cuts(i)),4)*0+1;
   else
     mss{i} = zeros(newsize(1),...
-                   newsize(2),3);
+                   newsize(2),3)*0+1;
   end
 end
 
-KKK = K1-3;
+
+%KKK = K1-3;
 ims = cellfun2(@(x)pad_image(x,PADSIZE,[1 1 1]),ims);
 
 if length(ims)<K1*K2

@@ -59,11 +59,24 @@ for i = 1:length(mining_queue)
     os = getosmatrix_bb(rs.bbs{1},gtbbs);
     os = max(os,[],2);
     goods = find(os < params.mine_skip_positive_objects_os);
+    bads = find(os >= params.mine_skip_positive_objects_os);
+    
+    if length(bads) >= 1
+    [maxscore,maxind] = max(rs.bbs{1}(bads,end));
+    maxos = os(bads(maxind));
+    
+    extrastring = sprintf(', max+ = %.3f, os_max+=%.3f',maxscore, ...
+                          maxos);
+    else 
+      extrastring = '';
+    end
+    
     rs.bbs{1} = rs.bbs{1}(goods,:);
     rs.xs{1} = rs.xs{1}(goods);
+  else
+    extrastring = '';
   end
-  
-
+    
   %NOTE(TJM): soft negative mining was experimental and is not used
   %anymore
   if isfield(params,'SOFT_NEGATIVE_MINING') && ...
@@ -99,7 +112,6 @@ for i = 1:length(mining_queue)
       bb = bb(1:min(length(bb),...
                     ceil(nviol*params.train_keep_nsv_multiplier)));
       
-
       rs.xs{q} = rs.xs{q}(bb);    
       scores{q} = cat(2,s);
     end
@@ -112,9 +124,9 @@ for i = 1:length(mining_queue)
   end
   total = sum(cellfun(@(x)x.num_visited,mining_queue));
 
-  fprintf(1,'Found %04d windows, image:%05d (#seen=%05d/%05d%s)\n',...
-          supersize, index, ...
-          total+1, length(mining_queue), addon);
+  fprintf(1,'Found %04d windows, [im=%04d/%04d%s%s]\n',...
+          supersize, ...
+          total+1, length(mining_queue), addon, extrastring);
 
   %increment how many times we processed this image
   mining_queue{i}.num_visited = mining_queue{i}.num_visited + 1;

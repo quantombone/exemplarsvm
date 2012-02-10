@@ -1,7 +1,7 @@
 function install_dataset
 
 data_directory = '/Users/tomasz/projects/pascal/';
-dataset_directory = 'VOC2007';
+dataset_directory = 'VOC2010';
 
 dataset_params = esvm_get_voc_dataset(dataset_directory, ...
                                       data_directory);

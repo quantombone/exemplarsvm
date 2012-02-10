@@ -75,7 +75,7 @@ data_set = model.data_set;
 
 potentialx = cell(0,1);
 potentialbb = cell(0,1);
-
+fprintf(1,'esvm_latent_update_dt: starting updates\n');
 for j = 1:length(data_set)  
   
   obj = {data_set{j}.objects};
@@ -124,7 +124,7 @@ else
   %now we are onto finding the best assignments  
   %we always do first iterations, because it is greedy
   for z = 1:max(1,params.latent_perturb_assignment_iterations)
-    fprintf(1,' ---###--- trying configuration %d\n',z);
+    fprintf(1,' ---###--- Latent trying configuration %d\n',z);
     scores = cellfun2(@(x)best_model.w(:)'*x-best_model.b, ...
                       potentialx);
     clear ass
@@ -195,9 +195,10 @@ if params.display == 1
   Ipad = zeros(size(Icur,1),10,3);
   Ipad(:,:,1) = 1;
   Icur = cat(2,Icur,Ipad,Icur2);
-  figure(3)
+  figure(1)
+  clf
   imagesc(Icur)
-  title('Positives and Negatives from mining','FontSize',24);
+  title('Positives and Negatives After Latent Update','FontSize',20);
   drawnow
   snapnow
   if params.dump_images == 1 && length(params.localdir) > 0

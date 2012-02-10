@@ -33,19 +33,20 @@ bbs = m.svbbs;
 
 
 %NOTE: MAXSIZE should perhaps be inside of the default_params script?
-MAXSIZE = 3500;
+MAXSIZE = 5000;
 if size(xs,2) >= MAXSIZE
   fprintf(1,'WARNING: maxsize problem\n');
-  error('TODO(BUG): bad maxsize problem\n');
-  HALFSIZE = MAXSIZE/2;
+  %error('TODO(BUG): bad maxsize problem\n');
+  HALFSIZE = 5000;
+  
   %NOTE: random is better than top 5000
   r = m.w(:)'*xs;
   [tmp,r] = sort(r,'descend');
-  r1 = r(1:HALFSIZE);
-  
-  r = HALFSIZE+randperm(length(r((HALFSIZE+1):end)));
   r = r(1:HALFSIZE);
-  r = [r1 r];
+  
+  %r = HALFSIZE+randperm(length(r((HALFSIZE+1):end)));
+  %r = r(1:HALFSIZE);
+  %r = [r1 r];
   xs = xs(:,r);
   bbs = bbs(r,:);
 end

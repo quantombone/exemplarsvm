@@ -24,25 +24,34 @@ end
 if ~exist('params','var') || length(params) == 0
   %% Get default parameters
   params = esvm_get_default_params;
+else
+  params2 = esvm_get_default_params;
+  f = fields(params);
+  for i = 1:length(f)
+    params2 = setfield(params2,f{i},getfield(params,f{i}));
+  end
+  params = params2;
 end
 
 params.display = 1;  
-params.dump_images = 0;
+params.dump_images = 1;
 params.detect_max_windows_per_exemplar = 100;
 params.train_max_negatives_in_cache = 5000;
-%params.train_max_mined_images = 500;
-params.latent_iterations = 2;
+params.train_max_mined_images = 500;
+params.latent_iterations = 4;
 % for dalaltriggs, it seams having same constant on positives as
 % negatives is better than using 50
 params.train_positives_constant = 1;
-params.mine_from_negatives = 1;
+params.mine_from_negatives = 0;
 params.mine_from_positives = 1;
-params.mine_skip_positive_objects_os = .5;
+params.mine_skip_positive_objects_os = .2;
+params.train_max_scale = 1.0;
+params.latent_os_thresh = 0.7;
 
 %params.detect_pyramid_padding = 0;
 
 % if ~exist('localdir','var')
-%   localdir = '/nfs/baikal/tmalisie/esvm-dt/';
+%localdir = '/nfs/baikal/tmalisie/ldt/';
 % end
 
 % params.localdir = ''; 
@@ -68,16 +77,6 @@ for niter = 1:params.latent_iterations
   model = esvm_latent_update_dt(model);
   model = esvm_train(model);
 end
-
-if ~exist('test_set','var')
-  results = [];
-  return;
-else
-  %evaluate on training data
-  test_struct = applyModel(model, test_set);
-  results = evaluateModel(test_set, test_struct, model);
-end
-
 
 %% Perform Platt calibration and M-matrix estimation
 %M = esvm_perform_calibration(val_grid, val_set, models,val_params);
