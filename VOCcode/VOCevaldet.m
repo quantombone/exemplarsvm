@@ -1,6 +1,11 @@
 function [rec,prec,ap,apold,fp,tp,npos,is_correct] = ...
     VOCevaldet(test_set,BB,cls,params)
 
+if ~exist('params','var')
+  params.evaluation_minoverlap = 0.5;
+  params.display = 1;
+end
+
 % % load test set
 % tic
 % cp=sprintf(VOCopts.annocachepath,VOCopts.testset);
