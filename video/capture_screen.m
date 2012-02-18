@@ -9,6 +9,19 @@ function imgData = capture_screen(capture_region)
 robo = java.awt.Robot;
 t = java.awt.Toolkit.getDefaultToolkit();
 
+% fid = fopen('/tmp/coords.txt','r');
+% coords = fscanf(fid,'%d %d %d %d');
+% fclose(fid);
+
+% fid = fopen('/tmp/coords.txt','w');
+% fprintf(fid,'1 1 1 1\n');
+% fclose(fid);
+
+% [aa,bb]=unix(' kill -SIGINT `ps aux | grep python | grep rectframe.py | head -1 | awk ''{print($2)}''`');
+% fprintf(1,'just sent signal 1\n');
+% pause(.1);
+
+
 if exist('capture_region','var')
   %rectangle = java.awt.Rectangle(capture_region(1),capture_region(2),capture_region(3), ...
   %capture_region(4));
@@ -18,12 +31,6 @@ else
   rectangle = java.awt.Rectangle(t.getScreenSize());  
 end
 javaImage = robo.createScreenCapture(rectangle);
-
-%NOTE: this part is not necessary because we can cast the data into
-%a matlab structure
-%filehandle = java.io.File('screencapture.jpg');
-%javax.imageio.ImageIO.write(image,'jpg',filehandle);
-%imageview('screencapture.jpg');
 
 H=javaImage.getHeight;
 W=javaImage.getWidth;
@@ -35,10 +42,11 @@ imgData(:,:,3) = bitshift(bitand(pixelsData,256^1-1),-8*0);
 imgData(:,:,2) = bitshift(bitand(pixelsData,256^2-1),-8*1);
 imgData(:,:,1) = bitshift(bitand(pixelsData,256^3-1),-8*2);
 
-%NOTE: this part is not necessary because we initialized the
-%robot's viewable area to "capture_region" before taking the screenshot
-%if exist('capture_region','var')
-%    imgData = imgData(capture_region(2):capture_region(4),capture_region(1):capture_region(3),:);
-%end
 
-%imgData = max(0.0,min(1.0,imresize(imgData,2)));
+% fid = fopen('/tmp/coords.txt','w');
+% fprintf(fid,'%d %d %d %d\n',coords(1),coords(2),coords(3),coords(4));
+% fclose(fid);
+% [aa,bb]=unix([' kill -SIGINT `ps aux | grep python | grep rectframe.py' ...
+%               ' | head -1 | awk ''{print($2)}''`']);
+% fprintf(1,'just sent signal 2\n');
+% pause(.1);
