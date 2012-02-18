@@ -1,5 +1,5 @@
-function results = evaluateModel(data_set, test_struct, model)
-params = model.params;
+function results = evaluateModel(data_set, boxes, cls)
 
-results = esvm_evaluate_pascal_voc(test_struct, data_set, model, params);
+
+results = esvm_evaluate_pascal_voc(boxes, data_set, model, params);
 
