@@ -2,8 +2,11 @@
 #moves it around, the goals is to highlight an object detection on the
 #desktop.. more work needs to still be done
 import wx
-print wx.version()
+import signal
 
+#def quit_gracefully(*args):
+#    print 'quitting loop'
+    
 class FancyFrame(wx.Frame):
     def __init__(self, width, height):
         wx.Frame.__init__(self, None,
@@ -14,7 +17,7 @@ class FancyFrame(wx.Frame):
         self.amount = 255;
         self.delta = -3;
         #self.SetTransparent(180)
-        self.InitializeToSize(width,height)
+        self.InitializeToSize(width,height,1,1)
         # b = wx.EmptyBitmap(width, height)
         # dc = wx.MemoryDC()
         # dc.SelectObject(b)
@@ -31,42 +34,64 @@ class FancyFrame(wx.Frame):
         # self.SetBackgroundColour('red')
         # self.Show(True)
 
+        
         self.Bind(wx.EVT_KEY_UP, self.OnKeyDown)
         self.timer = wx.Timer(self)
         self.timer.Start(25)
-        self.Bind(wx.EVT_TIMER, self.AlphaCycle)
+        self.Bind(wx.EVT_TIMER, self.NullCycle)
 
-    def InitializeToSize(self,width,height):
+        signal.signal(signal.SIGINT, self.AlphaCycle)
+
+        #signal.signal(signal.SIGINT, self.AlphaCycle)
+
+        # try:
+        #     print 'starting loop'
+        #     while True:
+        #         pass
+        # except KeyboardInterrupt:
+        #     quit_gracefully()
+
+
+    def InitializeToSize(self,width,height,xtl,ytl):
+        self.Show(False)
         b = wx.EmptyBitmap(width, height)
         dc = wx.MemoryDC()
         dc.SelectObject(b)
         dc.SetBackground(wx.Brush('black'))
-        dc.Clear()
+        #dc.Clear()
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
         dc.SetPen(wx.Pen('red', 4))
-        dc.DrawRectangle(10, 10, width-20, height-20)
+        dc.DrawRectangle(1, 1, width-1, height-1)
         dc.SelectObject(wx.NullBitmap)
         b.SetMaskColour('black')
         self.SetShape(wx.RegionFromBitmap(b))
         self.SetBackgroundColour('red')
+        self.Move((xtl,ytl))
         self.Show(True)
         
-    def AlphaCycle(self, evt):
-        f = open("coords.txt")
+    def AlphaCycle(self, evt, other=0):
+        #print 'alpha cycle running'
+        f = open("/tmp/coords.txt")
         xtl, ytl, xbr, ybr = "".join(f.readlines()).strip().split(" ")
         xtl = int(xtl)
         ytl = int(ytl)
         xbr = int(xbr)
         ybr = int(ybr)
         f.close()
-        self.amount += self.delta
+        #self.amount += self.delta
         #if self.amount == 0 or self.amount == 255:
         #    self.delta = -self.delta
-        self.Move((xtl,ytl))
-        #print self.amount
-        self.InitializeToSize(xbr-xtl,ybr-ytl)
-        self.Show()
+        
+        if xbr-xtl == 1:
+            #self.Hide()
+            a=1
+        else:
+            self.InitializeToSize((xbr-xtl),ybr-ytl,xtl,ytl)
+            self.Show()
 
+    def NullCycle(self, evt, other=0):
+        a = 10;
+        #print 'null cycle running'
 
 
     def OnKeyDown(self, event):
@@ -76,9 +101,12 @@ class FancyFrame(wx.Frame):
         else:
             event.Skip()
 
-
 if __name__ == "__main__":
+
+
     app = wx.App()
-    f = FancyFrame(300, 300)
+    f = FancyFrame(1000, 1000)
     app.MainLoop()
+
+
 
