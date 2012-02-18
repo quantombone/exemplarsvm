@@ -115,6 +115,8 @@ if length(svm_model.sv_coef) == 0
   %learning had no negatives
   wex = m.w;
   b = m.b;
+  fprintf(1,['esvm_update_svm: WARNINGL: # of negative support vectors' ...
+             ' is 0!\n']);
   fprintf(1,'reverting to old model...\n');
 else
   
@@ -146,8 +148,9 @@ else
   end  
 end
 
-maxpos = max(wex'*m.x - b);
-maxneg = max(wex'*m.svxs - b);
+maxpos = max(wex(:)'*m.x - b);
+maxneg = max(wex(:)'*m.svxs - b);
+
 fprintf(1,' --- Max positive/negative is %.3f/%.3f\n',maxpos,maxneg);
 fprintf(1,'SVM iteration took %.3f sec, ',toc(starttime));
 
@@ -157,10 +160,9 @@ m.b = b;
 r = m.w(:)'*m.svxs - m.b;
 svs = find(r >= -1.0000);
 
-if length(svs) == 0
-  fprintf(1,' ERROR: number of negative support vectors is 0!\');
-  error('Something went wrong');
-end
+% if length(svs) == 0
+%   error('Something went wrong');
+% end
 
 
 %KEEP (nsv_multiplier * #SV) vectors, but at most max_negatives of them
