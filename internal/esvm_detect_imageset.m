@@ -16,12 +16,13 @@ function grid = esvm_detect_imageset(imageset, model, ...
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
+fprintf(1,' \n---Detect imageset running now\n');
 
 if ~exist('params','var')
   params = esvm_get_default_params;
 end
 
-if ~exist('setname','var')
+if ~exist('setname','var') || length(setname)==0
   params.detect_images_per_chunk = 1;
   setname = '';
 end
@@ -105,16 +106,20 @@ for i = 1:length(ordering)
     fprintf(1,' --image %05d/%05d:',counter+j,length(imageset));
     Iname = imageset{index};
 
-    try
-      hit = strfind(Iname,'JPEGImages/');
-      curid = Iname((hit+11):end);
-      hit = strfind(curid,'.');
-      curid = curid(1:(hit(end)-1));      
-      %[tmp,curid,tmp] = fileparts(Iname);
-    catch
-      curid = '';
-    end
+    curid = '';
+    % try
+    %   hit = strfind(Iname,'JPEGImages/');
+    %   curid = Iname((hit+11):end);
+    %   hit = strfind(curid,'.');
+    %   curid = curid(1:(hit(end)-1));      
+    %   %[tmp,curid,tmp] = fileparts(Iname);
+    % catch
+    %   curid = '';
+    % end
     
+
+
+    fprintf(1,'toI running\n');
     I = toI(Is{j});
        
     starter = tic;
@@ -153,7 +158,7 @@ for i = 1:length(ordering)
     if params.display_detections == 1
       figure(1)
       clf
-      imagesc(toI(I))
+      imagesc(I)
       if size(boxes,1) > 0
         plot_bbox(boxes(1,:))
         title(num2str(boxes(1,end)))
@@ -162,6 +167,26 @@ for i = 1:length(ordering)
       end
       drawnow
     end
+    
+    if params.write_top_detection == 1
+      if size(boxes,1) > 0
+        bb = round(boxes(1,:));
+      else
+        bb = [1 1 3 3];
+      end
+      % fid = fopen('/tmp/coords.txt','w');
+      % fprintf(fid,'%d %d %d %d\n',bb(1),bb(2),bb(3),bb(4));
+      % fclose(fid);
+      
+      % [aa,bb]=unix(' kill -SIGINT `ps aux | grep python | grep rectframe.py | head -1 | awk ''{print($2)}''`');
+      % fprintf(1,'just sent signal 1\n');
+      % pause(.1)
+
+
+
+      
+    end
+
     
     %%%NOTE: the gt-function is well-defined for VOC-exemplars
     % if isfield(params,'gt_function') && ...
