@@ -199,6 +199,7 @@ params.localdir = '';
 % detections which have above this overlap with a ground-truth region)
 params.latent_os_thresh = 0.7;
 params.latent_iterations = 2;
+params.dt_initialize_with_flips = 0;
 
 %experimental flag which lets us perturb assignments during the
 %latent update step
