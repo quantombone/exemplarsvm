@@ -8,11 +8,11 @@ test_params.detect_keep_threshold = -2.0;
 
 
 if length(data_set) == 0
-  %data_set = get_screenshot_bg(50,@(x)imresize_max(x,400));
-  data_set = get_screenshot_bg(20);
+  data_set = get_screenshot_bg(50,@(x)imresize_max(x,400));
+  %data_set = get_screenshot_bg(20);
   test_params.display_detections = 1;
-  test_params.write_top_detection = 1;
-  test_params.detect_max_scale = .1;
+  %test_params.write_top_detection = 1;
+  %test_params.detect_max_scale = .1;
 end
 
 
