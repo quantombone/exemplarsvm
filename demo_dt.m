@@ -5,7 +5,7 @@
 
 load ~/projects/pascal/VOC2007/trainval.mat 
 
-model = learnDalalTriggs(data_set,'bus');
+model = learnDalalTriggs(data_set,'chair');
 return;
 
 %Create a held-out test-set
