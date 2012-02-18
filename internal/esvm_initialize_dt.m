@@ -1,9 +1,9 @@
 function model = esvm_initialize_dt(data_set, cls, params)
 % DalalTriggs model creation which creates an initial positive set
 % by warping positives into a single canonical position, where the
-% canonical position is the obtained from statistics of bounding box
+% canonical position is obtained from statistics of bounding box
 % aspect ratios. The variable params.init_params defines the
-% initialization function
+% initialization function.
 %
 % INPUTS:
 % data_set: the training set of objects
@@ -71,13 +71,6 @@ end
 
 data_set = cat(1,cur_pos_set(:),cur_neg_set(:));
 
-% fprintf(1,['TJM(HACK) choosing subset of 10 instances to make things' ...
-%            ' faster \n']);
-
-% %Set dataset to be the pruned dataset with only positives loaded
-% data_set = cur_pos_set(1:10);
-% cur_pos_set = cur_pos_set(1:10);
-
 hg_size = get_hg_size(cur_pos_set, params.init_params.sbin);
 hg_size = hg_size * min(1,params.init_params.MAXDIM/max(hg_size));
 hg_size = max(1,round(hg_size));
@@ -118,20 +111,22 @@ for j = 1:length(data_set)
       bbox(11) = j;
       bbox(12) = 0;
       bbs{end+1} = bbox;
-      
-      % Warp LR flipped version
-      bbox2 = flip_box(bbox,size(I));
-      warped2 = mywarppos(hg_size, flipI, params.init_params.sbin, ...
-                          bbox2);
-      
-      allwarps{end+1} = warped2;
-      curfeats{end+1} = params.init_params.features(warped2, ...
-                                                    params.init_params ...
-                                                    .sbin);
-      bbox2(11) = j;
-      bbox2(12) = 0;
-      bbox2(7) = 1; %indicate the flip
-      bbs{end+1} = bbox2;
+
+      if params.dt_initialize_with_flips == 1
+        % Warp LR flipped version
+        bbox2 = flip_box(bbox,size(I));
+        warped2 = mywarppos(hg_size, flipI, params.init_params.sbin, ...
+                            bbox2);
+        
+        allwarps{end+1} = warped2;
+        curfeats{end+1} = params.init_params.features(warped2, ...
+                                                      params.init_params ...
+                                                      .sbin);
+        bbox2(11) = j;
+        bbox2(12) = 0;
+        bbox2(7) = 1; %indicate the flip
+        bbs{end+1} = bbox2;
+      end
       fprintf(1,'++');
     else
       fprintf(1,'--');
@@ -159,10 +154,10 @@ m.x = curfeats;
 m.bb = cat(1,bbs{:});
 
 %negative features: svxs
-m.svxs = [];
+m.svxs = zeros(prod(m.hg_size),0);
 
 %negative windows: svbbs
-m.svbbs = [];
+m.svbbs = zeros(0,12);
 
 %create an initial classifier
 m.w = mean(curfeats,2);
@@ -177,9 +172,9 @@ m.params = params;
 %m.objectid = -1;
 %m.data_set = data_set;
 
+%[~,order] = sort(m.w(:)'*m.x,'descend');
+%allwarps = allwarps(order);
 
-[~,order] = sort(m.w(:)'*m.x,'descend');
-allwarps = allwarps(order);
 Is = cat(4,allwarps{:});
 Imean = mean(Is,4);
 
