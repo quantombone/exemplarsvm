@@ -16,8 +16,18 @@ if ~exist('test_set_name','var')
   test_set_name = '';
 end
 
-model_name = model.model_name;
-cls = model.cls;
+if ~exist('params','var')
+  params = esvm_get_default_params;
+end
+
+if ~exist('model','var')
+  model_name = '';
+elseif isstr(model)
+  model_name = model;
+elseif isstruct(model)
+  model_name = model.model_name;
+  cls = model.cls;
+end
 
 %VOCopts = params.dataset_params;
 
@@ -141,14 +151,16 @@ axis([0 1 0 1]);
 results.cls = cls;
 drawnow
 
-filer = sprintf(['%s/results/pr.%s-on-%s.pdf'], ...
-                params.localdir, ...
-                model_name, ...
-                test_set_name);
-
-[basedir,tmp,tmp] = fileparts(filer);
 
 if CACHE_FILE
+  
+  filer = sprintf(['%s/results/pr.%s-on-%s.pdf'], ...
+                  params.localdir, ...
+                  model_name, ...
+                  test_set_name);
+  
+  [basedir,tmp,tmp] = fileparts(filer);
+  
   if ~exist(basedir,'dir')
     mkdir(basedir);
   end
