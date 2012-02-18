@@ -106,10 +106,10 @@ function m = add_new_detections(m, xs, bbs)
 %
 
 %First iteration might not have support vector information stored
-if ~isfield(m, 'svxs') || isempty(m.svxs)
-  m.svxs = [];
-  m.svbbs = [];
-end
+%if ~iasfield(m, 'svxs') || isempty(m.svxs)
+%  m.svxs = [];
+%  m.svbbs = [];
+%end
 
 m.svxs = cat(2, m.svxs, xs);
 m.svbbs = cat(1, m.svbbs, bbs);
@@ -127,6 +127,8 @@ end
 m.svbbs = m.svbbs(subset,:);
 m.svxs = m.svxs(:,subset);
 
-[aa,bb] = sort(m.w(:)'*m.svxs,'descend');
-m.svbbs = m.svbbs(bb,:);
-m.svxs = m.svxs(:,bb);
+if numel(m.svxs) > 0
+  [aa,bb] = sort(m.w(:)'*m.svxs,'descend');
+  m.svbbs = m.svbbs(bb,:);
+  m.svxs = m.svxs(:,bb);
+end
