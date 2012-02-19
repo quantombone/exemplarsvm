@@ -97,7 +97,7 @@ for j = 1:length(data_set)
     bbox = obj(k).bbox;    
     UUU = bbox(3)-bbox(1)+1;
     VVV = bbox(4)-bbox(2)+1;
-    total = total + 2;
+    total = total + 1;
     angle = abs((atan2(VVV,UUU) - atan2(hg_size(1),hg_size(2))));
 
     if (angle < pi/6) && (obj(k).truncated==0)
@@ -113,6 +113,7 @@ for j = 1:length(data_set)
       bbs{end+1} = bbox;
 
       if params.dt_initialize_with_flips == 1
+        total = total + 1;
         % Warp LR flipped version
         bbox2 = flip_box(bbox,size(I));
         warped2 = mywarppos(hg_size, flipI, params.init_params.sbin, ...
@@ -172,8 +173,9 @@ m.params = params;
 %m.objectid = -1;
 %m.data_set = data_set;
 
-%[~,order] = sort(m.w(:)'*m.x,'descend');
-%allwarps = allwarps(order);
+%sort by initial score
+[~,order] = sort(m.w(:)'*m.x,'descend');
+allwarps = allwarps(order);
 
 Is = cat(4,allwarps{:});
 Imean = mean(Is,4);
