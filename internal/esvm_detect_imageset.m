@@ -74,9 +74,13 @@ end
 
 inds = do_partition(1:length(imageset),params.detect_images_per_chunk);
 
-% randomize chunk orderings
-myRandomize;
-ordering = randperm(length(inds));
+% randomize chunk orderings, when writing to disk
+if length(params.localdir) > 0
+  myRandomize;
+  ordering = randperm(length(inds));
+else
+  ordering = 1:length(inds);
+end
 
 %[v,host_string]=unix('hostname');
 
@@ -168,24 +172,24 @@ for i = 1:length(ordering)
       drawnow
     end
     
-    if params.write_top_detection == 1
-      if size(boxes,1) > 0
-        bb = round(boxes(1,:));
-      else
-        bb = [1 1 3 3];
-      end
-      % fid = fopen('/tmp/coords.txt','w');
-      % fprintf(fid,'%d %d %d %d\n',bb(1),bb(2),bb(3),bb(4));
-      % fclose(fid);
+    % if params.write_top_detection == 1
+    %   if size(boxes,1) > 0
+    %     bb = round(boxes(1,:));
+    %   else
+    %     bb = [1 1 3 3];
+    %   end
+    %   % fid = fopen('/tmp/coords.txt','w');
+    %   % fprintf(fid,'%d %d %d %d\n',bb(1),bb(2),bb(3),bb(4));
+    %   % fclose(fid);
       
-      % [aa,bb]=unix(' kill -SIGINT `ps aux | grep python | grep rectframe.py | head -1 | awk ''{print($2)}''`');
-      % fprintf(1,'just sent signal 1\n');
-      % pause(.1)
+    %   % [aa,bb]=unix(' kill -SIGINT `ps aux | grep python | grep rectframe.py | head -1 | awk ''{print($2)}''`');
+    %   % fprintf(1,'just sent signal 1\n');
+    %   % pause(.1)
 
 
 
       
-    end
+    % end
 
     
     %%%NOTE: the gt-function is well-defined for VOC-exemplars
