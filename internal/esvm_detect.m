@@ -49,6 +49,16 @@ if isempty(models)
   return;
 end
 
+params.max_image_size = 400;
+%Make sure image is in double format
+raw_max_dim = max([size(I,1) size(I,2)]);
+raw_factor = 1.0;
+if raw_max_dim > params.max_image_size
+  raw_factor = params.max_image_size/raw_max_dim;
+  I = imresize_max(I, params.max_image_size);
+  params.factor_multiplier = raw_factor;
+end
+
 if isstruct(models) && isfield(models,'models')
   [resstruct,feat_pyramid] = esvm_detect(I,models.models,params);
   return;
@@ -489,3 +499,6 @@ else
   end
 end
 
+if isfield(params,'factor_multiplier')
+  t.scales = t.scales*params.factor_multiplier;
+end
