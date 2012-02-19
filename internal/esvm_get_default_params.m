@@ -1,4 +1,4 @@
-function params = esvm_get_default_params
+function params = esvm_get_default_params(partial_params)
 % Return the default Exemplar-SVM detection/training parameters
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
 % All rights reserved. 
@@ -45,6 +45,9 @@ params.detect_pyramid_padding = 5;
 
 %The maximum scale to consdider in the feature pyramid
 params.detect_max_scale = 1.0;
+
+%The maximum image size to process (will downsample if necessary)
+params.max_image_size = 500;
 
 %The minimum scale to consider in the feature pyramid
 params.detect_min_scale = .01;
@@ -224,6 +227,9 @@ params.display = 0;
 %If enabled, we display detections during applyModel
 params.display_detections = 0;
 
+%EXPERIMENTAL FLAG to write top detection into a /tmp/ file
+params.write_top_detection = 0;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Saving and Output parameters %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -233,3 +239,14 @@ params.dump_images = 0;
 
 %if enabled, we dump the last image of learning only
 params.dump_last_image = 1;
+
+% If we are provided with a list of partial_params, overwrite the
+% defaults with the parameters set in partial_params
+if exist('partial_params','var')
+  params2 = params;
+  f = fields(partial_params);
+  for i = 1:length(f)
+    params2 = setfield(params2,f{i},getfield(partial_params,f{i}));
+  end
+  params = params2;
+end
