@@ -23,7 +23,8 @@ end
 if ~exist('model','var')
   model_name = '';
 elseif isstr(model)
-  model_name = model;
+  model_name = '';
+  cls = model;
 elseif isstruct(model)
   model_name = model.model_name;
   cls = model.cls;
@@ -137,6 +138,7 @@ clf
 %draw = 1;
 %NOTE(TJM): this is really close to working without writing a local
 %evaluation file, and needs to be fixed soon
+
 [results.recall,results.prec,results.ap,results.apold,results.fp,results.tp,results.npos,results.corr] = VOCevaldet(test_set,BB,cls,params);
 
 %if CACHE_FILE && exist(filerlock,'dir')
