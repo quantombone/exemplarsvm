@@ -21,8 +21,15 @@ else
   error('esvm_pyramid: cannot find sbin inside params');
 end
 
-%Make sure image is in double format
-im = double(im);
+% params.max_image_size = 400;
+% %Make sure image is in double format
+% im = double(im);
+% raw_max_dim = max([size(im,1) size(im,2)]);
+% raw_factor = 1.0;
+% if raw_max_dim > params.max_image_size
+%   raw_factor = params.max_image_size/raw_max_dim;
+%   im = imresize_max(im, params.max_image_size);
+% end
 
 if isfield(params,'detect_max_scale')
   detect_max_scale = params.detect_max_scale;
@@ -55,7 +62,7 @@ for i = 1:MAXLEVELS
   scaler = detect_max_scale / sc^(i-1);
   
   if scaler < detect_min_scale
-    return
+    break;
   end
   
   scale(i) = scaler;
@@ -64,7 +71,7 @@ for i = 1:MAXLEVELS
   %if minimum dimensions is less than or equal to 5, exit
   if min([size(scaled,1) size(scaled,2)])<=MINDIMENSION
     scale = scale(scale>0);
-    return;
+    break;
   end
 
   feat{i} = params.init_params.features(scaled,sbin);
@@ -74,7 +81,7 @@ for i = 1:MAXLEVELS
   if (size(feat{i},1)*size(feat{i},2)) == 0
     feat = feat(1:end-1);
     scale = scale(1:end-1);
-    return;
+    break;
   end
 
   %recover lost bin!!!
@@ -84,6 +91,6 @@ for i = 1:MAXLEVELS
   %any more levels
   if max([size(feat{i},1) size(feat{i},2)])<=MINDIMENSION
     scale = scale(scale>0);
-    return;
+    break;
   end  
 end
