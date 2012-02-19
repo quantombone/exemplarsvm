@@ -1,4 +1,4 @@
-function boxes = applyModel(data_set, model, test_set_name)
+function boxes = applyModel(data_set, model, test_set_name, draw)
 % Function to apply a model to a data-set
 % Inputs:
 %    data_set: a dataset of images
@@ -26,6 +26,14 @@ if length(data_set) == 0
   %test_params.detect_max_scale = .1;
 end
 
+if ~exist('draw','var')
+  draw = 0;
+end
+
+if draw == 1
+  test_params.display_detections = 1;
+end
+
 if isnumeric(data_set) && ...
       size(data_set,4) == 1 && ...
       size(data_set,3) == 3
@@ -49,6 +57,7 @@ else
   %% Apply on test set
   boxes = esvm_detect_imageset(data_set, model, test_params, test_set_name);
 end
+
 
 %% Apply calibration matrix to test-set results
 boxes = esvm_pool_exemplar_dets(boxes, model.models, [], ...
