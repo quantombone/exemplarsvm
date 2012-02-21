@@ -16,7 +16,7 @@ function grid = esvm_detect_imageset(imageset, model, ...
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
-fprintf(1,' \n---Detect imageset running now\n');
+%fprintf(1,' \n---Detect imageset running now\n');
 
 if ~exist('params','var')
   params = esvm_get_default_params;
@@ -107,7 +107,7 @@ for i = 1:length(ordering)
   for j = 1:L
 
     index = inds{ordering(i)}(j);
-    fprintf(1,' --image %05d/%05d:',counter+j,length(imageset));
+    %fprintf(1,' --image %05d/%05d:',counter+j,length(imageset));
     Iname = imageset{index};
 
     curid = '';
@@ -122,8 +122,6 @@ for i = 1:length(ordering)
     % end
     
 
-
-    fprintf(1,'toI running\n');
     I = toI(Is{j});
        
     starter = tic;
@@ -137,8 +135,8 @@ for i = 1:length(ordering)
       scores = [];
     end
     [aa,bb] = max(scores);
-    fprintf(1,' %d w''s took %.3fsec, #windows=%05d, max=%.3f \n',...
-            length(model.models),toc(starter),length(scores),aa);
+    %fprintf(1,' %d w''s took %.3fsec, #windows=%05d, max=%.3f \n',...
+    %        length(model.models),toc(starter),length(scores),aa);
     
     % Transfer GT boxes from model onto the detection windows
     boxes = esvm_adjust_boxes(coarse_boxes, model);
