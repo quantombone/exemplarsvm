@@ -210,6 +210,6 @@ if params.display
     grid;
     xlabel 'recall'
     ylabel 'precision'
-    title(sprintf('class: %s, AP = %.3f, APold=%.3f',...
-                  cls, ap, apold));
+    title(sprintf('class: %s, AP = %.3f, OS=%.3f',...
+                  cls, ap, params.evaluation_minoverlap));
 end
