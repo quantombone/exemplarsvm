@@ -181,6 +181,9 @@ params.calibration_matrix_neighbor_thresh = .5;
 %onto best local "raw" exemplar-based detection
 params.calibration_matrix_propagate_onto_raw = 0;
 
+%The final NMS used to prune detections
+params.calibrate_nms = 0.3;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Intialization parameters %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
