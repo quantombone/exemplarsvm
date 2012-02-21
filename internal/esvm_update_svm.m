@@ -27,34 +27,29 @@ if length(m.mask(:)) ~= numel(m.w)
   m.mask = logical(m.mask(:));
 end
 
+%xs = m.svxs;
+%bbs = m.svbbs;
 
-xs = m.svxs;
-bbs = m.svbbs;
-
-
-%NOTE: MAXSIZE should perhaps be inside of the default_params script?
-MAXSIZE = 5000;
-if size(xs,2) >= MAXSIZE
-  fprintf(1,'WARNING: maxsize problem\n');
-  %error('TODO(BUG): bad maxsize problem\n');
-  HALFSIZE = 5000;
+%NOTE: MAXSIZE is the maximum number of examples we will keep in our cache
+MAXSIZE = m.params.train_max_negatives_in_cache;
+if size(m.svxs,2) > MAXSIZE
+  fprintf(1,'WARNING:reducing SVM problem problem from %d to %d\n',...
+          size(m.svxs,2),MAXSIZE);
   
-  %NOTE: random is better than top 5000
-  r = m.w(:)'*xs;
+  r = m.w(:)'*m.svxs;
   [tmp,r] = sort(r,'descend');
-  r = r(1:HALFSIZE);
+  r = r(1:MAXSIZE);
   
+  %I used to think random was better
   %r = HALFSIZE+randperm(length(r((HALFSIZE+1):end)));
   %r = r(1:HALFSIZE);
   %r = [r1 r];
-  xs = xs(:,r);
-  bbs = bbs(r,:);
+  m.svxs = m.svxs(:,r);
+  m.svbbs = m.svbbs(r,:);
 end
 
-
-  
-superx = cat(2,m.x,xs);
-supery = cat(1,ones(size(m.x,2),1),-1*ones(size(xs,2),1));
+superx = cat(2,m.x,m.svxs);
+supery = cat(1,ones(size(m.x,2),1),-1*ones(size(m.svxs,2),1));
 
 spos = sum(supery==1);
 sneg = sum(supery==-1);
@@ -108,10 +103,45 @@ fprintf(1,' -----\nStarting SVM: dim=%d... #pos=%d, #neg=%d ',...
         size(newx,1),spos,sneg);
 starttime = tic;
 
-svm_model = libsvmtrain(supery, newx',sprintf(['-s 0 -t 0 -c' ...
-                    ' %f -w1 %.9f -q'], m.params.train_svm_c, wpos));
+svm_model = liblineartrain(supery, sparse(newx)',sprintf(['-s 2 -B 1 -c' ...
+                   ' %f -w1 %.9f -q'], m.params.train_svm_c, ...
+                                             wpos));
 
-if length(svm_model.sv_coef) == 0
+
+%svm_model = libsvmtrain(supery, newx',sprintf(['-s 0 -t 0 -c' ...
+%                   ' %f -w1 %.9f -q'], m.params.train_svm_c, ...
+%                                             wpos));
+
+learning_time = toc(starttime);
+
+% opt.iter_max_Newton = 30;
+% opt.prec = 1e-6;
+% starttime = tic;
+% [neww,newb] = primal_svm(supery,1./double(m.params.train_svm_c),...
+%                          newx',m.w(:),-m.b,opt);
+% learning_time = toc(starttime);
+
+% rneg = neww(:)'*m.svxs+newb;
+% rpos = neww(:)'*m.x+newb;
+% [aa,bb] = sort(rneg,'descend');
+% astar = aa(max(1,round(length(aa)*.1)));
+
+% abad = find(neww(:)'*newx(:,supery==1)+newb < astar);
+% if length(abad) > sum(supery==1)/2
+%   [aa,bb] = sort(rpos,'ascend');
+%   abad = bb(1:max(1,round(length(bb)/2)));  
+% end
+
+% fprintf(1,'\n ---length of removed "bad" positives is %d\n',length(abad));
+% newx(:,abad) = [];
+% supery(abad) = [];
+% opt.iter_max_Newton = 5;
+% [neww,newb] = primal_svm(supery,1./double(m.params.train_svm_c),...
+%                          newx',neww,newb,opt);
+%wex = neww;
+%b = -newb;
+
+if sneg == 0 %length(svm_model.sv_coef) == 0
   %learning had no negatives
   wex = m.w;
   b = m.b;
@@ -120,17 +150,24 @@ if length(svm_model.sv_coef) == 0
   fprintf(1,'reverting to old model...\n');
 else
   
-  %convert support vectors to decision boundary
-  svm_weights = full(sum(svm_model.SVs .* ...
-                         repmat(svm_model.sv_coef,1, ...
-                                size(svm_model.SVs,2)),1));
+  wex = reshape(svm_model.w(1:end-1),[],1);
+  b = -svm_model.w(end);
   
-  wex = svm_weights';
-  b = svm_model.rho;
+
   
+  % %convert support vectors to decision boundary
+  % svm_weights = full(sum(svm_model.SVs .* ...
+  %                        repmat(svm_model.sv_coef,1, ...
+  %                               size(svm_model.SVs,2)),1));
+  
+  % wex = svm_weights';
+  % b = svm_model.rho;
+  
+  
+  %do this only for libsvm
   if supery(1) == -1
-    wex = wex*-1;
-    b = b*-1;    
+   wex = wex*-1;
+   b = b*-1;    
   end
   
   %% project back to original space
@@ -149,10 +186,12 @@ else
 end
 
 maxpos = max(wex(:)'*m.x - b);
+minpos = min(wex(:)'*m.x - b);
 maxneg = max(wex(:)'*m.svxs - b);
 
-fprintf(1,' --- Max positive/negative is %.3f/%.3f\n',maxpos,maxneg);
-fprintf(1,'SVM iteration took %.3f sec, ',toc(starttime));
+fprintf(1,' --- Max+,min+=  is %.3f,%.3f \n --- Max- = %.3f\n',...
+        maxpos,minpos,maxneg);
+fprintf(1,'SVM iteration took %.3f sec, ',learning_time);
 
 m.w = reshape(wex, size(m.w));
 m.b = b;
@@ -160,19 +199,27 @@ m.b = b;
 r = m.w(:)'*m.svxs - m.b;
 svs = find(r >= -1.0000);
 
+fprintf(1,'Length of nsvs is %d/%d\n',length(svs),length(r));
+
 % if length(svs) == 0
 %   error('Something went wrong');
 % end
 
 
 %KEEP (nsv_multiplier * #SV) vectors, but at most max_negatives of them
-total_length = ceil(m.params.train_keep_nsv_multiplier*length(svs));
+%total_length = ceil(m.params.train_keep_nsv_multiplier* ...
+%                    length(svs));
+
+%keep cache-full worth of negatives
+total_length = length(r);
 total_length = min(total_length,m.params.train_max_negatives_in_cache);
 
 [alpha,beta] = sort(r,'descend');
 svs = beta(1:min(length(beta),total_length));
 m.svxs = m.svxs(:,svs);
 m.svbbs = m.svbbs(svs,:);
-fprintf(1,' kept %d negatives\n',total_length);
+m.svbbs(:,end) = m.w(:)'*m.svxs-m.b;
+m.bb(:,end) = m.w(:)'*m.x-m.b;
+%fprintf(1,' kept %d negatives\n',total_length);
 
 
