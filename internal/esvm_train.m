@@ -111,11 +111,14 @@ for i = 1:length(model.models)
   
   % Append '-svm' to the mode to create the models name
   m.model_name = new_model_name;
+  model.model_name = new_model_name;
   m.iteration = 1;
 
   
-  if isfield(m,'mining_stats')
-    m = rmfield(m,'mining_stats');
+  for j = 1:length(m.models)
+    if isfield(m.models{j},'mining_stats')
+      m.models{j} = rmfield(m.models{j},'mining_stats');
+    end
   end
 
   %save a trace of variables during learning
@@ -140,6 +143,8 @@ for i = 1:length(model.models)
   
   % Add training set and training set's mining queue 
   mining_queue = esvm_initialize_mining_queue(m, model.cls);
+  mining_queue = mining_queue(1:min(length(mining_queue),...
+                                    params.train_max_mined_images));
 
   total_mines = 0;  
   while keep_going == 1
@@ -160,8 +165,9 @@ for i = 1:length(model.models)
     if ((total_mines >= params.train_max_mined_images) || ...
           (isempty(mining_queue))) || ...
           (m.iteration == params.train_max_mine_iterations)
-
+      
       keep_going = 0;      
+      m.models{1} = rmfield(m.models{1},'mining_stats');
       %bump up filename to final file
       %filer2 = filer2final;
     end
