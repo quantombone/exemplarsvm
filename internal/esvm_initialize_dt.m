@@ -69,6 +69,9 @@ end
 [cur_pos_set, cur_neg_set] = get_positive_negative_sets(data_set, ...
                                                   cls);
 
+cur_pos_set = cur_pos_set(1:min(length(cur_pos_set),...
+                                params.max_number_of_positives));
+
 data_set = cat(1,cur_pos_set(:),cur_neg_set(:));
 
 hg_size = get_hg_size(cur_pos_set, params.init_params.sbin);
@@ -184,21 +187,7 @@ m.icon = Imean;
 model.models{1} = m;
 
 if params.display == 1
-  %allwarps = cellfun2(@(x)repmat(edge(rgb2gray(x),'canny'),[1 1
-  %3]),allwarps);
-
-  %Imean(:,:,1) = median(squeeze(Is(:,:,1,:)),3);
-  %Imean(:,:,2) = median(squeeze(Is(:,:,2,:)),3);
-  %Imean(:,:,3) = median(squeeze(Is(:,:,3,:)),3);
-  s = [size(Imean,1) size(Imean,2)];
-  Iwpos = imresize(jettify(HOGpicture(m.w)),s);
-  Iwneg = imresize(jettify(HOGpicture(-m.w)),s);
-  Is = cat(4,Imean,Iwpos,Iwneg,Is);
-  figure(1)
-  clf
-  montage(Is)
-  title('DalalTriggs initialization','FontSize',20);
-  drawnow
+  show_model_data(model,10);
 end
 
 if CACHE_FILE == 1
