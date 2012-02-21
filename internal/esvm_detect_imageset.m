@@ -108,6 +108,7 @@ for i = 1:length(ordering)
 
     index = inds{ordering(i)}(j);
     %fprintf(1,' --image %05d/%05d:',counter+j,length(imageset));
+    fprintf(1,'.');
     Iname = imageset{index};
 
     curid = '';
