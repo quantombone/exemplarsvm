@@ -61,18 +61,13 @@ m.btrace{end+1} = m.b;
 % m.model.svbbs(:,end) = r;
 
 function show_figures(m)
-%Show the current model and top negative support vectors
-Isv1 = esvm_show_det_stack(m.models{1}.svbbs,m.data_set,7,7,m.models{1});
-figure(1)
-clf
-imagesc(Isv1)
-axis image
-axis off
-iter = length(m.models{1}.wtrace);
-title(sprintf('%s: Negative Mining iter %03d',...
-              m.model_name,iter),'FontSize',14)
-drawnow
-snapnow
+
+if m.params.display == 1    
+  show_model_data(m, 5);
+  drawnow
+  snapnow
+end
+
 
 % if there is a local directory, and dump images was enabled, or
 % dump_last_image and we are on the last iteration
