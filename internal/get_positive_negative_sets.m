@@ -38,10 +38,11 @@ for j = 1:length(bads)
 end
 
 good_images = cellfun(@(x)numel(x)>0, good_objects);
-stripped_set = [cellfun(@(x,y)setfield(x,'objects',x.objects(y)),...
+a = cellfun(@(x,y)setfield(x,'objects',x.objects(y)),...
                        data_set, ...
                        good_objects,'UniformOutput', ...
-                       false) negative_set];
+                       false);
+stripped_set = cat(1,a(:),negative_set(:));
 
 for k = 1:length(stripped_set)
   if ~isstruct(stripped_set{k})

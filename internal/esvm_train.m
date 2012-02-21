@@ -72,7 +72,6 @@ final_directory = ...
 %  mkdir(final_directory);
 %end
 
-
 %Assign unique identifiers to all of the models
 model.models = cellfun(@(x,y)setfield(x,'identifier',y),...
                        model.models,num2cell(1:length(model.models)),...
@@ -113,7 +112,7 @@ for i = 1:length(model.models)
   % Append '-svm' to the mode to create the models name
   m.model_name = new_model_name;
   m.iteration = 1;
-  m.total_mines = 0;
+
   
   if isfield(m,'mining_stats')
     m = rmfield(m,'mining_stats');
@@ -140,24 +139,25 @@ for i = 1:length(model.models)
   keep_going = 1;
   
   % Add training set and training set's mining queue 
-  %m.train_set = neg_set;
   mining_queue = esvm_initialize_mining_queue(m, model.cls);
-  
+
+  total_mines = 0;  
   while keep_going == 1
-    if ~isfield(m,'mining_stats')
-      total_mines = 0;
-    else
-      total_mines = sum(cellfun(@(x)x.total_mines, m.mining_stats));
-    end
-    m.total_mines = total_mines;
+    % if ~isfield(m,'mining_stats')
+    %   total_mines = 0;
+    % else
+    %   total_mines = sum(cellfun(@(x)x.total_mines, m.mining_stats));
+    % end
+    % m.total_mines = total_mines;
 
     m.data_set = model.data_set;
     m.params = model.params;
     m.model_name = model.model_name;
 
     [m,mining_queue] = esvm_mine_train_iteration(m, mining_queue);
+    total_mines = sum(cellfun(@(x)x.total_mines, m.models{1}.mining_stats));
 
-    if ((m.total_mines >= params.train_max_mined_images) || ...
+    if ((total_mines >= params.train_max_mined_images) || ...
           (isempty(mining_queue))) || ...
           (m.iteration == params.train_max_mine_iterations)
 

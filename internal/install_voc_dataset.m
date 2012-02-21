@@ -1,10 +1,13 @@
-function [trainval_set, test_set] = install_dataset(data_directory, dataset_directory)
+function [trainval_set, test_set] = install_voc_dataset(data_directory, dataset_directory)
 % Installs a dataset into a single mat file with pointers to image
 % locations and all annotations loaded into a single matlab structure
 
 if nargin == 0
   data_directory = '/Users/tomasz/projects/pascal/';
   dataset_directory = 'VOC2010';
+
+  data_directory = '/csail/vision-videolabelme/databases/';
+  dataset_directory = 'SUN11';
 end
 
 trainval_file = sprintf('%s/%s/trainval.mat',data_directory, ...
@@ -26,7 +29,7 @@ else
                                        'Annotations'),...
                                 '.jpg','.xml'),image_set, ...
                      'UniformOutput',false);
-  
+
   data_set = cellfun(@(x)PASreadrecord(x),newfiles,'UniformOutput', ...
                      false);
   data_set = cellfun(@(x,y)setfield(x,'I',y),data_set,image_set,'UniformOutput',false);

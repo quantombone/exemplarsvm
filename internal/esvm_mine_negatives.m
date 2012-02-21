@@ -227,18 +227,36 @@ end
 
 function mining_queue = update_mq_onepass(mining_queue, violating_images, ...
                                            empty_images)
-
-%% Take the violating images and remove them from queue
-mover_ids = find(cellfun(@(x)ismember(x.index,violating_images), ...
+%here the code has been updated to cycle through the queue, because
+%a maximum number of mined images is always in effect, it doesn't
+%hurt to make this data-structure cyclical
+%% We now take the violating images and place them on the end of the queue
+mover_ids = find(cellfun(@(x)ismember((x.index),violating_images), ...
                          mining_queue));
 
+enders = mining_queue(mover_ids);
 mining_queue(mover_ids) = [];
+mining_queue = cat(2,mining_queue,enders);
 
-%% We now take the empty images and remove them from queue
-mover_ids = find(cellfun(@(x)ismember(x.index,empty_images), ...
+%% We now take the empty images and place them on the end of the queue
+mover_ids = find(cellfun(@(x)ismember((x.index),empty_images), ...
                          mining_queue));
 
+enders = mining_queue(mover_ids);
 mining_queue(mover_ids) = [];
+mining_queue = cat(2,mining_queue,enders);
+
+% %% Take the violating images and remove them from queue
+% mover_ids = find(cellfun(@(x)ismember(x.index,violating_images), ...
+%                          mining_queue));
+
+% mining_queue(mover_ids) = [];
+
+% %% We now take the empty images and remove them from queue
+% mover_ids = find(cellfun(@(x)ismember(x.index,empty_images), ...
+%                          mining_queue));
+
+% mining_queue(mover_ids) = [];
 
 function mining_queue = update_mq_front_violators(mining_queue,...
                                                   violating_images, ...

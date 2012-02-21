@@ -31,23 +31,25 @@ else
   params = esvm_get_default_params(params);
 end
 
-params.display = 1;  
-params.dump_images = 1;
+params.display = 0;  
+params.dump_images = 0;
 params.detect_max_windows_per_exemplar = 100;
 params.train_max_negatives_in_cache = 5000;
-params.train_max_mined_images = 200;
+params.train_max_mined_images = 500;
 params.latent_iterations = 2;
 % for dalaltriggs, it seams having same constant on positives as
 % negatives is better than using 50
 params.train_positives_constant = 1;
-params.mine_from_negatives = 0;
-params.mine_from_positives = 1;
+params.mine_from_negatives = 1;
+params.mine_from_positives = 0;
 params.mine_skip_positive_objects_os = .2;
 params.train_max_scale = 1.0;
 params.latent_os_thresh = 0.7;
+params.dt_initialize_with_flips = 1;
 
 %params.detect_pyramid_padding = 0;
 
+starttime = tic;
 model = esvm_initialize_dt(data_set, cls, params);
 model = esvm_train(model);
 
@@ -55,3 +57,5 @@ for niter = 1:params.latent_iterations
   model = esvm_latent_update_dt(model);
   model = esvm_train(model);
 end
+
+model.learn_time = toc(starttime);

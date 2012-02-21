@@ -34,3 +34,5 @@ fprintf(1,'Randomizing mining queue with %d images\n',...
         length(mining_queue));
 myRandomize;
 mining_queue = mining_queue(randperm(length(mining_queue)));
+L = min(length(mining_queue),m.params.train_max_mined_images);
+mining_queue = mining_queue(1:L);
