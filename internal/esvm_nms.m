@@ -49,6 +49,8 @@ while ~isempty(I)
   
   o = w.*h ./ area(I(1:last-1));
   
+  %o = w.*h;
+  %o = o ./ (area(I(1:last-1)) + area(i) - o);
   I([last; find(o>overlap)]) = [];
 end
 
