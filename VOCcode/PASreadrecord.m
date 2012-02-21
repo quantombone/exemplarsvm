@@ -4,8 +4,16 @@ if length(path)<4
     error('unable to determine format: %s',path);
 end
 
-if strcmp(path(end-3:end),'.txt')
+try
+  if strcmp(path(end-3:end),'.txt')
     rec=PASreadrectxt(path);
-else
+  else
     rec=VOCreadrecxml(path);
+  end
+  fprintf(1,'.');
+catch
+  %If file did not load (it is not there, or invalid format), then
+  %simply return an empty array (but do not crash!)
+  rec = [];
+  fprintf(1,',');
 end
