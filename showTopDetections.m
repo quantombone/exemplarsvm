@@ -1,21 +1,28 @@
-function Isv = showTopDetections(data_set, boxes, L)
-% Show top detections from the model
+function Isv = showTopDetections(data_set, boxes, MAX_BOXES)
+% Show top detection crops in one large image, where all crops are
+% resized to the size of the average detection
+% Input: 
+%   data_set: (the set of images for which we have boxes)
+%   boxes: a matrix of (Nx12) boxes where boxes(:,11) points to
+%      imageid
+%   MAX_BOXES: the maximum number of boxes to show (defaults to 100)
 
-if ~exist('L','var')
-  L = 100;
+if ~exist('MAX_BOXES','var')
+  MAX_BOXES = 100;
 end
 
-L = min(L,size(boxes,1));
+MAX_BOXES = min(MAX_BOXES,size(boxes,1));
+[aa,bb] = sort(boxes(:,end),'descend');
+boxes = boxes(bb(1:MAX_BOXES),:);
+
 
 mw = round(mean(boxes(:,4)-boxes(:,2)));
 mh = round(mean(boxes(:,3)-boxes(:,1)));
 
 PSIZE = round((mw+mh)/2*.4);
 
-[aa,bb] = sort(boxes(:,end),'descend');
-boxes = boxes(bb,:);
 
-for i = 1:L
+for i = 1:MAX_BOXES
   fprintf(1,'.');
   b = boxes(i,:);
 
@@ -36,18 +43,15 @@ for i = 1:L
   
 
   %crops{i} = I(b(2):b(4),b(1):b(3),:);
-  try
-    crops{i} = imresize(crops{i},round([mw mh]),'bicubic');
-  catch
-    keyboard
-  end
-  crops{i} = max(0.0,min(1.0,crops{i}));
 
+  crops{i} = imresize(crops{i},round([mw mh]),'bicubic');
+
+  crops{i} = max(0.0,min(1.0,crops{i}));
 end
 
-K1 = ceil(sqrt(L));
+K1 = ceil(sqrt(MAX_BOXES));
 K2 = K1;
-for j = (L+1):(K1*K2)
+for j = (MAX_BOXES+1):(K1*K2)
   crops{j} = zeros(round(mw),round(mh),3);
 end
 
