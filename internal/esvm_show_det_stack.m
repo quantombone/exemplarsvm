@@ -1,16 +1,16 @@
 function Isv = esvm_show_det_stack(bbs, train_set, K2, K1, m)
 % Create a [K1]x[K2] image which visualizes the detection windows, as
 % well as information about the trained exemplar [m].
-% The first row shows [exemplar image, w+, w- ,
-%    mean0, mean 1, ... ,mean N]
+%
+% The first row shows [exemplar image, w+, w-]
 % Second row first icon starts the top detections. This
 % visualization is used to show top negative support vectors as
 % well as top detection from any set.
 % Inputs:
 %    bbs: a set of bounding boxes, where bbs(j,11) is the image
-%    from the j-th bounding box. images are shown in the raw order
+%      from the j-th bounding box. images are shown in the raw order
 %    train_set: the set of (virtual) images which bbs(:,11) refers to
-%    [K2,K1]: sizes of grid
+%    [K2,K1]: sizes of grid [defaults to 5]
 %    m: the model, if present fills in icon and w+/w- pics
 %
 %
@@ -20,8 +20,6 @@ function Isv = esvm_show_det_stack(bbs, train_set, K2, K1, m)
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
-% NOTE(TJM): there is a bug when K2=15, K1=20, with the averages
-% not being only in the first row of the image
 
 if ~exist('K2','var')
   K1 = 5;
@@ -47,9 +45,7 @@ K2 = max(K2,5);
 %   bbs = bbs(bb, :);
 %   m.model.svxs = m.model.svxs(:, bb);
 % else
-
 % end
-
 
 if ~exist('m','var')
   pos_picture = ones(10,10,1);
@@ -87,14 +83,11 @@ for i = 1:length(ucurids)
     mypad = max([d1,d2,d3,d4]);
     PADDER = round(mypad)+2;
     I = pad_image(Ibase,PADDER);
-    
     bb = round(cb + PADDER);
     ims{hits(j)} = I(bb(2):bb(4),bb(1):bb(3),:);
-   
     if cb(7) == 1
       ims{hits(j)} = flip_image(ims{hits(j)});
-    end
-        
+    end    
   end
 end
 
@@ -141,9 +134,17 @@ for i = 1:length(cuts)
   end
 end
 
-
 %KKK = K1-3;
-ims = cellfun2(@(x)pad_image(x,PADSIZE,[1 1 1]),ims);
+
+dists = cap_range(bbs(:,end),[-1 1]);
+dists = (dists+1)/2;
+NC = 200;
+colorsheet = jet(NC);
+dists = round(dists*(NC-1)+1);
+colors = colorsheet(dists,:);
+for i = 1:length(ims)
+  ims{i} = pad_image(ims{i},PADSIZE,colors(i,:));
+end
 
 if length(ims)<K1*K2
   ims{K1*K2} = zeros(newsize(1)+PADSIZE*2,...
@@ -155,10 +156,8 @@ for j = (N+1):(K1*K2)
                    newsize(2)+PADSIZE*2,3);
 end
 
-
 pos_picture = jettify(imresize(pos_picture,newsize,'nearest'));
 neg_picture = jettify(imresize(neg_picture,newsize,'nearest'));
-
 
 %first four slots are reserved for the image
 NSHIFT = length(mss) + NSHIFT_BASE;
