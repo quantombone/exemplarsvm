@@ -64,9 +64,9 @@ filer = cache_file;
 
 p = params;%esvm_get_default_params;
 p.detect_save_features = 1;
-p.detect_keep_threshold = -1.0;
+p.detect_keep_threshold = -1.2;
 p.detect_exemplar_nms_os_threshold = 1.0;
-p.detect_max_windows_per_exemplar = 300;
+p.detect_max_windows_per_exemplar = 500;
 
 curx = cell(0,1);
 curbb = cell(0,1);
@@ -119,7 +119,9 @@ if USE_ALL_POTENTIALS == 1
 else
   
   best_model = model.models{1};
-  best_score = evaluate_obj(best_model);
+  %NOTE: start out with a really large value, because the number of
+  %positives might have changed we cannot use last iteration's value
+  best_score = 100000000;%evaluate_obj(best_model);
   
   %now we are onto finding the best assignments  
   %we always do first iterations, because it is greedy
@@ -162,16 +164,16 @@ else
     end
   end
   
-  models{1} = best_model;
+  model.models{1} = best_model;
 end
 
 %Update name with proper suffix being concatenated
-models{1}.model_name = [model_name];
+model.model_name = [model_name];
 
-fprintf(1,'Got latent updates for %d examples\n',size(models{1}.bb,1));
+fprintf(1,'Got latent updates for %d examples\n',size(model.models{1}.bb,1));
 
 if CACHE_FILE == 1
-  save(filer,'models');
+  save(filer,'model');
 end
 
 % if (m.params.dump_images == 1) || ...
@@ -184,14 +186,14 @@ end
 % end
 
 if params.display == 1    
-  [aa,bb] = sort(models{1}.w(:)'*models{1}.x,'descend');
-  Icur = esvm_show_det_stack(models{1}.bb(bb,:),model.data_set, ...
-                             10,10,models{1});
+  [aa,bb] = sort(model.models{1}.w(:)'*model.models{1}.x,'descend');
+  Icur = esvm_show_det_stack(model.models{1}.bb(bb,:),model.data_set, ...
+                             10,10,model.models{1});
   
-  [aa,bb] = sort(models{1}.w(:)'*models{1}.svxs,'descend');
-  Icur2 = esvm_show_det_stack(models{1}.svbbs(bb,:), ...
+  [aa,bb] = sort(model.models{1}.w(:)'*model.models{1}.svxs,'descend');
+  Icur2 = esvm_show_det_stack(model.models{1}.svbbs(bb,:), ...
                               model.data_set, 10,10, ...
-                              models{1});
+                              model.models{1});
   Ipad = zeros(size(Icur,1),10,3);
   Ipad(:,:,1) = 1;
   Icur = cat(2,Icur,Ipad,Icur2);
