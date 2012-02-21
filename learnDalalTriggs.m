@@ -33,10 +33,12 @@ end
 
 params.display = 0;  
 params.dump_images = 0;
-params.detect_max_windows_per_exemplar = 100;
-params.train_max_negatives_in_cache = 5000;
+params.detect_max_windows_per_exemplar = 200;
+params.train_max_negatives_in_cache = 20000;
 params.train_max_mined_images = 500;
 params.latent_iterations = 2;
+params.train_svm_c = 1;
+params.train_max_windows_per_iteration = 5000;
 % for dalaltriggs, it seams having same constant on positives as
 % negatives is better than using 50
 params.train_positives_constant = 1;
