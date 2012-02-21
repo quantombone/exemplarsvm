@@ -84,12 +84,12 @@ if (exist('M','var') && (~isempty(M)) && isfield(M,'betas') && ...
     bboxes{i} = calib_boxes;
   end
 elseif exist('M','var') && ~isempty(M) && isfield(M,'neighbor_thresh')
-  fprintf(1,'Applying M-matrix to %d images:',length(bboxes));
-  starter=tic;
+  %fprintf(1,'Applying M-matrix to %d images:',length(bboxes));
+  %starter=tic;
 
   nbrlist = cell(length(bboxes),1);
   for i = 1:length(bboxes)
-    fprintf(1,'.');
+    %fprintf(1,'.');
     if size(bboxes{i},1) == 0
       continue
     end
@@ -101,18 +101,20 @@ elseif exist('M','var') && ~isempty(M) && isfield(M,'neighbor_thresh')
     r2 = esvm_apply_M(xraw,bboxes{i},M);
     bboxes{i}(:,end) = r2;
   end
-  fprintf(1,'took %.3fsec\n',toc(starter));
+  %fprintf(1,'took %.3fsec\n',toc(starter));
 else
-  fprintf(1,'No betas, No M-matrix, no calibration\n');
+  %fprintf(1,'No betas, No M-matrix, no calibration\n');
 end
 
 
-os_thresh = .3;
-fprintf(1, 'Applying NMS (OS thresh=%.3f)\n',os_thresh);
+if ~isfield(params,'calibrate_nms')
+  params.calibrate_nms = 0.3;
+end
+%fprintf(1, 'Applying NMS (OS thresh=%.3f)\n',os_thresh);
 for i = 1:length(bboxes)
   if size(bboxes{i},1) > 0
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
-    bboxes{i} = esvm_nms(bboxes{i},os_thresh);
+    bboxes{i} = esvm_nms(bboxes{i},params.calibrate_nms);
     if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
       maxos{i} = maxos{i}(bboxes{i}(:,5));
     end
