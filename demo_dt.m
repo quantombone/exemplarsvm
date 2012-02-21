@@ -13,13 +13,13 @@ classes = {'chair','laptop','table',...
            'television','sink','sofa', ...
            'toilet' };
 
-classes = {'sink'};
-classes = {'laptop'};
-classes = {'sofa'};
-classes = {'chair'};
-classes = {'toilet'};
-classes = {'table'};
-for i = 1:length(classes)
+% classes = {'sink'};
+% classes = {'laptop'};
+% classes = {'sofa'};
+% classes = {'chair'};
+% classes = {'toilet'};
+% classes = {'table'};
+parfor i = 1:length(classes)
   model = learnDalalTriggs(data_set, classes{i});
   savemodel(model,classes{i});
   %save(sprintf('/csail/vision-videolabelme/databases/SUN11/dt-models/%s.mat',classes{i}),'model');
