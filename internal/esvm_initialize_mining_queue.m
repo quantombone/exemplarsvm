@@ -8,9 +8,13 @@ function mining_queue = esvm_initialize_mining_queue(m, cls)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-
 indices = 1:length(m.data_set);
 negatives = find(cellfun(@(x)length(x.objects)==0, m.data_set));
+myRandomize;
+r = randperm(length(negatives));
+negatives = negatives(r(1:min(length(negatives), ...
+                            m.params.train_max_negative_images)));
+
 positives = find(cellfun(@(x)length(x.objects)~=0, m.data_set));
 
 if m.params.mine_from_negatives == 0

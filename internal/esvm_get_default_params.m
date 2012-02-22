@@ -93,6 +93,7 @@ params.train_max_mine_iterations = 100;
 
 %Maximum TOTAL number of images to mine from the mining queue
 params.train_max_mined_images = 2500;
+params.train_max_negative_images = 2000;
 
 %Maximum number of negatives to mine before SVM kicks in (this
 %defines one iteration of learning)

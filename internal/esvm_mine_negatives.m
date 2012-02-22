@@ -1,4 +1,4 @@
-function [hn, mining_queue, mining_stats] = ...
+function [hn, mining_queue, mining_stats, model] = ...
     esvm_mine_negatives(model, mining_queue)
 % Compute "Hard-Negatives" for the images in the
 % stream/queue [imageset/mining_queue] for the current model
@@ -49,6 +49,11 @@ for i = 1:length(mining_queue)
   I = toI(imageset{index});
 
   [rs,t] = esvm_detect(I, model, params);
+  for q = 1:length(rs.bbs)
+    if ~isempty(rs.bbs{q})
+      rs.bbs{q}(:,11) = index;
+    end
+  end
 
   if isstruct(imageset{index}) ...
         && isfield(imageset{index},'objects') ...
@@ -56,23 +61,78 @@ for i = 1:length(mining_queue)
         && params.mine_skip_positive_objects == 1
     gtbbs = cat(1,imageset{index}.objects.bbox);
 
-    os = getosmatrix_bb(rs.bbs{1},gtbbs);
-    os = max(os,[],2);
-    goods = find(os < params.mine_skip_positive_objects_os);
-    bads = find(os >= params.mine_skip_positive_objects_os);
+    full_os = getosmatrix_bb(rs.bbs{1},gtbbs);
+    [os,gtid] = max(full_os,[],2);
+    good_negatives = find(os < ...
+                          params.mine_skip_positive_objects_os);
+    bad_negatives = find(os >= ...
+                          params.mine_skip_positive_objects_os);
     
-    if length(bads) >= 1
-    [maxscore,maxind] = max(rs.bbs{1}(bads,end));
-    maxos = os(bads(maxind));
-    
-    extrastring = sprintf(', max+ = %.3f, os_max+=%.3f',maxscore, ...
-                          maxos);
+    good_positives = find(os >= params.latent_os_thresh);
+
+      
+    if length(good_positives) >= 1
+      [max_pos_score,max_pos_ind] = max(rs.bbs{1}(good_positives,end));
+
+      maxos = os(good_positives(max_pos_ind));
+      
+      extrastring = sprintf(', max+ = %.3f, os_max+=%.3f',...
+                            max_pos_score, maxos);
     else 
       extrastring = '';
     end
     
-    rs.bbs{1} = rs.bbs{1}(goods,:);
-    rs.xs{1} = rs.xs{1}(goods);
+    %remove old positives from this image
+    old_positives = find(model.models{1}.bb(:,11)==index);
+    remove_positives = old_positives;
+    model.models{1}.x(:,remove_positives) = [];
+    model.models{1}.bb(remove_positives,:) = [];
+    %fprintf(1,'Removed %d positives\n',length(remove_positives));
+    %old_os = getosmatrix_bb(model.models{1}.bb(old_positives,:), ...
+    %                        gtbbs(curid,:));
+    %remove_positives = old_positives(old_os> ...
+    %                                 params.latent_os_thresh);
+    
+        
+    %% Here we update the positives
+    good_os = os(good_positives);
+    good_id = gtid(good_positives);
+    uid = unique(good_id);
+    c = 0;
+    for j = 1:length(uid)
+      curid = uid(j);
+      cur_goods = good_positives(good_id==curid);
+      [aa,bb] = sort(rs.bbs{1}(cur_goods,end),'descend');
+      %take top scoring detection
+      cur_goods = cur_goods(bb(1));
+      newbb = rs.bbs{1}(cur_goods,:);
+      newx = cat(2,rs.xs{1}{cur_goods});
+      
+      %find ids of old positives from this image, then compute os
+      %with gt object
+
+      
+
+      % figure(1)
+      % clf
+      % imagesc(I)
+      % plot_bbox(newbb,'',[0 1 0])
+      % plot_bbox(model.models{1}.bb(remove_positives,:),'old')
+      % drawnow
+
+      model.models{1}.x(:,end+1) = newx;
+      model.models{1}.bb(end+1,:) = newbb;
+      c = c + 1;
+
+    end
+    
+    %fprintf(1,'Added %d positives\n',c);
+    
+    rs.bbs{1} = rs.bbs{1}(good_negatives,:);
+    rs.xs{1} = rs.xs{1}(good_negatives);
+
+
+    
   else
     extrastring = '';
   end
@@ -94,12 +154,7 @@ for i = 1:length(mining_queue)
 
   numpassed = numpassed + 1;
 
-  curid_integer = index;  
-  for q = 1:length(rs.bbs)
-    if ~isempty(rs.bbs{q})
-      rs.bbs{q}(:,11) = curid_integer;
-    end
-  end
+  
  
   %% Make sure we only keep 3 times the number of violating windows
   clear scores
@@ -246,6 +301,10 @@ function mining_queue = update_mq_onepass(mining_queue, violating_images, ...
 % mining_queue(mover_ids) = [];
 % mining_queue = cat(2,mining_queue,enders);
 
+isvisited = find(cellfun(@(x)x.num_visited,mining_queue));
+mining_queue(isvisited) = [];
+
+if 0
 %% Take the violating images and remove them from queue
 mover_ids = find(cellfun(@(x)ismember(x.index,violating_images), ...
                          mining_queue));
@@ -257,6 +316,9 @@ mover_ids = find(cellfun(@(x)ismember(x.index,empty_images), ...
                          mining_queue));
 
 mining_queue(mover_ids) = [];
+end
+
+
 
 function mining_queue = update_mq_front_violators(mining_queue,...
                                                   violating_images, ...

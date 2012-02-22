@@ -143,6 +143,7 @@ for i = 1:length(model.models)
   
   % Add training set and training set's mining queue 
   mining_queue = esvm_initialize_mining_queue(m, model.cls);
+  mining_queue = repmat(mining_queue(:),ceil(params.train_max_mined_images/length(mining_queue)));
   mining_queue = mining_queue(1:min(length(mining_queue),...
                                     params.train_max_mined_images));
 

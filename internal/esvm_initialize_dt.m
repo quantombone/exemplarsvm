@@ -69,8 +69,8 @@ end
 [cur_pos_set, cur_neg_set] = get_positive_negative_sets(data_set, ...
                                                   cls);
 
-cur_pos_set = cur_pos_set(1:min(length(cur_pos_set),...
-                                params.max_number_of_positives));
+% cur_pos_set = cur_pos_set(1:min(length(cur_pos_set),...
+%                                 params.max_number_of_positives));
 
 if length(cur_pos_set) == 0
   error(sprintf('No positives of class "%s" found',cls));
@@ -88,6 +88,8 @@ fprintf(1,['esvm_initialize_dt(%s): warping to size [%d x %d]\n'],...
         cls,hg_size(1),hg_size(2));
 allwarps = cell(0,1);
 
+minsize = .9 * (hg_size(1)*hg_size(2)*params.init_params.sbin*params.init_params.sbin);
+
 total = 0;
 for j = 1:length(data_set)  
   %Skip positive generation if there are no objects
@@ -104,6 +106,13 @@ for j = 1:length(data_set)
     bbox = obj(k).bbox;    
     UUU = bbox(3)-bbox(1)+1;
     VVV = bbox(4)-bbox(2)+1;
+    
+    % skip small examples
+    if (bbox(3)-bbox(1)+1)*(bbox(4)-bbox(2)+1) < minsize
+      fprintf(1,'-');
+      continue
+    end    
+    
     total = total + 1;
     angle = abs((atan2(VVV,UUU) - atan2(hg_size(1),hg_size(2))));
 
@@ -147,11 +156,10 @@ for j = 1:length(data_set)
         %plot_bbox(bbox2)
         %drawnow
         %pause
-
       end
-      fprintf(1,'++');
+      fprintf(1,'+');
     else
-      fprintf(1,'--');
+      fprintf(1,'-');
     end
   end
 end
@@ -196,7 +204,10 @@ m.params = params;
 
 %sort by initial score
 [~,order] = sort(m.w(:)'*m.x,'descend');
+order = order(1:min(length(order),params.max_number_of_positives));
 allwarps = allwarps(order);
+m.x = m.x(:,order);
+m.bb = m.bb(order,:);
 
 Is = cat(4,allwarps{:});
 Imean = mean(Is,4);
