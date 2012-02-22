@@ -72,6 +72,10 @@ end
 cur_pos_set = cur_pos_set(1:min(length(cur_pos_set),...
                                 params.max_number_of_positives));
 
+if length(cur_pos_set) == 0
+  error(sprintf('No positives of class "%s" found',cls));
+end
+
 data_set = cat(1,cur_pos_set(:),cur_neg_set(:));
 
 hg_size = get_hg_size(cur_pos_set, params.init_params.sbin);
@@ -114,6 +118,12 @@ for j = 1:length(data_set)
       bbox(11) = j;
       bbox(12) = 0;
       bbs{end+1} = bbox;
+      
+      %figure(2)
+      %imagesc(I)
+      %plot_bbox(bbox)
+      %drawnow
+      %pause
 
       if params.dt_initialize_with_flips == 1
         total = total + 1;
@@ -126,10 +136,18 @@ for j = 1:length(data_set)
         curfeats{end+1} = params.init_params.features(warped2, ...
                                                       params.init_params ...
                                                       .sbin);
+        bbox2 = flip_box(bbox2,size(I));
         bbox2(11) = j;
         bbox2(12) = 0;
         bbox2(7) = 1; %indicate the flip
         bbs{end+1} = bbox2;
+        
+        %figure(2)
+        %imagesc(flipI)
+        %plot_bbox(bbox2)
+        %drawnow
+        %pause
+
       end
       fprintf(1,'++');
     else
