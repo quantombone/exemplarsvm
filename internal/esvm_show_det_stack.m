@@ -83,11 +83,20 @@ for i = 1:length(ucurids)
     mypad = max([d1,d2,d3,d4]);
     PADDER = round(mypad)+2;
     I = pad_image(Ibase,PADDER);
-    bb = round(cb + PADDER);
+    bb = cb;
+    bb(1:4) = round(bb(1:4) + PADDER);
     ims{hits(j)} = I(bb(2):bb(4),bb(1):bb(3),:);
     if cb(7) == 1
       ims{hits(j)} = flip_image(ims{hits(j)});
     end    
+    
+    if 0
+      imagesc(I)
+      plot_bbox(bb)
+      bb(7)
+      drawnow
+
+    end
   end
 end
 
