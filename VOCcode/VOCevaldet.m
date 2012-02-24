@@ -148,7 +148,7 @@ for d=1:nd
     %bb=BB(:,d);
     ovmax=-inf;
 
-    try
+
     for j=1:size(gt(i).BB,2)
         bbgt=gt(i).BB(:,j);
         bi=[max(bb(1),bbgt(1)) ; max(bb(2),bbgt(2)) ; min(bb(3),bbgt(3)) ; min(bb(4),bbgt(4))];
@@ -166,9 +166,7 @@ for d=1:nd
             end
         end
     end
-    catch
-      keyboard
-    end
+
     % assign detection as true positive/don't care/false positive
     if ovmax>=params.evaluation_minoverlap
         if ~gt(i).diff(jmax)
@@ -177,6 +175,7 @@ for d=1:nd
 		gt(i).det(jmax)=true;
                 is_correct(d) = 1;
             else
+                is_correct(d) = -1;
                 fp(d)=1;            % false positive (multiple detection)
             end
         end
