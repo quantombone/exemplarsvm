@@ -72,10 +72,10 @@ for i = 1:length(mining_queue)
 
       
     if length(good_positives) >= 1
-      [max_pos_score,max_pos_ind] = max(rs.bbs{1}(good_positives,end));
-
-      maxos = os(good_positives(max_pos_ind));
+      [aa,bb] = sort(rs.bbs{1}(good_positives,end),'descend');
       
+      [max_pos_score,max_pos_ind] = max(rs.bbs{1}(good_positives,end));
+      maxos = os(good_positives(max_pos_ind));
       extrastring = sprintf(', max+ = %.3f, os_max+=%.3f',...
                             max_pos_score, maxos);
     else 
@@ -102,9 +102,18 @@ for i = 1:length(mining_queue)
     for j = 1:length(uid)
       curid = uid(j);
       cur_goods = good_positives(good_id==curid);
+      
+
+      
       [aa,bb] = sort(rs.bbs{1}(cur_goods,end),'descend');
       %take top scoring detection
+      
+      %take on of top K positives randomly
+      K = 1;
+      r = randperm(min(length(bb),K));
+      bb = bb(r);
       cur_goods = cur_goods(bb(1));
+      
       newbb = rs.bbs{1}(cur_goods,:);
       newx = cat(2,rs.xs{1}{cur_goods});
       
@@ -122,6 +131,17 @@ for i = 1:length(mining_queue)
 
       model.models{1}.x(:,end+1) = newx;
       model.models{1}.bb(end+1,:) = newbb;
+      
+
+      [aa,bb] = sort(model.models{1}.w(:)'*model.models{1}.x, ...
+                     'descend');
+      bb = bb(1:min(length(bb),model.params.max_number_of_positives));
+
+      
+      model.models{1}.x = model.models{1}.x(:,bb);
+      model.models{1}.bb = model.models{1}.bb(bb,:);
+
+      
       c = c + 1;
 
     end
@@ -131,6 +151,7 @@ for i = 1:length(mining_queue)
     rs.bbs{1} = rs.bbs{1}(good_negatives,:);
     rs.xs{1} = rs.xs{1}(good_negatives);
 
+    
 
     
   else
