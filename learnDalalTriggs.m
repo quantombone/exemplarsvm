@@ -43,7 +43,7 @@ params.train_max_windows_per_iteration = 3000;
 % for dalaltriggs, it seams having same constant on positives as
 % negatives is better than using 50
 params.train_positives_constant = 1;
-params.mine_from_negatives = 1;
+params.mine_from_negatives = 0;
 params.mine_from_positives = 1;
 params.mine_skip_positive_objects_os = .2;
 params.mine_from_positives_do_latent_update = 1;
@@ -52,14 +52,25 @@ params.latent_os_thresh = 0.5;
 params.dt_initialize_with_flips = 0;
 
 %params.detect_pyramid_padding = 0;
+%fprintf(1,'hack max 40\n');
+%params.max_number_of_positives = 20;
 
 starttime = tic;
 model = esvm_initialize_dt(data_set, cls, params);
 
-%params.mine_from_positives = 1;
-%params.mine_from_negatives = 0;
-%model.params = esvm_get_default_params(params);
+params.mine_from_positives = 1;
+params.mine_from_negatives = 1;
+params.train_max_mined_images = 3000;
+
+model.params = esvm_get_default_params(params);
 model = esvm_train(model);
+
+% params.train_max_mined_images = 1000;
+% params.mine_from_negatives = 1;
+% params.mine_from_positives = 0;
+% model.params = esvm_get_default_params(params);
+% model = esvm_train(model);
+
 if 0
 for niter = 1:params.latent_iterations
   %model = esvm_latent_update_dt(model);
