@@ -63,9 +63,44 @@ m.btrace{end+1} = m.b;
 function show_figures(m)
 
 if m.params.display == 1    
-  show_model_data(m, 5);
+  figure(1)
+  clf
+  show_model_data(m, 8);
   drawnow
   snapnow
+  figure(2)
+  clf
+  rpos = m.models{1}.w(:)'*m.models{1}.x - m.models{1}.b;
+  rneg = m.models{1}.w(:)'*m.models{1}.svxs - m.models{1}.b;
+  rneg = rneg(rneg>=-1.01);
+  maxlen = max(length(rpos),length(rneg));
+  xpos = round(linspace(1,maxlen,length(rpos)));
+  xneg = round(linspace(1,maxlen,length(rneg)));
+  plot(xpos,rpos,'r.')
+  hold on;
+  plot(xneg,rneg,'k.')
+  hold on;
+  plot([1 maxlen],[-1 -1],'b-')
+  hold on;
+  plot([1 maxlen],[0 0],'k--')
+  hold on;
+  plot([1 maxlen],[1 1],'r--')
+  axis([1 maxlen -1.1 max(1,max(rpos))])
+  
+  % poshist = hist(rpos,linspace(-1,max(rpos)+.1,50));
+  % neghist = hist(rneg,linspace(-1,max(rpos)+.1,50));
+  
+  % poshist = conv(poshist,fspecial('gaussian',[1 7]),'same');
+  % neghist = conv(neghist,fspecial('gaussian',[1 7]),'same');
+  % poshist = poshist/sum(poshist);
+  % neghist = neghist/sum(neghist);
+  
+  % y2 = linspace(-1,max(rpos)+.1,50);
+  % plot(poshist*.1*maxlen,y2,'r')
+  % hold on
+  % plot(neghist*.1*maxlen,y2,'b')
+
+  
 end
 
 
