@@ -88,7 +88,10 @@ fprintf(1,['esvm_initialize_dt(%s): warping to size [%d x %d]\n'],...
         cls,hg_size(1),hg_size(2));
 allwarps = cell(0,1);
 
-minsize = .9 * (hg_size(1)*hg_size(2)*params.init_params.sbin*params.init_params.sbin);
+minsize = .9 * (hg_size(1)*hg_size(2)*params.init_params.sbin* ...
+                params.init_params.sbin);
+
+
 
 total = 0;
 for j = 1:length(data_set)  
@@ -99,7 +102,10 @@ for j = 1:length(data_set)
   obj = data_set{j}.objects;
     
   I = toI(data_set{j}.I);
-  flipI = flip_image(I);
+  
+  if params.dt_initialize_with_flips == 1
+    flipI = flip_image(I);
+  end
   
   for k = 1:length(obj)    
     % Warp original bounding box
@@ -126,6 +132,7 @@ for j = 1:length(data_set)
                                                     .sbin);
       bbox(11) = j;
       bbox(12) = 0;
+      
       bbs{end+1} = bbox;
       
       %figure(2)
@@ -168,6 +175,7 @@ fprintf(1,'\nesvm_initialize_dt(%s): %d out of %d positives\n',...
         cls,length(curfeats), total);
 curfeats = cellfun2(@(x)reshape(x,[],1),curfeats);
 curfeats = cat(2,curfeats{:});
+
 
 model.data_set = data_set;
 model.cls = cls;
@@ -216,6 +224,8 @@ m.icon = Imean;
 model.models{1} = m;
 
 if params.display == 1
+  figure(1)
+  clf
   show_model_data(model,10);
 end
 
