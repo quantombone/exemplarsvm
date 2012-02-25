@@ -5,9 +5,9 @@
 
 %load ~/projects/pascal/VOC2007/trainval.mat 
 
-if ~exist('data_set','var')
-  load /csail/vision-videolabelme/databases/SUN11/trainval.mat 
-end
+%if ~exist('data_set','var')
+%  load /csail/vision-videolabelme/databases/SUN11/trainval.mat 
+%end
 
 classes = {'chair','laptop','table',...
            'television','sink','sofa', ...
@@ -19,11 +19,11 @@ classes = {'chair','laptop','table',...
 % classes = {'chair'};
 % classes = {'toilet'};
 % classes = {'table'};
+clear models;
 parfor i = 1:length(classes)
-  model = learnDalalTriggs(data_set, classes{i});
-  savemodel(model,classes{i});
+  models{i} = learnDalalTriggs(data_set, classes{i});
+  savemodel(models{i},classes{i});
   %save(sprintf('/csail/vision-videolabelme/databases/SUN11/dt-models/%s.mat',classes{i}),'model');
-
 end
 
 return;

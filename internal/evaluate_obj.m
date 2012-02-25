@@ -1,7 +1,8 @@
-function obj = evaluate_obj(m)
-%Return the SVM objective from libsvm
+function obj = evaluate_obj(model)
+%Return the SVM objective from linear SVM cost function
 
-p = m.params;
+p = model.params;
+m = model.models{1};
 posloss = sum(hinge(m.w(:)'*m.x-m.b));
 negloss = sum(hinge(-m.w(:)'*m.svxs+m.b));
 obj  = .5*m.w(:)'*m.w(:) + p.train_svm_c * ...
