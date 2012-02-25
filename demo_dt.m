@@ -5,13 +5,16 @@
 
 %load ~/projects/pascal/VOC2007/trainval.mat 
 
-%if ~exist('data_set','var')
-%  load /csail/vision-videolabelme/databases/SUN11/trainval.mat 
-%end
+if ~exist('data_set','var')
+  load /csail/vision-videolabelme/databases/SUN11/trainval.mat 
+end
 
 classes = {'chair','laptop','table',...
            'television','sink','sofa', ...
            'toilet' };
+
+classes = {'door','oven','bottle','bowl','painting','pillow', ...
+           'faucet','refrigerator','microwave','window','faucet','cushion','curtain','cabinet','floor','ceiling','plant','can','column','pot','lamp','sculpture','book','box','bottle','sign','flower','bookshelf','stair','screen','glass','carpet','towel','outlet','stool','cup'};
 
 % classes = {'sink'};
 % classes = {'laptop'};
@@ -21,21 +24,6 @@ classes = {'chair','laptop','table',...
 % classes = {'table'};
 clear models;
 parfor i = 1:length(classes)
-  models{i} = learnDalalTriggs(data_set, classes{i});
-  savemodel(models{i},classes{i});
-  %save(sprintf('/csail/vision-videolabelme/databases/SUN11/dt-models/%s.mat',classes{i}),'model');
+  model = learnDalalTriggs(data_set, classes{i});
 end
-
-return;
-
-%Create a held-out test-set
-test_set = esvm_generate_dataset(20,20,'circle');
-
-%Get detection boxes by applying model to test_set
-boxes = applyModel(test_set, model);
-
-%Get the AP curve by comparing against ground_truth
-results = evaluateModel(test_set, boxes);
-
-%Show the top detections on the test_set
-showTopDetections(test_set, boxes);
+%  savemodel(models{i},classes{i});
