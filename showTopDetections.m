@@ -91,5 +91,6 @@ if nargout == 0
   clf
   imagesc(Isv)
   drawnow
+  Isv = [];
 end
 
