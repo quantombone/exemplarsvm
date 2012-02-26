@@ -17,8 +17,8 @@ if ~exist('MAX_BOXES','var')
 end
 
 MAX_BOXES = min(MAX_BOXES,size(boxes,1));
-[aa,bb] = sort(boxes(:,end),'descend');
-boxes = boxes(bb(1:MAX_BOXES),:);
+%[aa,bb] = sort(boxes(:,end),'descend');
+%boxes = boxes(bb(1:MAX_BOXES),:);
 
 if exist('is_correct','var')
   cols = [ 0 0 1; 1 0 0; 0 1 0];
@@ -83,7 +83,6 @@ crops = reshape(crops,K1,K2)';
 for j = 1:K2
   svrows{j} = cat(2,crops{j,:});
 end
-
 Isv = cat(1,svrows{:});
 
 if nargout == 0
