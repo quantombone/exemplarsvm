@@ -12,8 +12,8 @@ end
 
 model = learnDalalTriggs(data_set,cls,params);
 save(filer,'model');
-if fileexists(filerlock)
+try
   rmdir(filerlock);
-else
+catch
   fprintf(1,'lock file already gone\n');
 end
