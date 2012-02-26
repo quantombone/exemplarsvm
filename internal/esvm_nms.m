@@ -21,6 +21,15 @@ if isempty(boxes)
   return;
 end
 
+if ~exist('overlap','var')
+  overlap = 0.5;
+end
+
+if (overlap >= 1.0)
+  top = boxes;
+  return;
+end
+
 x1 = boxes(:,1);
 y1 = boxes(:,2);
 x2 = boxes(:,3);
