@@ -25,17 +25,7 @@ if REMOVE_SELF == 1
   curids = cellfun2(@(x)x.curid,models);
 end
 
-%cls = models{1}.cls;
-%excurids = cellfun2(@(x)x.curid,models);
 bboxes = cell(1,length(grid));
-maxos = cell(1,length(grid));
-
-% try
-%   curcls = find(ismember(params.dataset_params.classes, ...
-%                          models{1}.cls));
-% catch
-%   %dataset_params is missing
-% end
 
 for i = 1:length(grid)  
   curid = grid{i}.curid;
@@ -44,22 +34,11 @@ for i = 1:length(grid)
     continue
   end
   
-  % if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
-  %   maxos{i} = grid{i}.extras.maxos;
-  %   maxos{i}(grid{i}.extras.maxclass~=curcls) = 0;
-  % end
-  
   if REMOVE_SELF == 1
     exes = bboxes{i}(:,6);
     excurids = curids(exes);
     badex = find(ismember(excurids,{curid}));
     bboxes{i}(badex,:) = [];
-    
-    % if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
-    %   if ~isempty(maxos{i})
-    %     maxos{i}(badex) = [];
-    %   end
-    % end
   end
 end
 
@@ -115,9 +94,6 @@ for i = 1:length(bboxes)
   if size(bboxes{i},1) > 0
     bboxes{i}(:,5) = 1:size(bboxes{i},1);
     bboxes{i} = esvm_nms(bboxes{i},params.calibrate_nms);
-    if ~isempty(grid{i}.extras) && isfield(grid{i}.extras,'maxos')
-      maxos{i} = maxos{i}(bboxes{i}(:,5));
-    end
     if exist('nbrlist','var')
       nbrlist{i} = nbrlist{i}(bboxes{i}(:,5));
     end
@@ -167,7 +143,6 @@ final_boxes = bboxes;
 % return unclipped boxes for transfers
 final.unclipped_boxes = unclipped_boxes;
 final.final_boxes = final_boxes;
-final.final_maxos = maxos;
 
 %Create a string which summarizes the pooling type
 calib_string = '';
@@ -182,4 +157,4 @@ end
 final.calib_string = calib_string;
 
 %NOTE: is this necessary anymore?
-final.imbb = cellfun2(@(x)x.imbb,grid);
+%final.imbb = cellfun2(@(x)x.imbb,grid);
