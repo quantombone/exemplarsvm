@@ -1,4 +1,4 @@
-function Icur = show_model_data(model, K)
+function Icur = show_model_data(model, K, show)
 %Shows the model's positives and negatives as crops in one large
 %matrix
 %  Inputs:
@@ -9,6 +9,10 @@ function Icur = show_model_data(model, K)
 
 if ~exist('K','var')
   K = 5;
+end
+
+if ~exist('show','var')
+  show = 1;
 end
 
 [aa,bb] = sort(model.models{1}.w(:)'*model.models{1}.x,'descend');
@@ -23,7 +27,8 @@ if numel(model.models{1}.svxs) > 0
   Ipad(:,:,1) = 1;
   Icur = cat(2,Icur,Ipad,Icur2);
 end
-if nargout == 1
+
+if nargout == 0
   return;
 end
 %else show
