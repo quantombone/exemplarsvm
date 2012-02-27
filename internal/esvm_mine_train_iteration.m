@@ -65,7 +65,7 @@ function show_figures(m)
 if m.params.display == 1    
   figure(1)
   clf
-  show_model_data(m, 8);
+  show_model_data(m, 10);
   drawnow
   snapnow
   figure(2)
@@ -107,10 +107,14 @@ end
 % if there is a local directory, and dump images was enabled, or
 % dump_last_image and we are on the last iteration
 if (length(m.params.localdir)>0) && ...
-      ((m.params.dump_images == 1) || ...
-       ((m.params.dump_last_image == 1) && ...
-        (m.iteration == m.params.train_max_mine_iterations)))
+      ((m.params.dump_images == 1))
+  
+  if ((m.params.dump_last_image == 1) && ...
+      (m.iteration ~= m.params.train_max_mine_iterations))
+    return;
+  end
 
+  Isv1 = show_model_data(m, 15);
   imwrite(Isv1,sprintf('%s/models/%s.%d_mineiter_I=%05d.png', ...
                     m.params.localdir, m.model_name, ...
                     m.models{1}.identifier, m.iteration), 'png');
