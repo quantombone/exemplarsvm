@@ -205,10 +205,16 @@ ap = VOCap(rec,prec);
 
 if params.display
     % plot precision/recall
+    figure(1)
+    clf
     plot(rec,prec,'-','LineWidth',2);
-    grid;
-    xlabel 'recall'
-    ylabel 'precision'
+    hold on;
+    plot(rec,prec,'o');
+    grid on;
+    xlabel('recall','FontSize',20)
+    ylabel('precision','FontSize',20)
     title(sprintf('class: %s, AP = %.3f, OS=%.3f',...
-                  cls, ap, params.evaluation_minoverlap));
+                  cls, ap, params.evaluation_minoverlap),'FontSize',20);
+    maxrec = max(rec)+.1;
+    axis([0 1 0 1])
 end
