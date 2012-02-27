@@ -97,7 +97,8 @@ mu = zeros(size(superx,1),1);
 newx = bsxfun(@minus,superx,mu);
 newx = newx(logical(m.mask),:);
 
-newx = A(m.mask,:)'*newx;
+%newx = A(m.mask,:)'*newx;
+newx = newx(find(m.mask),:);
 
 fprintf(1,' -----\nStarting SVM: dim=%d... #pos=%d, #neg=%d ',...
         size(newx,1),spos,sneg);
