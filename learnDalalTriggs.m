@@ -32,11 +32,11 @@ else
 end
 
 params.display = 1;  
-params.dump_images = 0;
+params.dump_images = 1;
 params.detect_max_windows_per_exemplar = 200;
 params.train_max_negatives_in_cache = 20000;
-params.max_number_of_positives = 1000;
-params.train_max_mined_images = 10000;
+params.max_number_of_positives = 2000;
+params.train_max_mined_images = 5000;
 params.latent_iterations = 2;
 params.train_svm_c = .01;
 params.train_max_windows_per_iteration = 3000;
