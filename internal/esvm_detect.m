@@ -67,6 +67,12 @@ end
 if ~iscell(models) && ~isfield(models,'models')
   models = {models};
   [resstruct,feat_pyramid] = esvm_detect(I,models,params);
+  if isfield(params,'factor_multiplier')
+    for q = 1:length(feat_pyramid)
+      feat_pyramid(q).scales = feat_pyramid(q).scales*params.factor_multiplier;
+    end
+  end
+  
   return;
 end
 
@@ -87,6 +93,19 @@ if doflip == 1
 else %If there is no flip, then we are done
   resstruct = rs1;
   feat_pyramid = t1;
+  if isfield(params,'factor_multiplier')
+    for q = 1:length(feat_pyramid)
+      feat_pyramid(q).scales = feat_pyramid(q).scales*params.factor_multiplier;
+    end
+  end
+  
+  for q = 1:length(resstruct.bbs)
+    if numel(resstruct.bbs{q}) > 0
+      resstruct.bbs{q}(:,1:4) = resstruct.bbs{q}(:,1:4)/ ...
+          params.factor_multiplier;
+    end
+  end
+  
   return;
 end
 
@@ -104,6 +123,19 @@ resstruct = rs1;
 
 %Concatenate normal and LR pyramids
 feat_pyramid = cat(1,t1,t2);
+
+if isfield(params,'factor_multiplier')
+  for q = 1:length(feat_pyramid)
+    feat_pyramid(q).scales = feat_pyramid(q).scales*params.factor_multiplier;
+  end
+end
+
+for q = 1:length(resstruct.bbs)
+  if numel(resstruct.bbs{q}) > 0
+    resstruct.bbs{q}(:,1:4) = resstruct.bbs{q}(:,1:4)/ ...
+        params.factor_multiplier;
+  end
+end
 
 function [resstruct,t] = esvm_detectdriver(I, models, ...
                                              params)
@@ -267,6 +299,8 @@ else
   resstruct.xs = cell(N,1);
 end
 %fprintf(1,'\n');
+
+
 
 function [resstruct,t] = esvm_detectdriverBLOCK(I, models, ...
                                              params)
@@ -499,6 +533,3 @@ else
   end
 end
 
-if isfield(params,'factor_multiplier')
-  t.scales = t.scales*params.factor_multiplier;
-end
