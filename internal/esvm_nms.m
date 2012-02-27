@@ -30,6 +30,24 @@ if (overlap >= 1.0)
   return;
 end
 
+if size(boxes,2) == 12
+  uims = unique(boxes(:,11));
+  if length(uims) > 1
+    
+    for i = 1:length(uims)
+      curboxes = boxes(boxes(:,11)==uims(i),:);
+      curboxes(:,5) = 1:size(curboxes,1);
+      keeps{i} = esvm_nms(curboxes,overlap);
+    end
+    
+    top = cat(1,keeps{:});
+    [aa,bb] = sort(top(:,end),'descend');
+    top = top(bb,:);
+    return;
+  end
+end
+
+
 x1 = boxes(:,1);
 y1 = boxes(:,2);
 x2 = boxes(:,3);
