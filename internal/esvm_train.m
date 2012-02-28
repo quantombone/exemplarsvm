@@ -285,10 +285,9 @@ end
 
 DELETE_INITIAL = 1;
 
-model = esvm_load_models(params, new_model_name, allfiles, ...
-                          CACHE_FILE, STRIP_FILE, DELETE_INITIAL);
-
-
+m = esvm_load_models(params, new_model_name, allfiles, ...
+                     CACHE_FILE, STRIP_FILE, DELETE_INITIAL);
+m = m{1};
 
 function savem(filer2,m)
 save(filer2,'m');
