@@ -17,8 +17,8 @@ if ~exist('MAX_BOXES','var')
 end
 
 MAX_BOXES = min(MAX_BOXES,size(boxes,1));
-%[aa,bb] = sort(boxes(:,end),'descend');
-%boxes = boxes(bb(1:MAX_BOXES),:);
+[aa,bb] = sort(boxes(:,end),'descend');
+boxes = boxes(bb(1:MAX_BOXES),:);
 
 if exist('is_correct','var')
   cols = [ 0 0 1; 1 0 0; 0 1 0];
@@ -36,9 +36,8 @@ mh = round(mh*factor);
 for i = 1:MAX_BOXES
   fprintf(1,'.');
   b = boxes(i,:);
+
   I = toI(data_set{b(11)});
-  %I = pad_image(I,PSIZE);
-  %b = round(b + PSIZE);
   b = round(b);
 
   us = b(2):b(4);
