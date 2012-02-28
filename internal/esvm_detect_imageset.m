@@ -75,7 +75,7 @@ end
 inds = do_partition(1:length(imageset),params.detect_images_per_chunk);
 
 % randomize chunk orderings, when writing to disk
-if length(params.localdir) > 0
+if length(params.localdir) > 0 && (params.display ~= 1)
   myRandomize;
   ordering = randperm(length(inds));
 else
@@ -166,8 +166,10 @@ for i = 1:length(ordering)
         plot_bbox(esvm_nms(clip_to_image(boxes,[1 1 size(I,2) size(I,1)]),1.2))
         title(num2str(boxes(1,end)))
       end
-      axis image
       axis off
+      axis image
+      %axis image
+      %axis off
       drawnow
     end
     
