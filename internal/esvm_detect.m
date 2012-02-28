@@ -49,18 +49,6 @@ if isempty(models)
   return;
 end
 
-params.max_image_size = 400;
-%Make sure image is in double format
-raw_max_dim = max([size(I,1) size(I,2)]);
-raw_factor = 1.0;
-if raw_max_dim > params.max_image_size
-  raw_factor = params.max_image_size/raw_max_dim;
-  I = imresize_max(I, params.max_image_size);
-  params.factor_multiplier = raw_factor;
-else
-  params.factor_multiplier = 1.0;
-end
-
 if isstruct(models) && isfield(models,'models')
   [resstruct,feat_pyramid] = esvm_detect(I,models.models,params);
   return;
@@ -70,13 +58,27 @@ if ~iscell(models) && ~isfield(models,'models')
   models = {models};
   [resstruct,feat_pyramid] = esvm_detect(I,models,params);
 
-  for q = 1:length(feat_pyramid)
-    feat_pyramid(q).scales = feat_pyramid(q).scales*params.factor_multiplier;
-  end
+  %for q = 1:length(feat_pyramid)
+  %  feat_pyramid(q).scales = feat_pyramid(q).scales*params.factor_multiplier;
+  %end
 
-  
   return;
 end
+
+
+params.max_image_size = 400;
+%Make sure image is in double format
+raw_max_dim = max([size(I,1) size(I,2)]);
+raw_factor = 1.0;
+Ioriginal = I;
+if raw_max_dim > params.max_image_size
+  raw_factor = params.max_image_size/raw_max_dim;
+  I = imresize_max(Ioriginal, params.max_image_size);
+  params.factor_multiplier = raw_factor;
+else
+  params.factor_multiplier = 1.0;
+end
+
 
 %if ~isfield(params,'nnmode')
 %  params.nnmode = '';
@@ -86,6 +88,7 @@ doflip = params.detect_add_flip;
 
 params.detect_add_flip = 0;
 [rs1, t1] = esvm_detectdriver(I, models, params);
+
 rs1 = prune_nms(rs1, params);
 
 if doflip == 1
@@ -138,6 +141,7 @@ for q = 1:length(resstruct.bbs)
         params.factor_multiplier;
   end
 end
+
 
 function [resstruct,t] = esvm_detectdriver(I, models, ...
                                              params)
