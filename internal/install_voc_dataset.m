@@ -46,7 +46,14 @@ if fileexists(test_file)
   test_set = load(test_file);
   test_set = test_set.data_set;
 else
-  image_set = esvm_get_pascal_set(dataset_params, ['test']);
+  try
+    image_set = esvm_get_pascal_set(dataset_params, ['test']);
+  catch
+    fprintf(1,'No testset to process\n');
+    test_set = [];
+    return;
+
+  end
   
   newfiles = cellfun(@(x)strrep(strrep(x,'JPEGImages', ...
                                        'Annotations'),...
