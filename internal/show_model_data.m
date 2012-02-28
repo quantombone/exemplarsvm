@@ -28,7 +28,7 @@ if numel(model.models{1}.svxs) > 0
   Icur = cat(2,Icur,Ipad,Icur2);
 end
 
-if nargout == 0
+if show == 0
   return;
 end
 %else show
