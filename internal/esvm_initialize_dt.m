@@ -91,22 +91,27 @@ allwarps = cell(0,1);
 minsize = .9 * (hg_size(1)*hg_size(2)*params.init_params.sbin* ...
                 params.init_params.sbin);
 
-
-
 total = 0;
+total_negatives = 0;
+badfeats = cell(0,1);
+badboxes = cell(0,1);
+
+TOTALNEGS = 30000;
+
 for j = 1:length(data_set)  
   %Skip positive generation if there are no objects
   if ~isfield(data_set{j},'objects') || length(data_set{j}.objects) == 0
     continue
   end
+  
   obj = data_set{j}.objects;
-    
   I = toI(data_set{j}.I);
   
   if params.dt_initialize_with_flips == 1
     flipI = flip_image(I);
   end
-  
+
+  gt_boxes = cat(1,obj.bbox);
   for k = 1:length(obj)    
     % Warp original bounding box
     bbox = obj(k).bbox;    
@@ -123,7 +128,9 @@ for j = 1:length(data_set)
     angle = abs((atan2(VVV,UUU) - atan2(hg_size(1),hg_size(2))));
 
     if (angle < pi/6) && (obj(k).truncated==0)
-      warped1 = mywarppos(hg_size, I, params.init_params.sbin, bbox);
+
+      warped1 = mywarppos(hg_size, I, params.init_params.sbin, ...
+                          bbox);
       
       allwarps{end+1} = warped1;
       curfeats{end+1} = params.init_params.features(warped1, ...
@@ -132,8 +139,15 @@ for j = 1:length(data_set)
                                                     .sbin);
       bbox(11) = j;
       bbox(12) = 0;
-      
       bbs{end+1} = bbox;
+      
+      % [badfeats{end+1},badboxes{end+1}] ...
+      %     = get_bad_warps(I, bbox, gt_boxes, hg_size, minsize, ...
+      %                        params);
+      % badboxes{end}(:,11) = j;
+      % badboxes{end}(:,7) = 0;
+      
+
       
       %figure(2)
       %imagesc(I)
@@ -157,6 +171,14 @@ for j = 1:length(data_set)
         bbox2(12) = 0;
         bbox2(7) = 1; %indicate the flip
         bbs{end+1} = bbox2;
+        
+        % [badfeats{end+1},badboxes{end+1}] ...
+        %   = get_bad_warps(flipI, bbox2, flip_box(gt_boxes,size(I)), ...
+        %                          hg_size, minsize, ...
+        %                          params);
+        % badboxes{end}(:,11) = j;
+        % badboxes{end}(:,7) = 1;
+        
         
         %figure(2)
         %imagesc(flipI)
@@ -191,19 +213,22 @@ m.x = curfeats;
 %positive windows: bb
 m.bb = cat(1,bbs{:});
 
+%m.svxs = cat(2,badfeats{:});
 %negative features: svxs
 m.svxs = zeros(prod(m.hg_size),0);
 
 %negative windows: svbbs
 m.svbbs = zeros(0,12);
+%m.svbbs = cat(1,badboxes{:});
 
 %create an initial classifier
 m.w = mean(curfeats,2);
 m.w = m.w - mean(m.w(:));
 m.w = reshape(m.w, m.hg_size);
 m.b = 0;
-
 m.params = params;
+
+%m = esvm_update_svm(m);
 
 %m.name = sprintf('dt-%s',m.cls);
 %m.curid = m.cls;
@@ -296,4 +321,31 @@ y2 = round(bbox(4)+pady);
 
 window = subarray(I, y1, y2, x1, x2, 1);
 warped = imresize(window, cropsize(1:2), 'bilinear');
+
+function [badfeats,bbox_bad] = get_bad_warps(I, bbox, gt_boxes, hg_size, minsize, ...
+                                                params)
+
+bbox_bad = repmat(bbox(1,1:4),1000,1);
+bbox_bad = bbox_bad + 200*randn(size(bbox_bad));
+bbox_bad = clip_to_image(bbox_bad,[1 1 size(I,2) size(I,1)]);
+curA = (bbox_bad(:,3)-bbox_bad(:,1)+1) .* (bbox_bad(:,4)- ...
+                                           bbox_bad(:,2)+1);
+UUU = bbox_bad(:,3)-bbox_bad(:,1)+1;
+VVV = bbox_bad(:,4)-bbox_bad(:,2)+1;
+
+angle = abs((atan2(VVV,UUU) - atan2(hg_size(1),hg_size(2))));
+bbox_bad = bbox_bad(curA>=minsize & (angle)<pi/6,:);
+bbox_bad = bbox_bad(max(getosmatrix_bb(bbox_bad,gt_boxes),[], ...
+                        2)<=.01,:);
+bbox_bad(:,12) = 0;%randn(size(bbox_bad,1),1);
+%bbox_bad = esvm_nms(bbox_bad,.5);
+
+badfeats = zeros(hg_size(1)*hg_size(2)*params.init_params.features(),size(bbox_bad,1));
+for j = 1:size(bbox_bad,1)       
+  bf = params.init_params.features(mywarppos(hg_size,I, ...
+                                                params ...
+                                                .init_params.sbin,bbox_bad(j,:)),params.init_params.sbin);
+  badfeats(:,j) = bf(:);
+end
+
 
