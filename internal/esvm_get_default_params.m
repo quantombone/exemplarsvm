@@ -38,7 +38,7 @@ params.detect_max_windows_per_exemplar = 100;
 %prune highly overlapping, redundant, detections.
 %If less than 1.0, then we apply nms to detections so that we don't have
 %too many redundant windows [defaults to 0.5]
-params.detect_exemplar_nms_os_threshold = 0.5;
+params.detect_exemplar_nms_os_threshold = 1.0;
 
 %How much we pad the pyramid (to let detections fall outside the image)
 params.detect_pyramid_padding = 5;
