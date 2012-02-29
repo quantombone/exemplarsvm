@@ -88,13 +88,26 @@ doflip = params.detect_add_flip;
 
 params.detect_add_flip = 0;
 [rs1, t1] = esvm_detectdriver(I, models, params);
+%s1 = max(abs(rs1.bbs{1}(:,end)' - (models{1}.w(:)'*cat(2,rs1.xs{1}{:})- ...
+%     models{1}.b)))
 
 rs1 = prune_nms(rs1, params);
+
+%s1 = max(abs(rs1.bbs{1}(:,end)' - (models{1}.w(:)'*cat(2,rs1.xs{1}{:})- ...
+%     models{1}.b)))
+
+
 
 if doflip == 1
   params.detect_add_flip = 1;
   [rs2, t2] = esvm_detectdriver(I, models, params);
+  %s1 = max(abs(rs2.bbs{1}(:,end)' - (models{1}.w(:)'*cat(2,rs2.xs{1}{:})- ...
+  %   models{1}.b)))
+
   rs2 = prune_nms(rs2, params);
+  %s1 = max(abs(rs2.bbs{1}(:,end)' - (models{1}.w(:)'*cat(2,rs2.xs{1}{:})- ...
+  %                                   models{1}.b)))
+
 else %If there is no flip, then we are done
   resstruct = rs1;
   feat_pyramid = t1;
@@ -482,7 +495,8 @@ end
 
 function rs = prune_nms(rs, params)
 %Prune via nms to eliminate redundant detections
-
+%NOTE(TJM): there is a bug here whic I found during eccv_mine.. why
+%do nms here anyways?
 %If the field is missing, or it is set to 1, then we don't need to
 %process anything.  If it is zero, we also don't do NMS.
 if ~isfield(params,'detect_exemplar_nms_os_threshold') || (params.detect_exemplar_nms_os_threshold >= 1) ...
@@ -490,13 +504,15 @@ if ~isfield(params,'detect_exemplar_nms_os_threshold') || (params.detect_exempla
   return;
 end
 
+%NOTE: the fifth field must contain elements 1:Nboxes
+rs.bbs{1}(:,5) = 1:size(rs.bbs{1},1);
 rs.bbs = cellfun2(@(x)esvm_nms(x,params.detect_exemplar_nms_os_threshold),rs.bbs);
 
 if ~isempty(rs.xs)
   for i = 1:length(rs.bbs)
     if ~isempty(rs.xs{i})
-      %NOTE: the fifth field must contain elements
-      rs.xs{i} = rs.xs{i}(:,rs.bbs{i}(:,5) );
+      %NOTE: the fifth field must contain elements 1:Nboxes
+      rs.xs{i} = rs.xs{i}(:,rs.bbs{i}(:,5));
     end
   end
 end
