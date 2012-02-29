@@ -163,7 +163,9 @@ for i = 1:length(ordering)
       clf
       imagesc(I)
       if size(boxes,1) > 0
-        plot_bbox(esvm_nms(clip_to_image(boxes,[1 1 size(I,2) size(I,1)]),1.2))
+        plot_bbox(esvm_nms(clip_to_image(boxes,[1 1 size(I,2) size(I,1)]),0.5))
+        [alpha,beta] = max(boxes(:,end));
+        plot_bbox(boxes(beta,:),'',[1 0 0])
         title(num2str(boxes(1,end)))
       end
       axis off
