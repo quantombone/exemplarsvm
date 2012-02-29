@@ -190,7 +190,7 @@ maxpos = max(wex(:)'*m.x - b);
 minpos = min(wex(:)'*m.x - b);
 maxneg = max(wex(:)'*m.svxs - b);
 
-fprintf(1,' --- Max+,min+=  is %.3f,%.3f \n --- Max- = %.3f\n',...
+fprintf(1,'\n --- Positives (Max,min) = %.3f,%.3f \n --- Negatives (Max) = %.3f\n',...
         maxpos,minpos,maxneg);
 fprintf(1,'SVM iteration took %.3f sec, ',learning_time);
 
