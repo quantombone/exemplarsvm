@@ -81,69 +81,67 @@ for i = 1:length(mining_queue)
     else 
       extrastring = '';
     end
-    
-    %remove old positives from this image
-    old_positives = find(model.models{1}.bb(:,11)==index);
-    remove_positives = old_positives;
-    model.models{1}.x(:,remove_positives) = [];
-    model.models{1}.bb(remove_positives,:) = [];
-    %fprintf(1,'Removed %d positives\n',length(remove_positives));
-    %old_os = getosmatrix_bb(model.models{1}.bb(old_positives,:), ...
-    %                        gtbbs(curid,:));
-    %remove_positives = old_positives(old_os> ...
-    %                                 params.latent_os_thresh);
-    
+
+
+    if params.mine_from_positives_do_latent_update == 1
+      %remove old positives from this image
+      old_positives = find(model.models{1}.bb(:,11)==index);
+      remove_positives = old_positives;
+      model.models{1}.x(:,remove_positives) = [];
+      model.models{1}.bb(remove_positives,:) = [];
+      %fprintf(1,'Removed %d positives\n',length(remove_positives));
+      %old_os = getosmatrix_bb(model.models{1}.bb(old_positives,:), ...
+      %                        gtbbs(curid,:));
+      %remove_positives = old_positives(old_os> ...
+      %                                 params.latent_os_thresh);
+      
+      %% Here we update the positives
+      good_os = os(good_positives);
+      good_id = gtid(good_positives);
+      uid = unique(good_id);
+      c = 0;
+      for j = 1:length(uid)
+        curid = uid(j);
+        cur_goods = good_positives(good_id==curid);
         
-    %% Here we update the positives
-    good_os = os(good_positives);
-    good_id = gtid(good_positives);
-    uid = unique(good_id);
-    c = 0;
-    for j = 1:length(uid)
-      curid = uid(j);
-      cur_goods = good_positives(good_id==curid);
+        [aa,bb] = sort(rs.bbs{1}(cur_goods,end),'descend');
+        %take top scoring detection
+        
+        %take on of top K positives randomly
+        K = 1;
+        r = randperm(min(length(bb),K));
+        bb = bb(r);
+        cur_goods = cur_goods(bb(1));
+        
+        newbb = rs.bbs{1}(cur_goods,:);
+        newx = cat(2,rs.xs{1}{cur_goods});
+        
+        %find ids of old positives from this image, then compute os
+        %with gt object
+        
+        
+        
+        % figure(1)
+        % clf
+        % imagesc(I)
+        % plot_bbox(newbb,'',[0 1 0])
+        % plot_bbox(model.models{1}.bb(remove_positives,:),'old')
+        % drawnow
+        
+        model.models{1}.x(:,end+1) = newx;
+        model.models{1}.bb(end+1,:) = newbb;
+        
+        
+        [aa,bb] = sort(model.models{1}.w(:)'*model.models{1}.x, ...
+                       'descend');
+        bb = bb(1:min(length(bb),model.params.max_number_of_positives));
+        
+        
+        model.models{1}.x = model.models{1}.x(:,bb);
+        model.models{1}.bb = model.models{1}.bb(bb,:);
+        c = c + 1;
+      end
       
-
-      
-      [aa,bb] = sort(rs.bbs{1}(cur_goods,end),'descend');
-      %take top scoring detection
-      
-      %take on of top K positives randomly
-      K = 1;
-      r = randperm(min(length(bb),K));
-      bb = bb(r);
-      cur_goods = cur_goods(bb(1));
-      
-      newbb = rs.bbs{1}(cur_goods,:);
-      newx = cat(2,rs.xs{1}{cur_goods});
-      
-      %find ids of old positives from this image, then compute os
-      %with gt object
-
-      
-
-      % figure(1)
-      % clf
-      % imagesc(I)
-      % plot_bbox(newbb,'',[0 1 0])
-      % plot_bbox(model.models{1}.bb(remove_positives,:),'old')
-      % drawnow
-
-      model.models{1}.x(:,end+1) = newx;
-      model.models{1}.bb(end+1,:) = newbb;
-      
-
-      [aa,bb] = sort(model.models{1}.w(:)'*model.models{1}.x, ...
-                     'descend');
-      bb = bb(1:min(length(bb),model.params.max_number_of_positives));
-
-      
-      model.models{1}.x = model.models{1}.x(:,bb);
-      model.models{1}.bb = model.models{1}.bb(bb,:);
-
-      
-      c = c + 1;
-
     end
     
     %fprintf(1,'Added %d positives\n',c);
@@ -151,9 +149,6 @@ for i = 1:length(mining_queue)
     rs.bbs{1} = rs.bbs{1}(good_negatives,:);
     rs.xs{1} = rs.xs{1}(good_negatives);
 
-    
-
-    
   else
     extrastring = '';
   end
@@ -183,12 +178,13 @@ for i = 1:length(mining_queue)
   for q = 1:1
     if ~isempty(rs.bbs{q})
       s = rs.bbs{q}(:,end);
-      nviol = sum(s >= -1);
-      [aa,bb] = sort(s,'descend');
-      bb = bb(1:min(length(bb),...
-                    ceil(nviol*params.train_keep_nsv_multiplier)));
+      % BUG(TJM): this code should not be here!
+      % nviol = sum(s >= -1);
+      % [aa,bb] = sort(s,'descend');
+      % bb = bb(1:min(length(bb),...
+      %               ceil(nviol*params.train_keep_nsv_multiplier)));
       
-      rs.xs{q} = rs.xs{q}(bb);    
+      % rs.xs{q} = rs.xs{q}(bb);    
       scores{q} = cat(2,s);
     end
   end
