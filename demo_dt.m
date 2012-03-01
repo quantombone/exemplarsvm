@@ -10,12 +10,12 @@ if ~exist('data_set','var')
 end
 
 
-classes = {'chair','laptop','table',...
+classes = {'chair','table',...
            'television','sink','sofa', ...
            'toilet' };
 
-classes = {'door','bottle','bowl','painting','pillow', ...
-           'faucet','window','faucet','cushion','curtain','cabinet','floor','ceiling','plant','can','column','pot','lamp','sculpture','book','box','bottle','sign','flower','bookshelf','stair','screen','glass','carpet','towel','outlet','stool','cup'};
+% classes = {'door','bottle','bowl','painting','pillow', ...
+%            'faucet','window','faucet','cushion','curtain','cabinet','floor','ceiling','plant','can','column','pot','lamp','sculpture','book','box','bottle','sign','flower','bookshelf','stair','screen','glass','carpet','towel','outlet','stool','cup'};
 % classes = {'sink'};
 % classes = {'laptop'};
 % classes = {'sofa'};
@@ -29,4 +29,4 @@ parfor i = 1:length(classes)
   model = learnDalalTriggsSave(data_set, classes{i});
 end
 matlabpool close
-%  savemodel(models{i},classes{i});
+

@@ -32,7 +32,7 @@ if ~exist('params','var') || length(params) == 0
   params.detect_max_windows_per_exemplar = 200;
   params.train_max_negatives_in_cache = 20000;
   params.max_number_of_positives = 2000;
-  params.train_max_mined_images = 1000;
+  params.train_max_mined_images = 10000;
   params.latent_iterations = 2;
   params.train_svm_c = .01;
   params.train_max_windows_per_iteration = 3000;
