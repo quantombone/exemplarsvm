@@ -34,7 +34,7 @@ if ~exist('params','var') || length(params) == 0
   params.max_number_of_positives = 2000;
   params.train_max_mined_images = 5000;
   params.latent_iterations = 2;
-  params.train_svm_c = .01;
+  params.train_svm_c = .1;
   params.train_max_windows_per_iteration = 3000;
   % for dalaltriggs, it seams having same constant on positives as
   % negatives is better than using 50
