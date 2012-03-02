@@ -183,7 +183,8 @@ params.calibration_matrix_neighbor_thresh = .5;
 params.calibration_matrix_propagate_onto_raw = 0;
 
 %The final NMS used to prune detections
-params.calibrate_nms = 0.3;
+params.calibrate_nms = 0.5; %%NOTE(TJM) was 0.3 for exemplar-svm
+                            %iccv2001 experiments
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Intialization parameters %%
