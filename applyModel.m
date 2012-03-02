@@ -15,9 +15,9 @@ end
 %% Define test-set parameters
 test_params = model.params;
 test_params.detect_exemplar_nms_os_threshold = 1.0;
-test_params.detect_max_windows_per_exemplar = 500;
-test_params.detect_keep_threshold = -1.0;
-
+test_params.detect_max_windows_per_exemplar = 200;
+test_params.detect_keep_threshold = -1.5;
+test_params.calibrate_nms = 1.0;
 if length(data_set) == 0
   data_set = get_screenshot_bg(50,@(x)imresize_max(x,400));
   %data_set = get_screenshot_bg(20);
