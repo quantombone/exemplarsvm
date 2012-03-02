@@ -27,8 +27,8 @@ end
 if ~exist('params','var') || length(params) == 0
   %% Get default parameters
   params = esvm_get_default_params;
-  params.display = 1;  
-  params.dump_images = 1;
+  params.display = 0;  
+  params.dump_images = 9;
   params.detect_max_windows_per_exemplar = 200;
   params.train_max_negatives_in_cache = 20000;
   params.max_number_of_positives = 2000;
@@ -46,15 +46,12 @@ if ~exist('params','var') || length(params) == 0
   params.train_max_scale = 1.0;
   params.latent_os_thresh = 0.5;
   params.dt_initialize_with_flips = 0;
-  
   %params.detect_pyramid_padding = 0;
   %fprintf(1,'hack max 40\n');
   %params.max_number_of_positives = 20;
-  
 else
   params = esvm_get_default_params(params);
 end
-
 
 starttime = tic;
 model = esvm_initialize_dt(data_set, cls, params);
