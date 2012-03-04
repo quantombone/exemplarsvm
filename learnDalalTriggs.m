@@ -27,19 +27,19 @@ end
 if ~exist('params','var') || length(params) == 0
   %% Get default parameters
   params = esvm_get_default_params;
-  params.display = 0;  
-  params.dump_images = 9;
-  params.detect_max_windows_per_exemplar = 200;
+  params.display = 0;
+  params.dump_images = 0;
+  params.detect_max_windows_per_exemplar = 5000;
   params.train_max_negatives_in_cache = 20000;
   params.max_number_of_positives = 2000;
-  params.train_max_mined_images = 10000;
+  params.train_max_mined_images = 10000; %500;
   params.latent_iterations = 2;
   params.train_svm_c = .01;
   params.train_max_windows_per_iteration = 3000;
   % for dalaltriggs, it seams having same constant on positives as
   % negatives is better than using 50
   params.train_positives_constant = 1;
-  params.mine_from_negatives = 1;
+  params.mine_from_negatives = 0;
   params.mine_from_positives = 1;
   params.mine_skip_positive_objects_os = .2;
   params.mine_from_positives_do_latent_update = 1;
