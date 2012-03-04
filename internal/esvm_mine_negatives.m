@@ -87,8 +87,11 @@ for i = 1:length(mining_queue)
       %remove old positives from this image
       old_positives = find(model.models{1}.bb(:,11)==index);
       remove_positives = old_positives;
+      oldposx = model.models{1}.x;
+      oldposbb = model.models{1}.bb;
       model.models{1}.x(:,remove_positives) = [];
       model.models{1}.bb(remove_positives,:) = [];
+
       %fprintf(1,'Removed %d positives\n',length(remove_positives));
       %old_os = getosmatrix_bb(model.models{1}.bb(old_positives,:), ...
       %                        gtbbs(curid,:));
@@ -148,6 +151,13 @@ for i = 1:length(mining_queue)
     
     rs.bbs{1} = rs.bbs{1}(good_negatives,:);
     rs.xs{1} = rs.xs{1}(good_negatives);
+
+    if size(model.models{1}.x,2) < params.min_number_of_positives
+      fprintf(1,'Reverting to old positive\n');
+      model.models{1}.x = oldposx;
+      model.models{1}.bb = oldposbb;
+    end
+
 
   else
     extrastring = '';
