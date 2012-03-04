@@ -209,6 +209,8 @@ params.latent_os_thresh = 0.7;
 params.latent_iterations = 2;
 params.dt_initialize_with_flips = 0;
 params.max_number_of_positives = 2000;
+params.min_number_of_positives = 1;
+
 
 %experimental flag which lets us perturb assignments during the
 %latent update step
