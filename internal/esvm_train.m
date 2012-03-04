@@ -172,7 +172,17 @@ for i = 1:length(model.models)
       %bump up filename to final file
       %filer2 = filer2final;
     end
-    
+
+    if length(m.models{1}.wtrace)>=2
+      diffy = norm(m.models{1}.wtrace{end}(:)- ...
+                   m.models{1}.wtrace{end-1}(:));
+      if diffy < .0001
+        fprintf(1,['Stopping learning because w failed to change' ...
+                   ' across an iteration\n']);
+        keep_going = 0;
+      end
+    end
+
     %HACK: remove neg_set which causes save issue when it is a
     %cell array of function pointers
     %msave = m;
