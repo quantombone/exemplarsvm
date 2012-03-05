@@ -219,7 +219,7 @@ params.latent_perturb_assignment_iterations = 0;
 %Information about where we mine images from
 params.mine_from_negatives = 1;
 params.mine_from_positives = 0;
-
+params.mine_from_positives_do_latent_update = 1;
 % If enabled, skips objects durning mining when mining from positives
 params.mine_skip_positive_objects = 1;
 

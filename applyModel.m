@@ -18,8 +18,9 @@ test_params.detect_exemplar_nms_os_threshold = 1.0;
 test_params.detect_max_windows_per_exemplar = 200;
 test_params.detect_keep_threshold = -1.5;
 test_params.calibrate_nms = 1.0;
+
 if length(data_set) == 0
-  data_set = get_screenshot_bg(50,@(x)imresize_max(x,400));
+  data_set = get_screenshot_bg(5000,@(x)imresize_max(x,400));
   %data_set = get_screenshot_bg(20);
   test_params.display_detections = 1;
   %test_params.write_top_detection = 1;
@@ -34,13 +35,16 @@ if draw == 1
   test_params.display_detections = 1;
 end
 
+
 if isnumeric(data_set) && ...
       size(data_set,4) == 1 && ...
       size(data_set,3) == 3
   data_set = {data_set};
   
   %Given a single image
-  boxes = esvm_detect_imageset(data_set, model, test_params, test_set_name);
+  boxes = esvm_detect_imageset(data_set, model, test_params, ...
+                               test_set_name);
+
 elseif isnumeric(data_set) && ...
       size(data_set,4) > 1 && ...
       size(data_set, 3)==3
@@ -55,7 +59,8 @@ elseif isnumeric(data_set) && ...
   end
 else
   %% Apply on test set
-  boxes = esvm_detect_imageset(data_set, model, test_params, test_set_name);
+  boxes = esvm_detect_imageset(data_set, model, test_params, ...
+                               test_set_name);
 end
 
 

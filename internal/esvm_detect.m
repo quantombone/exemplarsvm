@@ -202,7 +202,6 @@ end
 
 
 t = get_pyramid(I, sbin, params);
-
 resstruct.padder = t.padder;
 resstruct.bbs = cell(N,1);
 xs = cell(N,1);
@@ -550,6 +549,10 @@ else
     else
       t = I{1};
     end
+  elseif length(I)==2 && params.detect_add_flip==1
+    t =I(2);
+  elseif length(I)==2 && params.detect_add_flip==0
+    t = I(1);
   else
     t = I;
   end
