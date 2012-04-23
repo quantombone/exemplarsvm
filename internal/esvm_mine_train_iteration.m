@@ -76,7 +76,7 @@ if m.params.display == 1
   maxlen = max(length(rpos),length(rneg));
   xpos = round(linspace(1,maxlen,length(rpos)));
   xneg = round(linspace(1,maxlen,length(rneg)));
-  plot(xpos,rpos,'r.')
+  plot(xpos,rpos,'g.')
   hold on;
   plot(xneg,rneg,'k.')
   hold on;
@@ -86,6 +86,7 @@ if m.params.display == 1
   hold on;
   plot([1 maxlen],[1 1],'r--')
   axis([1 maxlen -1.1 max(1,max(rpos))])
+  
   
   % poshist = hist(rpos,linspace(-1,max(rpos)+.1,50));
   % neghist = hist(rneg,linspace(-1,max(rpos)+.1,50));
@@ -99,8 +100,6 @@ if m.params.display == 1
   % plot(poshist*.1*maxlen,y2,'r')
   % hold on
   % plot(neghist*.1*maxlen,y2,'b')
-
-  
 end
 
 
