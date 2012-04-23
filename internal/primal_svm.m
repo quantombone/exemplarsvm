@@ -72,11 +72,20 @@ while 1
   %Xsv = X(sv,:);
   %fprintf(1,'size X: %d size Xsv: %d\n',size(X,1),size(Xsv,1));
   %Hessian
-  hess = hess_constant + ...
-         [[Xsv'*Xsv sum(Xsv,1)']; [sum(Xsv,1) length(sv)]];
-  
-  %step = -pinv(hess)*grad;
-  step  = - hess \ grad;   
+
+  if 1
+    
+    
+     hess = hess_constant + ...
+            [[Xsv'*Xsv sum(Xsv,1)']; [sum(Xsv,1) length(sv)]];
+    
+
+    %hess = hess_constant;
+    
+    step  = - hess \ grad;   
+  else
+    step = -grad;
+  end
 
   % Do an exact line search
   [t,out] = line_search_linear(w,step,out,Y,X,lambda);
