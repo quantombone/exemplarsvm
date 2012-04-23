@@ -123,7 +123,7 @@ prec=tp./(fp+tp);
 % apold = ap;
 ap = VOCap(rec,prec);
 
-if params.display
+if isfield(params,'display') && params.display
     % plot precision/recall
     figure(1)
     clf
