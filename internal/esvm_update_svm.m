@@ -27,6 +27,10 @@ if length(m.mask(:)) ~= numel(m.w)
   m.mask = logical(m.mask(:));
 end
 
+if isfield(m,'mask') && ~islogical(m.mask)
+  m.mask = logical(m.mask);
+end
+
 %xs = m.svxs;
 %bbs = m.svbbs;
 
@@ -47,6 +51,20 @@ if size(m.svxs,2) > MAXSIZE
   m.svxs = m.svxs(:,r);
   m.svbbs = m.svbbs(r,:);
 end
+
+%% here we take the best positive from the set of possible positives
+
+% r = m.w(:)'*m.x-m.b;
+% uhit = unique(m.bb(:,6));
+% curx = [];
+% superinds = zeros(length(uhit),1);;
+% for j = 1:length(uhit)
+%   goods = find(m.bb(:,6)==uhit(j) | m.bb(:,6)==(2*uhit(j)));
+%   [aa,bb] = sort(r(goods),'descend');
+%   curx(:,end+1) = m.x(:,goods(bb(1)));
+% end
+
+m = esvm_update_positives(m);
 
 superx = cat(2,m.x,m.svxs);
 supery = cat(1,ones(size(m.x,2),1),-1*ones(size(m.svxs,2),1));
@@ -96,31 +114,64 @@ mu = zeros(size(superx,1),1);
 
 newx = bsxfun(@minus,superx,mu);
 newx = newx(logical(m.mask),:);
-
 %newx = A(m.mask,:)'*newx;
-newx = newx(find(m.mask),:);
+%keyboard
+%newx = newx(find(m.mask),:);
 
 fprintf(1,' -----\nStarting SVM: dim=%d... #pos=%d, #neg=%d ',...
         size(newx,1),spos,sneg);
 starttime = tic;
 
-svm_model = liblineartrain(supery, sparse(newx)',sprintf(['-s 2 -B 1 -c' ...
-                   ' %f -w1 %.9f -q'], m.params.train_svm_c, ...
-                                             wpos));
 
 
-%svm_model = libsvmtrain(supery, newx',sprintf(['-s 0 -t 0 -c' ...
-%                   ' %f -w1 %.9f -q'], m.params.train_svm_c, ...
-%                                             wpos));
+if 0
+  svm_model = libsvmtrain(supery, newx',sprintf(['-s 0 -t 0 -c' ...
+                    ' %f -w1 %.9f -q'], m.params.train_svm_c, ...
+                                                wpos));
+  
+  
+  %convert support vectors to decision boundary
+  svm_weights = full(sum(svm_model.SVs .* ...
+                         repmat(svm_model.sv_coef,1, ...
+                                size(svm_model.SVs,2)),1));
+  
+  wex = svm_weights';
+  b = svm_model.rho;
+  
+  
+  %do this only for libsvm
+  if supery(1) == -1
+    wex = wex*-1;
+    b = b*-1;    
+  end
+else
+  
+  bvalue = 1;
+  subset = 1:length(supery);
+  for q = 1:1
+    svm_model = liblineartrain(supery(subset), sparse(newx(:,subset))',sprintf(['-s 2 -B %.3f -c' ...
+                      ' %f -w1 %.9f -q'], bvalue, m.params.train_svm_c, ...
+                                                    wpos));
+    % r = svm_model.w(1:end-1)*newx+svm_model.w(end);
+    % rbad = find(r<0.5 & supery'==1);
+    % subset = 1:length(supery);
+    % subset(rbad) = [];
+    % fprintf(1,'new pos length: %d\n',length(subset));
+  end
+ 
+  wex = reshape(svm_model.w(1:end-1),[],1);
+  b = -svm_model.w(end)*bvalue; 
+end
+
 
 learning_time = toc(starttime);
 
-% opt.iter_max_Newton = 30;
-% opt.prec = 1e-6;
-% starttime = tic;
-% [neww,newb] = primal_svm(supery,1./double(m.params.train_svm_c),...
-%                          newx',m.w(:),-m.b,opt);
-% learning_time = toc(starttime);
+ % opt.iter_max_Newton = 30;
+ % opt.prec = 1e-6;
+ % starttime = tic;
+ % [neww,newb] = primal_svm(supery,1./double(m.params.train_svm_c),...
+ %                          newx',m.w(:),-m.b,opt);
+ % learning_time = toc(starttime);
 
 % rneg = neww(:)'*m.svxs+newb;
 % rpos = neww(:)'*m.x+newb;
@@ -150,27 +201,7 @@ if sneg == 0 %length(svm_model.sv_coef) == 0
              ' is 0!\n']);
   fprintf(1,'reverting to old model...\n');
 else
-  
-  wex = reshape(svm_model.w(1:end-1),[],1);
-  b = -svm_model.w(end);
-  
-
-  
-  % %convert support vectors to decision boundary
-  % svm_weights = full(sum(svm_model.SVs .* ...
-  %                        repmat(svm_model.sv_coef,1, ...
-  %                               size(svm_model.SVs,2)),1));
-  
-  % wex = svm_weights';
-  % b = svm_model.rho;
-  
-  
-  %do this only for libsvm
-  if supery(1) == -1
-   wex = wex*-1;
-   b = b*-1;    
-  end
-  
+    
   %% project back to original space
   b = b + wex'*A(m.mask,:)'*mu(m.mask);
   wex = A(m.mask,:)*wex;
@@ -179,7 +210,7 @@ else
   wex2(m.mask) = wex;
   
   wex = wex2;
-  
+
   %% issue a warning if the norm is very small
   if norm(wex) < .00001
     fprintf(1,'learning broke down!\n');
