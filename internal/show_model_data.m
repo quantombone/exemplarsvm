@@ -37,3 +37,4 @@ imagesc(Icur)
 title(sprintf('%s: objective=%.3f',model.model_name,objective),'FontSize',20);
 drawnow
 snapnow
+
