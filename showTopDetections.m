@@ -48,8 +48,13 @@ for i = 1:MAX_BOXES
   
   crops{i} = zeros(length(us),length(vs),3);
   crops{i}(goodu,goodv,:) = I(us(goodu),vs(goodv),:);
-  
-  crops{i} = max(0.0,min(1.0,imresize(crops{i},round([mw mh]),'bicubic')));
+  if (size(crops{i},1)*size(crops{i},2))>0
+    crops{i} = max(0.0,min(1.0,imresize(crops{i},round([mw mh]), ...
+                                        'bicubic')));
+  else
+    crops{i} = zeros(mw,mh,3);
+  end
+
   if exist('colors','var')
     crops{i} = pad_image(crops{i}, 3, colors(i,:));
   end
@@ -67,6 +72,10 @@ for i = 1:MAX_BOXES
   % end
   % plot_bbox(boxes(i,:),'',c,c)
   % pause
+  
+  if b(7) == 1
+    crops{i} = flip_image(crops{i});
+  end
 end
 
 K1 = ceil(sqrt(MAX_BOXES));
