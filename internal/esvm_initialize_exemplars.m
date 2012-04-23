@@ -60,8 +60,12 @@ if CACHE_FILE == 1
   data_set = data_set(rrr);
 end
 
-[cur_pos_set, cur_neg_set] = get_positive_negative_sets(data_set, cls);
-data_set = [cur_pos_set cur_neg_set];
+[cur_pos_set, cur_neg_set] = get_positive_negative_sets(data_set, ...
+                                                  cls);
+
+
+
+data_set = cat(1,cur_pos_set(:),cur_neg_set(:));
 
 model.data_set = data_set;
 model.cls = cls;
@@ -69,8 +73,8 @@ model.model_name = model_name;
 model.params = params;
 
 %Create an array of all final file names
-allfiles = cell(1,length(data_set));
-
+allfiles = cell(0,1);%1,length(data_set));
+numskip = 0;
 for j = 1:length(data_set)  
   curid = j;
   
@@ -87,14 +91,15 @@ for j = 1:length(data_set)
     % Warp original bounding box
     bbox = obj(k).bbox; 
     
-    if (obj(k).truncated==0)
-      continue
-    end
+    %if (obj(k).truncated==0)
+    %  numskip = numskip + 1;
+    %  continue
+    %end
 
     filer = sprintf('%s/%d.%d.%s.mat',...
                     results_directory, curid, objectid, cls);
     
-    allfiles{j} = filer;
+    allfiles{end+1} = filer;
     if ~isfield(params,'init_params')
       error('Warning, cannot initialize without params.init_params\n');
     end
@@ -111,8 +116,8 @@ for j = 1:length(data_set)
     I = toI(data_set{j});
     
     %Call the init function which is a mapping from (I,bbox) to (model)
-    m = params.init_params.init_function(I, bbox, params.init_params);
-
+    m = params.init_params.init_function(I, bbox, params);
+    
     %m.model = model;        
     %Save filename (or original image)
     m.I = data_set{j}.I;
@@ -120,10 +125,9 @@ for j = 1:length(data_set)
     m.objectid = objectid;
     m.cls = cls;    
     m.gt_box = gt_box;
-    
+    m.bb(:,11) = j;
     m.sizeI = size(I);
-    m.model_name = model_name;
-    m.name = sprintf('%s.%d.%s',m.curid,m.objectid,m.cls);
+    m.name = sprintf('%d.%d.%s',m.curid,m.objectid,m.cls);
 
     if CACHE_FILE == 1
       save(filer,'m');
@@ -131,9 +135,10 @@ for j = 1:length(data_set)
         rmdir(filerlock);
       end
     else
-      allfiles{j} = m;
+      allfiles{end} = m;
     end
     
+
     % %Print the bounding box overlap between the initial window and
     % %the final window
     % finalos = getosmatrix_bb(m.gt_box, m.model.bb(1,:));
@@ -152,13 +157,15 @@ for j = 1:length(data_set)
   end
 end
 
+fprintf(1,'numskip = %d\n',numskip);
+
 if CACHE_FILE == 0
   model.models = allfiles;
   return;
+else
+  %sort files so they are in alphabetical order
+  [allfiles, ~] = sort(allfiles);
 end
-
-%sort files so they are in alphabetical order
-[allfiles, bb] = sort(allfiles);
 
 %Load all of the initialized exemplars
 CACHE_FILE = 1;
