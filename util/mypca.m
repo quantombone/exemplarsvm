@@ -4,7 +4,7 @@ function [v,d,mu] = mypca(xxx,K)
 
 %Tomasz Malisiewcz (tomasz@cmu.edu)
 [d,n] = size(xxx);
-if d > 3000
+if d > 4000
   fprintf(1,'too big!\n');
   v = [];
   mu = [];
