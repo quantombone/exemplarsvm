@@ -66,7 +66,7 @@ if ~iscell(models) && ~isfield(models,'models')
 end
 
 
-params.max_image_size = 400;
+params.max_image_size = 500;
 %Make sure image is in double format
 raw_max_dim = max([size(I,1) size(I,2)]);
 raw_factor = 1.0;
