@@ -1,5 +1,5 @@
 function resc = get_canonical_bb(model, oldmodel)
-%warp all bbs into a [100 100] box, so that we can warp all GTs
+%warp all bbs into a [10*hg_size(1) 10*hg_size(2)] box, so that we can warp all GTs
 %into the same frame and compute overlap score between any two
 %candidates
 
