@@ -36,7 +36,7 @@ if size(boxes,2) == 12
     
     for i = 1:length(uims)
       curboxes = boxes(boxes(:,11)==uims(i),:);
-      curboxes(:,5) = 1:size(curboxes,1);
+      %curboxes(:,5) = 1:size(curboxes,1);
       keeps{i} = esvm_nms(curboxes,overlap);
     end
     
