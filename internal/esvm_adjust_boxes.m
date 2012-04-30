@@ -21,7 +21,7 @@ function top = esvm_adjust_boxes(boxes, model)
 top = boxes;
 
 if strcmp(model.model_name,'dalal') || ...
-      ~isfield(model.models{1},'gt_box')
+      ~isfield(model.models{1},'center')
   return;
 end
 
@@ -33,10 +33,11 @@ top(:,1:4) = 0;
 
 for i = 1:size(boxes,1)
   d = boxes(i,:);
-  c = model.models{boxes(i,6)}.bb(1,1:4);
-  gt = model.models{boxes(i,6)}.gt_box;
+  c = model.models{boxes(i,6)}.center;%bb(1,1:4);
+  gt = mean(model.models{boxes(i,6)}.curc,1);
   
   %find the xform from c to d
   xform = find_xform(c, d(1:4));
+
   top(i,1:4) = apply_xform(gt, xform);      
 end
