@@ -60,8 +60,7 @@ if CACHE_FILE == 1
   data_set = data_set(rrr);
 end
 
-[cur_pos_set, cur_neg_set] = get_positive_negative_sets(data_set, ...
-                                                  cls);
+[cur_pos_set, cur_neg_set] = split_sets(data_set, cls);
 
 
 
