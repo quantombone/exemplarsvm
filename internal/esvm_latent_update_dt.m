@@ -1,4 +1,5 @@
 function model = esvm_latent_update_dt(model, params)
+error('deprecated')
 % Updates positives with latent placements which pass os threshold test
 % 
 % INPUTS:
