@@ -1,5 +1,5 @@
 function model = esvm_initialize_fixedframe_exemplar(I, bbox, ...
-                                                  init_params)
+                                                  params)
 % Initialize exemplars using a Fixed Frame as defined by
 % init_params.hg_size.  The fixedframe mode also needs to compute a
 % template-mask, which will indicate which part of the square
@@ -14,8 +14,10 @@ function model = esvm_initialize_fixedframe_exemplar(I, bbox, ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
+init_params = params.init_params;
 sbin = init_params.sbin;
 hg_size = init_params.hg_size;
+params.init_params = init_params;
 
 %NOTE: K/ADD_LR are advanced features
 %K/ADD_LR determines how many windows to get templates for (although only
@@ -30,29 +32,30 @@ end
 %make sure K is at least 1
 K = max(K, 1);
 
-if isfield(init_params,'ADD_LR') && init_params.ADD_LR == 1 && (K >= 1)
-  fprintf(1,'ADD_LR turned on K = %d\n', K);
-  params = init_params;
-  params = rmfield(params,'ADD_LR');
 
-  model = initialize_fixedframe_model(I, ...
+if isfield(init_params,'ADD_LR') && init_params.ADD_LR == 1 && (K >= 1)
+  %fprintf(1,'ADD_LR turned on K = %d\n', K);
+  %params = init_params;
+  params.init_params = rmfield(params.init_params,'ADD_LR');
+  model = esvm_initialize_fixedframe_exemplar(I, ...
                                       bbox, ...
                                       params);
 
-  model2 = initialize_fixedframe_model(flip_image(I), ...
+  model2 = esvm_initialize_fixedframe_exemplar(flip_image(I), ...
                                       flip_box(bbox, size(I)), ...
                                       params);
+
   x2 = model2.x;
   bb2 = model2.bb;
-  for j = 1:size(bb2,1);
+  for j = 1:size(bb2,1)
     bb2(j,7) =  1;
     bb2(j,1:4) = flip_box(bb2(j,1:4),size(I));
   end
-  
   model.x = cat(2,model.x,x2);
   model.bb = cat(1,model.bb,bb2);
-    
+  return;
 end
+
 
 rawbox = bbox;
 
@@ -76,6 +79,9 @@ os = getosmatrix_bb(allbb,bbox);
 sym1 = abs((allbb(:,1)-bbox(1)) - (allbb(:,3)-bbox(3)));
 sym2 = abs((allbb(:,2)-bbox(2)) - (allbb(:,4)-bbox(4)));
 meansym = (sym1+sym2)/100;
+
+%TJM: hack tufn off meansym
+meansym = 0;
 
 %Sorty by a measure which wants high overlap, and low symmetry-difference
 [tmp,order] = sort(os-meansym,'descend');
@@ -107,6 +113,8 @@ for q = 1:K
   curfeats{q} = curfeat;
 end
 
+
+
 % Get the template mask, so that we only perform learning over the
 % regions of the template corresponding to the GT region.
 
@@ -130,14 +138,15 @@ fmask = sum(f2.^2,3)>0;
 fmask(min(u):max(u),min(v):max(v)) = 1;
 
 model.init_params = init_params;
-model.hg_size = [hg_size(1) hg_size(2) features];
+model.hg_size = [hg_size(1) hg_size(2) init_params.features()];
 
 x = curfeats{1};
 model.mask = (sum(x.^2,3)>0) & fmask;
 model.w = zeros(size(x));
 
-mask3 = repmat(model.mask,[1 1 features]);
+mask3 = repmat(model.mask,[1 1 init_params.features()]);
 mask3 = mask3(:);
+model.mask = mask3;
 
 %%initialize model to normalized HOG
 model.w(mask3) = curfeats{1}(mask3) - mean(curfeats{1}(mask3));
@@ -146,7 +155,7 @@ model.b = 0;
 model.x = cellfun2(@(x)reshape(x,[],1), curfeats);
 model.x = cat(2,model.x{:});
 model.bb = cat(1,bbs{:});
-
+model.bb(:,end) = model.w(:)'*model.x;
 
 function bbox = squareize_bbox(bbox)
 %Expand region such that is still within image and tries to satisfy
