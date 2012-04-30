@@ -64,7 +64,6 @@ end
 %   curx(:,end+1) = m.x(:,goods(bb(1)));
 % end
 
-m = esvm_update_positives(m);
 
 superx = cat(2,m.x,m.svxs);
 supery = cat(1,ones(size(m.x,2),1),-1*ones(size(m.svxs,2),1));
@@ -146,25 +145,45 @@ if 0
   end
 else
   
-  bvalue = 1;
-  subset = 1:length(supery);
-  for q = 1:1
-    svm_model = liblineartrain(supery(subset), sparse(newx(:,subset))',sprintf(['-s 2 -B %.3f -c' ...
-                      ' %f -w1 %.9f -q'], bvalue, m.params.train_svm_c, ...
-                                                    wpos));
-    % r = svm_model.w(1:end-1)*newx+svm_model.w(end);
-    % rbad = find(r<0.5 & supery'==1);
-    % subset = 1:length(supery);
-    % subset(rbad) = [];
-    % fprintf(1,'new pos length: %d\n',length(subset));
-  end
- 
-  wex = reshape(svm_model.w(1:end-1),[],1);
-  b = -svm_model.w(end)*bvalue; 
+  % bvalue = 1;
+  % subset = 1:length(supery);
+  % for q = 1:1
+  %   svm_model = liblineartrain(supery(subset), sparse(newx(:,subset))',sprintf(['-s 2 -B %.3f -c' ...
+  %                     ' %f -w1 %.9f -q'], bvalue, m.params.train_svm_c, ...
+  %                                                   wpos));
+  %   % r = svm_model.w(1:end-1)*newx+svm_model.w(end);
+  %   % rbad = find(r<0.5 & supery'==1);
+  %   % subset = 1:length(supery);
+  %   % subset(rbad) = [];
+  %   % fprintf(1,'new pos length: %d\n',length(subset));
+  % end
+  % wex = reshape(svm_model.w(1:end-1),[],1);
+  % b = -svm_model.w(end)*bvalue; 
+  
+  fprintf(1,'starting svmlsq:\n');
+  tic
+  newx2 = newx;
+  newx2(end+1,:) = 1;
+  oldw = [m.w(:)];
+  oldw(end+1) = -m.b;
+
+  [nw] = svmlsq(supery,newx2, ...
+                (1/m.params.train_svm_c),oldw);
+  
+  toc
+
+  svm_model.w = nw';
+  wex = nw(1:end-1);
+  b = nw(end)*-1;
+
 end
 
 
 learning_time = toc(starttime);
+
+vals = supery'.*(wex'*superx-b);
+svmobj =  (1/m.params.train_svm_c)/2*sum(wex.^2) + sum(hinge(vals));
+svmobj
 
  % opt.iter_max_Newton = 30;
  % opt.prec = 1e-6;
@@ -253,5 +272,4 @@ m.svbbs = m.svbbs(svs,:);
 m.svbbs(:,end) = m.w(:)'*m.svxs-m.b;
 m.bb(:,end) = m.w(:)'*m.x-m.b;
 %fprintf(1,' kept %d negatives\n',total_length);
-
 
