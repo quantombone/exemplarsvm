@@ -66,8 +66,7 @@ if CACHE_FILE == 1
   end
 end
 
-[cur_pos_set, cur_neg_set] = get_positive_negative_sets(data_set, ...
-                                                  cls);
+[cur_pos_set, cur_neg_set] = split_sets(data_set, cls);
 
 % cur_pos_set = cur_pos_set(1:min(length(cur_pos_set),...
 %                                 params.max_number_of_positives));
@@ -78,9 +77,15 @@ end
 
 data_set = cat(1,cur_pos_set(:),cur_neg_set(:));
 
-hg_size = get_hg_size(cur_pos_set, params.init_params.sbin);
-hg_size = hg_size * min(1,params.init_params.MAXDIM/max(hg_size));
-hg_size = max(1,round(hg_size));
+if isfield(params,'hg_size')
+  hg_size = params.hg_size;
+elseif isfield(params.init_params,'hg_size')
+  hg_size = params.init_params.hg_size;
+else
+  hg_size = get_hg_size(cur_pos_set, params.init_params.sbin);
+  hg_size = hg_size * min(1,params.init_params.MAXDIM/max(hg_size));
+  hg_size = max(1,round(hg_size));
+end
 
 curfeats = cell(0,1);
 bbs = cell(0,1);
