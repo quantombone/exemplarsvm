@@ -5,12 +5,16 @@ if ~exist('trainval','var')
   trainval = trainval.data_set;
 end
 
-cls = 'bicycle';%bus';
+%classes = {'chair','tvmonitor','cow','motorbike','bus','sofa'};
+classes = {'chair'};
+for i = 1:length(classes)
+  cls = classes{i};
+
 %[positive_set, negative_set] = ...
 %    split_sets(trainval, cls);
 %data_set = cat(2,data_set,negative_set');
 data_set = trainval;
-%classes = {'tvmonitor','bicycle','boat','motorbike','bus'};
+
 
 params = esvm_get_default_params;
 params.display = 0;
@@ -18,7 +22,7 @@ params.dump_images = 0;
 params.detect_max_windows_per_exemplar = 200;
 params.train_max_negatives_in_cache = 20000;
 params.max_number_of_positives = 2000;
-params.train_max_mined_images = 10000;
+params.train_max_mined_images = 5000;
 params.train_svm_c = .01;
 params.train_max_windows_per_iteration = 3000;
 params.train_positives_constant = 1;
@@ -44,10 +48,11 @@ else
 end
 
 filer = sprintf('~/Desktop/DT/%s.mat',cls);
-%if fileexists(filer)
-%  load(filer);
-%else
-model = esvm_train(model);
-save(filer,'model');
-%end
+if fileexists(filer)
+  load(filer);
+else
+  model = esvm_train(model);
+  save(filer,'model');
+end
 
+end
