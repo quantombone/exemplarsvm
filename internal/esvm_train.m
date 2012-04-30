@@ -127,6 +127,7 @@ for i = 1:length(model.models)
 
   if isfield(m,'svxs') && numel(m.svxs)>0
     fprintf(1,'Pre-SVMing');
+    %do the latent updates
     m = params.training_function(m);
   end
   
