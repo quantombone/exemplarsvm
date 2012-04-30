@@ -27,6 +27,10 @@ model2.models{1}.mask = logical(1+0*model2.models{1}.mask(:));
 
 model2.models{1}.savex = x;
 model2.models{1}.savebb = bb;
-model2 = esvm_update_positives(model2);
+model2 = esvm_update_positives(model2,1);
+
+hg_size = model.params.init_params.hg_size;
+model.models{1}.center = [0 0 10*hg_size(1) 10*hg_size(2)];
+
 
 
