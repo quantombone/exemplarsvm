@@ -46,6 +46,8 @@ else
   m.mining_stats{end+1} = mining_stats;
 end
 
+m = esvm_update_positives(m,1);
+%m = esvm_update_positives(m,0);
 m = m.params.training_function(m);
 
 % Append new w to trace
