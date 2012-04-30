@@ -15,11 +15,17 @@ if ~exist('show','var')
   show = 1;
 end
 
-[aa,bb] = sort(model.models{1}.w(:)'*model.models{1}.x,'descend');
+r = model.models{1}.w(:)'*model.models{1}.x- ...
+               model.models{1}.b;
+model.models{1}.bb(:,end) = r;
+[aa,bb] = sort(r,'descend');
+
 Icur = esvm_show_det_stack(model.models{1}.bb(bb,:),model.data_set, ...
                            K,K,model.models{1});
 if numel(model.models{1}.svxs) > 0
-  [aa,bb] = sort(model.models{1}.w(:)'*model.models{1}.svxs,'descend');
+  r = model.models{1}.w(:)'*model.models{1}.svxs - model.models{1}.b;
+  [aa,bb] = sort(r,'descend');
+  model.models{1}.svbbs(:,end) = r;
   Icur2 = esvm_show_det_stack(model.models{1}.svbbs(bb,:), ...
                               model.data_set, K,K, ...
                               model.models{1});
@@ -32,9 +38,13 @@ if show == 0
   return;
 end
 %else show
-objective = evaluate_obj(model);
+objective = evaluate_obj(model.models{1});
+figure(39)
 imagesc(Icur)
-title(sprintf('%s: objective=%.3f',model.model_name,objective),'FontSize',20);
+title(sprintf('%s: objective=%.5f',model.model_name,objective),'FontSize',20);
 drawnow
 snapnow
 
+if nargout == 0
+  Icur = [];
+end
