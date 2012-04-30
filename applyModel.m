@@ -23,6 +23,7 @@ if length(data_set) == 0
   data_set = get_screenshot_bg(5000,@(x)imresize_max(x,400));
   %data_set = get_screenshot_bg(20);
   test_params.display_detections = 1;
+
   %test_params.write_top_detection = 1;
   %test_params.detect_max_scale = .1;
 end
@@ -31,8 +32,8 @@ if ~exist('draw','var')
   draw = 0;
 end
 
-if draw == 1
-  test_params.display_detections = 1;
+if draw > 0
+  test_params.display_detections = draw;
 end
 
 
