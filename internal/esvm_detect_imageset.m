@@ -126,7 +126,20 @@ for i = 1:length(ordering)
     I = toI(Is{j});
        
     starter = tic;
+    params.detect_save_features=1;
     rs = esvm_detect(I, model, params);
+    
+    if isfield(model.models{1},'A')
+      x = cat(2,rs.xs{1}{:});
+      x(end+1,:) = 1;
+      b2 = model.models{1}.A*x;
+      for qqq = 1:size(rs.bbs{1},1)
+        curbb = rs.bbs{1}(qqq,:);
+        xform = find_xform(model.models{1}.center,curbb);
+        newbb = apply_xform(b2(:,qqq)',xform);
+        rs.bbs{1}(qqq,1:4) = newbb(1:4);      
+      end
+    end
     
     coarse_boxes = cat(1,rs.bbs{:});
     if ~isempty(coarse_boxes)
@@ -158,12 +171,14 @@ for i = 1:length(ordering)
     res{j}.imbb = [1 1 size(I,2) size(I,1)];
     res{j}.curid = curid;
 
-    if params.display_detections == 1
+    if params.display_detections > 0
       figure(1)
       clf
       imagesc(I)
-      if size(boxes,1) > 0
-        plot_bbox(esvm_nms(clip_to_image(boxes,[1 1 size(I,2) size(I,1)]),0.5))
+      if size(boxes,1) > 0 && boxes(1,end)>=-1
+        % plot_bbox(esvm_nms(clip_to_image(boxes,[1 1 size(I,2) ...
+        %             size(I,1)]),.5))
+        %plot_bbox(clip_to_image(boxes,[1 1 size(I,2) size(I,1)]))
         [alpha,beta] = max(boxes(:,end));
         plot_bbox(boxes(beta,:),'',[1 0 0])
         title(num2str(boxes(1,end)))
@@ -173,6 +188,7 @@ for i = 1:length(ordering)
       %axis image
       %axis off
       drawnow
+      pause(params.display_detections)
     end
     
     % if params.write_top_detection == 1
