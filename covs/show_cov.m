@@ -1,4 +1,4 @@
-function [evecicons,evals] = show_cov(res)
+function [evecicons,evals,evecs] = show_cov(res)
 % Create visualizations of the HOG covariance matrix estimated from
 % the fields of res.
 % Return stack of eigenvector images by performing
@@ -16,6 +16,7 @@ d = d(bb);
 toc
 
 evals = d;
+evecs = v;
 
 %Compute top 100 eigenvector images, which will viewable by using
 %montage
