@@ -39,7 +39,6 @@ if show == 0
 end
 %else show
 objective = evaluate_obj(model.models{1});
-figure(39)
 imagesc(Icur)
 title(sprintf('%s: objective=%.5f',model.model_name,objective),'FontSize',20);
 drawnow
