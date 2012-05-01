@@ -12,6 +12,8 @@ function [w,svmobj] = svmlsq(y,x,lambda,w)
 %  w: current estimate of w
 %Tomasz Malisiewicz (tomasz@csail.mit.edu)
 
+x(end+1,:) = 1;
+
 
 %maximum number of newton iterations
 NITER = 20;
@@ -31,11 +33,9 @@ nostart = (sum(w(1:end-1).^2)==0);
 oldgoods = [];
 curmat = zeros(F,F);
 
-oldr = (y'.*(w'*x));
 
 oldobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
 fprintf(1,' -++curobj=%.3f\n',oldobj)
-
 
 for i = 1:NITER
   starttime=tic;
@@ -55,7 +55,6 @@ for i = 1:NITER
     %choose all of them
     goods = find(r<=1.0);
   end
-
   
   newgoods = setdiff(goods,oldgoods);
   oldgoods = setdiff(oldgoods,goods);
@@ -77,12 +76,9 @@ for i = 1:NITER
   for q = 1:length(alphas)
     alpha = alphas(q);
     
-    newobj(q) = alpha*alpha*n1+(1-alpha).^2*n2+2*alpha*(1-alpha)*ip ...
+    newobj(q) = lambda/2*(alpha*alpha*n1+(1-alpha).^2*n2+2*alpha*(1-alpha)*ip) ...
         + sum(hinge(r1*alpha+(1-alpha)*r2));
     
-    % w2 = alpha*w+(1-alpha)*oldw;
-    % newobj(q) =  lambda/2*sum(w2(1:end-1).^2) + ...
-    %     sum(hinge(r1*alpha+(1-alpha)*r2));%y'.*(w2'*x)));
     if (newobj(q) < bestobj)
       bestw = alpha*w+(1-alpha)*oldw;
       bestobj = newobj(q);
@@ -91,8 +87,8 @@ for i = 1:NITER
   
   w = bestw;
 
-  if (oldobj - bestobj)/oldobj < .01
   %if norm(w-oldw)<.000001
+  if (oldobj - bestobj)/oldobj < .01
     break;
   end
   oldw = w;  
@@ -111,6 +107,7 @@ if nargout == 2
   %fprintf(1,'curobj=%.3f\n',svmobj);
 end
 
+oldobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
 
 
 function [gw] = compute_gradient(y,x,w,lambda)
