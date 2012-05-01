@@ -33,8 +33,8 @@ curmat = zeros(F,F);
 
 oldr = (y'.*(w'*x));
 
-svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
-fprintf(1,' -++curobj=%.3f\n',svmobj)
+oldobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
+fprintf(1,' -++curobj=%.3f\n',oldobj)
 
 
 for i = 1:NITER
@@ -56,6 +56,7 @@ for i = 1:NITER
     goods = find(r<=1.0);
   end
 
+  
   newgoods = setdiff(goods,oldgoods);
   oldgoods = setdiff(oldgoods,goods);
   curmat = curmat + x(:,newgoods)*x(:,newgoods)' - x(:,oldgoods)*x(:,oldgoods)';
@@ -63,37 +64,66 @@ for i = 1:NITER
   M = (BtB+2*curmat);
   U = 2*x(:,goods)*y(goods);
   w = M\U;  
-  
+
   %perform the line search  
   alphas = linspace(0,1,10);
   bestw = w;
   bestobj = 100000000;
+  r1 = y'.*(w'*x);
+  r2 = y'.*(oldw'*x);
+  n1 = sum(w(1:end-1).^2);
+  n2 = sum(oldw(1:end-1).^2);
+  ip = w(1:end-1)'*oldw(1:end-1);
   for q = 1:length(alphas)
     alpha = alphas(q);
-    w2 = alpha*w+(1-alpha)*oldw;
-    newobj(q) =  lambda/2*sum(w2(1:end-1).^2) + sum(hinge(y'.*(w2'* ...
-                                                  x)));
     
+    newobj(q) = alpha*alpha*n1+(1-alpha).^2*n2+2*alpha*(1-alpha)*ip ...
+        + sum(hinge(r1*alpha+(1-alpha)*r2));
+    
+    % w2 = alpha*w+(1-alpha)*oldw;
+    % newobj(q) =  lambda/2*sum(w2(1:end-1).^2) + ...
+    %     sum(hinge(r1*alpha+(1-alpha)*r2));%y'.*(w2'*x)));
     if (newobj(q) < bestobj)
-      bestw = w2;
+      bestw = alpha*w+(1-alpha)*oldw;
       bestobj = newobj(q);
     end
   end
+  
   w = bestw;
-    
-  if norm(w-oldw)<.01
+
+  if (oldobj - bestobj)/oldobj < .01
+  %if norm(w-oldw)<.000001
     break;
   end
   oldw = w;  
-  svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
+  
+  %svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
   endtime = toc(starttime);
-  fprintf(1,' ---curobj=%.3f (iter in %.3f s, ngoods=%d)\n',svmobj,endtime,length(newgoods));
+  fprintf(1,' ---curobj=%.3f (iter in %.3f s)\n',bestobj,endtime);
 
+  oldobj = bestobj;
   oldgoods = goods;
 end
 
 if nargout == 2
-  svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
-  fprintf(1,'curobj=%.3f\n',svmobj);
+  svmobj = bestobj;
+  %svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
+  %fprintf(1,'curobj=%.3f\n',svmobj);
+end
+
+
+
+function [gw] = compute_gradient(y,x,w,lambda)
+
+%Compute the w-norm part
+gw = lambda*w;
+gw(end) = 0;
+
+%compute the w on positives part
+r = y'.*(w'*x);
+u = find(r<1);
+
+for i = 1:length(u)
+  gw = gw + hingeprime(r(u(i)))*y(u(i))*x(:,u(i));
 end
 
