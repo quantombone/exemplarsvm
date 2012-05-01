@@ -145,29 +145,29 @@ if 0
   end
 else
   
-  % bvalue = 1;
-  % subset = 1:length(supery);
-  % for q = 1:1
-  %   svm_model = liblineartrain(supery(subset), sparse(newx(:,subset))',sprintf(['-s 2 -B %.3f -c' ...
-  %                     ' %f -w1 %.9f -q'], bvalue, m.params.train_svm_c, ...
-  %                                                   wpos));
-  %   % r = svm_model.w(1:end-1)*newx+svm_model.w(end);
-  %   % rbad = find(r<0.5 & supery'==1);
-  %   % subset = 1:length(supery);
-  %   % subset(rbad) = [];
-  %   % fprintf(1,'new pos length: %d\n',length(subset));
-  % end
-  % wex = reshape(svm_model.w(1:end-1),[],1);
-  % b = -svm_model.w(end)*bvalue; 
+  if 0
+  bvalue = 100;
+  subset = 1:length(supery);
+  for q = 1:1
+    svm_model = liblineartrain(supery(subset), sparse(newx(:,subset))',sprintf(['-s 2 -B %.3f -c' ...
+                      ' %f -w1 %.9f -q'], bvalue, m.params.train_svm_c, ...
+                                                    wpos));
+    % r = svm_model.w(1:end-1)*newx+svm_model.w(end);
+    % rbad = find(r<0.5 & supery'==1);
+    % subset = 1:length(supery);
+    % subset(rbad) = [];
+    % fprintf(1,'new pos length: %d\n',length(subset));
+  end
+  wex = reshape(svm_model.w(1:end-1),[],1);
+  b = -svm_model.w(end)*bvalue; 
   
+  else
   fprintf(1,'starting svmlsq:\n');
   tic
-  newx2 = newx;
-  newx2(end+1,:) = 1;
   oldw = [m.w(:)];
   oldw(end+1) = -m.b;
 
-  [nw] = svmlsq(supery,newx2, ...
+  [nw] = svmlsq(supery,newx, ...
                 (1/m.params.train_svm_c),oldw);
   
   toc
@@ -175,6 +175,7 @@ else
   svm_model.w = nw';
   wex = nw(1:end-1);
   b = nw(end)*-1;
+  end
 
 end
 
