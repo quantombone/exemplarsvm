@@ -61,12 +61,15 @@ elseif isnumeric(data_set) && ...
 else
   %% Apply on test set
   boxes = esvm_detect_imageset(data_set, model, test_params, ...
-                               test_set_name);
+                               test_set_name);  
 end
 
-
+M = [];
+if isfield(model,'M')
+  M = model.M;
+end
 %% Apply calibration matrix to test-set results
-boxes = esvm_pool_exemplar_dets(boxes, model.models, [], ...
+boxes = esvm_pool_exemplar_dets(boxes, model.models, M, ...
                                 test_params);
 
 boxes = cat(1,boxes.final_boxes{:});
