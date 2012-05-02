@@ -46,7 +46,7 @@ else
   m.mining_stats{end+1} = mining_stats;
 end
 
-m = esvm_update_positives(m,1);
+%m = esvm_update_positives(m,1);
 %m = esvm_update_positives(m,0);
 m = m.params.training_function(m);
 
@@ -65,13 +65,13 @@ m.btrace{end+1} = m.b;
 function show_figures(m)
 
 if m.params.display == 1    
-  figure(1)
+  figure(99)
   clf
+  subplot(2,1,1)
   show_model_data(m, 10);
-  drawnow
-  snapnow
-  figure(2)
-  clf
+
+  subplot(2,1,2)
+
   rpos = m.models{1}.w(:)'*m.models{1}.x - m.models{1}.b;
   rneg = m.models{1}.w(:)'*m.models{1}.svxs - m.models{1}.b;
   rneg = rneg(rneg>=-1.01);
@@ -88,6 +88,8 @@ if m.params.display == 1
   hold on;
   plot([1 maxlen],[1 1],'r--')
   axis([1 maxlen -1.1 max(1,max(rpos))])
+  drawnow
+  snapnow
   
   
   % poshist = hist(rpos,linspace(-1,max(rpos)+.1,50));
