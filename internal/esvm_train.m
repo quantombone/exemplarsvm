@@ -36,7 +36,7 @@ else
 end
 
 model_name = model.model_name;
-new_model_name = [model_name params.training_function()];
+new_model_name = [model_name params.training_function('')];
 
 cache_dir =  ...
     sprintf('%s/models/',params.localdir);
