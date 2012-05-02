@@ -5,6 +5,11 @@ function m = esvm_update_positives(m,greedy,PSELECT,NASS)
 %   m: the input model
 %   [greedy]: do greedy assignment, defaults to [true]
 
+if nargin>0 && isstr(m)
+  return;
+end
+
+
 if ~exist('PSELECT','var')
   PSELECT = .5;
   NASS = 3;
@@ -18,6 +23,10 @@ if ~exist('greedy','var')
   greedy = 1;
 end
 
+if rand > .8
+  greedy = 1;
+end
+
 fprintf(1,'Updating Positives: greedy=%d\n',greedy);
 
 if isfield(m,'models')
@@ -28,6 +37,7 @@ end
 if ~isfield(m,'savex')
   return;
 end
+
 
 m.savebb(:,5) = 1:size(m.savebb,1);
 
