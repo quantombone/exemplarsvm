@@ -1,4 +1,4 @@
-function [m, other] = esvm_update_svm(m)
+function [m, other] = esvm_update_svm(m,fraction)
 % Perform SVM learning for a single exemplar model, we assume that
 % the exemplar has a set of detections loaded in m.svxs and m.svbbs
 % Durning Learning, we can apply some pre-processing such as PCA or
@@ -10,6 +10,11 @@ function [m, other] = esvm_update_svm(m)
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
+
+if nargin>0 && isstr(m)
+ other = m;
+ return;
+end
 
 other = 'svm';
 %if no inputs are specified, just return the suffix of current method
@@ -64,9 +69,27 @@ end
 %   curx(:,end+1) = m.x(:,goods(bb(1)));
 % end
 
+if exist('fraction','var') 
+  %take a random fraction of positives
+  r = randperm(size(m.x,2));
+  r = r(1:round(length(r)*fraction));
+  % [aa,bb] = sort(m.w(:)'*m.x - m.b);
+  % maxneg = max(m.w(:)'*m.svxs - m.b);
+  
+  % r = [m.w(:)'*m.x-m.b m.w(:)'*m.svxs-m.b];
+  % %y = [ones(1,size(m.x,2)) -1*ones(1,size(m.svxs,2))];
+  
+  % bb = bb(aa>maxneg);
+  % aa = aa(aa>maxneg);
+  % r = bb;
 
-superx = cat(2,m.x,m.svxs);
-supery = cat(1,ones(size(m.x,2),1),-1*ones(size(m.svxs,2),1));
+  fprintf(1,'Fraction of positives is %d/%d\n',length(r),size(m.x,2));
+else
+  r = 1:size(m.x,2);
+  fprintf(1,' --NO FRACTION\n');
+end
+superx = cat(2,m.x(:,r),m.svxs);
+supery = cat(1,ones(length(r),1),-1*ones(size(m.svxs,2),1));
 
 spos = sum(supery==1);
 sneg = sum(supery==-1);
@@ -171,7 +194,7 @@ else
                 (1/m.params.train_svm_c),oldw);
   
   toc
-
+  length(supery)
   svm_model.w = nw';
   wex = nw(1:end-1);
   b = nw(end)*-1;
