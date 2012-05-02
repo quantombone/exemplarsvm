@@ -2,21 +2,27 @@ function model2 = unify_model(model)
 %Convert separate "initialized" Exemplar-SVM models into one big
 %fat model which will start a DT-training run
 
+
 for i = 1:length(model.models)
   bbs{i} = model.models{i}.bb;
   bbs{i}(:,6) = i+(length(model.models))*bbs{i}(:,7);
+  gts{i} = [model.models{i}.gt_box 0 i 0 0 0 0 model.models{i}.curid ...
+            0];
 end
+
 x = cellfun2(@(x)x.x,model.models);
 x = cat(2,x{:});
 bb = cat(1,bbs{:});
 model2 = model;
 model2.models = model2.models(1);
+model2.models{1}.gts = cat(1,gts{:});
 model2.models{1} = rmfield(model2.models{1},'I');
 model2.models{1} = rmfield(model2.models{1},'curid');
 model2.models{1} = rmfield(model2.models{1},'objectid');
 model2.models{1} = rmfield(model2.models{1},'gt_box');
 model2.models{1} = rmfield(model2.models{1},'sizeI');
 model2.models{1} = rmfield(model2.models{1},'name');
+
 
 model2.models{1}.x = x;
 model2.models{1}.bb = bb;
