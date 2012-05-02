@@ -48,6 +48,7 @@ for i = 1:length(mining_queue)
   index = mining_queue{i}.index;
   I = toI(imageset{index});
 
+
   [rs,t] = esvm_detect(I, model, params);
   for q = 1:length(rs.bbs)
     if ~isempty(rs.bbs{q})
@@ -83,67 +84,143 @@ for i = 1:length(mining_queue)
     end
 
 
-    if params.mine_from_positives_do_latent_update == 1
+    if params.mine_from_positives_do_latent_update == 1 && ...
+          size(model.models{1}.svxs,2)>=5000
       %remove old positives from this image
       old_positives = find(model.models{1}.bb(:,11)==index);
-      remove_positives = old_positives;
-      oldposx = model.models{1}.x;
-      oldposbb = model.models{1}.bb;
-      model.models{1}.x(:,remove_positives) = [];
-      model.models{1}.bb(remove_positives,:) = [];
-
-      %fprintf(1,'Removed %d positives\n',length(remove_positives));
-      %old_os = getosmatrix_bb(model.models{1}.bb(old_positives,:), ...
-      %                        gtbbs(curid,:));
-      %remove_positives = old_positives(old_os> ...
-      %                                 params.latent_os_thresh);
+      old_potentials = find(model.models{1}.savebb(:,11)==index);
+      if length(old_positives) == 0 || length(good_positives)==0
+        continue
+      end
       
-      %% Here we update the positives
-      good_os = os(good_positives);
-      good_id = gtid(good_positives);
-      uid = unique(good_id);
-      c = 0;
-      for j = 1:length(uid)
-        curid = uid(j);
-        cur_goods = good_positives(good_id==curid);
+      gtinds = find(model.models{1}.gts(:,11)==index);
+      gts = (model.models{1}.gts(gtinds,:));
+
+      
+      new_possibles = cat(1,rs.bbs{1}(good_positives,:),...
+                          model.models{1}.savebb(old_potentials,:));
+      new_x = cat(2,cat(2,rs.xs{1}{good_positives}),...
+                  model.models{1}.savex(:,old_potentials));
+      
+      %remove all old one
+      model.models{1}.savebb(old_potentials,:) = [];
+      model.models{1}.savex(:,old_potentials) = [];
+      model.models{1}.bb(old_positives,:) = [];
+      model.models{1}.x(:,old_positives) = [];
+      
+      
+      K = model.models{1}.init_params.K;
+      N = length(unique(model.models{1}.gts(:,6)));
+
+      for iii = 1:size(gts,1)
         
-        [aa,bb] = sort(rs.bbs{1}(cur_goods,end),'descend');
-        %take top scoring detection
+        curos = getosmatrix_bb(gts(iii,:),new_possibles);
+        [aa,bb] = sort(model.models{1}.w(:)'*new_x- ...
+                       model.models{1}.b);
         
-        %take on of top K positives randomly
-        K = 1;
-        r = randperm(min(length(bb),K));
-        bb = bb(r);
-        cur_goods = cur_goods(bb(1));
+        if sum(curos(bb)>=params.latent_os_thresh) >= 1
+          bads = find(curos(bb)< ...
+                      params.latent_os_thresh);
+          aa(bads) = [];
+          bb(bads) = [];
+        end
+        bb = bb(1:min(length(bb),K));
+        curbb = new_possibles(bb,:);
+        curbb(:,6) = gts(iii,6);
+        curbb(:,6) = curbb(:,6) + curbb(:,7)*N;
         
-        newbb = rs.bbs{1}(cur_goods,:);
-        newx = cat(2,rs.xs{1}{cur_goods});
-        
-        %find ids of old positives from this image, then compute os
-        %with gt object
-        
-        
+        % if numel(bb) == 0
+        %   keyboard
+        % end
         
         % figure(1)
         % clf
         % imagesc(I)
-        % plot_bbox(newbb,'',[0 1 0])
-        % plot_bbox(model.models{1}.bb(remove_positives,:),'old')
-        % drawnow
+        % plot_bbox(curbb)
+        % title(num2str(iii));
+        % if size(curbb,1)==0
+        %   keyboard
+        % else
+        %   drawnow
+        % end
+
         
-        model.models{1}.x(:,end+1) = newx;
-        model.models{1}.bb(end+1,:) = newbb;
+        curx = new_x(:,bb);
+        model.models{1}.savex = cat(2,model.models{1}.savex,curx);
+        model.models{1}.savebb = cat(1,model.models{1}.savebb, ...
+                                     curbb);
         
         
-        [aa,bb] = sort(model.models{1}.w(:)'*model.models{1}.x, ...
-                       'descend');
-        bb = bb(1:min(length(bb),model.params.max_number_of_positives));
+        model.models{1}.x = cat(2,model.models{1}.x,curx(:,1));
+        model.models{1}.bb = cat(1,model.models{1}.bb, ...
+                                     curbb(1,:));
         
-        
-        model.models{1}.x = model.models{1}.x(:,bb);
-        model.models{1}.bb = model.models{1}.bb(bb,:);
-        c = c + 1;
       end
+      % fprintf(1,'unique is : ');
+      % len = length(unique(model.models{1}.bb(:,6)));
+      
+      
+    %   keyboard
+    %   remove_positives = old_positives;
+    %   oldposx = model.models{1}.x;
+    %   oldposbb = model.models{1}.bb;
+    %   model.models{1}.x(:,remove_positives) = [];
+    %   model.models{1}.bb(remove_positives,:) = [];
+
+    %   %fprintf(1,'Removed %d positives\n',length(remove_positives));
+    %   %old_os = getosmatrix_bb(model.models{1}.bb(old_positives,:), ...
+    %   %                        gtbbs(curid,:));
+    %   %remove_positives = old_positives(old_os> ...
+    %   %                                 params.latent_os_thresh);
+      
+    %   %% Here we update the positives
+    %   good_os = os(good_positives);
+    %   good_id = gtid(good_positives);
+    %   uid = unique(good_id);
+    %   c = 0;
+    %   for j = 1:length(uid)
+    %     curid = uid(j);
+    %     cur_goods = good_positives(good_id==curid);
+        
+    %     [aa,bb] = sort(rs.bbs{1}(cur_goods,end),'descend');
+    %     %take top scoring detection
+        
+    %     %take on of top K positives randomly, K=1 means take top
+    %     %hit
+    %     keyboard
+    %     K = 1;
+    %     r = randperm(min(length(bb),K));
+    %     bb = bb(r);
+    %     cur_goods = cur_goods(bb(1));
+        
+    %     newbb = rs.bbs{1}(cur_goods,:);
+    %     newx = cat(2,rs.xs{1}{cur_goods});
+        
+    %     %find ids of old positives from this image, then compute os
+    %     %with gt object
+        
+        
+        
+    %     % figure(1)
+    %     % clf
+    %     % imagesc(I)
+    %     % plot_bbox(newbb,'',[0 1 0])
+    %     % plot_bbox(model.models{1}.bb(remove_positives,:),'old')
+    %     % drawnow
+        
+    %     model.models{1}.x(:,end+1) = newx;
+    %     model.models{1}.bb(end+1,:) = newbb;
+        
+        
+    %     [aa,bb] = sort(model.models{1}.w(:)'*model.models{1}.x, ...
+    %                    'descend');
+    %     bb = bb(1:min(length(bb),model.params.max_number_of_positives));
+        
+        
+    %     model.models{1}.x = model.models{1}.x(:,bb);
+    %     model.models{1}.bb = model.models{1}.bb(bb,:);
+    %     c = c + 1;
+    %   end
       
     end
     
@@ -263,7 +340,7 @@ end
 if ~exist('xs','var')
   %If no detections from from anymodels, return an empty matrix
   for i = 1:1 
-    hn.xs{i} = zeros(prod(size(model.model.w)),0);
+    hn.xs{i} = zeros(prod(size(model.models{1}.w)),0);
     hn.bbs{i} = [];
   end
   mining_stats.num_violating = 0;
