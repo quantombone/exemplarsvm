@@ -62,18 +62,33 @@ end
 
 [cur_pos_set, cur_neg_set] = split_sets(data_set, cls);
 
-
-
 data_set = cat(1,cur_pos_set(:),cur_neg_set(:));
 
 model.data_set = data_set;
 model.cls = cls;
 model.model_name = model_name;
+
+if ~isfield('params','hg_size')
+  [hg_size,N] = get_hg_size(cur_pos_set, params.init_params.sbin);
+  hg_size = hg_size * min(1,params.init_params.MAXDIM/max(hg_size));
+  hg_size = max(1,round(hg_size));
+  hg_size
+  params.init_params.hg_size = hg_size;
+  params.init_params.N = N;
+  
+  if isfield(params.init_params,'MAX_POS_CACHE')
+    params. init_params.K = round((params.init_params.MAX_POS_CACHE/(params.init_params.N)));
+  fprintf(1,'Choosing k=%d\n',params.init_params.K);
+  end
+
+end
+  
 model.params = params;
 
 %Create an array of all final file names
 allfiles = cell(0,1);%1,length(data_set));
 numskip = 0;
+counter = 1;
 for j = 1:length(data_set)  
   curid = j;
   
@@ -90,10 +105,10 @@ for j = 1:length(data_set)
     % Warp original bounding box
     bbox = obj(k).bbox; 
     
-    %if (obj(k).truncated==0)
-    %  numskip = numskip + 1;
-    %  continue
-    %end
+    if (obj(k).truncated==1)
+      numskip = numskip + 1;
+      continue
+    end
 
     filer = sprintf('%s/%d.%d.%s.mat',...
                     results_directory, curid, objectid, cls);
@@ -127,7 +142,8 @@ for j = 1:length(data_set)
     m.bb(:,11) = j;
     m.sizeI = size(I);
     m.name = sprintf('%d.%d.%s',m.curid,m.objectid,m.cls);
-
+    m.counter = counter;
+    counter = counter + 1;
     if CACHE_FILE == 1
       save(filer,'m');
       if exist(filerlock,'dir')
