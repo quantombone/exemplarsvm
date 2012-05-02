@@ -23,6 +23,7 @@ params.init_params = init_params;
 %K/ADD_LR determines how many windows to get templates for (although only
 %the first will have its template mask region defined)
 
+
 if isfield(init_params,'K')
   K = init_params.K;
 else
@@ -72,19 +73,22 @@ t.padder = 2;
 [allbb,alluv,alllvl,t] = pad_and_get_all_bb(t, hg_size, sbin);
 
 %Get all overlaps with fixed frame box (ideal is 1.0)
-os = getosmatrix_bb(allbb,bbox);
+[os,os1] = getosmatrix_bb(allbb,bbox);
 
 %% get the symmetry meaasure meansym which measures the symmetry
 %distance (ideal would be zero)
-sym1 = abs((allbb(:,1)-bbox(1)) - (allbb(:,3)-bbox(3)));
-sym2 = abs((allbb(:,2)-bbox(2)) - (allbb(:,4)-bbox(4)));
-meansym = (sym1+sym2)/100;
+sym1 = abs((allbb(:,1)-bbox(1)) + (allbb(:,3)-bbox(3)));
+sym2 = abs((allbb(:,2)-bbox(2)) + (allbb(:,4)-bbox(4)));
+meansym = (sym1+sym2)/(bbox(3)-bbox(1)+bbox(4)-bbox(2))/8;
+
 
 %TJM: hack tufn off meansym
-meansym = 0;
+%meansym = 100;
 
 %Sorty by a measure which wants high overlap, and low symmetry-difference
-[tmp,order] = sort(os-meansym,'descend');
+[tmp,order] = sort(os-meansym+.01*os1,'descend');
+
+
 
 curfeats = cell(K,1);
 bbs = cell(K,1);
@@ -146,7 +150,7 @@ model.w = zeros(size(x));
 
 mask3 = repmat(model.mask,[1 1 init_params.features()]);
 mask3 = mask3(:);
-model.mask = mask3;
+%model.mask = mask3;
 
 %%initialize model to normalized HOG
 model.w(mask3) = curfeats{1}(mask3) - mean(curfeats{1}(mask3));
