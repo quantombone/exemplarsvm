@@ -70,6 +70,7 @@ if m.params.display == 1
   subplot(2,1,1)
   show_model_data(m, 10);
 
+
   subplot(2,1,2)
 
   rpos = m.models{1}.w(:)'*m.models{1}.x - m.models{1}.b;
@@ -91,6 +92,7 @@ if m.params.display == 1
   drawnow
   snapnow
   
+
   
   % poshist = hist(rpos,linspace(-1,max(rpos)+.1,50));
   % neghist = hist(rneg,linspace(-1,max(rpos)+.1,50));
