@@ -8,11 +8,14 @@ for i = 1:length(model.models)
   bbs{i}(:,6) = i+(length(model.models))*bbs{i}(:,7);
   gts{i} = [model.models{i}.gt_box 0 i 0 0 0 0 model.models{i}.curid ...
             0];
+  curx{i} = model.models{i}.x(:,1);
+  curbb{i} = bbs{i}(1,:);
 end
 
 x = cellfun2(@(x)x.x,model.models);
-x = cat(2,x{:});
 bb = cat(1,bbs{:});
+x = cat(2,x{:});
+
 model2 = model;
 model2.models = model2.models(1);
 model2.models{1}.gts = cat(1,gts{:});
@@ -24,8 +27,9 @@ model2.models{1} = rmfield(model2.models{1},'sizeI');
 model2.models{1} = rmfield(model2.models{1},'name');
 
 
-model2.models{1}.x = x;
-model2.models{1}.bb = bb;
+model2.models{1}.x = cat(2,curx{:});
+model2.models{1}.bb = cat(1,curbb{:});
+
 model2.models{1}.svxs = zeros(size(x,1),0);
 model2.models{1}.svbbs = zeros(0,12);
 model2.models{1}.resc = get_canonical_bb(model,model);
@@ -33,7 +37,12 @@ model2.models{1}.mask = logical(1+0*model2.models{1}.mask(:));
 
 model2.models{1}.savex = x;
 model2.models{1}.savebb = bb;
-model2 = esvm_update_positives(model2,1);
+
+model2.models{1}.w = reshape(mean(model2.models{1}.x,2), ...
+                             size(model2.models{1}.w));
+model2.models{1}.w = model2.models{1}.w - mean(model2.models{1}.w(:));
+
+%model2 = esvm_update_positives(model2,1);
 
 hg_size = model.params.init_params.hg_size;
 model.models{1}.center = [0 0 10*hg_size(1) 10*hg_size(2)];
