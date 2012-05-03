@@ -36,8 +36,6 @@ if isfield(m,'mask') && ~islogical(m.mask)
   m.mask = logical(m.mask);
 end
 
-%xs = m.svxs;
-%bbs = m.svbbs;
 
 %NOTE: MAXSIZE is the maximum number of examples we will keep in our cache
 MAXSIZE = m.params.train_max_negatives_in_cache;
@@ -59,16 +57,6 @@ end
 
 %% here we take the best positive from the set of possible positives
 
-% r = m.w(:)'*m.x-m.b;
-% uhit = unique(m.bb(:,6));
-% curx = [];
-% superinds = zeros(length(uhit),1);;
-% for j = 1:length(uhit)
-%   goods = find(m.bb(:,6)==uhit(j) | m.bb(:,6)==(2*uhit(j)));
-%   [aa,bb] = sort(r(goods),'descend');
-%   curx(:,end+1) = m.x(:,goods(bb(1)));
-% end
-
 if exist('fraction','var') 
   %take a random fraction of positives
   r = randperm(size(m.x,2));
@@ -83,11 +71,13 @@ if exist('fraction','var')
   % aa = aa(aa>maxneg);
   % r = bb;
 
-  fprintf(1,'Fraction of positives is %d/%d\n',length(r),size(m.x,2));
 else
   r = 1:size(m.x,2);
-  fprintf(1,' --NO FRACTION\n');
 end
+
+fprintf(1,'Fraction of positives is %d/%d\n',length(r),size(m.x, ...
+                                                  2));
+  
 superx = cat(2,m.x(:,r),m.svxs);
 supery = cat(1,ones(length(r),1),-1*ones(size(m.svxs,2),1));
 
@@ -146,97 +136,26 @@ starttime = tic;
 
 
 
-if 0
-  svm_model = libsvmtrain(supery, newx',sprintf(['-s 0 -t 0 -c' ...
-                    ' %f -w1 %.9f -q'], m.params.train_svm_c, ...
-                                                wpos));
-  
-  
-  %convert support vectors to decision boundary
-  svm_weights = full(sum(svm_model.SVs .* ...
-                         repmat(svm_model.sv_coef,1, ...
-                                size(svm_model.SVs,2)),1));
-  
-  wex = svm_weights';
-  b = svm_model.rho;
-  
-  
-  %do this only for libsvm
-  if supery(1) == -1
-    wex = wex*-1;
-    b = b*-1;    
-  end
-else
-  
-  if 0
-  bvalue = 100;
-  subset = 1:length(supery);
-  for q = 1:1
-    svm_model = liblineartrain(supery(subset), sparse(newx(:,subset))',sprintf(['-s 2 -B %.3f -c' ...
-                      ' %f -w1 %.9f -q'], bvalue, m.params.train_svm_c, ...
-                                                    wpos));
-    % r = svm_model.w(1:end-1)*newx+svm_model.w(end);
-    % rbad = find(r<0.5 & supery'==1);
-    % subset = 1:length(supery);
-    % subset(rbad) = [];
-    % fprintf(1,'new pos length: %d\n',length(subset));
-  end
-  wex = reshape(svm_model.w(1:end-1),[],1);
-  b = -svm_model.w(end)*bvalue; 
-  
-  else
-  fprintf(1,'starting svmlsq:\n');
-  tic
-  oldw = [m.w(:)];
-  oldw(end+1) = -m.b;
 
-  [nw] = svmlsq(supery,newx, ...
-                (1/m.params.train_svm_c),oldw);
-  
-  toc
-  length(supery)
-  svm_model.w = nw';
-  wex = nw(1:end-1);
-  b = nw(end)*-1;
-  end
+fprintf(1,'starting svmlsq:\n');
 
-end
+oldw = [m.w(:)];
+oldw(end+1) = -m.b;
 
+[nw] = svmlsq(supery,newx, ...
+              (1/m.params.train_svm_c),oldw);
+
+svm_model.w = nw';
+wex = nw(1:end-1);
+b = nw(end)*-1;
 
 learning_time = toc(starttime);
 
-vals = supery'.*(wex'*superx-b);
+vals = supery'.*(wex'*newx-b);
 svmobj =  (1/m.params.train_svm_c)/2*sum(wex.^2) + sum(hinge(vals));
-svmobj
 
- % opt.iter_max_Newton = 30;
- % opt.prec = 1e-6;
- % starttime = tic;
- % [neww,newb] = primal_svm(supery,1./double(m.params.train_svm_c),...
- %                          newx',m.w(:),-m.b,opt);
- % learning_time = toc(starttime);
 
-% rneg = neww(:)'*m.svxs+newb;
-% rpos = neww(:)'*m.x+newb;
-% [aa,bb] = sort(rneg,'descend');
-% astar = aa(max(1,round(length(aa)*.1)));
-
-% abad = find(neww(:)'*newx(:,supery==1)+newb < astar);
-% if length(abad) > sum(supery==1)/2
-%   [aa,bb] = sort(rpos,'ascend');
-%   abad = bb(1:max(1,round(length(bb)/2)));  
-% end
-
-% fprintf(1,'\n ---length of removed "bad" positives is %d\n',length(abad));
-% newx(:,abad) = [];
-% supery(abad) = [];
-% opt.iter_max_Newton = 5;
-% [neww,newb] = primal_svm(supery,1./double(m.params.train_svm_c),...
-%                          newx',neww,newb,opt);
-%wex = neww;
-%b = -newb;
-
-if sneg == 0 %length(svm_model.sv_coef) == 0
+if sneg == 0 
   %learning had no negatives
   wex = m.w;
   b = m.b;
