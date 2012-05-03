@@ -83,9 +83,16 @@ for i = 1:length(mining_queue)
       extrastring = '';
     end
 
+    if ~isfield(model.models{1},'mining_stats')
+      totalMined = 0;
+    else      
+      totalMined = sum(cellfun(@(x)x.total_mines, ...
+                               model.models{1}.mining_stats));
+    end
 
     if params.mine_from_positives_do_latent_update == 1 && ...
-          size(model.models{1}.svxs,2)>=5000
+          totalMined >= 1000
+      
       %remove old positives from this image
       old_positives = find(model.models{1}.bb(:,11)==index);
       old_potentials = find(model.models{1}.savebb(:,11)==index);
@@ -108,12 +115,10 @@ for i = 1:length(mining_queue)
       model.models{1}.bb(old_positives,:) = [];
       model.models{1}.x(:,old_positives) = [];
       
-      
       K = model.models{1}.init_params.K;
       N = length(unique(model.models{1}.gts(:,6)));
 
       for iii = 1:size(gts,1)
-        
         curos = getosmatrix_bb(gts(iii,:),new_possibles);
         [aa,bb] = sort(model.models{1}.w(:)'*new_x- ...
                        model.models{1}.b);
@@ -123,6 +128,8 @@ for i = 1:length(mining_queue)
                       params.latent_os_thresh);
           aa(bads) = [];
           bb(bads) = [];
+        else
+          continue;
         end
         bb = bb(1:min(length(bb),K));
         curbb = new_possibles(bb,:);
@@ -136,25 +143,32 @@ for i = 1:length(mining_queue)
         % figure(1)
         % clf
         % imagesc(I)
-        % plot_bbox(curbb)
+
+        % plot_bbox(curbb(1,:),'',[1 0 0])
         % title(num2str(iii));
+        % drawnow
         % if size(curbb,1)==0
         %   keyboard
         % else
         %   drawnow
         % end
-
         
         curx = new_x(:,bb);
+        
         model.models{1}.savex = cat(2,model.models{1}.savex,curx);
         model.models{1}.savebb = cat(1,model.models{1}.savebb, ...
                                      curbb);
         
-        
-        model.models{1}.x = cat(2,model.models{1}.x,curx(:,1));
+        model.models{1}.x = cat(2,model.models{1}.x,curx(:,1)); 
         model.models{1}.bb = cat(1,model.models{1}.bb, ...
                                      curbb(1,:));
         
+        %oldos = getosmatrix_bb(model.models{1}.bb,curbb(1,:));
+        % if max(oldos) > .9
+        %   fprintf(1,'adding one which is already there.. check it out\n');
+        %   keyboard
+        % end
+
       end
       % fprintf(1,'unique is : ');
       % len = length(unique(model.models{1}.bb(:,6)));
