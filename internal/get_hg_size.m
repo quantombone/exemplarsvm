@@ -1,8 +1,13 @@
 function [hg_size,N] = get_hg_size(pos_set, sbin)
-%% Load ids of all images in trainval that contain cls
+%% Load ids of all images in trainval that contain cls which are
+%% not truncated
 
-r =cellfun2(@(x)cat(1,x.objects.bbox),pos_set);
-bbs =cat(1,r{:});
+r = cellfun2(@(x)cat(1,x.objects.bbox),pos_set);
+bbs = cat(1,r{:});
+
+x = cellfun2(@(x)cat(1,x.objects.truncated),pos_set); 
+truncated = cat(1,x{:});
+bbs = bbs(truncated==0,:);
 
 W = bbs(:,3)-bbs(:,1)+1;
 H = bbs(:,4)-bbs(:,2)+1;
