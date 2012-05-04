@@ -1,13 +1,48 @@
-function [result] = VOCevaldet(test_set,BB,cls,params)
+function [result] = VOCevaldet(test_set,BB,cls,evaluation_minoverlap)
 % Evaluates the set of bounding boxes on the dataset
 % called test_set with the PASCAL VOC criterion.
+% Input: 
+% test_set:   a cell array of image pointers which have 
+%BB A matrix of 
 %
-if ~exist('params','var')
-  params.evaluation_minoverlap = 0.5;
-  params.display = 1;
+if ~exist('evaluation_minoverlap','var')
+  evaluation_minoverlap = 0.5;
+ 
 end
 
-fprintf('%s: pr: evaluating detections\n',cls);
+if isstr(cls) && strcmp(cls,'all')
+  cls = {...
+    'aeroplane'
+    'bicycle'
+    'bird'
+    'boat'
+    'bottle'
+    'bus'
+    'car'
+    'cat'
+    'chair'
+    'cow'
+    'diningtable'
+    'dog'
+    'horse'
+    'motorbike'
+    'person'
+    'pottedplant'
+    'sheep'
+    'sofa'
+    'train'
+    'tvmonitor'};
+elseif isstr(cls)
+  cls = {cls};
+elseif ~iscell(cls)
+  fprintf(1,'Error, no class string provided\n');
+end
+
+cls_string = cellfun2(@(x)[x '+'],cls);
+cls_string = [cls_string{:}];
+cls_string = cls_string(1:end-1);
+
+fprintf('%s: pr: evaluating detections over %d images\n',cls_string,length(test_set));
        
 % extract ground truth objects
 npos=0;
@@ -22,7 +57,13 @@ for i=1:length(test_set)
           length(test_set{i}.objects)==0
       %dont do anything if no objects, no gt!
     else
-      clsinds=strmatch(cls,{test_set{i}.objects(:).class},'exact');
+      %tic
+      %clsinds=cellfun2(@(x)strmatch(x,{test_set{i}.objects(: ...
+      %%                                            ).class}, ...
+      %                              'exact'),cls);
+      %toc
+      clsinds = find(ismember({test_set{i}.objects(:).class},cls));
+      
       gt(i).BB=cat(1,test_set{i}.objects(clsinds).bbox)';
       gt(i).diff=[test_set{i}.objects(clsinds).difficult];% | [test_set{i}.objects(clsinds).occluded];
       gt(i).det=false(length(clsinds),1);
@@ -31,11 +72,12 @@ for i=1:length(test_set)
       %skip difficult ones in evaluation
       npos=npos+sum(~gt(i).diff);
     end
-
 end
-npos
+
 sss = tic;
-[ap, rec, prec, fp, tp, is_correct, missed] = get_aps(params,cls,gt,npos,BB);
+params.evaluation_minoverlap =evaluation_minoverlap;
+params.display = (nargout==0);
+[ap, rec, prec, fp, tp, is_correct, missed] = get_aps(params,cls_string,gt,npos,BB);
 
 result.rec = rec;
 result.prec = prec;
@@ -48,8 +90,8 @@ result.missed = missed;
 
 finaltime = toc(sss);
 fprintf(1,'Time for computing AP: %.3fsec\n',finaltime);
-
-function [ap,rec,prec,fp,tp,is_correct,missed] = get_aps(params,cls,gt,npos,BB);
+fprintf(1,'%s AP: %.3f\n',cls_string,ap);
+function [ap,rec,prec,fp,tp,is_correct,missed] = get_aps(params,cls_string,gt,npos,BB);
 
 [~,order] = sort(BB(:,end),'descend');
 BB = BB(order,:);
@@ -69,7 +111,6 @@ for d=1:nd
     bb = BB(d,1:4);
     i = BB(d,11);
     ovmax=-inf;
-
     for j=1:size(gt(i).BB,2)
         bbgt=gt(i).BB(:,j);
         bi=[max(bb(1),bbgt(1)) ; max(bb(2),bbgt(2)) ; min(bb(3),bbgt(3)) ; min(bb(4),bbgt(4))];
@@ -123,10 +164,9 @@ prec=tp./(fp+tp);
 % apold = ap;
 ap = VOCap(rec,prec);
 
-if isfield(params,'display') && params.display
+if params.display
     % plot precision/recall
-    figure(1)
-    clf
+
     plot(rec,prec,'-','LineWidth',2);
     hold on;
     plot(rec,prec,'o');
@@ -134,7 +174,7 @@ if isfield(params,'display') && params.display
     xlabel('recall','FontSize',20)
     ylabel('precision','FontSize',20)
     title(sprintf('class: %s, AP = %.3f, OS=%.3f',...
-                  cls, ap, params.evaluation_minoverlap),...
+                  cls_string, ap, params.evaluation_minoverlap),...
           'FontSize',20);
     maxrec = max(rec)+.1;
     axis([0 1 0 1])
