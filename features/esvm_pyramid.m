@@ -58,6 +58,10 @@ sc = 2 ^(1/interval);
 % we reach MAXLEVELS or detect_min_scale
 scale = zeros(1,MAXLEVELS);
 feat = {};
+curI = im;
+curscale = detect_max_scale;
+
+modder = 5;
 for i = 1:MAXLEVELS
   scaler = detect_max_scale / sc^(i-1);
   
@@ -66,7 +70,27 @@ for i = 1:MAXLEVELS
   end
   
   scale(i) = scaler;
-  scaled = resize(im,scale(i));
+
+  if 1
+    if scaler == curscale
+      scaled = curI;
+    else
+      curfactor = scale(i)/curscale;
+      scaled = resize(curI,curfactor);
+    end
+    
+    if mod(i,modder) == 0
+      curI = scaled;
+      curscale = scale(i);
+    end
+  else
+    scaled = resize(im,scale(i));
+  end
+  
+  % resim{i} = scaled;
+  % imshow(scaled)
+  % drawnow
+    
   
   %if minimum dimensions is less than or equal to 5, exit
   if min([size(scaled,1) size(scaled,2)])<=MINDIMENSION
@@ -84,9 +108,13 @@ for i = 1:MAXLEVELS
     break;
   end
 
+  f2 = zeros(size(feat{i},1)+2,size(feat{i},2)+2,size(feat{i},3));
+  f2(2:end-1,2:end-1,:) = feat{i};
+  feat{i} = f2;
   %recover lost bin!!!
-  feat{i} = padarray(feat{i}, [1 1 0], 0);
+  %feat{i} = padarray(feat{i}, [1 1 0], 0);
 
+  
   %if the max dimensions is less than or equal to 5, dont produce
   %any more levels
   if max([size(feat{i},1) size(feat{i},2)])<=MINDIMENSION
