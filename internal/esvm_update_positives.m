@@ -1,4 +1,4 @@
-function m = esvm_update_positives(m,greedy,PSELECT,NASS)
+function m = esvm_update_positives(m,greedy,PSELECT,NASS,min_cache)
 %Do latent SVM updates on the positive examples saved inside
 %m.savex and m.savebb
 % Inputs
@@ -9,6 +9,12 @@ if nargin>0 && isstr(m)
   return;
 end
 
+if size(m.svxs,2) < min_cache%m.params.train_max_negatives_in_cache
+  fprintf(1,['Update positives: not updating cache_size=%d, ready' ...
+             ' at %d\n'],size(m.svxs,2),10000);%m.params.train_max_negatives_in_cache);
+  return;
+  
+end
 
 if ~exist('PSELECT','var')
   PSELECT = .5;
@@ -39,8 +45,6 @@ if ~isfield(m,'savex')
 end
 
 
-m.savebb(:,5) = 1:size(m.savebb,1);
-
 r = m.w(:)'*m.savex-m.b;
 m.savebb(:,end) = r;
 uhit = unique(m.savebb(:,6));
@@ -69,6 +73,15 @@ for j = 1:length(uhit)
   curc(end+1:end+K,:) = m.resc(goods(bb(ind)),:);
 end
 
+news = curbb(:,[1:4 7 11]);
+olds = m.bb(:,[1:4 7 11]);
+
 m.x = curx;
 m.bb = curbb;
 m.curc = curc;
+
+sun = size(unique(cat(1,news,olds),'rows'),1);
+fprintf(1,'Updating Positives: #new elements = %d\n',...
+        sun-size(olds, 1));
+fprintf(1,'Updating Positives: #new obj = %.3f\n',...
+        evaluate_obj(m));
