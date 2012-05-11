@@ -45,6 +45,7 @@ numpassed = 0;
 model.total_mines = 0;
 
 for i = 1:length(mining_queue)
+  model.total = model.total + 1;
   index = mining_queue{i}.index;
   I = toI(imageset{index});
 
@@ -106,7 +107,7 @@ for i = 1:length(mining_queue)
       
       new_possibles = cat(1,rs.bbs{1}(good_positives,:),...
                           model.models{1}.savebb(old_potentials,:));
-      new_x = cat(2,cat(2,rs.xs{1}{good_positives}),...
+      new_x = cat(2, rs.xs{1}(:,good_positives),...
                   model.models{1}.savex(:,old_potentials));
       
       %remove all old one
@@ -241,7 +242,7 @@ for i = 1:length(mining_queue)
     %fprintf(1,'Added %d positives\n',c);
     
     rs.bbs{1} = rs.bbs{1}(good_negatives,:);
-    rs.xs{1} = rs.xs{1}(good_negatives);
+    rs.xs{1} = rs.xs{1}(:,good_negatives);
 
     if size(model.models{1}.x,2) < params.min_number_of_positives
       fprintf(1,'Reverting to old positive\n');
@@ -264,7 +265,7 @@ for i = 1:length(mining_queue)
         os = getosmatrix_bb(rs.bbs{j},top_det);
         goods = find(os<params.SOFT_NEGATIVE_MINING_OS);
         rs.bbs{j} = rs.bbs{j}(goods,:);
-        rs.xs{j} = rs.xs{j}(goods);
+        rs.xs{j} = rs.xs{j}(:,goods);
       end
     end
   end
@@ -295,7 +296,8 @@ for i = 1:length(mining_queue)
   if supersize > 0
     addon=sprintf(', max = %.3f',max(cellfun(@(x)max_or_this(x,-1000),scores)));
   end
-  total = sum(cellfun(@(x)x.num_visited,mining_queue));
+  %total = sum(cellfun(@(x)x.num_visited,mining_queue));
+  total = model.total;
 
   fprintf(1,'Found %04d windows, [im=%04d/%04d%s%s]\n',...
           supersize, ...
@@ -307,19 +309,25 @@ for i = 1:length(mining_queue)
   number_of_windows = number_of_windows + cellfun(@(x)length(x),scores)';
   
   clear curxs curbbs
-  for q = 1:1 
-    curxs{q} = [];
-    curbbs{q} = [];
-    if isempty(rs.xs{q})
-      continue
-    end
-    
-    goods = cellfun(@(x)prod(size(x)),rs.xs{q})>0;
-    curxs{q} = cat(2,curxs{q},rs.xs{q}{goods});
-    curbbs{q} = cat(1,curbbs{q},rs.bbs{q}(goods,:));
-  end
+  %curxs = cat(2,rs.xs{:});
+  %curbbs = cat(1,rs.bbs{:});
   
-  Ndets = cellfun(@(x)size(x,2),curxs);
+  curxs = rs.xs{1};
+  curbbs = rs.bbs{1};
+  % for q = 1:1 
+  %   curxs{q} = [];
+  %   curbbs{q} = [];
+  %   if isempty(rs.xs{q})
+  %     continue
+  %   end
+
+  %   goods = cellfun(@(x)prod(size(x)),rs.xs{q})>0;
+  %   curxs{q} = cat(2,curxs{q},rs.xs{q}{goods});
+  %   curbbs{q} = cat(1,curbbs{q},rs.bbs{q}(goods,:));
+  % end
+
+  Ndets = size(curbbs,2);
+  %Ndets = cellfun(@(x)size(x,2),curxs);
   %if no detections, just skip image because there is nothing to store
   if sum(Ndets) == 0
     empty_images(end+1) = index;
@@ -335,10 +343,13 @@ for i = 1:length(mining_queue)
     violating_images(end+1) = index;
   end
 
-  for a = 1:1 
-    xs{a}{i} = curxs{a};
-    bbs{a}{i} = curbbs{a};
-  end
+  %for a = 1:1 
+  %  xs{a}{i} = curxs{a};
+  %%  bbs{a}{i} = curbbs{a};
+  %end
+
+  xs{1} = curxs;
+  bbs{1} = curbbs;
   
   if (numpassed + model.total_mines >= ...
       params.train_max_mined_images) || ...
@@ -355,7 +366,7 @@ if ~exist('xs','var')
   %If no detections from from anymodels, return an empty matrix
   for i = 1:1 
     hn.xs{i} = zeros(prod(size(model.models{1}.w)),0);
-    hn.bbs{i} = [];
+    hn.bbs{i} = zeros(0,12);
   end
   mining_stats.num_violating = 0;
   mining_stats.num_empty = 0;
