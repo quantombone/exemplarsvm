@@ -11,6 +11,10 @@ function [positive_set, negative_set] = ...
 %   negative_set: a set of negative images which do not contain any
 %      instances of class cls
 
+if isstruct(data_set) && isfield(data_set,'data_set')
+  data_set = data_set.data_set;
+end
+
 nonempties = cellfun(@(x)isfield(x,'objects'),data_set);
 negative_set = data_set(~logical(nonempties));
 data_set = data_set(logical(nonempties));
