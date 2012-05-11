@@ -6,8 +6,31 @@ function [result] = VOCevaldet(test_set,BB,cls,evaluation_minoverlap)
 %BB A matrix of 
 %
 if ~exist('evaluation_minoverlap','var')
-  evaluation_minoverlap = 0.5;
- 
+  evaluation_minoverlap = 0.5; 
+end
+
+if ~exist('cls','var')
+  [aa,bb] = sort(BB(:,end),'descend');
+  for q = 1:min(length(bb),10)
+    curbb = BB(bb(q),:);
+    classes = {test_set{curbb(11)}.objects.class};
+    if length(classes) == 0
+      continue
+    end
+    
+    gtbbs = cat(1,test_set{curbb(11)}.objects.bbox);
+    os = getosmatrix_bb(curbb,gtbbs);
+    [maxos,maxind] = max(os);
+    if maxos > .5
+      cls = classes{maxind};
+      fprintf(1,'Auto-guessing class %s from hit rank %d\n',cls,q);
+      break;
+    end
+  end
+  
+  if ~exist('cls','var')
+    error('no cls provided: cannot guess one');
+  end
 end
 
 if isstr(cls) && strcmp(cls,'all')
