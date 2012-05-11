@@ -1,5 +1,5 @@
 function exemplar_overlay = esvm_exemplar_inpaint(detection_box, ...
-                                                  model, ...
+                                                  model, data_set, ...
                                                   stuff)
 % Paint the exemplar into the image I 
 % Copyright (C) 2011-12 by Tomasz Malisiewicz
@@ -17,6 +17,7 @@ function exemplar_overlay = esvm_exemplar_inpaint(detection_box, ...
 %% show gt bb with os in [MAXOS_THRESH,.5) as incorrect
 %% do not even show gt bb if os is in [0,MAXOS_THRESH)
 %MAXOS_THRESH = .2;
+
 
 SHOW_TITLES = 0;
 
@@ -70,8 +71,8 @@ if 0 %strcmp(model.cls,'bus')
   %                                                 gtbb(4),gtbb(1):gtbb(3),:));
 else
   [mini_overlay.I, mini_overlay.alphamask] = ...
-      esvm_get_exemplar_icon({model},1,detection_box(7),1,...
-                             loadseg,stuff.dataset_params);
+      esvm_get_exemplar_icon({model},data_set,1,detection_box(7)~=model.bb(1,7),1,...
+                             loadseg,stuff.params);
 
 end
 
@@ -80,6 +81,8 @@ end
 
 [exemplar_overlay.I, exemplar_overlay.alphamask] = ...
     insert_exemplar(I, mini_overlay, detection_box);
+
+
 
 exemplar_overlay.mini_overlay = mini_overlay;
 
@@ -186,6 +189,7 @@ I2 = I;
 
 newalpha = repmat(newalpha,[1 1 3]);
 
+
 PAD = round(size(I2,1)*.8);
 I2 = pad_image(I2,PAD);
 
@@ -213,6 +217,7 @@ Iblack(targetx,targety,:) = ...
     newI(goodsx,goodsy,:).*(newalpha(goodsx,goodsy,:));
 
 
+
 %mask(targetx,targety,:) = 1;
 
 mask(targetx,targety,:) = newalpha(goodsx,goodsy);
@@ -230,7 +235,7 @@ mask = max(0.0,min(1.0,mask));
 Ia = Iblack;
 Ib = I;
 alphamap = mask;
-alphamap(alphamap>0) = .8;
+alphamap(alphamap>0) = 1;
 alphamap(alphamap==0) = 0;
 %alphamap(alphamap>0) = .5;
 %alphamap(alphamap==0) = .7;
@@ -238,6 +243,8 @@ alphamap = repmat(alphamap,[1 1 3]);
 Itotal = Ia.*alphamap + Ib.*(1-alphamap);
 
 I2 = Itotal;
+
+
 
 function save_me_as_pdf(stuff,index)
 fprintf(1,'saving disabled temporarily\n');
