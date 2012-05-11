@@ -1,5 +1,5 @@
 function [Iex,Iexmask,Icb,Icbmask] = esvm_get_exemplar_icon(models, ...
-                                                  index,flip,subind, ...
+                                                  data_set,index,flip,subind, ...
                                                   loadseg, VOCopts)
 % Extract an exemplar visualization image (one from gt box, one from
 % cb box) [and does flip if specified]
@@ -26,6 +26,7 @@ if ~isfield(models{index},'gt_box') || ~isfield(models{index},'bb') ...
   return;
 end
 
+
 %Subind indicates which window to show (defaults to the base)
 if ~exist('subind','var')
   subind = 1;
@@ -41,27 +42,37 @@ if ~exist('loadseg','var')
   loadseg = 1;
 end
 
-%cb = models{index}.model.bb(subind,1:4);
+curI = toI(data_set(models{index}.bb(1,11)));
+sizeI = size(curI);
+models{index}.sizeI = sizeI;
+
+cb = models{index}.bb(subind,1:4);
 %TJM: changed
-cb = models{index}.gt_box;    
+%cb = models{index}.gt_box;    
 d1 = max(0,1 - cb(1));
 d2 = max(0,1 - cb(2));
 d3 = max(0,cb(3) - models{index}.sizeI(2));
 d4 = max(0,cb(4) - models{index}.sizeI(1));
 mypad = max([d1,d2,d3,d4]);
+
+
+
 PADDER = round(mypad)+2;
+%PADDER = 200;
 
 if isfield(models{index},'I')
   I = convert_to_I(models{index}.I);
 else
   I = ...
-      convert_to_I(models{index}.data_set{models{index}.bb(subind,11)});
+      convert_to_I(data_set{models{index}.bb(subind,11)});
 end
+
 %pre-pad mask because GT region can be outside image
 mask = pad_image(zeros(size(I,1),size(I,2)),PADDER);
 g = models{index}.gt_box;
 g2 = g + PADDER;
 mask(g2(2):g2(4),g2(1):g2(3)) = 1;
+
 
 if loadseg == 1 && exist('VOCopts','var')
   try
@@ -76,19 +87,33 @@ if loadseg == 1 && exist('VOCopts','var')
   end
 end
 
+
 cb = models{index}.gt_box;    
 Iex = pad_image(I, PADDER);
 Iexmask = pad_image(mask,PADDER);
 cb = round(cb + PADDER);
 
-Iex = Iex(cb(2):cb(4),cb(1):cb(3),:);
+try
+  Iex = Iex(cb(2):cb(4),cb(1):cb(3),:);
+catch
+  fprintf(1,'Iex bug\n');
+  keyboard
+end
 Iexmask = Iexmask(cb(2):cb(4),cb(1):cb(3));
+
+
 
 cb = models{index}.bb(subind,1:4);
 Icb = pad_image(I, PADDER);
 cb = round(cb + PADDER);
-Icb = Icb(cb(2):cb(4),cb(1):cb(3),:);
-Icbmask = mask(cb(2):cb(4),cb(1):cb(3));
+
+try
+  Icb = Icb(cb(2):cb(4),cb(1):cb(3),:);
+  Icbmask = mask(cb(2):cb(4),cb(1):cb(3));
+catch
+  fprintf(1,'other bug\b');
+  keyboard
+end
 
 if flip == 1
   Iex = flip_image(Iex);
@@ -96,6 +121,7 @@ if flip == 1
   Iexmask = flip_image(Iexmask);
   Icbmask = flip_image(Icbmask);
 end
+
 
 function [I, mask] = load_seg(VOCopts, model)
 
