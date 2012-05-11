@@ -7,8 +7,7 @@ function res = estimate_covariance(train_set, cparams, res2)
 %Estimates the covariance matrix by going through all the data
 
 if isfield(cparams,'titler')
-  
-  filer = sprintf('/nfs/baikal/tmalisie/cov/covar_%s_%d_%d.mat',...
+  filer = sprintf('/nfs/baikal/tmalisie/cov/final_%s_%d_%d.mat',...
                   cparams.titler, cparams.hg_size(1), ...
                   cparams.hg_size(2));
   
@@ -29,14 +28,13 @@ if ~exist('dataset_directory','var')
   dataset_directory = 'VOC2007';
 end
 
-
 %keep all windows
 params = esvm_get_default_params;
 params.detect_max_windows_per_exemplar = 1000000;
 params.detect_save_features = 1;
 params.detect_exemplar_nms_os_threshold = 1;
 params.detect_pyramid_padding = 0;
-params.detect_add_flip = 0;
+params.detect_add_flip = 1;
 
 model.params = params;
 model.models{1}.w = zeros(cparams.hg_size(1),...
@@ -50,9 +48,15 @@ globalN = 0;
 fsize = numel(model.models{1}.w);
 sums = zeros(fsize, 1);
 outers = zeros(fsize, fsize);
+
+%Learn matrix from 1000 random images
 r = randperm(length(train_set));
-r = r(1:min(length(r),1000));
+r = r(1:min(length(r),10000));
 train_set = train_set(r);
+
+MAX_WINDOWS = 50000000;
+maxw = floor(MAX_WINDOWS / length(train_set));
+
 
 if exist('res2','var')
   tic
@@ -64,15 +68,45 @@ if exist('res2','var')
   toc
 end
 
+masker = zeros(cparams.hg_size(1),cparams.hg_size(2), ...
+               esvm_features);
+regions = cell(0,1);
+for a = 1:cparams.hg_size(1)
+  for b = 1:cparams.hg_size(2)
+    m = masker;
+    m(a,b,:) = 1;
+    inds = find(m);
+    regions{end+1} = inds;
+  end
+end
+
 for i = 1:length(train_set)
   I = toI(train_set{i});
+  tic
   rs = esvm_detect(I,model);
+  toc
+
+  norms = cellfun2(@(x)sum(rs.xs{1}(x,:).^2,1),regions);
+  norms = cat(1,norms{:});
+  goods = find(sum(norms==0,1)==0);
+  rs.bbs{1} = rs.bbs{1}(goods,:);
+  rs.xs{1} = rs.xs{1}(:,goods);
+  
+  r = randperm(length(goods));
+  r = r(1:min(maxw,length(r)));
+  rs.bbs{1} = rs.bbs{1}(r,:);
+  rs.xs{1} = rs.xs{1}(:,r);
+  
+  %experiment: try adding locations of features into covariance matrix
+  %rs.xs{1} = cat(1,rs.xs{1},rs.bbs{1}(:,1:4)');
+
   if numel(rs.xs{1})==0
     fprintf(1,'tiny image!\n');
+
     continue
   end
 
-  x = cat(2,rs.xs{1}{:});
+  x = rs.xs{1};
   bbs = rs.bbs{1};
   globalN = globalN + size(x,2);
   
@@ -80,6 +114,7 @@ for i = 1:length(train_set)
     
     if length(train_set{i}.objects) == 0
       continue
+
     end
     
     curcls = find(ismember({train_set{i}.objects.class}, ...
@@ -90,6 +125,7 @@ for i = 1:length(train_set)
     
     if length(curcls) == 0
       continue
+
     end
     
     goodbb = cat(1,train_set{i}.objects.bbox);
@@ -108,6 +144,7 @@ for i = 1:length(train_set)
     % figure(1)
     % clf
     % imagesc(I)
+
     % plot_bbox(bbs)
     % drawnow
   elseif isfield(cparams,'scene_os')
@@ -141,13 +178,13 @@ for i = 1:length(train_set)
                     n,globalN));
 end
 
-
 res.c = 1./(n-1)*(outers - sums*sums'/n);
 res.n = n;
 res.mean = sums/n;
 res.params = params;
 res.hg_size = size(model.models{1}.w);
-[res.evecicons,res.evals] = show_cov(res);
+fprintf(1,'Diagonalizing...\n');
+[res.evals,res.evecs] = show_cov(res);
 res.titler = '';
 
 if exist('filer','var')

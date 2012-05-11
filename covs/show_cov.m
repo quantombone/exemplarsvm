@@ -1,7 +1,7 @@
-function [evecicons,evals,evecs] = show_cov(res)
-% Create visualizations of the HOG covariance matrix estimated from
-% the fields of res.
-% Return stack of eigenvector images by performing
+function [evals,evecs,evecicons] = show_cov(res)
+% Compute eigenvalues and eigenvectors of the HOG covariance matrix
+% estimated from the fields of the input [res].  If 3 outputs are
+% specified, then returns a stack of eigenvector images by performing
 % eigendecomposition of the covariance matrix
 
 c = res.c;
@@ -17,6 +17,10 @@ toc
 
 evals = d;
 evecs = v;
+
+if nargout < 3
+  return;
+end
 
 %Compute top 100 eigenvector images, which will viewable by using
 %montage

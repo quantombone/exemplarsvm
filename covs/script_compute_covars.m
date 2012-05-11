@@ -6,8 +6,8 @@ end
 cls = {'bus','car','train','cow','sheep','chair','sofa'};
 cls = {'all'};
 
-for a = 8:12
-  for b = 8:12
+for a = 12
+  for b = 12
     params.hg_size = [a b];
     for i = 1:length(cls)  
       %[cur_pos_set, cur_neg_set] = split_sets(data_set, ...
