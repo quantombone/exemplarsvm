@@ -73,4 +73,3 @@ boxes = esvm_pool_exemplar_dets(boxes, model.models, M, ...
                                 test_params);
 
 boxes = cat(1,boxes.final_boxes{:});
-
