@@ -1,4 +1,4 @@
-function top = esvm_nms(boxes, overlap)
+function top = esvm_nms(boxes, overlap, biased)
 % top = esvm_nms(boxes, overlap)
 % Non-maximum suppression. (FAST VERSION)
 % Greedily select high-scoring detections and skip detections
@@ -15,6 +15,11 @@ function top = esvm_nms(boxes, overlap)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
+%If biased is 0, then use the symmetric OS score, defaults to
+%Pedro's biased version
+if ~exist('biased','var')
+  biased = 1;
+end
 
 if isempty(boxes)
   top = [];
@@ -22,6 +27,7 @@ if isempty(boxes)
 end
 
 if ~exist('overlap','var')
+  fprintf(1,'Default to os=.5\n');
   overlap = 0.5;
 end
 
@@ -73,11 +79,13 @@ while ~isempty(I)
   
   w = max(0.0, xx2-xx1+1);
   h = max(0.0, yy2-yy1+1);
-  
-  o = w.*h ./ area(I(1:last-1));
-  
-  %o = w.*h;
-  %o = o ./ (area(I(1:last-1)) + area(i) - o);
+
+  if biased == 1
+    o = w.*h ./ area(I(1:last-1));
+  else
+    o = w.*h;
+    o = o ./ (area(I(1:last-1)) + area(i) - o);
+  end
   I([last; find(o>overlap)]) = [];
 end
 
