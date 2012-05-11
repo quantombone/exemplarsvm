@@ -8,7 +8,7 @@ for i = 1:length(model.models)
   gts{i} = [model.models{i}.gt_box 0 i 0 0 0 0 model.models{i}.curid ...
             0];
   curx{i} = model.models{i}.x(:,1);
-  curx{i}(5) = i;
+  curbb{i}(:,5) = i;
   curbb{i} = bbs{i}(1,:);
 end
 

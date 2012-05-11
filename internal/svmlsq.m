@@ -28,7 +28,8 @@ if exist('params','var') && isfield(params,'regularizer')
   lambdaI = lambda*params.regularizer;
 else
   params.basis = eye(size(x,1));
-  params.regularizer = eye(size(x,1));
+  params.regularizer = lambda*eye(size(x,1));
+  params.display = 1;
 end
 
 %b = ones(1,size(x,1));
@@ -46,8 +47,11 @@ nostart = (sum(w(1:end-1).^2)==0);
 oldgoods = [];
 curmat = zeros(F,F);
 
-oldobj =  lambda/2*sum((params.basis*w(1:end-1)).^2) + sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
-%fprintf(1,' -++curobj=%.3f\n',oldobj)
+oldobj =  lambda/2*sum((params.basis*w(1:end-1)).^2) + ...
+          sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
+if params.display == 1
+  fprintf(1,' -++curobj=%.3f\n',oldobj)
+end
 
 for i = 1:NITER
   starttime=tic;
@@ -90,13 +94,6 @@ for i = 1:NITER
   w = M\U;  
   %end
   
-  
-  
-
-  %perform the line search  
-  % bestobj = lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w(1:end- ...
-  %                                                 1)'*x+w(end))));
-
   [w2,bestobj] = line_search(w,oldw,y,x,lambda,params,linspace(0,1, ...
                                                   10));
 
@@ -104,8 +101,11 @@ for i = 1:NITER
   
   %svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
   endtime = toc(starttime);
-  %fprintf(1,' ---curobj=%.3f (iter in %.3f s, +s: %d -s: %d #neg-sv %d)\n',...
-  %        bestobj,endtime,length(newgoods),length(oldgoods),num_nsv);
+  if params.display == 1
+    fprintf(1,' ---curobj=%.3f (iter in %.3f s, +s: %d -s: %d #neg-sv %d)\n',...
+            bestobj,endtime,length(newgoods),length(oldgoods), ...
+            num_nsv);
+  end
 
   if (length(newgoods) == 0 && length(oldgoods)==0)%(oldobj - bestobj)/oldobj < .001
     %fprintf(1,'breaking because new objective is %.3f\n',bestobj);
@@ -113,18 +113,17 @@ for i = 1:NITER
   end
   oldw = w;  
 
-
   oldobj = bestobj;
   oldgoods = goods;
 end
 
 if nargout == 2
   svmobj = bestobj;
-  %svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
-  %fprintf(1,'curobj=%.3f\n',svmobj);
+  if params.display == 1
+    svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
+    fprintf(1,'curobj=%.3f\n',svmobj);
+  end
 end
-
-%oldobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
 
 
 function [gw] = compute_gradient(y,x,w,lambda)
