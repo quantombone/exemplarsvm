@@ -318,6 +318,10 @@ else
 end
 %fprintf(1,'\n');
 
+%Concatenate everything to make it nice
+
+goods = find(cellfun(@(x)numel(x),resstruct.xs));
+resstruct.xs(goods) = cellfun2(@(x)cat(2,x{:}),resstruct.xs(goods));
 
 
 function [resstruct,t] = esvm_detectdriverBLOCK(I, models, ...
@@ -491,6 +495,7 @@ if params.detect_save_features == 0
   resstruct.xs = cell(N,1);
 end
 %fprintf(1,'\n');
+
 
 function rs = prune_nms(rs, params)
 %Prune via nms to eliminate redundant detections
