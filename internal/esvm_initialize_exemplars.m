@@ -72,15 +72,15 @@ if ~isfield('params','hg_size')
   [hg_size,N] = get_hg_size(cur_pos_set, params.init_params.sbin);
   hg_size = hg_size * min(1,params.init_params.MAXDIM/max(hg_size));
   hg_size = max(1,round(hg_size));
-  hg_size
+  fprintf(1,'Found a HOG template size of [%d x %d] from %d examples\n',hg_size(1),hg_size(2),N);
+
   params.init_params.hg_size = hg_size;
   params.init_params.N = N;
   
   if isfield(params.init_params,'MAX_POS_CACHE')
     params. init_params.K = round((params.init_params.MAX_POS_CACHE/(params.init_params.N)));
-  fprintf(1,'Choosing k=%d\n',params.init_params.K);
+    fprintf(1,'Saving %d wiggles per exemplar for Positive Cache\n',params.init_params.K);
   end
-
 end
   
 model.params = params;
@@ -172,7 +172,7 @@ for j = 1:length(data_set)
   end
 end
 
-fprintf(1,'numskip = %d\n',numskip);
+fprintf(1,'\nSkipped %d truncated objects\n',numskip);
 
 if CACHE_FILE == 0
   model.models = allfiles;
