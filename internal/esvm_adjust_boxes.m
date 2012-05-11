@@ -20,9 +20,13 @@ function top = esvm_adjust_boxes(boxes, model)
 
 top = boxes;
 
-if strcmp(model.model_name,'dalal') || ...
-      ~isfield(model.models{1},'center')
-  return;
+for i = 1:length(model.models)
+  if  ~isfield(model.models{i},'center')
+    s=model.models{i}.hg_size(1:2)*10;
+    c = [0 0 s(1) s(2)];
+    model.models{i}.center = c;
+    %return;
+  end
 end
 
 if numel(boxes)==0
@@ -41,3 +45,13 @@ for i = 1:size(boxes,1)
 
   top(i,1:4) = apply_xform(gt, xform);      
 end
+
+% top2 = boxes;
+% top2(:,1:4) = 0;
+% for i = 1:size(model)
+%   xform = find_xform(model.models{i}.center, mean(model.models{i}.curc,1));
+%   hits = find(boxes(i,6)==i);
+%   top2(hits,:) = apply_xform(boxes(hits,:),xform);
+% end
+
+% keyboard
