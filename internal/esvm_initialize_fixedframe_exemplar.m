@@ -88,8 +88,6 @@ meansym = (sym1+sym2)/(bbox(3)-bbox(1)+bbox(4)-bbox(2))/8;
 %Sorty by a measure which wants high overlap, and low symmetry-difference
 [tmp,order] = sort(os-meansym+.01*os1,'descend');
 
-
-
 curfeats = cell(K,1);
 bbs = cell(K,1);
 
