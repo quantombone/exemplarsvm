@@ -1,4 +1,4 @@
-function [w,svmobj] = svmlsq(y,x,lambda,w)
+function [w,svmobj] = svmlsq(y,x,lambda,w,NITER,params)
 %Compute optimal solution for hinge-squared SVM problem
 %By guessing the support vectors, solving a least-squares
 %optimization problem, then iterating between updating the support
@@ -12,34 +12,24 @@ function [w,svmobj] = svmlsq(y,x,lambda,w)
 %  w: current estimate of w
 %Tomasz Malisiewicz (tomasz@csail.mit.edu)
 
-% [w,svmobj] = learn_ll(x,y,lambda,1);
-
-% function [w,svmobj,t] = learn_ll(x,y,lambda,meancoeff)
-% starttime = tic;
-
-% if ~exist('meancoeff','var')
-%   meancoeff = 0;
-% end
-
-% params.bias = 100;
-% mx = mean(x,2)*meancoeff;
-% x2 = bsxfun(@minus,x,mx);
-% svm_model = liblineartrain(y, sparse(x2)',sprintf(['-s 2 -B %.5f -e .0001 -c' ...
-%                     ' %f -q'], params.bias, 1/lambda));
-% w = svm_model.w';
-% w(end) = (w(end)*params.bias);
-% t = toc(starttime);
-
-% w(end) = w(end) - w(1:end-1)'*mx;
-
-% vals = y'.*(w(1:end-1)'*x+w(end));
-% svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(vals));
-% return;
 
 %maximum number of newton iterations
-NITER = 20;
+if ~exist('NITER','var')
+  NITER = 20;
+end
+
+if NITER == -1
+  [w,svmobj] = learn_ll(x,y,lambda,1);
+  return;
+end
 
 lambdaI = lambda*eye(size(x,1));
+if exist('params','var') && isfield(params,'regularizer')
+  lambdaI = lambda*params.regularizer;
+else
+  params.basis = eye(size(x,1));
+  params.regularizer = eye(size(x,1));
+end
 
 %b = ones(1,size(x,1));
 %b(end) = 0;
@@ -56,8 +46,8 @@ nostart = (sum(w(1:end-1).^2)==0);
 oldgoods = [];
 curmat = zeros(F,F);
 
-oldobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
-fprintf(1,' -++curobj=%.3f\n',oldobj)
+oldobj =  lambda/2*sum((params.basis*w(1:end-1)).^2) + sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
+%fprintf(1,' -++curobj=%.3f\n',oldobj)
 
 for i = 1:NITER
   starttime=tic;
@@ -70,14 +60,15 @@ for i = 1:NITER
     r = (y'.*(w(1:end-1)'*x+w(end)));
 
     % [aa,bb] = sort(r,'ascend');
-    % aa = aa(1:i*500);
-    % bb = bb(1:i*500);
+    % aa = aa(1:i*1000);
+    % bb = bb(1:i*1000);
     % goods = bb(aa<=1);
+    
 
     %choose all of them
     goods = find(r<=1.0);
   end
-  
+
 
   %curmat = x(:,goods)*x(:,goods)';
   newgoods = setdiff(goods,oldgoods);
@@ -95,25 +86,29 @@ for i = 1:NITER
   %   grad = M*w+U;
   %   w = w + .00001*grad;
   % else
+  %w = pinv(M)*U;
   w = M\U;  
   %end
-
+  
   
   
 
   %perform the line search  
-  bestobj = lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w(1:end- ...
-                                                  1)'*x+w(end))));
+  % bestobj = lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w(1:end- ...
+  %                                                 1)'*x+w(end))));
 
-  [w2,bestobj] = line_search(w,oldw,y,x,lambda,linspace(0,1,10));
+  [w2,bestobj] = line_search(w,oldw,y,x,lambda,params,linspace(0,1, ...
+                                                  10));
 
+  num_nsv = sum( (w(1:end-1)'*x(:,y==-1) + w(end)) >= -1);
   
   %svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
   endtime = toc(starttime);
-  fprintf(1,' ---curobj=%.3f (iter in %.3f s, +s: %d -s: %d)\n',...
-          bestobj,endtime,length(newgoods),length(oldgoods));
-  
-  if (oldobj - bestobj)/oldobj < .001
+  %fprintf(1,' ---curobj=%.3f (iter in %.3f s, +s: %d -s: %d #neg-sv %d)\n',...
+  %        bestobj,endtime,length(newgoods),length(oldgoods),num_nsv);
+
+  if (length(newgoods) == 0 && length(oldgoods)==0)%(oldobj - bestobj)/oldobj < .001
+    %fprintf(1,'breaking because new objective is %.3f\n',bestobj);
     break;
   end
   oldw = w;  
@@ -146,7 +141,7 @@ for i = 1:length(u)
   gw = gw + hingeprime(r(u(i)))*y(u(i))*x(:,u(i));
 end
 
-function [w,bestobj] = line_search(w,oldw,y,x,lambda,alphas)
+function [w,bestobj] = line_search(w,oldw,y,x,lambda,params,alphas)
 %perform the line search  
 if ~exist('alphas','var')
   alphas = linspace(0,1,10);
@@ -155,9 +150,11 @@ bestw = w;
 bestobj = 100000000;
 r1 = y'.*(w(1:end-1)'*x+w(end));
 r2 = y'.*(oldw(1:end-1)'*x+oldw(end));
-n1 = sum(w(1:end-1).^2);
-n2 = sum(oldw(1:end-1).^2);
-ip = w(1:end-1)'*oldw(1:end-1);
+n1 = sum((params.basis*w(1:end-1)).^2);
+n2 = sum((params.basis*oldw(1:end-1)).^2);
+
+ip = w(1:end-1)'*params.regularizer*oldw(1:end-1);
+
 for q = 1:length(alphas)
   alpha = alphas(q);
   
@@ -173,3 +170,25 @@ for q = 1:length(alphas)
 end
 
 w = bestw;
+
+function [w,svmobj,t] = learn_ll(x,y,lambda,meancoeff)
+starttime = tic;
+
+if ~exist('meancoeff','var')
+  meancoeff = 0;
+end
+
+params.bias = 100;
+mx = mean(x,2)*meancoeff;
+x2 = bsxfun(@minus,x,mx);
+svm_model = liblineartrain(y, sparse(x2)',sprintf(['-s 2 -B %.5f -e .001 -c' ...
+                    ' %f -q'], params.bias, 1/lambda));
+w = svm_model.w';
+w(end) = (w(end)*params.bias);
+t = toc(starttime);
+
+w(end) = w(end) - w(1:end-1)'*mx;
+
+vals = y'.*(w(1:end-1)'*x+w(end));
+svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(vals));
+return;
