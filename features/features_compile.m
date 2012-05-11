@@ -2,9 +2,8 @@
 %mex -O resize.cc
 mex CXX=gcc CXXOPTIMFLAGS='-O3 -DNDEBUG -funroll-all-loops' resize.cc
 
-
 % Compile Felzenszwalb's 31D features
-mex -O features_pedro.cc
+mex CXX=gcc CXXOPTIMFLAGS='-O3 -DNDEBUG -funroll-all-loops' features_pedro.cc
 
 %Compile a variant of Felzenszwalb's features which doesn't do normalization
 mex -O features_raw.cc
