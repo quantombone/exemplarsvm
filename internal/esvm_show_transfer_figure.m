@@ -1,4 +1,4 @@
-function NR = esvm_show_transfer_figure(I, models, topboxes, overlays, ...
+function NR = esvm_show_transfer_figure(I, models, data_set, topboxes, overlays, ...
                                         current_rank, corr)
 % Show a figure with the detections of the exemplar svm model
 % NOTE(TJM): this function needs cleanup, but works in the pipeline
@@ -18,18 +18,18 @@ add_one = 0;
   
 figure(1)
 clf
-if add_one == 1
-  ha = tight_subplot(2, 2, .05, ...
-                     .1, .01);
-  NR = [2 2];
-else
-  ha = tight_subplot(1, 2, .05, ...
-                     .01, .01);
-  %hb = tight_subplot(1, 2, .05, ...
-  %                   .1, .01);
-  NR = [2 2];
+% if add_one == 1
+%   ha = tight_subplot(2, 2, .05, ...
+%                      .1, .01);
+%   NR = [2 2];
+% else
+%   ha = tight_subplot(1, 2, .05, ...
+%                      .01, .01);
+%   %hb = tight_subplot(1, 2, .05, ...
+%   %                   .1, .01);
+   NR = [2 2];
   
-end
+% end
 
 PADDER = 100;
 Ipad = pad_image(I,PADDER);
@@ -61,13 +61,13 @@ for i = 1:N
 
   mid = topboxes(i,6);
   flip = topboxes(i,7);
-  hogpic = HOGpicture(models{topboxes(i,6)}.model.w);
+  hogpic = HOGpicture(models{topboxes(i,6)}.w);
   hogpic = jettify(hogpic);
   if flip == 1
     hogpic = flip_image(hogpic);
   end
   
-  Iex = esvm_get_exemplar_icon(models, mid, topboxes(i,7));
+  Iex = esvm_get_exemplar_icon(models,data_set, mid, topboxes(i,7));
   
   Iex1 = imresize(chunks{i},[size(Iex,1) size(Iex,2)]);
   Iex1 = max(0.0,min(1.0,Iex1));
@@ -87,14 +87,15 @@ for i = 1:N
               repmat(overlays{1}.mini_overlay.alphamask,[1 1 3]));
     Ib = Iex;
     alphamap = overlays{1}.mini_overlay.alphamask;
-    alphamap(alphamap>0) = .5;
-    alphamap(alphamap==0) = .7;
+    %alphamap(alphamap>0) = .5;
+    %alphamap(alphamap==0) = .7;
     alphamap = repmat(alphamap,[1 1 3]);
     Itotal = Ia.*alphamap + Ib.*(1-alphamap);
     
     Imeta = Itotal;
     offset = [0 size(Ishow,1)+size(Iex2,1)];
  
+
     %Ishow = cat(1,Ishow,Iex2,Imeta);
   
   elseif strcmp(models{mid}.cls,'bus')
@@ -118,18 +119,18 @@ for i = 1:N
   bb2 = bb1;
   
   bb2([2 4]) = bb2([2 4]) + size(Iex,1) + PPP;
-  axes(ha(1));
-  imagesc(Ishow)
+  %axes(ha(1));
+  %imagesc(Ishow)
 
-  axis image
-  axis off
+  %axis image
+  %axis off
 
   bouter = [1 1 size(Ishow,2) size(Ishow,1)];
   bouter(1) = bouter(1) - round(size(Ishow,2)*.05);
   bouter(2) = bouter(2) - round(size(Ishow,1)*.05);
   bouter(3) = bouter(3) + round(size(Ishow,2)*.05);
   bouter(4) = bouter(4) + round(size(Ishow,1)*.05);
-  plot_bbox(bouter, '', [0 0 0], [0 0 0], 0, [2 1])
+  %plot_bbox(bouter, '', [0 0 0], [0 0 0], 0, [2 1])
 
   if isfield(overlays{1}.mini_overlay,'faces')
     plot_faces(overlays{1}.mini_overlay.faces);
@@ -141,12 +142,12 @@ for i = 1:N
     curcolor = [1 0 0 ];
   end
 
-  plot_bbox(bb1, sprintf('Exemplar-SVM %s %d',models{mid}.cls,mid), ...
-            curcolor, curcolor, 0, [2 1])
+  %plot_bbox(bb1, sprintf('Exemplar-SVM %s %d',models{mid}.cls,mid), ...
+  %          curcolor, curcolor, 0, [2 1])
   
   %sprintf('Exemplar.%d',mid)
   
-  plot_bbox(bb2, sprintf('Exemplar Image %d',mid), [1 1 0], [1 1 0], 0, [2 1])
+  %plot_bbox(bb2, sprintf('Exemplar Image %d',mid), [1 1 0], [1 1 0], 0, [2 1])
   
   id_string = '';
   if isfield(models{abs(mid)},'curid')
@@ -171,12 +172,13 @@ end
 
 extraI = overlays{1}.I;
 
+
 clipped_top = clip_to_image(topboxes(1,:),[1 1 size(extraI,2) ...
                     size(extraI,1)]);
 clipped_top([1 2]) = clipped_top([1 2])+2;
 clipped_top([3 4]) = clipped_top([3 4])-2;
 
-axes(ha(2));
+%axes(ha(2));
 
 PPP = round(size(I,1)*.05);
 I2 = I(1:PPP,:,:)*0+1;
@@ -223,7 +225,7 @@ end
 clipped_top([2 4]) = clipped_top([2 4]) + size(I,1)+size(I2,1);
 
 %dont do yellow box for segmentation
-if 1 %%~strcmp(models{mid}.cls,'bus')
+if 0 %%~strcmp(models{mid}.cls,'bus')
   plot_bbox(clipped_top,'Exemplar',[1 1 0],[1 1 0],0,[2 1]);
 end
 axis image
