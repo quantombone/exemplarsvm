@@ -102,7 +102,7 @@ end
 
 %Get the exemplar frame icon
 if exist('m','var')
-  [~,~,Ibase] = esvm_get_exemplar_icon({m},1);
+  [~,~,Ibase] = esvm_get_exemplar_icon({m},train_set,1);
 else
   Ibase = ones(10,10,3);
 end
