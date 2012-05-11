@@ -15,6 +15,7 @@ end
 draw = 0;
 tic
 N = length(image_set);
+data_set = cell(N,1);
 for i = 1:N  
   
   %estimate the bg color
@@ -22,8 +23,17 @@ for i = 1:N
   
   %get foreground segmentation
   [mask,bb] = estimate_fg(image_set{i}, bg_color);
-  
   data_set{i}.I = image_set{i};
+  
+  [baser,filer,exter] = fileparts(data_set{i}.I);
+  newdir = 'seg/';
+  if ~exist([baser newdir],'dir')
+    mkdir([baser newdir]);
+  end
+  data_set{i}.segmentation = [baser newdir filer  exter];
+  imwrite(mask,data_set{i}.segmentation);
+
+  %data_set{i}.segmentation = mask;
   object.class = cls;
   object.view = '';
   object.truncated = 0;
