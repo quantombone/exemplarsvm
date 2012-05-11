@@ -27,9 +27,10 @@ end
 [hn, mining_queue, mining_stats, m] = ...
     esvm_mine_negatives(m, mining_queue);
 
+
 m.models{1} = add_new_detections(m.models{1}, ...
-                                 cat(2,hn.xs{1}{:}), ...
-                                 cat(1,hn.bbs{1}{:}));
+                                 hn.xs{1}, ...
+                                 hn.bbs{1});
    
 m.models{1} = update_the_model(m.models{1}, mining_stats);
 
@@ -69,16 +70,15 @@ if m.params.display == 1
   clf
   subplot(2,1,1)
   show_model_data(m, 10);
-
-
+  axis off
   subplot(2,1,2)
-
   rpos = m.models{1}.w(:)'*m.models{1}.x - m.models{1}.b;
   rneg = m.models{1}.w(:)'*m.models{1}.svxs - m.models{1}.b;
   rneg = rneg(rneg>=-1.01);
   maxlen = max(length(rpos),length(rneg));
   xpos = round(linspace(1,maxlen,length(rpos)));
   xneg = round(linspace(1,maxlen,length(rneg)));
+  topper = max([max(rpos) max(rneg)]);
   plot(xpos,rpos,'g.')
   hold on;
   plot(xneg,rneg,'k.')
@@ -88,7 +88,7 @@ if m.params.display == 1
   plot([1 maxlen],[0 0],'k--')
   hold on;
   plot([1 maxlen],[1 1],'r--')
-  axis([1 maxlen -1.1 max(1,max(rpos))])
+  axis([1 maxlen -1.1 topper+.01])
   drawnow
   snapnow
   
@@ -150,24 +150,37 @@ function m = add_new_detections(m, xs, bbs)
 %  m.svbbs = [];
 %end
 
-m.svxs = cat(2, m.svxs, xs);
-m.svbbs = cat(1, m.svbbs, bbs);
-
-%Create a unique string identifier for each of the support vectors,
-%so we can run 'unique' on them
-names = cell(size(m.svbbs, 1), 1);
-for i = 1:length(names)
-  bb = m.svbbs(i,:);
-  names{i} = sprintf('%d.%.3f.%d.%d.%d',bb(11),bb(8), ...
-                             bb(9),bb(10),bb(7));
+if numel(bbs) == 0
+  bbs = zeros(0,12);
 end
-  
-[unames,subset,j] = unique(names);
-m.svbbs = m.svbbs(subset,:);
-m.svxs = m.svxs(:,subset);
 
-if numel(m.svxs) > 0
-  [aa,bb] = sort(m.w(:)'*m.svxs,'descend');
-  m.svbbs = m.svbbs(bb,:);
-  m.svxs = m.svxs(:,bb);
-end
+m.svxs(:,end+1:end+size(xs,2)) = xs;
+m.svbbs(end+1:end+size(bbs,1),:) = bbs;
+%m.svxs = cat(2, m.svxs, xs);
+%m.svbbs = cat(1, m.svbbs, bbs);
+
+% %Create a unique string identifier for each of the support vectors,
+% %so we can run 'unique' on them
+% names = cell(size(m.svbbs, 1), 1);
+% for i = 1:length(names)
+%   bb = m.svbbs(i,:);
+%   names{i} = sprintf('%d.%.3f.%d.%d.%d',bb(11),bb(8), ...
+%                              bb(9),bb(10),bb(7));
+% end
+% [unames,subset,j] = unique(names);
+
+[~,subset,~] = unique(m.svbbs(:,[1:4 7 11]),'rows');
+%if norm(sort(subset)-sort(subset2))
+%  keyboard
+%end
+bads = setdiff(1:size(m.svbbs,1),subset);
+m.svbbs(bads,:) = [];
+m.svxs(:,bads) = [];
+%m.svbbs = m.svbbs(subset,:);
+%m.svxs = m.svxs(:,subset);
+
+% if numel(m.svxs) > 0
+%   [aa,bb] = sort(m.w(:)'*m.svxs,'descend');
+%   m.svbbs = m.svbbs(bb,:);
+%   m.svxs = m.svxs(:,bb);
+% end
