@@ -16,6 +16,7 @@ N=length(W);
 
 [hg_size,aspect_ratio_histogram] = get_bb_stats(H, W, sbin);
 
+
 function [modelsize,aspects] = get_bb_stats(h,w, sbin)
 % Following Felzenszwalb's formula
 
@@ -32,14 +33,17 @@ areas = sort(h.*w);
 %TJM: make sure we index into first element if not enough are
 %present to take the 20 percentile area
 area = areas(max(1,floor(length(areas) * 0.2)));
-area = max(min(area, 5000), 3000);
+area = max(min(area, 5000), 1000);
 
-if area==3000
+if area==1000
   fprintf(1,'WARNING: esvm_initialize_dt has tiny objects\n');
 end
+
 
 % pick dimensions
 w = sqrt(area/aspect);
 h = w*aspect;
 
 modelsize = [round(h/sbin) round(w/sbin)];
+modelsize = max(modelsize,4);
+modelsize = min(modelsize,12);
