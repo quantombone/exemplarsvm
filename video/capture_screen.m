@@ -21,14 +21,17 @@ t = java.awt.Toolkit.getDefaultToolkit();
 % fprintf(1,'just sent signal 1\n');
 % pause(.1);
 
-
 if exist('capture_region','var')
   %rectangle = java.awt.Rectangle(capture_region(1),capture_region(2),capture_region(3), ...
   %capture_region(4));
-  rectangle = java.awt.Rectangle(capture_region(1),capture_region(2),capture_region(3)-capture_region(1)+1, ...
-                                 capture_region(4)-capture_region(2)+1);
+  rectangle = java.awt.Rectangle(capture_region(1),...
+                                 capture_region(2),...
+                                 capture_region(3)-capture_region(1)+1,...
+  capture_region(4)-capture_region(2)+1);
+
 else
   rectangle = java.awt.Rectangle(t.getScreenSize());  
+
 end
 javaImage = robo.createScreenCapture(rectangle);
 
