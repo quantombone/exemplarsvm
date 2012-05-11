@@ -113,7 +113,7 @@ for i = 1:length(model.models)
   m.model_name = new_model_name;
   model.model_name = new_model_name;
   m.iteration = 1;
-
+  m.total = -1;
   
   for j = 1:length(m.models)
     if isfield(m.models{j},'mining_stats')
