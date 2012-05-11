@@ -153,7 +153,8 @@ for i = 1:length(ordering)
     %        length(model.models),toc(starter),length(scores),aa);
     
     % Transfer GT boxes from model onto the detection windows
-    boxes = esvm_adjust_boxes(coarse_boxes, model);
+    %boxes = esvm_adjust_boxes(coarse_boxes, model);
+    boxes = coarse_boxes;
 
     if (params.detect_min_scene_os > 0.0)
       os = getosmatrix_bb(boxes,[1 1 size(I,2) size(I,1)]);
@@ -175,13 +176,18 @@ for i = 1:length(ordering)
       figure(1)
       clf
       imagesc(I)
-      if size(boxes,1) > 0 && boxes(1,end)>=-1
+      if size(boxes,1) > 0 && max(boxes(:,end))>=-1
         % plot_bbox(esvm_nms(clip_to_image(boxes,[1 1 size(I,2) ...
         %             size(I,1)]),.5))
         %plot_bbox(clip_to_image(boxes,[1 1 size(I,2) size(I,1)]))
         [alpha,beta] = max(boxes(:,end));
-        plot_bbox(boxes(beta,:),'',[1 0 0])
-        title(num2str(boxes(1,end)))
+        bbtop = boxes(beta,:);
+        bbtop = esvm_adjust_boxes(bbtop, model);
+        [~,tops] = sort(boxes(:,end),'descend');
+        tops = boxes(tops(1:min(length(tops),10)),:);
+        plot_bbox(tops);
+        plot_bbox(bbtop,'',[1 0 0])
+        title(num2str(boxes(beta,end)))
       end
       axis off
       axis image
