@@ -67,7 +67,7 @@ bbox = squareize_bbox(bbox);
 clear t
 params.detect_levels_per_octave = 10;
 [t.hog, t.scales] = esvm_pyramid(I, params);
-t.padder = 2;
+t.padder = 5;
 
 %Pad pyramid and compute all bounding boxes, and their levels
 [allbb,alluv,alllvl,t] = pad_and_get_all_bb(t, hg_size, sbin);
@@ -129,9 +129,9 @@ I2(oks) = rand(size(oks));
 
 I2 = resize(I2,bbs{1}(8));
 
-
 f2 = features_raw(I2,sbin);
 f2 = padarray(f2,[t.padder+1 t.padder+1 0]);
+
 f2 = f2(bbs{1}(9)+(1:hg_size(1))-1+t.padder,...
         bbs{1}(10)+(1:hg_size(2))-1+t.padder,:);
 
