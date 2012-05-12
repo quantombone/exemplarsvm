@@ -18,6 +18,8 @@ end
 if ~exist('cls','var')
   cls = 'bus';
 end
+
+fprintf(1,'Class is %s\n',cls);
   
 if ~exist('params','var')
   params = esvm_get_default_params;
