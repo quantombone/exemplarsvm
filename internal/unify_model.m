@@ -10,6 +10,7 @@ for i = 1:length(model.models)
   curx{i} = model.models{i}.x(:,1);
   curbb{i}(:,5) = i;
   curbb{i} = bbs{i}(1,:);
+
 end
 
 x = cellfun2(@(x)x.x,model.models);
@@ -55,3 +56,4 @@ model2.models{1}.center = [0 0 10*hg_size(1) 10*hg_size(2)];
                    model2.models{1}.savebb(:,[1:4 7 11]),'rows');
 
 model2.models{1}.bb(:,5) = bb;
+model2.models{1}.curc = model2.models{1}.resc(bb,:);
