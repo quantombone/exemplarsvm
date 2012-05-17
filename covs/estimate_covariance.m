@@ -4,13 +4,14 @@ function res = estimate_covariance(train_set, cparams, res2)
 % If res2 is provided (optional), the highest probability window is
 % diaplayed in each image
 
-%Estimates the covariance matrix by going through all the data
+%Estimates the covariance matrix by going through all the data, and
+%makes sure the data doesn't hit zero "outside-image" cells.
 
 if isfield(cparams,'titler')
-  filer = sprintf('/nfs/baikal/tmalisie/cov/final_%s_%d_%d.mat',...
-                  cparams.titler, cparams.hg_size(1), ...
+  filer = sprintf('/nfs/baikal/tmalisie/cov/final_%s%s_%d_%d.mat',...
+                  cparams.titler, cparams.obj, cparams.hg_size(1), ...
                   cparams.hg_size(2));
-  
+
   if fileexists(filer)
     fprintf(1,'FILE EXISTS, loading from %s\n',filer);
     load(filer)
@@ -81,6 +82,25 @@ for a = 1:cparams.hg_size(1)
 end
 
 for i = 1:length(train_set)
+  fprintf(1,'.');
+  if isfield(cparams,'obj') && length(cparams.obj) > 0
+    
+    if length(train_set{i}.objects) == 0
+      continue
+    end
+    
+    curcls = find(ismember({train_set{i}.objects.class}, ...
+                           cparams.obj));
+    if strcmp(cparams.obj,'all')
+      curcls = 1:length(train_set{i}.objects);
+    end
+    
+    if length(curcls) == 0
+      continue 
+    end
+  end
+  
+  
   I = toI(train_set{i});
   tic
   rs = esvm_detect(I,model);
@@ -182,9 +202,10 @@ res.c = 1./(n-1)*(outers - sums*sums'/n);
 res.n = n;
 res.mean = sums/n;
 res.params = params;
+res.cparams = cparams;
 res.hg_size = size(model.models{1}.w);
 fprintf(1,'Diagonalizing...\n');
-[res.evals,res.evecs] = show_cov(res);
+[res.evals,res.evecs] = learn_cov(res);
 res.titler = '';
 
 if exist('filer','var')
