@@ -9,6 +9,10 @@ if nargin>0 && isstr(m)
   return;
 end
 
+if ~exist('min_cache','var')
+  min_cache = -1;
+end
+
 if size(m.svxs,2) < min_cache%m.params.train_max_negatives_in_cache
   fprintf(1,['Update positives: not updating cache_size=%d, ready' ...
              ' at %d\n'],size(m.svxs,2),10000);%m.params.train_max_negatives_in_cache);
