@@ -120,7 +120,7 @@ end
 if nargout == 2
   svmobj = bestobj;
   if params.display == 1
-    svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(y'.*(w'*x)));
+    svmobj =  lambda/2*sum((params.basis*w(1:end-1)).^2) + sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
     fprintf(1,'curobj=%.3f\n',svmobj);
   end
 end
