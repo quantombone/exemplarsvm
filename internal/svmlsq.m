@@ -56,7 +56,7 @@ for i = 1:NITER
   if (i == 1) && (~exist('w','var') || sum(abs(w(:)))==0)
     goods = 1:length(y);
   else
-    r = (y'.*((params.basis*w(1:end-1))'*x+w(end)));
+    r = (y'.*(w(1:end-1)'*x+w(end)));
     goods = find(r<=1.0);
   end
 
