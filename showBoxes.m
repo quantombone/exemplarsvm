@@ -34,7 +34,7 @@ mw = round(mw*factor);
 mh = round(mh*factor);
 
 for i = 1:MAX_BOXES
-  fprintf(1,'.');
+  %fprintf(1,'.');
   b = boxes(i,:);
 
   I = toI(data_set{b(11)});

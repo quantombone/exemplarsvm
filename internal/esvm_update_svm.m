@@ -132,8 +132,10 @@ fprintf(1,'starting svmlsq:\n');
 oldw = [m.w(:)];
 oldw(end+1) = -m.b;
 
+curw = oldw([find(logical(m.mask)); numel(m.mask)+1]);
+
 [nw] = svmlsq(supery,superx, ...
-              (1/m.params.train_svm_c),oldw,m.params.train_newton_iter);
+              (1/m.params.train_svm_c),curw,m.params.train_newton_iter);
 
 svm_model.w = nw';
 wex = nw(1:end-1);
@@ -158,8 +160,9 @@ else
   %b = b + wex'*A(m.mask,:)'*mu(m.mask);
   %wex = A(m.mask,:)*wex;
   
-  wex2 = zeros(size(superx,1),1);
-  wex2(m.mask) = wex;
+  wex2 = zeros(size(m.x,1),1);
+  wex2(find(m.mask)) = wex;
+  %wex2(end) = b;
   
   wex = wex2;
 
