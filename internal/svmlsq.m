@@ -23,13 +23,17 @@ end
 
 %Use liblinear if number of iterations is negative
 if NITER < 0
-  [w,svmobj] = learn_ll(x,y,lambda,1);
+  [w] = learn_ll(x,y,lambda,1);
+  
+  svmobj =  lambda/2*sum((params.basis*w(1:end-1)).^2) + ...
+            sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
+  
   return;
 end
 
 lambdaI = lambda*eye(size(x,1));
 if exist('params','var') && isfield(params,'regularizer')
-  lambdaI = params.regularizer;
+  lambdaI = lambda*params.regularizer;
 else
   params.basis = eye(size(x,1));
   params.regularizer = eye(size(x,1));
@@ -72,7 +76,7 @@ for i = 1:NITER
   w = M\U;  
   
   [w,bestobj] = line_search(w,oldw,y,x,lambda,params,linspace(0,1,10));
-
+  
   num_nsv = sum( (w(1:end-1)'*x(:,y==-1) + w(end)) >= -1);
   
   endtime = toc(starttime);
