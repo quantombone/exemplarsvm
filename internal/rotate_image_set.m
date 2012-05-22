@@ -2,8 +2,8 @@ function sets = rotate_image_set(I)
 %Return a set of images from a single one which applies different
 %transformations to the input and is used for better matching
 
-values1 = linspace(.5,2,10);
-values2 = linspace(.5,2,10);
+values1 = linspace(-.1,.1,10);
+values2 = linspace(-.1,.1,10);
 sets = cell(0,1);
 for i = 1:length(values1)
   for j = 1:length(values2)
