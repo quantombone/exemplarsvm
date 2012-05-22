@@ -71,7 +71,7 @@ for i = 1:MAXLEVELS
   
   scale(i) = scaler;
 
-  if 1
+  if 0
     if scaler == curscale
       scaled = curI;
     else
