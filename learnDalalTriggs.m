@@ -33,7 +33,7 @@ params.max_number_of_positives = 2000;
 params.train_max_negatives_in_cache = 30000;
 params.train_max_mined_images = length(data_set);
 params.train_max_negative_images = 10000;
-params.train_max_mine_iterations = 100;
+params.train_max_mine_iterations = 500;
 
 params.train_svm_c = .01;
 params.train_max_windows_per_iteration = 3000;
@@ -54,7 +54,7 @@ params.init_params.ADD_LR = 1;
 params.init_params.init_function = ...
     @esvm_initialize_fixedframe_exemplar;
 params.training_function = @ ...
-    (m)esvm_update_positives(esvm_update_svm(esvm_update_positives(esvm_update_svm(m,.5,10000),1,1,1,10000)),1,1,1,10000);
+    (m)esvm_update_positives(esvm_update_svm(m,1,10000),1,1,1,10000);
 
 %params.training_function = @ ...
 %    (m)esvm_update_positives(esvm_update_svm(esvm_update_positives(esvm_update_svm(m,.8))));
