@@ -1,4 +1,6 @@
 function evalDTsave
+DO_FULL = 0;
+
 addpath(genpath(pwd));
 load /csail/vision-videolabelme/people/tomasz/pascal/VOC2007/test.mat
 
@@ -26,19 +28,31 @@ classes={...
 
 myRandomize;
 classes = classes(randperm(length(classes)));
+
+
 for i = 1:length(classes)
-  filer = sprintf(['/csail/vision-videolabelme/people/tomasz/may2012-dt/' ...
+  filer = sprintf(['/csail/vision-videolabelme/people/tomasz/may19/' ...
                    '%s.mat'],classes{i});
-
-
-  filer2 = [filer '.fullresults.mat'];
+  if ~fileexists(filer)
+    continue
+  end
+  if DO_FULL == 1
+    filer2 = [filer '.fullresults.mat'];
+  else
+    filer2 = [filer '.results.mat'];
+  end
+  
   filer2lock = [filer2 '.lock'];
   if fileexists(filer2) || mymkdir_dist(filer2lock) == 0
     continue
   end
   load(filer);
-  pset = data_set;
-  %pset = split_sets(data_set,classes{i});
+
+  if DO_FULL == 0
+    pset = split_sets(data_set,classes{i});
+  else
+    pset = data_set;
+  end
   boxes = applyModel(pset,model);
   boxes2 = esvm_nms(boxes);
   boxes3 = esvm_adjust_boxes(boxes2,model);
