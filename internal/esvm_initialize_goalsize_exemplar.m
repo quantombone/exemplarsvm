@@ -80,18 +80,24 @@ hg_sizes = cat(2,hg_sizes{:});
 MINDIM = 4;
 MAXDIM = 10;
 
+hasw = cellfun(@(x)isfield(x,'w'),models);
 valids = find(max(hg_sizes,[],1)<=MAXDIM & min(hg_sizes,[],1)>= ...
-              MINDIM & max(hg_sizes,[],1)>=MINDIM);
+              MINDIM & max(hg_sizes,[],1)>=MINDIM & hasw);
+
+if length(valids) == 0
+  valids = find(max(hg_sizes,[],1)<=MAXDIM & hasw);
+end
+
 models = models(valids);
-masker = cellfun2(@(x)x.mask,models);
+try
+  masker = cellfun2(@(x)x.mask,models);
+catch
+  keyboard
+end
 
 for q = 1:length(masker)
   [u,v] = find(masker{q});
-
   sizes(q,:) = [max(u)-min(u)+1 max(v)-min(v)+1];
-
-
-  %sies(q,:) = models{q}.hg_size(1:2);
 end
 [targetlvl,mask] = get_ncell_mask(init_params, masker,sizes);
 
