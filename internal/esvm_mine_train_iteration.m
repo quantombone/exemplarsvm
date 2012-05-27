@@ -73,7 +73,7 @@ if m.params.display == 1
   Isv=show_model_data(m, 10);
   imagesc(Isv)
   if isfield(m,'localdir')
-    imwrite(Isv,sprintf('/%s_%05d.png',m.localdir,m.iteration));
+    imwrite(Isv,sprintf('%s/iter_%s_%05d.png',m.localdir,m.cls,m.iteration));
   end
   axis off
   subplot(2,1,2)

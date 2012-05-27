@@ -78,8 +78,8 @@ model.models{1}.params.train_svm_c = model.params.train_svm_c;
 model.models{1}.params.train_newton_iter = 10;
 model.params.train_newton_iter = 10;
 
-if exists('filer','var')
-  [a,b,c,d] = fileparts(filer);
+if exist('filer','var')
+  [a,b,c] = fileparts(filer);
   model.localdir = a;
 end
 starter = tic;

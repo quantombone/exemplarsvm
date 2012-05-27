@@ -127,6 +127,12 @@ end
 news = curbb(:,[1:4 7 11]);
 olds = m.bb(:,[1:4 7 11]);
 
+% figure(34)
+% showBoxes(m.data_set,olds);
+
+% figure(45)
+% showBoxes(m.data_set,news);
+
 m.x = curx;
 m.bb = curbb;
 m.curc = curc;
