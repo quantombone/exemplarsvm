@@ -211,7 +211,6 @@ m.svxs = m.svxs(:,svs);
 m.svbbs = m.svbbs(svs,:);
 m.svbbs(:,end) = rneg(svs);
 m.bb(:,end) = rpos;
-%fprintf(1,' kept %d negatives\n',total_length);
 
 ubads = length(unique(m.svbbs(:,11)));
-fprintf(1,'\n --- UNIQUE BADS = %d\n\n',ubads);
+fprintf(1,'--- UNIQUE NSV IMAGES [%d]\n',ubads);

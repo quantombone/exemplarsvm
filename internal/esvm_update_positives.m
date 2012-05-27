@@ -133,7 +133,7 @@ m.curc = curc;
 
 sun = size(unique(cat(1,news,olds),'rows'),1);
 fprintf(1,'Updating Positives: #new elements = %d\n',...
-        sun-size(olds, 1));
+        abs(sun-size(olds, 1)));
 fprintf(1,'Updating Positives: #old obj = %.3f\n,          --- new obj = %.3f\n',...
         oldobj,evaluate_obj(m));
 
