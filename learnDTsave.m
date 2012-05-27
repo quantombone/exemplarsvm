@@ -27,14 +27,14 @@ classes={...
 myRandomize;
 classes = classes(randperm(length(classes)));
 for i = 1:length(classes)
-  filer = sprintf(['/csail/vision-videolabelme/people/tomasz/may12/' ...
+  filer = sprintf(['/csail/vision-videolabelme/people/tomasz/may28/' ...
                    '%s.mat'],classes{i});
 
   filerlock = [filer '.lock'];
   if fileexists(filer) || mymkdir_dist(filerlock) == 0
     continue
   end
-  model = learnDalalTriggs(data_set,classes{i});
+  model = learnDalalTriggs(data_set,classes{i},'',filer);
   save(filer,'model');
 
   try

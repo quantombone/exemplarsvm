@@ -70,7 +70,11 @@ if m.params.display == 1
   figure(99)
   clf
   subplot(2,1,1)
-  show_model_data(m, 10);
+  Isv=show_model_data(m, 10);
+  imagesc(Isv)
+  if isfield(m,'localdir')
+    imwrite(Isv,sprintf('/%s_%05d.png',m.localdir,m.iteration));
+  end
   axis off
   subplot(2,1,2)
   rpos = m.models{1}.w(:)'*m.models{1}.x - m.models{1}.b;

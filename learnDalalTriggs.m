@@ -1,4 +1,4 @@
-function model = learnDalalTriggs(data_set, cls, params)
+function model = learnDalalTriggs(data_set, cls, params, filer)
 % Learn a DalalTriggs template detector, with latent updates,
 % perturbed assignments (which help avoid local minima), and
 % ability to use different features.
@@ -21,7 +21,7 @@ end
 
 fprintf(1,'Class is %s\n',cls);
   
-if ~exist('params','var')
+if ~exist('params','var') || length(params)==0
   params = esvm_get_default_params;
 end
 
@@ -78,6 +78,10 @@ model.models{1}.params.train_svm_c = model.params.train_svm_c;
 model.models{1}.params.train_newton_iter = 10;
 model.params.train_newton_iter = 10;
 
+if exists('filer','var')
+  [a,b,c,d] = fileparts(filer);
+  model.localdir = a;
+end
 starter = tic;
 model = esvm_train(model);
 model.learn_time = toc(starter);
