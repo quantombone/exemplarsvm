@@ -18,12 +18,16 @@ c = c - n*mu*mu';
 %symmetrize to eliminate some issues
 c = (c+c')/2;
 
+if exist('K','var')
+  K = min(min(K,size(xxx,2)),size(xxx,1));
+end
 
 if exist('K','var')
   [v,d] = eigs(c,K);
 else
   [v,d] = eig(c);
 end
+
 
 d = diag(d);
 d = max(d,0.0);
