@@ -34,6 +34,7 @@ end
 %if isfield(m,'mask') && ~islogical(m.mask)
 %  m.mask = logical(m.mask);
 %end
+%A = diag(mask);
 
 mask = logical(mask>0);
 
@@ -68,7 +69,7 @@ end
 fprintf(1,'Fraction of positives is %d/%d\n',length(r),size(m.x, ...
                                                   2));
   
-superx = cat(2,m.x(logical(mask),r),m.svxs(logical(mask),:));
+superx = cat(2,m.x(:,r),m.svxs(:,:));
 supery = cat(1,ones(length(r),1),-1*ones(size(m.svxs,2),1));
 
 spos = sum(supery==1);
@@ -93,7 +94,6 @@ wneg = 1;
 %                                  m.hg_size),...
 %                          mining_params.DOMINANT_GRADIENT_PROJECTION_K);
   
-  
 %   A2 = get_dominant_basis(reshape(mean(superx(:,supery==-1),2), ...
 %                                   m.hg_size),...
 %                           mining_params ...
@@ -116,32 +116,29 @@ wneg = 1;
 
 %newx = bsxfun(@minus,superx(logical(m.mask),:),mu(logical(m.mask)));
 
-%newx = A(m.mask,:)'*newx;
-%keyboard
-%newx = newx(find(m.mask),:);
+%mu = zeros(size(superx,1));
+
+%superx = superx./((repmat(mask(:),1,size(superx,2)))+eps);
 
 fprintf(1,' -----\nStarting SVM: dim=%d... #pos=%d, #neg=%d ',...
         size(superx,1),spos,sneg);
 starttime = tic;
-
 
 fprintf(1,'starting svmlsq:\n');
 
 oldw = [m.w(:)];
 oldw(end+1) = -m.b;
 
-curw = oldw([find(logical(mask)); numel(mask)+1]);
+curw = oldw;
+%curw = oldw([find(logical(mask)); numel(mask)+1]);
 
 p.regularizer = eye(size(superx,1)+1)*(1/m.params.train_svm_c);
 p.regularizer(end,end) = 0;
 p.c = zeros(size(superx,1)+1,1);
 p.NITER = m.params.train_newton_iter;
 
-try
-  [nw] = svmlsq(supery,superx, curw, p);
-catch
-  keyboard
-end
+
+[nw] = svmlsq(supery, superx, curw, p);
 
 svm_model.w = nw';
 wex = nw(1:end-1);
@@ -151,7 +148,6 @@ learning_time = toc(starttime);
 
 vals = supery'.*(wex'*superx-b);
 svmobj =  (1/m.params.train_svm_c)/2*sum(wex.^2) + sum(hinge(vals));
-
 
 if sneg == 0 
   %learning had no negatives
@@ -167,7 +163,7 @@ else
   %wex = A(m.mask,:)*wex;
   
   wex2 = zeros(size(m.x,1),1);
-  wex2(find(mask)) = wex;
+  wex2(:) = wex;
   %wex2(end) = b;
   
   wex = wex2;
@@ -217,3 +213,5 @@ m.svbbs(:,end) = rneg(svs);
 m.bb(:,end) = rpos;
 %fprintf(1,' kept %d negatives\n',total_length);
 
+ubads = length(unique(m.svbbs(:,11)));
+fprintf(1,'\n --- UNIQUE BADS = %d\n\n',ubads);

@@ -44,9 +44,9 @@ if isfield(m,'models')
   return;
 end
 
+oldobj = evaluate_obj(m);
 if isfield(m,'extra_models')
   
-  oldobj = evaluate_obj(m);
   m2.models = m.extra_models;
   m2.w = m.w;
   m2.b = m.b;
@@ -134,5 +134,6 @@ m.curc = curc;
 sun = size(unique(cat(1,news,olds),'rows'),1);
 fprintf(1,'Updating Positives: #new elements = %d\n',...
         sun-size(olds, 1));
-fprintf(1,'Updating Positives: #new obj = %.3f\n',...
-        evaluate_obj(m));
+fprintf(1,'Updating Positives: #old obj = %.3f\n,          --- new obj = %.3f\n',...
+        oldobj,evaluate_obj(m));
+

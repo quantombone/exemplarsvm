@@ -82,9 +82,9 @@ if ~isfield('params','hg_size')
   end
   hg_size = hg_size * min(1,params.init_params.MAXDIM/max(hg_size));
   hg_size = max(1,round(hg_size));
-  %fprintf(1,'Found a HOG template size of [%d x %d] from %d examples\n',hg_size(1),hg_size(2),N);
+  fprintf(1,'Found a HOG template size of [%d x %d] from %d examples\n',hg_size(1),hg_size(2),N);
 
-  %params.init_params.hg_size = hg_size;
+  params.init_params.hg_size = hg_size;
   params.init_params.N = N;
   
   if isfield(params.init_params,'MAX_POS_CACHE')
@@ -153,8 +153,10 @@ for j = 1:length(data_set)
     m.gt_box = gt_box;
     m.bb(:,11) = j;
 
-    for q = 1:length(m.models)
-      m.models{q}.bb(11) = j;
+    if isfield(m,'models')
+      for q = 1:length(m.models)
+        m.models{q}.bb(11) = j;
+      end
     end
     m.sizeI = size(I);
     m.name = sprintf('%d.%d.%s',m.curid,m.objectid,m.cls);

@@ -66,7 +66,6 @@ for i = 1:length(model.models)
     
     curbbsave = curbb;
     flippy = curbb(7);
-
     
     if curbb(7) == 0
       curbb([1]) = curbb([1]) + vshift*D1;

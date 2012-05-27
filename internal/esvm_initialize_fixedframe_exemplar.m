@@ -104,7 +104,8 @@ for q = 1:K
   ip.bb = allbb(superind,:);
   
   bb = zeros(1,12);
-  bb(1:4) = allbb(superind,:);
+  bb(1:4) = allbb(superind,1:4);
+  
   bb(7) = ip.flip;
   bb(8) = ip.scale;
   bb(9:10) = ip.offset;
@@ -177,9 +178,10 @@ fmask(min(u):max(u),min(v):max(v)) = 1;
 x = curfeats{1};
 model.mask = (sum(x.^2,3)>0) & fmask;
 
-model.masks = cellfun(@(x,y)get_mask(I,rawbox,x,y,sbin,t,hg_size),bbs, ...
-                curfeats,'UniformOutput',false);
-model.masks = cat(3,model.masks{:});
+
+%model.masks = cellfun(@(x,y)get_mask(I,rawbox,x,y,sbin,t,hg_size),bbs, ...
+%                curfeats,'UniformOutput',false);
+%model.masks = cat(3,model.masks{:});
 
 
 model.init_params = init_params;

@@ -30,6 +30,7 @@ end
 if params.NITER < 0
   [w] = learn_ll(x,y,params.regularizer(1),1);
   
+
   svmobj = w'*params.regularizer*w + sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
   
   return;
@@ -53,6 +54,7 @@ end
 oldw = w;
 oldgoods = [];
 curmat = zeros(F,F);
+
 
 oldobj = w'*params.regularizer*w + w'*params.c + ...
          sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
