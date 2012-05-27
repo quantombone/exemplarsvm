@@ -1,4 +1,4 @@
-function r = esvm_apply_M(x, boxes, M)
+function boxes = esvm_apply_M(boxes, model)
 % Apply boosting "co-occurrence" matrix M to the boxes
 % function r = esvm_apply_M(x, boxes, M)
 %
@@ -12,6 +12,21 @@ function r = esvm_apply_M(x, boxes, M)
 % This file is part of the Exemplar-SVM library and is made
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
+
+uims = unique(boxes(:,11));
+for i = 1:length(uims)
+  hits = find(boxes(:,11)==uims(i));
+  b = boxes(hits,:);
+  b(:,end) = b(:,end)+1;
+  
+  [xraw,nbrlist{i}] = esvm_get_M_features(b,length(model.models), ...
+                                          model.M.neighbor_thresh);
+  r2 = esvm_apply_M_driver(xraw,b,model.M);
+  boxes(hits,end) = r2;
+end
+
+
+function r = esvm_apply_M_driver(x, boxes, M)
 
 if prod(size(x))==0
   r = zeros(1,0);

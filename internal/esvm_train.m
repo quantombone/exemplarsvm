@@ -122,8 +122,8 @@ for i = 1:length(model.models)
   end
 
   %save a trace of variables during learning
-  m.models{1}.wtrace = cell(0,1);
-  m.models{1}.btrace = {};
+  %m.models{1}.wtrace = cell(0,1);
+  %m.models{1}.btrace = {};
 
   if isfield(m,'svxs') && numel(m.svxs)>0
     fprintf(1,'Pre-SVMing');
@@ -174,15 +174,15 @@ for i = 1:length(model.models)
       %filer2 = filer2final;
     end
 
-    if length(m.models{1}.wtrace)>=2
-      diffy = norm(m.models{1}.wtrace{end}(:)- ...
-                   m.models{1}.wtrace{end-1}(:));
-      if diffy < .0001
-        fprintf(1,['Stopping learning because w failed to change' ...
-                   ' across an iteration\n']);
-        keep_going = 0;
-      end
-    end
+    % if length(m.models{1}.wtrace)>=2
+    %   diffy = norm(m.models{1}.wtrace{end}(:)- ...
+    %                m.models{1}.wtrace{end-1}(:));
+    %   if diffy < .0001
+    %     fprintf(1,['Stopping learning because w failed to change' ...
+    %                ' across an iteration\n']);
+    %     keep_going = 0;
+    %   end
+    % end
 
     %HACK: remove neg_set which causes save issue when it is a
     %cell array of function pointers

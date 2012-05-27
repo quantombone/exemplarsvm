@@ -1,5 +1,4 @@
-function [betas] = esvm_perform_platt_calibration(grid, imageset, model, ...
-                                                  params)
+function [betas] = esvm_perform_platt_calibration(boxes, model)
 % Perform calibration by learning the sigmoid parameters (linear
 % transformation of svm scores) for each model independently. This
 % type of SVM classifier calibration is due to John Platt who used
@@ -15,72 +14,11 @@ function [betas] = esvm_perform_platt_calibration(grid, imageset, model, ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-if length(grid) == 0 || length(model) == 0
-  betas = [];
-  return;
-end
-
-if length(params.localdir) > 0
-  CACHE_FILES = 1;
-else
-  CACHE_FILES = 0;
-end
-
 %if enabled, do NMS, if disabled return raw detections
 DO_NMS = 0;
 
 % if enabled, display images
 display = params.display;
-
-% if display is enabled and dump_images is enabled, then dump images
-% into DUMPDIR
-dump_images = params.dump_images;
-
-model_name = '';
-if length(model)>=1 && isfield(model,'model_name') && ...
-      isstr(model.model_name)
-  model_name = model.model_name;
-end
-
-DUMPDIR = sprintf('%s/www/calib/',params.localdir, ...
-                  model_name);
-
-if dump_images==1 && ~exist(DUMPDIR,'dir')
-  mkdir(DUMPDIR);
-end
-
-% show A NxN grid of top detections (if display is turned on)
-SHOW_TOP_N_SVS = 10;
-
-if nargin < 1
-  fprintf(1,'Not enough arguments, need at least the grid\n');
-  return;
-end
-
-final_dir = ...
-    sprintf('%s/models/',params.localdir);
-
-if CACHE_FILES == 1 && ~exist(final_dir','dir')
-  mkdir(final_dir);
-end
-
-final_file = ...
-    sprintf('%s/%s-betas.mat',...
-            final_dir, ...
-            model_name);
-
-if CACHE_FILES == 1 
-  lockfile = [final_file '.lock'];
-  if fileexists(final_file) || (mymkdir_dist(lockfile)==0)
-    
-    %wait until lockfiles are gone
-    wait_until_all_present({lockfile},5,1);
-    fprintf(1,'Loading final file %s\n',final_file);
-    res = load_keep_trying(final_file);
-    betas = res.betas;
-    return;
-  end
-end
 
 for i = 1:length(model.models)
   if ~isfield(model.models{i},'curid')

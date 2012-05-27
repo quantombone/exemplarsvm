@@ -1,5 +1,6 @@
 function [data_set] = esvm_generate_synthetic_dataset(Npos, Nneg, ...
-                                                  cls, bb_noise)
+                                                  cls, noise_factor, ...
+                                                  bb_noise)
 % Generate a synthetic dataset of circle patterns over a random
 % background of noise (a very easy example) and assign the class
 % name "cls" to those instances.  The first Npos images in the data
@@ -29,6 +30,11 @@ if ~exist('bb_noise','var')
   bb_noise = 0;
 end
 
+if ~exist('noise_factor','var')
+  noise_factor = .1;
+end
+
+
 %size of pattern to inpaint to the image
 pattern_size = 200;
 
@@ -39,8 +45,9 @@ image_size = 400;
 % detect those instances
 %Apattern = generate_pattern(pattern_size);
 Apattern1 = generate_pattern(pattern_size,2);
-Apattern2 = generate_pattern(pattern_size,1);
-
+Apattern1(:,1:round(size(Apattern1,2)/2),:)=[];
+Apattern2 = Apattern1(:,end:-1:1,:);
+%Apattern2 = generate_pattern(pattern_size,1);
 
 N = Npos + Nneg;
 data_set = cell(N,1);
@@ -58,13 +65,14 @@ for i = 1:N
     Apattern = Apattern2;
   end
   %Generate a background image of goal size
-  I = generate_random_image(image_size);
+  I = generate_random_image(image_size,noise_factor);
   %I = max(0.0,min(1.0,imresize(I,[image_size image_size], ...
   %                             'bicubic')));
   
   %rescale Apattern with random size, making sure it is resized
   %with nearest neighbor interpolation to ensure it remains binary
   random_scale = (rand*.8)+(1.0-.4);
+
   A = imresize(Apattern, random_scale, 'nearest');
    
   %If index i is greater than Npos, then it is a negative, so we
@@ -75,7 +83,7 @@ for i = 1:N
     bb = [];
   end
   
-  [I,bb] = post_process(I,bb);  
+  [I,bb] = post_process(I,bb,noise_factor);  
   data_set{i}.I = I;
   
   
@@ -141,17 +149,19 @@ else
   Apattern = repmat(Apattern,[1 1 3]);
 end
 
-function I = generate_random_image(image_size)
+function I = generate_random_image(image_size,noise_factor)
 % Generate a random image
 % Note, loading a random image from disk might be a better
 % background pattern
-I = rand(image_size,image_size,3);
+I = 1-noise_factor*rand(image_size,image_size,3);
 
-function [I,bb] = post_process(I,bb)
+function [I,bb] = post_process(I,bb,noise_factor)
 %perform additional post processing such as adding noise to the
 %image to make the detection problem more difficult
 
-I = .4*I+.6*rand(size(I));
+I = I + noise_factor*randn(size(I));
+I = max(0.0,min(1.0,I));
+%I = .4*I+noise_factor*rand(size(I));
 
 function [I2,bb] = inpaint_pattern(I, A)
 %Inpaint pattern A into image I at some random location where the

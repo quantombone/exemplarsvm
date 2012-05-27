@@ -15,7 +15,7 @@ if nargin>0 && isstr(m)
  other = m;
  return;
 end
-
+fprintf(1,'update svm called\n');
 other = 'svm';
 %if no inputs are specified, just return the suffix of current method
 if nargin==0
@@ -24,18 +24,18 @@ if nargin==0
 end
 
 if ~isfield(m,'mask') || length(m.mask)==0
-  m.mask = logical(ones(numel(m.w),1));
+  mask = (ones(numel(m.w),1));
 end
 
 if length(m.mask(:)) ~= numel(m.w)
-  m.mask = repmat(m.mask,[1 1 m.hg_size(3)]);
-  m.mask = logical(m.mask(:));
+  mask = repmat(m.mask,[1 1 m.hg_size(3)]);
 end
 
-if isfield(m,'mask') && ~islogical(m.mask)
-  m.mask = logical(m.mask);
-end
+%if isfield(m,'mask') && ~islogical(m.mask)
+%  m.mask = logical(m.mask);
+%end
 
+mask = logical(mask>0);
 
 % %NOTE: MAXSIZE is the maximum number of examples we will keep in our cache
 % MAXSIZE = m.params.train_max_negatives_in_cache;
@@ -68,7 +68,7 @@ end
 fprintf(1,'Fraction of positives is %d/%d\n',length(r),size(m.x, ...
                                                   2));
   
-superx = cat(2,m.x(logical(m.mask),r),m.svxs(logical(m.mask),:));
+superx = cat(2,m.x(logical(mask),r),m.svxs(logical(mask),:));
 supery = cat(1,ones(length(r),1),-1*ones(size(m.svxs,2),1));
 
 spos = sum(supery==1);
@@ -125,17 +125,23 @@ fprintf(1,' -----\nStarting SVM: dim=%d... #pos=%d, #neg=%d ',...
 starttime = tic;
 
 
-
-
 fprintf(1,'starting svmlsq:\n');
 
 oldw = [m.w(:)];
 oldw(end+1) = -m.b;
 
-curw = oldw([find(logical(m.mask)); numel(m.mask)+1]);
+curw = oldw([find(logical(mask)); numel(mask)+1]);
 
-[nw] = svmlsq(supery,superx, ...
-              (1/m.params.train_svm_c),curw,m.params.train_newton_iter);
+p.regularizer = eye(size(superx,1)+1)*(1/m.params.train_svm_c);
+p.regularizer(end,end) = 0;
+p.c = zeros(size(superx,1)+1,1);
+p.NITER = m.params.train_newton_iter;
+
+try
+  [nw] = svmlsq(supery,superx, curw, p);
+catch
+  keyboard
+end
 
 svm_model.w = nw';
 wex = nw(1:end-1);
@@ -161,7 +167,7 @@ else
   %wex = A(m.mask,:)*wex;
   
   wex2 = zeros(size(m.x,1),1);
-  wex2(find(m.mask)) = wex;
+  wex2(find(mask)) = wex;
   %wex2(end) = b;
   
   wex = wex2;
@@ -172,18 +178,19 @@ else
   end  
 end
 
+m.w = reshape(wex, size(m.w));
+m.b = b;
+
 rpos = wex(:)'*m.x - b;
+rneg = wex(:)'*m.svxs - b;
 maxpos = max(wex(:)'*m.x - b);
 minpos = min(rpos);
-rneg = m.w(:)'*m.svxs - m.b;
 maxneg = max(rneg);
 
 fprintf(1,'\n --- Positives (Max,min) = %.3f,%.3f \n --- Negatives (Max) = %.3f\n',...
         maxpos,minpos,maxneg);
 fprintf(1,'SVM iteration took %.3f sec, ',learning_time);
 
-m.w = reshape(wex, size(m.w));
-m.b = b;
 
 svs = find(rneg >= -1.0000);
 

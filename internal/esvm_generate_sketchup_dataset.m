@@ -17,22 +17,37 @@ tic
 N = length(image_set);
 data_set = cell(N,1);
 for i = 1:N  
-  
+  fprintf(1,'.');
   %estimate the bg color
   bg_color = estimate_bg_color(image_set{i});
   
   %get foreground segmentation
   [mask,bb] = estimate_fg(image_set{i}, bg_color);
   data_set{i}.I = image_set{i};
-  
+
   [baser,filer,exter] = fileparts(data_set{i}.I);
   newdir = 'seg/';
-  if ~exist([baser newdir],'dir')
-    mkdir([baser newdir]);
-  end
-  data_set{i}.segmentation = [baser newdir filer  exter];
-  imwrite(mask,data_set{i}.segmentation);
+  data_set{i}.segmentation = double(mask);
 
+  if ~exist([baser newdir],'dir')
+    try
+      mkdir([baser newdir]);
+    end
+  end
+  
+  data_set{i}.segmentation = [baser newdir filer exter];
+  if ~fileexists(data_set{i}.segmentation)
+    try
+      imwrite(mask,data_set{i}.segmentation);
+    catch
+    end
+  end
+  
+  figure(1)
+  clf
+  imagesc(segImage(toI(data_set{i}.I),mask))
+  drawnow  
+  
   %data_set{i}.segmentation = mask;
   object.class = cls;
   object.view = '';
@@ -53,12 +68,12 @@ for i = 1:N
 end
 toc
 
-figure(1)
-clf
-vis_box_tiles(data_set);
-title('Synthetic Data Set','FontSize',20)
-axis image
-axis off
+% figure(2)
+% clf
+% vis_box_tiles(data_set);
+% title('Synthetic Data Set','FontSize',20)
+% axis image
+% axis off
 
 function bg_color = estimate_bg_color(I)
 %Estimate the median color at the border of the image
@@ -75,8 +90,8 @@ for i = 1:3
                  reshape(I(end-P1:end,:,i),[],1)));
 end
 
-function [fg, bb] = estimate_fg(I, bg_color)
-I = toI(I);
+function [fg, bb] = estimate_fg(Iname, bg_color)
+I = toI(Iname);
 P1 = ceil(size(I,1)*.05);
 P2 = ceil(size(I,2)*.05);
 
@@ -89,6 +104,10 @@ d(:,1:P2) = 0;
 d(:,end-P2:end) = 0;
 
 fg = (d>.01);
+
+[a]=bwlabel(1-fg);
+fg = double(a~=a(1));
+
 
 if 0
   %If this is enabled, we re-crop the images to contain the object
@@ -103,4 +122,16 @@ end
 
 [u,v] = find(fg);
 bb = [min(v) min(u) max(v) max(u)];
+
+fg2 = bwmorph(fg,'dilate');
+outside = find(fg2==0);
+I1 = I(:,:,1);
+I2 = I(:,:,2);
+I3 = I(:,:,3);
+I1(outside) = bg_color(1);
+I2(outside) = bg_color(2);
+I3(outside) = bg_color(3);
+
+I = cat(3,I1,I2,I3);
+imwrite(I,Iname);
 

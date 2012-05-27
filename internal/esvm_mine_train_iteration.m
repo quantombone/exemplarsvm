@@ -14,10 +14,10 @@ function [m,mining_queue] = esvm_mine_train_iteration(m, mining_queue)
 
 % Start wtrace (trace of learned classifier parameters across
 % iterations) with first round classifier, if not present already
-if ~isfield(m.models{1}, 'wtrace')
-  m.models{1}.wtrace{1} = m.models{1}.w;
-  m.models{1}.btrace{1} = m.models{1}.b;
-end
+% if ~isfield(m.models{1}, 'wtrace')
+%   m.models{1}.wtrace{1} = m.models{1}.w;
+%   m.models{1}.btrace{1} = m.models{1}.b;
+% end
 
 if length(mining_queue) == 0
   fprintf(1,' ---Null mining queue, not mining!\n');
@@ -26,6 +26,7 @@ end
 
 [hn, mining_queue, mining_stats, m] = ...
     esvm_mine_negatives(m, mining_queue);
+
 
 
 m.models{1} = add_new_detections(m.models{1}, ...
@@ -52,8 +53,8 @@ end
 m = m.params.training_function(m);
 
 % Append new w to trace
-m.wtrace{end+1} = m.w;
-m.btrace{end+1} = m.b;
+% m.wtrace{end+1} = m.w;
+% m.btrace{end+1} = m.b;
 
 % if (m.params.dfun == 1)
 %   r = m.model.w(:)'*bsxfun(@minus,m.model.svxs,m.model.x(:,1)).^2 - ...

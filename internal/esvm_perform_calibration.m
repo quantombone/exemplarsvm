@@ -1,4 +1,4 @@
-function M = esvm_perform_calibration(grid, val_set, models, params)
+function M = esvm_perform_calibration(boxes, model)
 % 1. Perform LABOO calibration procedure and 2. Learn a combination
 % matrix M which multiplexes the detection results (by compiling
 % co-occurrence statistics on true positives) 

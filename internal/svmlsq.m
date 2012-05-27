@@ -1,4 +1,4 @@
-function [w,svmobj] = svmlsq(y,x,lambda,w,NITER,params)
+function [w,svmobj] = svmlsq(y,x,w,params)
 %Compute optimal solution for hinge-squared SVM problem
 %By guessing the support vectors, solving a least-squares
 %optimization problem, then iterating between updating the support
@@ -7,38 +7,44 @@ function [w,svmobj] = svmlsq(y,x,lambda,w,NITER,params)
 %objective function does not increase.
 % NOTE: works for L2-loss svms and makes sure bias is not
 % regularized
+% Minimizes the following objective
+% objective(w) = w'*R*w + w'*c + sum_{i=1}^N max(1-y_i*w'*x_i,0)^2
 %
 % Input
 %  y: vector of classes
 %  x: data matrix
-%  lambda: regulariation parameters
 %  w: current estimate of w
+%  params: coefficients and such such 
 %
 % Tomasz Malisiewicz (tomasz@csail.mit.edu)
 
 %Maximum number of newton iterations
-if ~exist('NITER','var')
-  NITER = 20;
+if ~isfield(params,'NITER')
+  params.NITER = 20;
+end
+if ~isfield(params,'display')
+  params.display = 0;
 end
 
 %Use liblinear if number of iterations is negative
-if NITER < 0
-  [w] = learn_ll(x,y,lambda,1);
+if params.NITER < 0
+  [w] = learn_ll(x,y,params.regularizer(1),1);
   
-  svmobj =  lambda/2*sum((params.basis*w(1:end-1)).^2) + ...
-            sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
+  svmobj = w'*params.regularizer*w + sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
   
   return;
 end
 
-lambdaI = lambda*eye(size(x,1));
-if exist('params','var') && isfield(params,'regularizer')
-  lambdaI = lambda*params.regularizer;
-else
-  params.basis = eye(size(x,1));
-  params.regularizer = eye(size(x,1));
-  params.display = 1;
-end
+%lambdaI = params.regularizer;
+%lambdaI = lambda*params.regularizer;
+%lambdaI = lambda*eye(size(x,1));
+%if exist('params','var') && isfield(params,'regularizer')
+%  lambdaI = lambda*params.regularizer;
+%else
+%  params.basis = eye(size(x,1));
+%  params.regularizer = eye(size(x,1));
+%  params.display = 1;
+%end
 
 F = size(x,1);
 if ~exist('w','var')
@@ -48,14 +54,14 @@ oldw = w;
 oldgoods = [];
 curmat = zeros(F,F);
 
-oldobj =  lambda/2*sum((params.basis*w(1:end-1)).^2) + ...
-          sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
+oldobj = w'*params.regularizer*w + w'*params.c + ...
+         sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
       
 if params.display == 1
-  fprintf(1,' -++curobj=%.3f\n',oldobj)
+  fprintf(1,'-++curobj=%.3f\n',oldobj)
 end
 
-for i = 1:NITER
+for i = 1:params.NITER
   starttime=tic;
   if (i == 1) && (~exist('w','var') || sum(abs(w(:)))==0)
     goods = 1:length(y);
@@ -69,14 +75,23 @@ for i = 1:NITER
   curmat = curmat + x(:,newgoods)*x(:,newgoods)' - x(:,oldgoods)*x(:,oldgoods)';
   
   sx = sum(x(:,goods),2);
-  M = [lambdaI + 2*curmat 2*sx;...
-       sx' length(goods)];
-  U = [2*x(:,goods)*y(goods); sum(y(goods))];
+  % M = [params.regularizer(1:end-1,1:end-1)+2*curmat 2*sx;...
+  %      sx' length(goods)];
+  % U = [2*x(:,goods)*y(goods); sum(y(goods))];
+  
+  M = 2*params.regularizer+[2*curmat 2*sx;...
+                    2*sx' 2*length(goods)];
+  U = [2*x(:,goods)*y(goods); 2*sum(y(goods))]-params.c;
+
 
   w = M\U;  
   
-  [w,bestobj] = line_search(w,oldw,y,x,lambda,params,linspace(0,1,10));
+  [w,bestobj,bestalpha] = line_search(w,oldw,y,x,params,linspace(0, ...
+                                                  1,10));
+
   
+  svmobj = w'*params.regularizer*w + w'*params.c + sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
+
   num_nsv = sum( (w(1:end-1)'*x(:,y==-1) + w(end)) >= -1);
   
   endtime = toc(starttime);
@@ -98,13 +113,13 @@ end
 if nargout == 2
   svmobj = bestobj;
   if params.display == 1
-    svmobj =  lambda/2*sum((params.basis*w(1:end-1)).^2) + sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
+    svmobj = w'*params.regularizer*w + w'*params.c + sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
     fprintf(1,'curobj=%.3f\n',svmobj);
   end
 end
 
 
-function [w,bestobj] = line_search(w,oldw,y,x,lambda,params,alphas)
+function [w,bestobj,bestalpha] = line_search(w,oldw,y,x,params,alphas)
 %Perform the line search between solutions w and oldw by looking at
 %solutions as follows: (alpha)*w + (1-alpha)*oldw
 if ~exist('alphas','var')
@@ -112,16 +127,20 @@ if ~exist('alphas','var')
 end
 bestw = w;
 bestobj = inf;
+bestalpha = inf;
 r1 = y'.*(w(1:end-1)'*x + w(end));
 r2 = y'.*(oldw(1:end-1)'*x + oldw(end));
-n1 = sum((params.basis*w(1:end-1)).^2, 1);
-n2 = sum((params.basis*oldw(1:end-1)).^2, 1);
-ip = w(1:end-1)'*params.regularizer*oldw(1:end-1);
+n1 = w'*params.regularizer*w;
+n2 = oldw'*params.regularizer*oldw;
+%n1 = sum((params.basis*w(1:end-1)).^2, 1);
+%n2 = sum((params.basis*oldw(1:end-1)).^2, 1);
+ip = w'*params.regularizer*oldw;
+%ip = w(1:end-1)'*params.regularizer*oldw(1:end-1);
 newobj = zeros(length(alphas),1);
 for q = 1:length(alphas)
   alpha = alphas(q);
   
-  newobj(q) = lambda/2*(alpha^2*n1+...
+  newobj(q) = (alpha^2*n1+...
       (1-alpha).^2*n2 + ...
       2*alpha*(1-alpha)*ip) + ...
       sum(hinge(r1*alpha+(1-alpha)*r2));
@@ -129,6 +148,7 @@ for q = 1:length(alphas)
   if (newobj(q) < bestobj)
     bestw = alpha*w+(1-alpha)*oldw;
     bestobj = newobj(q);
+    bestalpha = alpha;
   end
 end
 
@@ -155,4 +175,4 @@ w(end) = w(end) - w(1:end-1)'*mx;
 
 vals = y'.*(w(1:end-1)'*x+w(end));
 svmobj =  lambda/2*sum(w(1:end-1).^2) + sum(hinge(vals));
-return;
+

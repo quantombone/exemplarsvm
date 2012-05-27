@@ -68,21 +68,34 @@ model.data_set = data_set;
 model.cls = cls;
 model.model_name = model_name;
 
+SKIP_TRUNC = 1;
+
 if ~isfield('params','hg_size')
-  [hg_size,N] = get_hg_size(cur_pos_set, params.init_params.sbin);
+
+  [hg_size,N,Ntrunc] = get_hg_size(cur_pos_set, ...
+                                   params.init_params.sbin);
+  
+
+  if (N == Ntrunc)
+    fprintf(1,'warning, no skipping any truncated examples\n');
+    SKIP_TRUNC = 0;
+  end
   hg_size = hg_size * min(1,params.init_params.MAXDIM/max(hg_size));
   hg_size = max(1,round(hg_size));
-  fprintf(1,'Found a HOG template size of [%d x %d] from %d examples\n',hg_size(1),hg_size(2),N);
+  %fprintf(1,'Found a HOG template size of [%d x %d] from %d examples\n',hg_size(1),hg_size(2),N);
 
-  params.init_params.hg_size = hg_size;
+  %params.init_params.hg_size = hg_size;
   params.init_params.N = N;
   
   if isfield(params.init_params,'MAX_POS_CACHE')
-    params. init_params.K = round((params.init_params.MAX_POS_CACHE/(params.init_params.N)));
-    fprintf(1,'Saving %d wiggles per exemplar for Positive Cache\n',params.init_params.K);
+    params.init_params.K = round((params.init_params.MAX_POS_CACHE/ ...
+                                  (params.init_params.N)));
+    %NOTE: deprecated
+    %fprintf(1,'Saving %d wiggles per exemplar for Positive Cache\n',params.init_params.K);
   end
 end
-  
+
+
 model.params = params;
 
 %Create an array of all final file names
@@ -105,7 +118,7 @@ for j = 1:length(data_set)
     % Warp original bounding box
     bbox = obj(k).bbox; 
     
-    if (obj(k).truncated==1)
+    if (obj(k).truncated==1) && SKIP_TRUNC == 1
       numskip = numskip + 1;
       continue
     end
@@ -131,8 +144,7 @@ for j = 1:length(data_set)
     
     %Call the init function which is a mapping from (I,bbox) to (model)
     m = params.init_params.init_function(I, bbox, params);
-    
-    %m.model = model;        
+
     %Save filename (or original image)
     m.I = data_set{j}.I;
     m.curid = curid;
@@ -140,6 +152,10 @@ for j = 1:length(data_set)
     m.cls = cls;    
     m.gt_box = gt_box;
     m.bb(:,11) = j;
+
+    for q = 1:length(m.models)
+      m.models{q}.bb(11) = j;
+    end
     m.sizeI = size(I);
     m.name = sprintf('%d.%d.%s',m.curid,m.objectid,m.cls);
     m.counter = counter;

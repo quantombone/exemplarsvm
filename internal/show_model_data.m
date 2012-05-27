@@ -1,19 +1,24 @@
-function Icur = show_model_data(model, K, show)
+function Icur = show_model_data(model, N, show)
 %Shows the model's positives and negatives as crops in one large
 %matrix
 %  Inputs:
 %     model: the model
-%     K: the KxK grid which shows positive and negatives
+%     N: the number of positives to show (also same number of
+%     negatives) in a KxK grid where, K = ceil(sqrt(N)) 
 %  Outputs:
-%    The image which shows results (if specified, doesn't do the showing)
+%    The image (if specified, doesn't do the showing)
+%  Tomasz Malisiewicz (tomasz@csail.mit.edu)
 
-if ~exist('K','var')
-  K = 5;
+if ~exist('N','var')
+  N = 25;
 end
+
+K = ceil(sqrt(N));
 
 if ~exist('show','var')
   show = 1;
 end
+
 
 r = model.models{1}.w(:)'*model.models{1}.x- ...
                model.models{1}.b;
@@ -37,8 +42,9 @@ end
 if show == 0
   return;
 end
-%else show
+
 objective = evaluate_obj(model.models{1});
+
 imagesc(Icur)
 title(sprintf('%s: objective=%.5f',model.model_name,objective),'FontSize',20);
 drawnow

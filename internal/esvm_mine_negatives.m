@@ -348,8 +348,9 @@ for i = 1:length(mining_queue)
   %%  bbs{a}{i} = curbbs{a};
   %end
 
-  xs{1} = curxs;
-  bbs{1} = curbbs;
+
+  xs{1}{i} = curxs;
+  bbs{1}{i} = curbbs;
   
   if (numpassed + model.total_mines >= ...
       params.train_max_mined_images) || ...
@@ -376,6 +377,9 @@ end
 
 hn.xs = xs;
 hn.bbs = bbs;
+
+hn.xs{1} = cat(2,hn.xs{1}{:});
+hn.bbs{1} = cat(1,hn.bbs{1}{:});
 
 fprintf(1,'# Violating images: %d, #Non-violating images: %d\n', ...
         length(violating_images), length(empty_images));

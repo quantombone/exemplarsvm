@@ -40,7 +40,7 @@ params.train_max_windows_per_iteration = 3000;
 params.train_positives_constant = 1;
 params.train_max_scale = 1.0;
 params.train_max_images_per_iteration = 200;
-params.detect_pyramid_padding = 2;
+params.detect_pyramid_padding = 5;
 params.detect_levels_per_octave = 10;
 
 params.mine_from_negatives = 1;
@@ -51,13 +51,13 @@ params.mine_from_positives_do_latent_update = 0;
 params.latent_os_thresh = 0.5;
 params.init_params.MAX_POS_CACHE = 5000;
 params.init_params.ADD_LR = 1;
-params.init_params.init_function = ...
-    @esvm_initialize_fixedframe_exemplar;
+%params.init_params.init_function = ...
+%    @esvm_initialize_fixedframe_exemplar;
 params.training_function = @ ...
     (m)esvm_update_positives(esvm_update_svm(m,1,10000),1,1,1,10000);
 
-%params.training_function = @ ...
-%    (m)esvm_update_positives(esvm_update_svm(esvm_update_positives(esvm_update_svm(m,.8))));
+params.training_function = @ ...
+    (m)esvm_update_positives(esvm_update_svm(esvm_update_positives(esvm_update_svm(m,.8,10000),1,1,1,10000),1,10000),1,1,1,10000);
 
 %hardcode mask size
 %params.init_params.hg_size = [10 10 31];

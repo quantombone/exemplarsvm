@@ -113,6 +113,9 @@ params.train_keep_nsv_multiplier = 3;
 %ICCV11 constant for SVM learning is .01
 params.train_svm_c = .01; %% regularize more with .0001;
 
+%Maximum number of newton iterations to use
+params.train_newton_iter = 20;
+
 %The constant which tells us the weight in front of the positives
 %during SVM learning
 params.train_positives_constant = 50;

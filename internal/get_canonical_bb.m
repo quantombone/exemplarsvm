@@ -1,19 +1,19 @@
-function resc = get_canonical_bb(model, oldmodel)
+function resc = get_canonical_bb(bb,gt,hg_size)
 %warp all bbs into a [10*hg_size(1) 10*hg_size(2)] box, so that we can warp all GTs
 %into the same frame and compute overlap score between any two
 %candidates
 
-hg_size = model.params.init_params.hg_size;
+%hg_size = model.params.init_params.hg_size;
 center = [0 0 10*hg_size(1) 10*hg_size(2)];
 
 resc = [];
-for i = 1:length(model.models)
-  bb = model.models{i}.bb;
-  gt = model.models{i}.gt_box;
+%for i = 1:length(model.models)
+  %bb = model.models{i}.bb;
+  %gt = model.models{i}.gt_box;
   
   for j = 1:size(bb,1)
     xform = find_xform(bb(j,:), center);
-    transformed_c = apply_xform(gt, xform);
+    transformed_c = apply_xform(gt(j,:), xform);
     resc(end+1,:) = transformed_c;
     
     %curos = getosmatrix_bb(gt,bb(j,:));
@@ -35,4 +35,4 @@ for i = 1:length(model.models)
     % pause
     
   end
-end
+%end

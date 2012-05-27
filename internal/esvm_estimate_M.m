@@ -1,4 +1,4 @@
-function M = esvm_estimate_M(grid, model, params)
+function M = esvm_estimate_M(b, model)
 % Given a bunch of detections, learn the M boosting matrix, which
 % makes a final boxes's score depend on the co-occurrence of certain
 % "friendly" detections
@@ -10,46 +10,17 @@ function M = esvm_estimate_M(grid, model, params)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-neighbor_thresh = params.calibration_matrix_neighbor_thresh;
-count_thresh    = params.calibration_matrix_count_thresh;
-
-if length(params.localdir) > 0
-  CACHE_FILES = 1;
-else
-  CACHE_FILES = 0;
-end
-
-final_dir = ...
-    sprintf('%s/models/',params.localdir);
-
-final_file = ...
-    sprintf('%s/%s-M.mat',...
-            final_dir, model.model_name);
-
-if CACHE_FILES == 1 
-  lockfile = [final_file '.lock'];
-  if fileexists(final_file) || (mymkdir_dist(lockfile)==0)    
-    %wait until lockfiles are gone
-    wait_until_all_present({lockfile},5,1);
-    fprintf(1,'Loading final file %s\n',final_file);
-    res = load_keep_trying(final_file);
-    M = res.M;
-    return;
-  end
-end
-
-if length(grid) == 0
-  error(sprintf('Found no images of type %s\n',results_directory))
-end
+neighbor_thresh = model.params.calibration_matrix_neighbor_thresh;
+count_thresh    = model.params.calibration_matrix_count_thresh;
 
 %REMOVE FIRINGS ON SELF-IMAGE (these create artificially high scores)
 REMOVE_SELF = 1;
 
 cls = model.cls;
 
-excurids = cellfun(@(x)x.curid,model.models);
-boxes = cell(1,length(grid));
-maxos = cell(1,length(grid));
+N = length(model.data_set);
+
+maxos = cell(1,N);
 
 if REMOVE_SELF == 0
   fprintf(1,'Warning: Not removing self-hits\n');
@@ -57,36 +28,32 @@ end
 
 fprintf(1,' -Computing Box Features:');
 starter=tic;
-for i = 1:length(grid)
-  
-  %curid = grid{i}.curid;
-  curid = grid{i}.index;
-  boxes{i} = grid{i}.bboxes;
+for i = 1:N
+  curid = i;
+  hits = find(b(:,11) == i);
+  boxes{i} = b(hits,:);
   
   if size(boxes{i},1) == 0
-    if length(grid{i}.extras)>0
-      maxos{i} = [];
-    end      
+    maxos{i} = [];
     continue
+  else
+    hits = ismember({model.data_set{i}.objects.class},model.cls);
+    if length(hits) == 0
+      maxos{i} = zeros(size(boxes{i},1),1);
+    else
+      maxos{i} = max(getosmatrix_bb(boxes{i}(:,1:4),cat(1,model.data_set{i}.objects.bbox)),[],2);
+    end
   end
+  
 
   %old-method: use raw SVM scores + 1 (works better!)  NOTE: this
   %works better than using calibrated scores (doesn't work too well)
   calib_boxes = boxes{i};
   calib_boxes(:,end) = calib_boxes(:,end)+1;
-  
+  boxes{i} = calib_boxes;
   %Threshold at the target value specified in parameters
-  oks = find(calib_boxes(:,end) >= params.calibration_threshold);
-  boxes{i} = calib_boxes(oks,:);
-  if length(grid{i}.extras)>0
-    maxos{i} = grid{i}.extras.maxos;
-    maxos{i}(find(ismember(grid{i}.extras.maxclass,cls)==0)) = 0;
-    maxos{i} = maxos{i}(oks);
-  else
-    maxos{i} = zeros(size(boxes{i},1),1);
-  end
 
-  if REMOVE_SELF == 1
+  if 0 %REMOVE_SELF == 1
     %% remove self from this detection image!!! LOO stuff!
     %fprintf(1,'hack not removing self!\n');
     badex = find(ismember(excurids,curid));
@@ -98,6 +65,7 @@ for i = 1:length(grid)
     end
   end
 end
+
 
 lens = cellfun(@(x)size(x,1),boxes);
 boxes(lens==0) = [];
@@ -154,7 +122,7 @@ res = (cumsum(goods(bb))./(1:length(bb)));
 M.score = mean(res);
 fprintf(1,'took %.3fsec\n',toc(starter));
 
-if params.display == 1
+if model.params.display == 1
   figure(4)
   subplot(1,2,1)
   plot(scores,os,'r.','MarkerSize',12)
@@ -185,11 +153,6 @@ if params.display == 1
   snapnow
 end
 
-if CACHE_FILES == 1
-  fprintf(1,'Computed M, saving to %s\n',final_file);
-  save(final_file,'M');
-  rmdir(lockfile);
-end
 
 function M = learn_M_counting(x, exids, os, count_thresh)
 %Learn the matrix by counting activations on positives
