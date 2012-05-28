@@ -5,11 +5,22 @@ function [result] = VOCevaldet(test_set,BB,cls,evaluation_minoverlap)
 % test_set:   a cell array of image pointers which have 
 %BB A matrix of 
 %
+
+% if ~exist('BB','var') || numel(BB)==0
+%   result.rec = [];
+%   result.prec = [];
+%   result.ap = 0;
+%   result.fp = [];
+%   result.tp = [];
+% end
 if ~exist('evaluation_minoverlap','var')
   evaluation_minoverlap = 0.5; 
 end
 
 if ~exist('cls','var')
+  if numel(BB) == 0
+    cls = '';
+  else
   [aa,bb] = sort(BB(:,end),'descend');
   for q = 1:min(length(bb),10)
     curbb = BB(bb(q),:);
@@ -26,6 +37,7 @@ if ~exist('cls','var')
       fprintf(1,'Auto-guessing class %s from hit rank %d\n',cls,q);
       break;
     end
+  end
   end
   
   if ~exist('cls','var')
@@ -114,9 +126,16 @@ result.missed = missed;
 finaltime = toc(sss);
 fprintf(1,'Time for computing AP: %.3fsec\n',finaltime);
 fprintf(1,'%s AP: %.3f\n',cls_string,ap);
+
 function [ap,rec,prec,fp,tp,is_correct,missed] = get_aps(params,cls_string,gt,npos,BB);
 
-[~,order] = sort(BB(:,end),'descend');
+
+if length(BB) > 0
+  [~,order] = sort(BB(:,end),'descend');
+else
+  BB(1,:) = [-1 -1 -1 -1 0 0 0 0 0 0 1 -1];
+  order = 1;
+end
 BB = BB(order,:);
 confidence = BB(:,end);
 
