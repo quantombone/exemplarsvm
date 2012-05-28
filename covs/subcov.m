@@ -1,11 +1,11 @@
-function res2 = subcov(res,model)
-hg_size = model.models{1}.hg_size;
+function res2 = subcov(res,hg_size)
+%hg_size = model.models{1}.hg_size;
 
 hg_full = zeros(res.hg_size(1), res.hg_size(2), res.hg_size(3));
 
 offset = [0 0];
 offset = round((res.hg_size(1:2) - hg_size(1:2))/2);
-offset
+
 hg_full(offset(1) + (1:hg_size(1)),...
         offset(2) + (1:hg_size(2)),:) = 1;
 
@@ -13,6 +13,10 @@ subinds = find(hg_full);
 
 mu = res.mean(subinds);
 c = res.c(subinds,subinds);
+
+res2.c = c;
+res2.mean = mu;
+return;
 
 [v,d] = eig(c);
 d = diag(d);
