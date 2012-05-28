@@ -186,7 +186,7 @@ for i = 1:length(ordering)
         [~,tops] = sort(boxes(:,end),'descend');
         tops = boxes(tops(1:min(length(tops),10)),:);
         plot_bbox(tops);
-        plot_bbox(bbtop,'',[1 0 0])
+        plot_bbox(bbtop,num2str(bbtop(1,end)),[1 0 0])
         title(num2str(boxes(beta,end)))
       end
       axis off
