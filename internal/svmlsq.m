@@ -70,6 +70,11 @@ for i = 1:params.NITER
   else
     r = (y'.*(w(1:end-1)'*x+w(end)));
     goods = find(r<=1.0);
+    if length(goods) == 1
+      [alpha,beta] = sort(r,'ascend');
+      goods = beta(1:min(length(y),2));
+    end
+    
   end
 
   newgoods = setdiff(goods,oldgoods);
@@ -134,6 +139,9 @@ r1 = y'.*(w(1:end-1)'*x + w(end));
 r2 = y'.*(oldw(1:end-1)'*x + oldw(end));
 n1 = w'*params.regularizer*w;
 n2 = oldw'*params.regularizer*oldw;
+
+c1 = w'*params.c;
+c2 = oldw'*params.c;
 %n1 = sum((params.basis*w(1:end-1)).^2, 1);
 %n2 = sum((params.basis*oldw(1:end-1)).^2, 1);
 ip = w'*params.regularizer*oldw;
@@ -142,10 +150,11 @@ newobj = zeros(length(alphas),1);
 for q = 1:length(alphas)
   alpha = alphas(q);
   
-  newobj(q) = (alpha^2*n1+...
+  newobj(q) = (alpha^2*n1 + ...
       (1-alpha).^2*n2 + ...
       2*alpha*(1-alpha)*ip) + ...
-      sum(hinge(r1*alpha+(1-alpha)*r2));
+      (alpha*c1 + (1-alpha)*c2) + ...
+      sum(hinge(r1*alpha + (1-alpha)*r2));
   
   if (newobj(q) < bestobj)
     bestw = alpha*w+(1-alpha)*oldw;
