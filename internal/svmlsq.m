@@ -26,6 +26,14 @@ if ~isfield(params,'display')
   params.display = 0;
 end
 
+if ~isfield(params,'e')
+  params.e = zeros(size(y))';
+end
+
+if ~isfield(params,'weights')
+  params.weights = ones(size(y'));
+end
+
 %Use liblinear if number of iterations is negative
 if params.NITER < 0
   [w] = learn_ll(x,y,params.regularizer(1),1);
@@ -57,8 +65,8 @@ curmat = zeros(F,F);
 
 
 oldobj = w'*params.regularizer*w + w'*params.c + ...
-         sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
-      
+         sum((params.weights(:)').*hinge(y'.*(w(1:end-1)'*x+w(end)+params.e)));
+
 if params.display == 1
   fprintf(1,'-++curobj=%.3f\n',oldobj)
 end
@@ -68,11 +76,18 @@ for i = 1:params.NITER
   if (i == 1) && (~exist('w','var') || sum(abs(w(:)))==0)
     goods = 1:length(y);
   else
-    r = (y'.*(w(1:end-1)'*x+w(end)));
+    r = (y'.*(w(1:end-1)'*x+w(end)+params.e));
     goods = find(r<=1.0);
-    if length(goods) == 1
+    if length(goods) <= 10
+      fprintf(1,'Warning, fewer than 10 SVs\n');
+      %goods = 1:length(y);
+      %There can be a problem if initial solution only hits one
+      %points, so we take the two points with
       [alpha,beta] = sort(r,'ascend');
-      goods = beta(1:min(length(y),2));
+      %beta1 = beta(y(beta)>0);
+      %beta2 = beta(y(beta)<0);
+      %goods = [beta1(1) beta2(1)];
+      goods = beta(1:min(length(y),20));
     end
     
   end
