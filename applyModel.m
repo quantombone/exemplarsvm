@@ -1,4 +1,4 @@
-function boxes = applyModel(data_set, model, test_set_name, draw)
+function boxes = applyModel(data_set, model, draw)
 % Function to apply a model to a data-set
 % Inputs:
 %    data_set: a dataset of images
@@ -8,9 +8,9 @@ function boxes = applyModel(data_set, model, test_set_name, draw)
 % Outputs:
 %    boxes: a cell array of boxes
 
-if ~exist('test_set_name','var')
+%if ~exist('test_set_name','var')
   test_set_name = '';
-end
+%end
 
 %% Define test-set parameters
 test_params = model.params;
