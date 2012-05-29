@@ -50,6 +50,9 @@ if isempty(models)
 end
 
 if isstruct(models) && isfield(models,'models')
+  if isfield(models,'basis')
+    params.basis = models.basis;
+  end
   [resstruct,feat_pyramid] = esvm_detect(I,models.models,params);
   return;
 end
@@ -426,8 +429,15 @@ if isfield(params,'wtype') && ...
 elseif isempty(params.nnmode)
   %nnmode 0: Apply linear classifiers by performing one large matrix
   %multiplication and subtract bias
-  r = exemplar_matrix' * X;
-  r = bsxfun(@minus, r, bs);
+  
+  if ~isfield(params,'basis')
+    r = exemplar_matrix' * X;
+    r = bsxfun(@minus, r, bs);
+  else
+    v = cellfun2(@(x)x.v,models);
+    v = cat(2,v{:});
+    r = bsxfun(@plus,(v(1:end-1,:)'*(params.basis'*X)),v(end,:)');
+  end
 elseif strcmp(params.nnmode,'normalizedhog') == 1
   r = exemplar_matrix' * X;
 elseif strcmp(params.nnmode,'nndfun') == 1
