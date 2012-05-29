@@ -32,6 +32,7 @@ end
 
 if ~isfield(params,'weights')
   params.weights = ones(size(y'));
+  Z = diag(sparse(params.weights));
 end
 
 %Use liblinear if number of iterations is negative
@@ -65,7 +66,7 @@ curmat = zeros(F,F);
 
 
 oldobj = w'*params.regularizer*w + w'*params.c + ...
-         sum((params.weights(:)').*hinge(y'.*(w(1:end-1)'*x+w(end)+params.e)));
+         sum(params.weights.*(hinge(y'.*(w(1:end-1)'*x+w(end)+params.e))));
 
 if params.display == 1
   fprintf(1,'-++curobj=%.3f\n',oldobj)
@@ -79,7 +80,7 @@ for i = 1:params.NITER
     r = (y'.*(w(1:end-1)'*x+w(end)+params.e));
     goods = find(r<=1.0);
     if length(goods) <= 10
-      fprintf(1,'Warning, fewer than 10 SVs\n');
+      %fprintf(1,'Warning, fewer than 10 SVs\n');
       %goods = 1:length(y);
       %There can be a problem if initial solution only hits one
       %points, so we take the two points with
@@ -94,27 +95,35 @@ for i = 1:params.NITER
 
   newgoods = setdiff(goods,oldgoods);
   oldgoods = setdiff(oldgoods,goods);
-  curmat = curmat + x(:,newgoods)*x(:,newgoods)' - x(:,oldgoods)*x(:,oldgoods)';
+  curmat = curmat + x(:,newgoods)*Z(newgoods,newgoods)*x(:,newgoods)' - x(:,oldgoods)*Z(oldgoods,oldgoods)*x(:,oldgoods)';
   
-  sx = sum(x(:,goods),2);
+  sx = sum(x(:,goods)*Z(goods,goods),2);
+  %sx2 = sum(x(:,goods),2);
   % M = [params.regularizer(1:end-1,1:end-1)+2*curmat 2*sx;...
   %      sx' length(goods)];
   % U = [2*x(:,goods)*y(goods); sum(y(goods))];
   
-  M = 2*params.regularizer+[2*curmat 2*sx;...
-                    2*sx' 2*length(goods)];
-  U = [2*x(:,goods)*y(goods); 2*sum(y(goods))]-params.c;
+
+  % if params.regularizer(end)~=0
+  %   keyboard
+  % end
+
+  M = params.regularizer+[curmat sx;...
+                    sx' sum(params.weights(goods))];
+
+  U = [x(:,goods)*Z(goods,goods)*y(goods); sum(params.weights(goods)'.*y(goods))]-params.c/2;
 
 
+  %w = pinv(M)*U;
   w = M\U;  
   
   [w,bestobj,bestalpha] = line_search(w,oldw,y,x,params,linspace(0, ...
                                                   1,10));
 
-  
-  svmobj = w'*params.regularizer*w + w'*params.c + sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
+  svmobj = w'*params.regularizer*w + w'*params.c + sum(params.weights.*hinge(y'.*(w(1:end-1)'*x+w(end))));
 
-  num_nsv = sum( (w(1:end-1)'*x(:,y==-1) + w(end)) >= -1);
+  bestobj = svmobj;
+  num_nsv = sum( (w(1:end-1)'*x(:,y==-1) + w(end) + params.e(y==-1)) >= -1);
   
   endtime = toc(starttime);
   if params.display == 1
@@ -135,7 +144,7 @@ end
 if nargout == 2
   svmobj = bestobj;
   if params.display == 1
-    svmobj = w'*params.regularizer*w + w'*params.c + sum(hinge(y'.*(w(1:end-1)'*x+w(end))));
+    svmobj = w'*params.regularizer*w + w'*params.c + sum(params.weights.*hinge(y'.*(w(1:end-1)'*x+w(end)+params.e)));
     fprintf(1,'curobj=%.3f\n',svmobj);
   end
 end
@@ -150,8 +159,8 @@ end
 bestw = w;
 bestobj = inf;
 bestalpha = inf;
-r1 = y'.*(w(1:end-1)'*x + w(end));
-r2 = y'.*(oldw(1:end-1)'*x + oldw(end));
+r1 = y'.*(w(1:end-1)'*x + w(end) + params.e);
+r2 = y'.*(oldw(1:end-1)'*x + oldw(end) + params.e);
 n1 = w'*params.regularizer*w;
 n2 = oldw'*params.regularizer*oldw;
 
@@ -169,7 +178,7 @@ for q = 1:length(alphas)
       (1-alpha).^2*n2 + ...
       2*alpha*(1-alpha)*ip) + ...
       (alpha*c1 + (1-alpha)*c2) + ...
-      sum(hinge(r1*alpha + (1-alpha)*r2));
+      sum(params.weights.*hinge(r1*alpha + (1-alpha)*r2));
   
   if (newobj(q) < bestobj)
     bestw = alpha*w+(1-alpha)*oldw;
