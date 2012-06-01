@@ -18,6 +18,22 @@ function [w,svmobj] = svmlsq(y,x,w,params)
 %
 % Tomasz Malisiewicz (tomasz@csail.mit.edu)
 
+if nargin < 2
+  error('Need at least two input arguments')
+end
+
+if size(y,1) ~=size(x,2)
+  y = y';
+end
+
+if ~exist('w','var') || numel(w)==0
+  w = zeros(size(x,1)+1,1);
+end
+
+if ~exist('params','var')
+  params = [];
+end
+
 %Maximum number of newton iterations
 if ~isfield(params,'NITER')
   params.NITER = 20;
@@ -34,6 +50,7 @@ if ~isfield(params,'weights')
   params.weights = ones(size(y'));
   Z = diag(sparse(params.weights));
 end
+
 
 %Use liblinear if number of iterations is negative
 if params.NITER < 0
@@ -64,7 +81,6 @@ oldw = w;
 oldgoods = [];
 curmat = zeros(F,F);
 
-
 oldobj = w'*params.regularizer*w + w'*params.c + ...
          sum(params.weights.*(hinge(y'.*(w(1:end-1)'*x+w(end)+params.e))));
 
@@ -79,16 +95,16 @@ for i = 1:params.NITER
   else
     r = (y'.*(w(1:end-1)'*x+w(end)+params.e));
     goods = find(r<=1.0);
-    if length(goods) <= 10
+    
+    %There can be a problem if initial solution only hits one
+    %point or only points of one class, so we take the top 10
+    %points from each of the two classes as first iteration guess
+    if (i<=1) && (length(goods) <= 10)
       %fprintf(1,'Warning, fewer than 10 SVs\n');
-      %goods = 1:length(y);
-      %There can be a problem if initial solution only hits one
-      %points, so we take the two points with
       [alpha,beta] = sort(r,'ascend');
-      %beta1 = beta(y(beta)>0);
-      %beta2 = beta(y(beta)<0);
-      %goods = [beta1(1) beta2(1)];
-      goods = beta(1:min(length(y),20));
+      beta1 = beta(y(beta)>0);
+      beta2 = beta(y(beta)<0);
+      goods = [beta1(1:min(length(beta1),10)) beta2(1:min(length(beta2),10))];
     end
     
   end
@@ -148,6 +164,7 @@ if nargout == 2
     fprintf(1,'curobj=%.3f\n',svmobj);
   end
 end
+
 
 
 function [w,bestobj,bestalpha] = line_search(w,oldw,y,x,params,alphas)
