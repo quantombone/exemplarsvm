@@ -71,10 +71,13 @@ for i = 1:length(mining_queue)
     frac = .2;
 
     bb_in = rs.bbs{1};
-    bb_in(:,1) = max(bb_in(:,1),frac*size(I,2));
-    bb_in(:,2) = max(bb_in(:,2),frac*size(I,1));
-    bb_in(:,3) = min(bb_in(:,3),(1-frac)*size(I,2));
-    bb_in(:,4) = min(bb_in(:,4),(1-frac)*size(I,1));
+    if size(bb_in,1) > 0
+      bb_in(:,1) = max(bb_in(:,1),frac*size(I,2));
+      bb_in(:,2) = max(bb_in(:,2),frac*size(I,1));
+      bb_in(:,3) = min(bb_in(:,3),(1-frac)*size(I,2));
+      bb_in(:,4) = min(bb_in(:,4),(1-frac)*size(I,1));
+    end
+    
     %bb_in = clip_to_image(rs.bbs{1}, [1 1 size(I,2) size(I,1)]);
     bb_out = rs.bbs{1};
     
