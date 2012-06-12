@@ -65,9 +65,32 @@ for i = 1:length(mining_queue)
 
     full_os = getosmatrix_bb(rs.bbs{1},gtbbs);
     [os,gtid] = max(full_os,[],2);
-    good_negatives = find(os < ...
+    
+    %do not mine negatives when images are reflected because
+    %non-labed objects flips will occur in this region
+    frac = .2;
+
+    bb_in = rs.bbs{1};
+    bb_in(:,1) = max(bb_in(:,1),frac*size(I,2));
+    bb_in(:,2) = max(bb_in(:,2),frac*size(I,1));
+    bb_in(:,3) = min(bb_in(:,3),(1-frac)*size(I,2));
+    bb_in(:,4) = min(bb_in(:,4),(1-frac)*size(I,1));
+    %bb_in = clip_to_image(rs.bbs{1}, [1 1 size(I,2) size(I,1)]);
+    bb_out = rs.bbs{1};
+    
+    Win = bb_in(:,3)-bb_in(:,1);
+    Hin = bb_in(:,4)-bb_in(:,2);
+    
+    Wout = bb_out(:,3)-bb_out(:,1);
+    Hout = bb_out(:,4)-bb_out(:,2);
+    
+    is_inside_image = (Win.*Hin) >= .5;%.2* (Wout.*Hout);
+
+
+    
+    good_negatives = find(is_inside_image & os < ...
                           params.mine_skip_positive_objects_os);
-    bad_negatives = find(os >= ...
+    bad_negatives = find(~is_inside_image | os >= ...
                           params.mine_skip_positive_objects_os);
     
     good_positives = find(os >= params.latent_os_thresh);

@@ -2,9 +2,11 @@ function [result] = VOCevaldet(test_set,BB,cls,evaluation_minoverlap)
 % Evaluates the set of bounding boxes on the dataset
 % called test_set with the PASCAL VOC criterion.
 % Input: 
-% test_set:   a cell array of image pointers which have 
-%BB A matrix of 
-%
+% test_set:   a cell array of image pointers
+% BB: the matrix of bounding boxes
+% cls: the class to evaluate against (auto-guesses when not provided)
+% evaluation_minoverlap: the overlap score to use (defaults to 0.5)
+
 
 % if ~exist('BB','var') || numel(BB)==0
 %   result.rec = [];
@@ -112,7 +114,7 @@ end
 sss = tic;
 params.evaluation_minoverlap =evaluation_minoverlap;
 params.display = (nargout==0);
-[ap, rec, prec, fp, tp, is_correct, missed] = get_aps(params,cls_string,gt,npos,BB);
+[ap, rec, prec, fp, tp, is_correct, missed, closest_det] = get_aps(params,cls_string,gt,npos,BB);
 
 result.rec = rec;
 result.prec = prec;
@@ -122,12 +124,13 @@ result.tp=tp;
 result.npos=npos;
 result.is_correct = is_correct;
 result.missed = missed;
+result.closest_det = closest_det;
 
 finaltime = toc(sss);
 fprintf(1,'Time for computing AP: %.3fsec\n',finaltime);
 fprintf(1,'%s AP: %.3f\n',cls_string,ap);
 
-function [ap,rec,prec,fp,tp,is_correct,missed] = get_aps(params,cls_string,gt,npos,BB);
+function [ap,rec,prec,fp,tp,is_correct,missed,closest_det] = get_aps(params,cls_string,gt,npos,BB);
 
 
 if length(BB) > 0
@@ -171,6 +174,12 @@ for d=1:nd
         end
     end
 
+    if ovmax > 0
+      closest_det(d,:) = gt(i).BB(:,jmax)';
+    else
+      closest_det(d,:) = [0 0 0 0];
+    end
+    
     % assign detection as true positive/don't care/false positive
     if ovmax>=params.evaluation_minoverlap
         if ~gt(i).diff(jmax)
@@ -204,6 +213,8 @@ prec=tp./(fp+tp);
 %     ap=ap+p/11;
 % end
 % apold = ap;
+% fprintf(1,'APold: %.3f\n',apold);
+
 ap = VOCap(rec,prec);
 
 if params.display
@@ -235,6 +246,3 @@ missed.dets = missed.dets(bads);
 missed.objs = missed.objs(bads);
 missed.ims = missed.ims(bads);
 
-
-%save resdata.mat ims objs dets 
-%keyboard

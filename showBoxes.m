@@ -1,4 +1,4 @@
-function Isv = showBoxes(data_set, boxes, MAX_BOXES, is_correct)
+function [Isv,Icell,cropmasks] = showBoxes(data_set, boxes, MAX_BOXES, is_correct)
 % Show top detection crops in one large image, where all crops are
 % resized to the size of the average detection
 % Input: 
@@ -14,6 +14,13 @@ function Isv = showBoxes(data_set, boxes, MAX_BOXES, is_correct)
 
 if ~exist('MAX_BOXES','var')
   MAX_BOXES = 100;
+end
+
+if size(boxes,1) == 0
+  Isv = [];
+  Icel = [];
+  cropmasks = [];
+  return;
 end
 
 MAX_BOXES = min(MAX_BOXES,size(boxes,1));
@@ -48,15 +55,22 @@ for i = 1:MAX_BOXES
   
   crops{i} = zeros(length(us),length(vs),3);
   crops{i}(goodu,goodv,:) = I(us(goodu),vs(goodv),:);
+  
+  cropmasks{i} = zeros(length(us),length(vs),1);
+  cropmasks{i}(goodu,goodv) = 1;
+  
   if (size(crops{i},1)*size(crops{i},2))>0
 
     crops{i} = max(0.0,min(1.0,imresize(crops{i},round([mw mh]), ...
                                         'bicubic')));
-
+    cropmasks{i} = imresize(cropmasks{i},round([mw mh]),'nearest');
   else
     crops{i} = zeros(mw,mh,3);
+    cropmasks{i} = zeros(mw,mh);
   end
 
+  Icell{i} = crops{i};
+  
   if exist('colors','var')
     crops{i} = pad_image(crops{i}, 3, colors(i,:));
   end
@@ -80,8 +94,10 @@ for i = 1:MAX_BOXES
   end
 end
 
+
 K1 = ceil(sqrt(MAX_BOXES));
 K2 = K1;
+
 for j = (MAX_BOXES+1):(K1*K2)
   crops{j} = zeros(round(mw),round(mh),3);
   if exist('colors','var')

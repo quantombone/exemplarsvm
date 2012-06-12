@@ -40,7 +40,7 @@ params.train_max_windows_per_iteration = 3000;
 params.train_positives_constant = 1;
 params.train_max_scale = 1.0;
 params.train_max_images_per_iteration = 200;
-params.detect_pyramid_padding = 5;
+params.detect_pyramid_padding = 0;
 params.detect_levels_per_octave = 10;
 
 params.mine_from_negatives = 1;

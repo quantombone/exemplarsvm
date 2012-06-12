@@ -30,7 +30,9 @@ Icur = esvm_show_det_stack(model.models{1}.bb(bb,:),model.data_set, ...
 if numel(model.models{1}.svxs) > 0
   r = model.models{1}.w(:)'*model.models{1}.svxs - model.models{1}.b;
   [aa,bb] = sort(r,'descend');
-  model.models{1}.svbbs(:,end) = r;
+
+  model.models{1}.svbbs = model.models{1}.svbbs(bb,:);
+  model.models{1}.svbbs(:,end) = aa;
   Icur2 = esvm_show_det_stack(model.models{1}.svbbs(bb,:), ...
                               model.data_set, K,K, ...
                               model.models{1});

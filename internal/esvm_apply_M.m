@@ -19,9 +19,19 @@ for i = 1:length(uims)
   b = boxes(hits,:);
   b(:,end) = b(:,end)+1;
   
-  [xraw,nbrlist{i}] = esvm_get_M_features(b,length(model.models), ...
-                                          model.M.neighbor_thresh);
-  r2 = esvm_apply_M_driver(xraw,b,model.M);
+  if isfield(model,'M')
+    len = length(model.models);
+    gt = model.M.neighbor_thresh;
+    curM = model.M;
+  else
+    len = length(model.w)/2;
+    gt = model.neighbor_thresh;
+    curM = model;
+  end
+  
+  [xraw,nbrlist{i}] = esvm_get_M_features(b,len, ...
+                                          gt);
+  r2 = esvm_apply_M_driver(xraw,b,curM);
   boxes(hits,end) = r2;
 end
 

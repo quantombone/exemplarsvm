@@ -41,6 +41,21 @@ if isfield(init_params,'ADD_LR') && init_params.ADD_LR == 1 && (K >= 1)
   model = esvm_initialize_fixedframe_exemplar(I, ...
                                       bbox, ...
                                       params);
+  
+
+  % K = size(model.x,2);
+  % clear m
+  % for i = 1:K,
+  %   x = reshape(model.x(:,i),model.hg_size); 
+  %   m(:,:,i) = (sum(x.^2,3)==0);
+  % end
+  % m = sum(m,3);  
+  % bads = find(m(:)==1)
+  % if length(bads) > 0
+  %   disp('length bads: ');
+  %   length(bads)
+  % end
+    
 
   model2 = esvm_initialize_fixedframe_exemplar(flip_image(I), ...
                                       flip_box(bbox, size(I)), ...
@@ -67,7 +82,7 @@ bbox = squareize_bbox(bbox);
 clear t
 params.detect_levels_per_octave = 10;
 [t.hog, t.scales] = esvm_pyramid(I, params);
-t.padder = 5;
+t.padder = 0;
 
 %Pad pyramid and compute all bounding boxes, and their levels
 [allbb,alluv,alllvl,t] = pad_and_get_all_bb(t, hg_size, sbin);

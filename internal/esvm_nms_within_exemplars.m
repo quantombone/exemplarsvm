@@ -18,6 +18,7 @@ end
 uex = unique(boxes(:,6));
 top = cell(length(uex),1);
 for i = 1:length(uex)
+  fprintf(1,'.');
   top{i} = esvm_nms(boxes(boxes(:,6)==uex(i),:),os_thresh);
 end
 top = cat(1,top{:});

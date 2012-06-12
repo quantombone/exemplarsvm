@@ -82,6 +82,9 @@ else
   params.factor_multiplier = 1.0;
 end
 
+%pad image with mirrors
+params.frac = .2;
+[I,H2,W2] = rotate_pad(I,params.frac);
 
 %if ~isfield(params,'nnmode')
 %  params.nnmode = '';
@@ -93,6 +96,10 @@ params.detect_add_flip = 0;
 [rs1, t1] = esvm_detectdriver(I, models, params);
 %s1 = max(abs(rs1.bbs{1}(:,end)' - (models{1}.w(:)'*cat(2,rs1.xs{1}{:})- ...
 %     models{1}.b)))
+if size(rs1.bbs{1},1) > 0
+  rs1.bbs{1}(:,[1 3]) = rs1.bbs{1}(:,[1 3]) - W2;
+  rs1.bbs{1}(:,[2 4]) = rs1.bbs{1}(:,[2 4]) - H2;
+end
 
 rs1 = prune_nms(rs1, params);
 
@@ -100,10 +107,14 @@ rs1 = prune_nms(rs1, params);
 %     models{1}.b)))
 
 
-
 if doflip == 1
   params.detect_add_flip = 1;
   [rs2, t2] = esvm_detectdriver(I, models, params);
+  if size(rs2.bbs{1},1) > 0
+    rs2.bbs{1}(:,[1 3]) = rs2.bbs{1}(:,[1 3]) - W2;
+    rs2.bbs{1}(:,[2 4]) = rs2.bbs{1}(:,[2 4]) - H2;
+  end
+
   %s1 = max(abs(rs2.bbs{1}(:,end)' - (models{1}.w(:)'*cat(2,rs2.xs{1}{:})- ...
   %   models{1}.b)))
 

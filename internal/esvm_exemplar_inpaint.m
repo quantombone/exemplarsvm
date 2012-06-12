@@ -183,6 +183,11 @@ target = round(d);
 
 newsize = [target(4)-target(2)+1 target(3)- ...
                     target(1)+1];
+if numel(overlay.I) == 0
+  overlay.I = zeros(1,1,3);
+  overlay.alphamask = zeros(1,1,1);
+end
+
 newI = imresize(overlay.I,newsize,'nearest');
 newalpha = imresize(overlay.alphamask, newsize,'nearest');
 I2 = I;

@@ -108,9 +108,12 @@ for i = 1:MAXLEVELS
     break;
   end
 
-  f2 = zeros(size(feat{i},1)+2,size(feat{i},2)+2,size(feat{i},3));
-  f2(2:end-1,2:end-1,:) = feat{i};
-  feat{i} = f2;
+
+  %recover lost bin!!!
+  %f2 = zeros(size(feat{i},1)+2,size(feat{i},2)+2,size(feat{i},3));
+  %f2(2:end-1,2:end-1,:) = feat{i};
+  %feat{i} = f2;
+  
   %recover lost bin!!!
   %feat{i} = padarray(feat{i}, [1 1 0], 0);
 

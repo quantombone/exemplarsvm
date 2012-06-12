@@ -111,10 +111,12 @@ r = cell(length(xraw),1);
 fprintf(1,' -Applying M to %d images: ',length(xraw));
 starter=tic;
 for j = 1:length(xraw)
-  r{j} = esvm_apply_M(xraw{j},boxes{j},M);
+  r{j} = esvm_apply_M(boxes{j},M);
 end
 
-r = [r{:}];
+r = cat(1,r{:});
+r = r(:,end);
+
 [aa,bb] = sort(r,'descend');
 goods = os>.5;
 
@@ -122,7 +124,7 @@ res = (cumsum(goods(bb))./(1:length(bb)));
 M.score = mean(res);
 fprintf(1,'took %.3fsec\n',toc(starter));
 
-if model.params.display == 1
+if 1%model.params.display == 1
   figure(4)
   subplot(1,2,1)
   plot(scores,os,'r.','MarkerSize',12)

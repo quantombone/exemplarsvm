@@ -69,6 +69,10 @@ for i = 1:N
   
   Iex = esvm_get_exemplar_icon(models,data_set, mid, topboxes(i,7));
   
+  if numel(Iex) == 0
+    Iex = zeros(1,1,3);
+  end
+
   Iex1 = imresize(chunks{i},[size(Iex,1) size(Iex,2)]);
   Iex1 = max(0.0,min(1.0,Iex1));
   
