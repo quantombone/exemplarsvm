@@ -81,16 +81,18 @@ for i = 1:length(mining_queue)
     %bb_in = clip_to_image(rs.bbs{1}, [1 1 size(I,2) size(I,1)]);
     bb_out = rs.bbs{1};
     
-    Win = bb_in(:,3)-bb_in(:,1);
-    Hin = bb_in(:,4)-bb_in(:,2);
+    if size(bb_in,1) > 0
+      Win = bb_in(:,3)-bb_in(:,1);
+      Hin = bb_in(:,4)-bb_in(:,2);
+      
+      Wout = bb_out(:,3)-bb_out(:,1);
+      Hout = bb_out(:,4)-bb_out(:,2);
     
-    Wout = bb_out(:,3)-bb_out(:,1);
-    Hout = bb_out(:,4)-bb_out(:,2);
-    
-    is_inside_image = (Win.*Hin) >= .5;%.2* (Wout.*Hout);
+      is_inside_image = (Win.*Hin) >= .5;%.2* (Wout.*Hout);
+    else
+      is_inside_image = [];
+    end
 
-
-    
     good_negatives = find(is_inside_image & os < ...
                           params.mine_skip_positive_objects_os);
     bad_negatives = find(~is_inside_image | os >= ...

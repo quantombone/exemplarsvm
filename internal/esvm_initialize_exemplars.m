@@ -141,6 +141,7 @@ for j = 1:length(data_set)
     fprintf(1,'.');
     
     I = toI(data_set{j});
+    Isave = I;
     [I,H2,W2] = rotate_pad(I,.2);
     bbox([1 3]) = bbox([1 3]) + W2;
     bbox([2 4]) = bbox([2 4]) + H2;
@@ -148,6 +149,8 @@ for j = 1:length(data_set)
     m = params.init_params.init_function(I, bbox, params);
     m.bb(:,[1 3]) = m.bb(:,[1 3]) - W2;
     m.bb(:,[2 4]) = m.bb(:,[2 4]) - H2;
+    
+
 
     %Save filename (or original image)
     m.I = data_set{j}.I;

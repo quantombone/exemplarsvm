@@ -131,6 +131,15 @@ for q = 1:K
 end
 
 
+goods = os(order(1:K))>.2;
+if sum(goods) == 0
+  goods(1) = 1;
+end
+
+bbs = bbs(goods);
+curfeats = curfeats(goods);
+
+
 % Get the template mask, so that we only perform learning over the
 % regions of the template corresponding to the GT region.
 
@@ -216,6 +225,7 @@ model.w(mask3) = curfeats{1}(mask3) - mean(curfeats{1}(mask3));
 model.b = 0;
 
 model.x = cellfun2(@(x)reshape(x,[],1), curfeats);
+
 model.x = cat(2,model.x{:});
 model.bb = cat(1,bbs{:});
 model.bb(:,end) = model.w(:)'*model.x;
