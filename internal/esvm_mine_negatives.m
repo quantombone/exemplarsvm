@@ -90,7 +90,7 @@ for i = 1:length(mining_queue)
     
       is_inside_image = (Win.*Hin) >= .5;%.2* (Wout.*Hout);
     else
-      is_inside_image = [];
+      is_inside_image = os*0+1;
     end
 
     good_negatives = find(is_inside_image & os < ...
