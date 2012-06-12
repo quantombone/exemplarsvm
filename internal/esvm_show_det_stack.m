@@ -70,11 +70,14 @@ ims = cell(N,1);
 for i = 1:length(ucurids)
 
   Ibase = toI(train_set{ucurids(i)});
-  
+  [Ibase,H2,W2] = rotate_pad(Ibase,.2);
+ 
   hits = find(bbs(:,11)==ucurids(i));
   for j = 1:length(hits)
     
     cb = bbs(hits(j),:);
+    cb([1 3]) = cb([1 3]) + W2;
+    cb([2 4]) = cb([2 4]) + H2;
     
     d1 = max(0,1 - cb(1));
     d2 = max(0,1 - cb(2));
