@@ -383,7 +383,8 @@ sbin = models{1}.params.init_params.sbin;
 t = get_pyramid(I, sbin, params);
 resstruct.padder = t.padder;
 
-pyr_N = cellfun(@(x)prod([size(x,1) size(x,2)]-S+1),t.hog);
+pyr_N = cellfun(@(x)( max(0,size(x,1)-S(1)+1)*max(0,size(x,2)-S(2)+1)),t.hog);
+pyr_N = pyr_N.*(pyr_N>0);
 sumN = sum(pyr_N);
 
 X = zeros(S(1)*S(2)*fsize,sumN);
@@ -398,10 +399,11 @@ for i = 1:length(t.hog)
   ppp = reshape(1:NW,s(1),s(2));
   curf = reshape(t.hog{i},[],fsize);
   b = im2col(ppp,[S(1) S(2)]);
+  
 
   offsets{i} = b(1,:);
   offsets{i}(end+1,:) = i;
-  
+    
   for j = 1:size(b,2)
    X(:,counter) = reshape (curf(b(:,j),:),[],1);
    counter = counter + 1;
@@ -414,6 +416,7 @@ offsets = cat(2,offsets{:});
 
 uus = cat(2,uus{:});
 vvs = cat(2,vvs{:});
+
 
 % m.model.w = zeros(S(1),S(2),fsize);
 % m.model.b = 0;
@@ -483,8 +486,8 @@ for exid = 1:N
   sorted_scores = -sorted_scores';
 
   resstruct.xs{exid} = X(:,bb);
-  
   levels = offsets(2,bb);
+
   scales = t.scales(levels);
   curuus = uus(bb);
   curvvs = vvs(bb);

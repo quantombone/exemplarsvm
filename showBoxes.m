@@ -45,6 +45,12 @@ for i = 1:MAX_BOXES
   b = boxes(i,:);
 
   I = toI(data_set{b(11)});
+  Ibase = I;
+  [I,H2,W2] = rotate_pad(I,.2);
+
+  b([1 3]) = b([1 3]) + W2;
+  b([2 4]) = b([2 4]) + H2;
+
   b = round(b);
 
   us = b(2):b(4);
