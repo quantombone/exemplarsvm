@@ -1,4 +1,4 @@
-function I = toI(I)
+function I = toI(I,channels)
 %Get pixel representation of image because the input I can actually
 %be one of: real image, string, function.
 %Output will be a [M x N x 3] image matrix
@@ -51,7 +51,7 @@ end
 I = im2double(I);
 
 %Do not alow single channel images!!!
-if size(I,3) == 1
+if size(I,3) == 1 && ~exist('channels','var')
   I = repmat(I, [1 1 3]);
 end
 
