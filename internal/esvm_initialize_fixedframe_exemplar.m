@@ -146,7 +146,7 @@ curfeats = curfeats(goods);
 I2 = I*0;
 rawbox = clip_to_image(slight_expand(rawbox),[1 1 size(I,2) size(I, ...
                                                   1)]);
-rawbox = rawbox;
+rawbox = round(rawbox);
 
 I2(rawbox(2):rawbox(4),rawbox(1):rawbox(3),:) = 1;
 Ikeep = I2;
