@@ -1,5 +1,5 @@
 function [positive_set, negative_set] = ...
-    split_sets(data_set, cls)
+    split_sets(data_set, cls, skip_hard)
 % Extract positive and negative datasets from the data_set variable
 % according to the class specified in cls.
 % Inputs: 
@@ -20,16 +20,24 @@ negative_set = data_set(~logical(nonempties));
 data_set = data_set(logical(nonempties));
 
 %Skip truncated and difficult objects
-%has_truncated = cellfun(@(x)isfield(x.objects,'truncated'),data_set);
+has_truncated = cellfun(@(x)isfield(x.objects,'truncated'),data_set);
 has_difficult = cellfun(@(x)isfield(x.objects,'difficult'),data_set);
 
-if  any(has_difficult)
+if ~exist('skip_hard','var')
+  skip_hard = 1;
+  fprintf(1,'skipping truncated and difficult examples\n');
+else
+  skip_hard = 0;
+  fprintf(1,'NOT skipping truncated and difficult examples\n');
+end
+if skip_hard && (any(has_difficult) | any(has_truncated))
   %do not use truncated and difficult objects
   good_objects = cellfun(@(x)find(( ismember({x.objects.class},cls) & ...
+                                    ([x.objects.truncated]==0) & ...
                                     ([x.objects.difficult]==0))),...
                          data_set,'UniformOutput',false);
   
-  %                                    ([x.objects.truncated]==0) & ...
+
 else
   good_objects = cellfun(@(x)find(ismember({x.objects.class},cls)),...
                                   data_set,'UniformOutput',false);
