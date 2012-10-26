@@ -41,6 +41,11 @@ else
   params = esvm_get_default_params;
 end
 
+
+% if isfield(models.models{1},'A')
+%   params.max_models_before_block_method = 0;
+% end
+
 if isempty(models)
   fprintf(1,'Warning: empty models in esvm_detect\n');
   resstruct.bbs{1} = zeros(0,0);
@@ -69,7 +74,7 @@ if ~iscell(models) && ~isfield(models,'models')
 end
 
 
-params.max_image_size = 500;
+%params.max_image_size = 500;
 %Make sure image is in double format
 raw_max_dim = max([size(I,1) size(I,2)]);
 raw_factor = 1.0;
@@ -83,9 +88,11 @@ else
 end
 
 %pad image with mirrors
-params.frac = .2;
-[I,H2,W2] = rotate_pad(I,params.frac);
+%params.frac = .2;
+%[I,H2,W2] = rotate_pad(I,params.frac);
 
+H2 = 0;
+W2 = 0;
 %if ~isfield(params,'nnmode')
 %  params.nnmode = '';
 %end
@@ -212,8 +219,6 @@ else
              ' first]\n']);
   sbin = models{1}.params.init_params.sbin;
 end
-
-
 
 t = get_pyramid(I, sbin, params);
 resstruct.padder = t.padder;
@@ -447,6 +452,15 @@ elseif isempty(params.nnmode)
   if ~isfield(params,'basis')
     r = exemplar_matrix' * X;
     r = bsxfun(@minus, r, bs);
+    if isfield(models{1},'Akernel')
+      tic
+      coeff = models{1}.Akernel*X;
+      coeff = sum(coeff.^2,1);
+      toc
+      r = r + coeff;
+    end
+
+
   else
     v = cellfun2(@(x)x.v,models);
     v = cat(2,v{:});
