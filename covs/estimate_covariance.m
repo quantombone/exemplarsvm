@@ -8,8 +8,8 @@ function res = estimate_covariance(train_set, cparams, res2)
 %makes sure the data doesn't hit zero "outside-image" cells.
 
 if isfield(cparams,'titler')
-  filer = sprintf('/nfs/baikal/tmalisie/cov/final_%s%s_%d_%d.mat',...
-                  cparams.titler, cparams.obj, cparams.hg_size(1), ...
+  filer = sprintf('/nfs/baikal/tmalisie/cov/new/final_%s_%d_%d.mat',...
+                  cparams.titler, cparams.hg_size(1), ...
                   cparams.hg_size(2));
 
   if fileexists(filer)
@@ -35,7 +35,7 @@ params.detect_max_windows_per_exemplar = 1000000;
 params.detect_save_features = 1;
 params.detect_exemplar_nms_os_threshold = 1;
 params.detect_pyramid_padding = 0;
-params.detect_add_flip = 1;
+params.detect_add_flip = 0;
 
 model.params = params;
 model.models{1}.w = zeros(cparams.hg_size(1),...
@@ -55,9 +55,8 @@ r = randperm(length(train_set));
 r = r(1:min(length(r),10000));
 train_set = train_set(r);
 
-MAX_WINDOWS = 50000000;
+MAX_WINDOWS = 10000000;
 maxw = floor(MAX_WINDOWS / length(train_set));
-
 
 if exist('res2','var')
   tic
@@ -99,12 +98,16 @@ for i = 1:length(train_set)
       continue 
     end
   end
-  
-  
+    
   I = toI(train_set{i});
+  figure(1)
+  clf
+  imagesc(I)
+  drawnow
   tic
   rs = esvm_detect(I,model);
   toc
+
 
   norms = cellfun2(@(x)sum(rs.xs{1}(x,:).^2,1),regions);
   norms = cat(1,norms{:});

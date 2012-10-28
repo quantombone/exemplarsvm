@@ -1,4 +1,4 @@
-function boxes = applyModel(data_set, model, draw)
+function [boxes,saveboxes] = applyModel(data_set, model, draw)
 % Function to apply a model to a data-set
 % Inputs:
 %    data_set: a dataset of images
@@ -68,8 +68,10 @@ M = [];
 if isfield(model,'M')
   M = model.M;
 end
+
+
 %% Apply calibration matrix to test-set results
 boxes = esvm_pool_exemplar_dets(boxes, model.models, M, ...
                                 test_params);
-
+saveboxes = boxes;
 boxes = cat(1,boxes.final_boxes{:});

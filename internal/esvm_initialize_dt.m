@@ -23,7 +23,7 @@ function model = esvm_initialize_dt(data_set, cls, params)
 
 %save with dt as the model name
 model_name = [cls '-dt'];
-  
+
 if length(params.localdir)>0
   CACHE_FILE = 1;
 else
@@ -82,10 +82,11 @@ if isfield(params,'hg_size')
 elseif isfield(params.init_params,'hg_size')
   hg_size = params.init_params.hg_size;
 else
-  hg_size = get_hg_size(cur_pos_set, params.init_params.sbin);
+  [hg_size] = get_hg_size(cur_pos_set, params.init_params.sbin);
   hg_size = hg_size * min(1,params.init_params.MAXDIM/max(hg_size));
   hg_size = max(1,round(hg_size));
 end
+
 
 curfeats = cell(0,1);
 bbs = cell(0,1);
@@ -96,7 +97,10 @@ allwarps = cell(0,1);
 minsize = .9 * (hg_size(1)*hg_size(2)*params.init_params.sbin* ...
                 params.init_params.sbin);
 
+minsize = 1000;
+
 total = 0;
+num_keepers = 0;
 total_negatives = 0;
 badfeats = cell(0,1);
 badboxes = cell(0,1);
@@ -117,26 +121,52 @@ for j = 1:length(data_set)
   end
 
   gt_boxes = cat(1,obj.bbox);
+  
   for k = 1:length(obj)    
     % Warp original bounding box
     bbox = obj(k).bbox;    
     UUU = bbox(3)-bbox(1)+1;
     VVV = bbox(4)-bbox(2)+1;
     
-    % skip small examples
-    if (bbox(3)-bbox(1)+1)*(bbox(4)-bbox(2)+1) < minsize
-      fprintf(1,'-');
-      continue
-    end    
+    factor = params.dt_pad_factor;
+    bbox([1]) = bbox([1]) - UUU*factor;
+    bbox([3]) = bbox([3]) + UUU*factor;
     
-    total = total + 1;
-    angle = abs((atan2(VVV,UUU) - atan2(hg_size(1),hg_size(2))));
+    bbox([2]) = bbox([2]) - VVV*factor;
+    bbox([4]) = bbox([4]) + VVV*factor;
 
-    if (angle < pi/6) && (obj(k).truncated==0)
+    bbox([1 2]) = max(1,bbox([1 2]));
+    bbox(3) = min(size(I,2),bbox(3));
+    bbox(4) = min(size(I,1),bbox(4));
+    
+    UUU = bbox(3)-bbox(1)+1;
+    VVV = bbox(4)-bbox(2)+1;
+    
 
+    total = total + 1 + (params.dt_initialize_with_flips == 1);
+    
+    % skip small examples
+    % if  (bbox(3)-bbox(1)+1)*(bbox(4)-bbox(2)+1) < minsize
+    %   fprintf(1,'S');
+    %   continue
+    % end    
+    
+    % aspect = UUU/VVV;
+    % aspect2 = hg_size(1)/hg_size(2);
+    
+    % aspect/aspect2
+
+    
+
+    angle = abs((atan2(VVV,UUU) - atan2(hg_size(2),hg_size(1))));
+    ANGLETHRESH = pi/6;
+    %this turns this off
+    ANGLETHRESH = 10000;
+    %fprintf(1,'Angle is %f, thresh is %f\n',angle*180/pi,ANGLETHRESH*180/pi);
+    if (angle < ANGLETHRESH) && (obj(k).truncated==0) && (obj(k).difficult==0)
       warped1 = mywarppos(hg_size, I, params.init_params.sbin, ...
                           bbox);
-      
+
       allwarps{end+1} = warped1;
       curfeats{end+1} = params.init_params.features(warped1, ...
                                                     params ...
@@ -161,7 +191,7 @@ for j = 1:length(data_set)
       %pause
 
       if params.dt_initialize_with_flips == 1
-        total = total + 1;
+
         % Warp LR flipped version
         bbox2 = flip_box(bbox,size(I));
         warped2 = mywarppos(hg_size, flipI, params.init_params.sbin, ...
@@ -210,7 +240,7 @@ model.model_name = model_name;
 model.params = params;
 
 m.hg_size = [hg_size params.init_params.features()];
-m.mask = ones(m.hg_size(1),m.hg_size(2));
+%m.mask = ones(m.hg_size(1),m.hg_size(2));
 
 %positive features: x
 m.x = curfeats;
@@ -220,16 +250,17 @@ m.bb = cat(1,bbs{:});
 
 %m.svxs = cat(2,badfeats{:});
 %negative features: svxs
-m.svxs = zeros(prod(m.hg_size),0);
+%m.svxs = zeros(prod(m.hg_size),0);
 
 %negative windows: svbbs
-m.svbbs = zeros(0,12);
+%m.svbbs = zeros(0,12);
 %m.svbbs = cat(1,badboxes{:});
 
 %create an initial classifier
 m.w = mean(curfeats,2);
 m.w = m.w - mean(m.w(:));
 m.w = reshape(m.w, m.hg_size);
+
 m.b = 0;
 m.params = params;
 
@@ -247,10 +278,10 @@ allwarps = allwarps(order);
 m.x = m.x(:,order);
 m.bb = m.bb(order,:);
 
-Is = cat(4,allwarps{:});
-Imean = mean(Is,4);
+% Is = cat(4,allwarps{:});
+% Imean = mean(Is,4);
+% m.icon = Imean;
 
-m.icon = Imean;
 model.models{1} = m;
 
 if params.display == 1

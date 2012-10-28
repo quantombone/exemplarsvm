@@ -177,6 +177,16 @@ for q = 1:length(resstruct.bbs)
 end
 
 
+I2 = I(:,:,1)*0-1;
+bbs = resstruct.bbs{1};
+for q = 1:size(bbs,1)
+  bb = bbs(q,:);
+  bb(1:4) = round(bb(1:4));
+  bb(1:4) = clip_to_image(bb(1:4),[1 1 size(I,2) size(I,1)]);
+  I2(bb(2):bb(4),bb(1):bb(3)) = max(bb(end),I2(bb(2):bb(4),bb(1):bb(3)));
+end
+
+resstruct.I2 = I2;
 function [resstruct,t] = esvm_detectdriver(I, models, ...
                                              params)
 if ~isfield(params,'max_models_before_block_method')
@@ -450,8 +460,15 @@ elseif isempty(params.nnmode)
   %multiplication and subtract bias
   
   if ~isfield(params,'basis')
+
     r = exemplar_matrix' * X;
     r = bsxfun(@minus, r, bs);
+    %keyboard
+    %s = sum(max(r,-1),1);
+    % s=sum(exp(10*(max(r,-1))),1);
+    % r(1,:) = s;
+    % r(2:end,:) = -1;
+    
     if isfield(models{1},'Akernel')
       tic
       coeff = models{1}.Akernel*X;

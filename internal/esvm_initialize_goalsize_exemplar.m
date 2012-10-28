@@ -11,7 +11,6 @@ function model = esvm_initialize_goalsize_exemplar(I, bbox, init_params)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
-
 if ~exist('init_params','var')
   init_params.sbin = 8;
   init_params.hg_size = [8 8];
@@ -106,14 +105,16 @@ end
 
 
 %model = rmfield(models{targetlvl},'mask');
-model = rmfield(models{targetlvl},'w');
-model = rmfield(models{targetlvl},'b');
+%model = rmfield(models{targetlvl},{'w','b'});
+%model = rmfield(models{targetlvl},'b');
+model = models{targetlvl};
 models = cellfun2(@(x)rmfield(x,'init_params'),models);
 models = cellfun2(@(x)rmfield(x,'params'),models);
 %models = cellfun2(@(x)rmfield(x,'mask'),models);
 models = cellfun2(@(x)rmfield(x,'w'),models);
 models = cellfun2(@(x)rmfield(x,'b'),models);
 model.models = models;
+
 
 function models = get_all_models(model,masker,sizer,t,I)
 
@@ -133,6 +134,7 @@ for q = 1:length(sizer)
   
   model.w = curfeats - mean(curfeats(:));
   model.b = 0;
+
   model.hg_size = size(model.w);
   if prod(model.hg_size(1:2)) == 0
     models{q}.hg_size = model.hg_size;

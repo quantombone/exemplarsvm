@@ -19,7 +19,6 @@ if ~exist('show','var')
   show = 1;
 end
 
-
 r = model.models{1}.w(:)'*model.models{1}.x- ...
                model.models{1}.b;
 model.models{1}.bb(:,end) = r;
@@ -45,8 +44,8 @@ if show == 0
   return;
 end
 
-objective = evaluate_obj(model.models{1});
-
+%objective = evaluate_obj(model.models{1});
+objective = 1.0;
 imagesc(Icur)
 title(sprintf('%s: objective=%.5f',model.model_name,objective),'FontSize',20);
 drawnow

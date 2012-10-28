@@ -1,6 +1,8 @@
-function res2 = subcov(res,hg_size)
+function [res2,subinds,hg_full] = subcov(res,hg_size)
 %hg_size = model.models{1}.hg_size;
-
+fprintf(1,'Finding sub-covariance matrix of size%dx%d\n', ...
+        hg_size(1),hg_size(2));
+tic
 hg_full = zeros(res.hg_size(1), res.hg_size(2), res.hg_size(3));
 
 offset = [0 0];
@@ -16,7 +18,7 @@ c = res.c(subinds,subinds);
 
 res2.c = c;
 res2.mean = mu;
-return;
+%return;
 
 [v,d] = eig(c);
 d = diag(d);
@@ -38,3 +40,4 @@ res2.mean = mu;
 res2.hg_size = hg_size;
 res2.evals = d;
 res2.evecs = v;
+toc

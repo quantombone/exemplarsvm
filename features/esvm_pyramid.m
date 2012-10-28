@@ -47,7 +47,7 @@ end
 MAXLEVELS = 200;
 
 %Hardcoded minimum dimension of smallest (coarsest) pyramid level
-MINDIMENSION = 5;
+MINDIMENSION = 4;
 
 %Get the levels per octave from the parameters
 interval = params.detect_levels_per_octave;
@@ -92,27 +92,35 @@ for i = 1:MAXLEVELS
   % drawnow
     
   
+  %s=size(scaled);
+  %s=round(s(1:2)/params.init_params.sbin-2);
   %if minimum dimensions is less than or equal to 5, exit
-  if min([size(scaled,1) size(scaled,2)])<=MINDIMENSION
-    scale = scale(scale>0);
+
+  feat{i} = params.init_params.features(scaled,sbin);
+  
+  s = size(feat{i});
+  s = s(1:2);
+  if min(s)<=MINDIMENSION
+    scale = scale(1:i-1);
+    feat = feat(1:i-1);
     break;
   end
 
-  feat{i} = params.init_params.features(scaled,sbin);
+
 
   %if we get zero size feature, backtrack one, and dont produce any
   %more levels
-  if (size(feat{i},1)*size(feat{i},2)) == 0
-    feat = feat(1:end-1);
-    scale = scale(1:end-1);
-    break;
-  end
+  % if (size(feat{i},1)*size(feat{i},2)) == 0
+  %   feat = feat(1:end-1);
+  %   scale = scale(1:end-1);
+  %   break;
+  % end
 
 
   %recover lost bin!!!
-  %f2 = zeros(size(feat{i},1)+2,size(feat{i},2)+2,size(feat{i},3));
-  %f2(2:end-1,2:end-1,:) = feat{i};
-  %feat{i} = f2;
+  f2 = zeros(size(feat{i},1)+2,size(feat{i},2)+2,size(feat{i},3));
+  f2(2:end-1,2:end-1,:) = feat{i};
+  feat{i} = f2;
   
   %recover lost bin!!!
   %feat{i} = padarray(feat{i}, [1 1 0], 0);
@@ -120,8 +128,9 @@ for i = 1:MAXLEVELS
   
   %if the max dimensions is less than or equal to 5, dont produce
   %any more levels
-  if max([size(feat{i},1) size(feat{i},2)])<=MINDIMENSION
-    scale = scale(scale>0);
-    break;
-  end  
+  % if max([size(feat{i},1) size(feat{i},2)])<=MINDIMENSION
+  %   scale = scale(scale>0);
+  %   break;
+  % end  
 end
+

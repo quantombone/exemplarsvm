@@ -100,7 +100,7 @@ for i = 1:length(ordering)
   end
   res = cell(0,1);
 
-  clear Is;
+  %clear Is;
   Is = imageset(inds{ordering(i)});
   L = length(inds{ordering(i)});
 
@@ -126,9 +126,9 @@ for i = 1:length(ordering)
     I = toI(Is{j});
        
     starter = tic;
-    params.detect_save_features=1;
+    %params.detect_save_features=1;
     rs = esvm_detect(I, model, params);
-    
+
     if isfield(model.models{1},'A')
       x = cat(2,rs.xs{1}{:});
       x(end+1,:) = 1;
@@ -153,6 +153,7 @@ for i = 1:length(ordering)
     %        length(model.models),toc(starter),length(scores),aa);
     
     % Transfer GT boxes from model onto the detection windows
+    %NOTE: this is very slow
     %boxes = esvm_adjust_boxes(coarse_boxes, model);
     boxes = coarse_boxes;
 
@@ -175,26 +176,34 @@ for i = 1:length(ordering)
     if params.display_detections > 0
       figure(1)
       clf
-      imagesc(I)
+      imagesc(I)%pad_image(I,100))
+
+      %classes = cellfun2(@(x)x.cls,model.models);
+
+        
       if size(boxes,1) > 0 && max(boxes(:,end))>=-1
         % plot_bbox(esvm_nms(clip_to_image(boxes,[1 1 size(I,2) ...
         %             size(I,1)]),.5))
-        %plot_bbox(clip_to_image(boxes,[1 1 size(I,2) size(I,1)]))
+        %
         [alpha,beta] = max(boxes(:,end));
         bbtop = boxes(beta,:);
         bbtop = esvm_adjust_boxes(bbtop, model);
         [~,tops] = sort(boxes(:,end),'descend');
         tops = boxes(tops(1:min(length(tops),10)),:);
-        plot_bbox(tops);
-        plot_bbox(bbtop,num2str(bbtop(1,end)),[1 0 0])
+        %plot_bbox(tops);
+        bbtop(1,1:4) = bbtop(1,1:4);
+        bbtop = (clip_to_image(bbtop,[1 1 size(I,2) size(I,1)]));
+        plot_bbox(bbtop,[model.models{bbtop(1,6)}.cls ' ' num2str(bbtop(1,end))],[1 0 0])
         title(num2str(boxes(beta,end)))
       end
-      axis off
-      axis image
-      %axis image
       %axis off
+      %axis image
+      axis image
+      axis off
+      
       drawnow
       pause(params.display_detections)
+
     end
     
     % if params.write_top_detection == 1

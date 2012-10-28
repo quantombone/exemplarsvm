@@ -1,4 +1,4 @@
-function results = esvm_evaluate_pascal_voc(test_struct, test_set, ...
+function results = esvm_evaluate_pascal_voc(BB, test_set, ...
                                             model, params, test_set_name)
 
 % Evaluate PASCAL VOC detection task with the model, their output
@@ -112,7 +112,7 @@ end
 %fprintf(1,'HACK: changing OVERLAP HERE!\n');
 %VOCopts.minoverlap = .4;
 
-BB = cat(1,test_struct.final_boxes{:});
+%BB = cat(1,test_struct.final_boxes{:});
 
 % goods = find(cellfun(@(x)size(x,1),test_struct.final_boxes));
 
@@ -139,7 +139,9 @@ clf
 %NOTE(TJM): this is really close to working without writing a local
 %evaluation file, and needs to be fixed soon
 
-[results.recall,results.prec,results.ap,results.apold,results.fp,results.tp,results.npos,results.corr] = VOCevaldet(test_set,BB,cls,params);
+results = VOCevaldet(test_set,BB,cls,params.evaluation_minoverlap);
+
+%[results.recall,results.prec,results.ap,results.apold,results.fp,results.tp,results.npos,results.corr] = VOCevaldet(test_set,BB,cls,params);
 
 %if CACHE_FILE && exist(filerlock,'dir')
 % rmdir(filerlock);

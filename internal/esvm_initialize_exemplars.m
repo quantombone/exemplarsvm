@@ -143,6 +143,7 @@ for j = 1:length(data_set)
     I = toI(data_set{j});
     Isave = I;
     [I,H2,W2] = rotate_pad(I,.2);
+
     bbox([1 3]) = bbox([1 3]) + W2;
     bbox([2 4]) = bbox([2 4]) + H2;
     %Call the init function which is a mapping from (I,bbox) to (model)

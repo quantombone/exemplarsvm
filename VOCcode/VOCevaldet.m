@@ -130,7 +130,7 @@ finaltime = toc(sss);
 fprintf(1,'Time for computing AP: %.3fsec\n',finaltime);
 fprintf(1,'%s AP: %.3f\n',cls_string,ap);
 
-function [ap,rec,prec,fp,tp,is_correct,missed,closest_det] = get_aps(params,cls_string,gt,npos,BB);
+function [ap,rec,prec,fp,tp,is_correct,missed,closest_det] = get_aps(params,cls_string,gt,npos,BB)
 
 
 if length(BB) > 0

@@ -2,6 +2,10 @@ function [I,H2,W2] = rotate_pad(I,frac)
 %Pad the image by rotating out the interior to the exterior part
 %using padarray
 
+H2 = 0;
+W2 = 0;
+return;
+
 if ~exist('frac','var')
   frac = .2;
 end
