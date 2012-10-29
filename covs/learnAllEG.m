@@ -57,18 +57,21 @@ for i = 1:length(data_set)
 end
 
 
+if sum(cellfun(@(x)length(x),allmodels))==0
+  fprintf(1,'No good positives\n');
+  model = [];
+  return;
+end
+
+allmodels = cellfun2(@(x)x(:)',allmodels);
 model=cat(2,allmodels{:});
+
 clear allmodels
 
 
 goods = find(cellfun(@(x)length(x)>0,model));
 model = model(goods);
 
-if length(model) == 0
-  fprintf(1,'No good positives\n');
-  model = [];
-  return;
-end
 
 models = cellfun2(@(x)x.models{1},model);
 model = rmfield(model{1},{'cls','model_name'});
