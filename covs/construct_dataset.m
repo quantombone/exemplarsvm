@@ -1,6 +1,9 @@
 %addpath(genpath('~/exemplarsvm'));
+addpath(genpath('~/projects/video-adapt/code/LabelMeToolbox/'))
 
-image_set = textread('images','%s');
+d = '/Users/tomasz/projects/SUN2012/';
+unix(sprintf('find %s -name "*jpg" > images_list',d));
+image_set = textread('images_list','%s');
 newfiles = cellfun(@(x)strrep(strrep(x,'/Images', ...
                                      '/Annotations'),...
                               '.jpg','.xml'),image_set, ...
@@ -13,7 +16,7 @@ parfor i = 1:length(image_set)
   boundingbox = LMobjectboundingbox(annotation);
   annotation.objects = annotation.object;
   annotation = rmfield(annotation,'object');
-fprintf(1,'.');
+  fprintf(1,'.');
   for m = 1:length(annotation.objects)
     annotation.objects(m).class = annotation.objects(m).name;
     annotation.objects(m).truncated = 0;%annotation.objects(m).crop;
