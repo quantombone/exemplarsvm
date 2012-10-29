@@ -15,7 +15,7 @@ else
 end
 
 %iii = 1;
-parfor i = 1:length(data_set)
+for i = 1:length(data_set)
   saves = data_set{i};
 
   
@@ -59,7 +59,6 @@ end
 
 model=cat(2,allmodels{:});
 clear allmodels
-
 
 
 goods = find(cellfun(@(x)length(x)>0,model));
