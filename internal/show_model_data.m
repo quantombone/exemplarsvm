@@ -26,7 +26,7 @@ model.models{1}.bb(:,end) = r;
 
 Icur = esvm_show_det_stack(model.models{1}.bb(bb,:),model.data_set, ...
                            K,K,model.models{1});
-if numel(model.models{1}.svxs) > 0
+if isfield(model.models{1},'svxs') && numel(model.models{1}.svxs) > 0
   r = model.models{1}.w(:)'*model.models{1}.svxs - model.models{1}.b;
   [aa,bb] = sort(r,'descend');
 

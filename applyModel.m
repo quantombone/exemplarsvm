@@ -15,7 +15,7 @@ function [boxes,saveboxes] = applyModel(data_set, model, draw)
 %% Define test-set parameters
 test_params = model.params;
 test_params.detect_exemplar_nms_os_threshold = 1.0;
-test_params.detect_max_windows_per_exemplar = 200;
+%test_params.detect_max_windows_per_exemplar = 200;
 test_params.detect_keep_threshold = -1.0;
 test_params.calibrate_nms = 1.0;
 

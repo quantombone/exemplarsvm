@@ -109,6 +109,7 @@ for i = 1:length(ordering)
     index = inds{ordering(i)}(j);
     %fprintf(1,' --image %05d/%05d:',counter+j,length(imageset));
     fprintf(1,'.');
+
     Iname = imageset{index};
 
     curid = '';
@@ -174,27 +175,54 @@ for i = 1:length(ordering)
     res{j}.curid = curid;
 
     if params.display_detections > 0
+
       figure(1)
       clf
-      imagesc(I)%pad_image(I,100))
-
+      
+      
       %classes = cellfun2(@(x)x.cls,model.models);
+      
+      [alpha,beta] = max(boxes(:,end));
+      bbtop = boxes(beta,:);
+      
+      if strfind(model.models{bbtop(1,6)}.cls,'scene')
+        [bbtop2] = esvm_adjust_boxes(esvm_nms(bbtop,.8),model);
+        bbtop2 = bbtop;
+        bbtop3 = cellfun2(@(x)x.bb,model.models(bbtop2(:,6)));
+        bbtop3 = cat(1,bbtop3{:});
+        %axis image
+        %axis off
+        I2 = showTopDetections(model.data_set,bbtop3);
+        factor = size(I,1)/size(I2,1);
+        I = cat(2,I,max(0.0,min(1.0,imresize(I2,factor))));%size(I2,1)/size(I,1)
+        %figure(2)
+        %imagesc(I2)
+      end
+
+      imagesc(I)%pad_image(I,100))
 
         
       if size(boxes,1) > 0 && max(boxes(:,end))>=-1
         % plot_bbox(esvm_nms(clip_to_image(boxes,[1 1 size(I,2) ...
         %             size(I,1)]),.5))
         %
-        [alpha,beta] = max(boxes(:,end));
-        bbtop = boxes(beta,:);
+
         bbtop = esvm_adjust_boxes(bbtop, model);
         [~,tops] = sort(boxes(:,end),'descend');
         tops = boxes(tops(1:min(length(tops),10)),:);
         %plot_bbox(tops);
         bbtop(1,1:4) = bbtop(1,1:4);
-        bbtop = (clip_to_image(bbtop,[1 1 size(I,2) size(I,1)]));
+        %bbtop = (clip_to_image(bbtop,[1 1 size(I,2) size(I,1)]));
+        
         plot_bbox(bbtop,[model.models{bbtop(1,6)}.cls ' ' num2str(bbtop(1,end))],[1 0 0])
         title(num2str(boxes(beta,end)))
+        
+     
+        % 
+        % bbtop2 = bbtop2(1:min(size(bbtop2,1),3),:);
+        % plot_bbox(bbtop2)
+
+
       end
       %axis off
       %axis image

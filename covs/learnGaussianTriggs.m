@@ -19,15 +19,20 @@ end
 
 if exist('hg_size','var') && length(hg_size) > 0
   params.hg_size = hg_size;
+  params.init_params.hg_size = hg_size;
 end
+
+
 fprintf(1,'Initializing by warping positives\n');
 fprintf(1,'add_flips is %d\n',add_flips);
 params.dt_initialize_with_flips = add_flips;
 params.dt_pad_factor = .1;
 fprintf(1,'PAD factor is %f\n',params.dt_pad_factor);
 
+
 model = esvm_initialize_dt(data_set,cls,params);
 fprintf(1,'done initing\n');
+
 
 model.models{1}.cls = cls;
 

@@ -77,6 +77,7 @@ end
 
 data_set = cat(1,cur_pos_set(:),cur_neg_set(:));
 
+
 if isfield(params,'hg_size')
   hg_size = params.hg_size;
 elseif isfield(params.init_params,'hg_size')
@@ -86,6 +87,7 @@ else
   hg_size = hg_size * min(1,params.init_params.MAXDIM/max(hg_size));
   hg_size = max(1,round(hg_size));
 end
+
 
 
 curfeats = cell(0,1);
@@ -138,6 +140,7 @@ for j = 1:length(data_set)
     bbox([1 2]) = max(1,bbox([1 2]));
     bbox(3) = min(size(I,2),bbox(3));
     bbox(4) = min(size(I,1),bbox(4));
+    
     
     UUU = bbox(3)-bbox(1)+1;
     VVV = bbox(4)-bbox(2)+1;
@@ -259,8 +262,7 @@ m.bb = cat(1,bbs{:});
 %create an initial classifier
 m.w = mean(curfeats,2);
 m.w = m.w - mean(m.w(:));
-m.w = reshape(m.w, m.hg_size);
-
+m.w = reshape(m.w, m.hg_size(1), m.hg_size(2),[]);
 m.b = 0;
 m.params = params;
 
