@@ -14,15 +14,18 @@ else
   A = [];
 end
 
+
+
+
 %iii = 1;
-parfor i = 1:length(data_set)
+for i = 1:length(data_set)
   saves = data_set{i};
 
   
   if ~isfield(saves,'objects')
     continue
   end
-
+ 
   fprintf(1,'image %d / %d\n',i,length(data_set));
 
   iii = 1;
@@ -43,6 +46,11 @@ parfor i = 1:length(data_set)
 
     model{iii} = learnGaussianTriggs({s}, s.objects(1).class, res, ...
                                      0,hg_size,A);
+    
+    model{iii}.models{1}.curc = model{iii}.models{1}.bb(1:4);
+    model{iii}.models{1}.center = s.objects(1).bbox(1:4);
+
+
     model{iii}.params = model{iii}.params;
     model{iii}.params.detect_add_flip = 1;
     model{iii}.params.detect_max_windows_per_exemplar = 10;
@@ -57,19 +65,21 @@ parfor i = 1:length(data_set)
 end
 
 
-model=cat(2,allmodels{:});
-clear allmodels
+if sum(cellfun(@(x)length(x),allmodels))==0
+  fprintf(1,'No good positives\n');
+  model = [];
+  return;
+end
 
+allmodels = cellfun2(@(x)x(:)',allmodels);
+model=cat(2,allmodels{:});
+
+clear allmodels
 
 
 goods = find(cellfun(@(x)length(x)>0,model));
 model = model(goods);
 
-if length(model) == 0
-  fprintf(1,'No good positives\n');
-  model = [];
-  return;
-end
 
 models = cellfun2(@(x)x.models{1},model);
 model = rmfield(model{1},{'cls','model_name'});

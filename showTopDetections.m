@@ -20,7 +20,7 @@ MAX_BOXES = min(MAX_BOXES,size(boxes,1));
 [aa,bb] = sort(boxes(:,end),'descend');
 boxes = boxes(bb(1:MAX_BOXES),:);
 
-if exist('is_correct','var')
+if exist('is_correct','var') && length(is_correct)>0
   cols = [ 0 0 1; 1 0 0; 0 1 0];
   cols = cols(is_correct+2,:);      
   colors = cols(bb(1:MAX_BOXES),:);
@@ -59,6 +59,8 @@ for i = 1:MAX_BOXES
 
   if exist('colors','var')
     crops{i} = pad_image(crops{i}, 3, colors(i,:));
+  else
+    crops{i} = pad_image(pad_image(crops{i}, 2),1,[1 0 0]);
   end
   
   % figure(1)
@@ -86,6 +88,8 @@ for j = (MAX_BOXES+1):(K1*K2)
   crops{j} = zeros(round(mw),round(mh),3);
   if exist('colors','var')
     crops{j} = pad_image(crops{j},3,[1 1 1]);
+  else
+    crops{j} = pad_image(crops{j},3);
   end
 end
 
@@ -94,6 +98,13 @@ for j = 1:K2
   svrows{j} = cat(2,crops{j,:});
 end
 Isv = cat(1,svrows{:});
+
+
+if exist('colors','var')
+  Isv = pad_image(Isv,1,[0 0 0]);
+else
+  Isv = pad_image(Isv,1,[1 0 0]);
+end
 
 if nargout == 0
   figure(1)

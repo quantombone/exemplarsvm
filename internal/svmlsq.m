@@ -80,7 +80,6 @@ end
 oldw = w;
 oldgoods = [];
 curmat = zeros(F,F);
-
 oldobj = w'*params.regularizer*w + w'*params.c + ...
          sum(params.weights.*(hinge(y'.*(w(1:end-1)'*x+w(end)+params.e))));
 

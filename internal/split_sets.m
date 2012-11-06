@@ -1,4 +1,4 @@
-function [positive_set, negative_set] = ...
+function [positive_set, negative_set, positive_inds] = ...
     split_sets(data_set, cls, skip_hard)
 % Extract positive and negative datasets from the data_set variable
 % according to the class specified in cls.
@@ -67,8 +67,12 @@ for k = 1:length(stripped_set)
   end
 end
 
-
 good_images = cellfun(@(x)numel(x.objects)>0, stripped_set);
 
 positive_set = stripped_set(good_images);
 negative_set = stripped_set(~good_images);
+
+Igood = cellfun2(@(x)x.I,positive_set);
+Iall = cellfun2(@(x)x.I,data_set);
+
+[~,positive_inds] = ismember(Igood,Iall);

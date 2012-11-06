@@ -1,6 +1,7 @@
 function learnDTsave
 addpath(genpath(pwd));
 load /csail/vision-videolabelme/people/tomasz/pascal/VOC2007/trainval.mat
+%load /csail/vision-videolabelme/databases/pascal/VOC2011/train.mat
 
 classes={...
     'aeroplane'
@@ -27,7 +28,7 @@ classes={...
 myRandomize;
 classes = classes(randperm(length(classes)));
 for i = 1:length(classes)
-  filer = sprintf(['/csail/vision-videolabelme/people/tomasz/may28/' ...
+  filer = sprintf(['/csail/vision-videolabelme/people/tomasz/june12/' ...
                    '%s.mat'],classes{i});
 
   filerlock = [filer '.lock'];

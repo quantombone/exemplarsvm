@@ -460,7 +460,6 @@ elseif isempty(params.nnmode)
   %multiplication and subtract bias
   
   if ~isfield(params,'basis')
-
     r = exemplar_matrix' * X;
     r = bsxfun(@minus, r, bs);
     %keyboard
@@ -516,7 +515,9 @@ for exid = 1:N
 
   sorted_scores = -sorted_scores';
 
-  resstruct.xs{exid} = X(:,bb);
+  if params.detect_save_features == 1 
+    resstruct.xs{exid} = X(:,bb);
+  end
   levels = offsets(2,bb);
 
   scales = t.scales(levels);

@@ -66,16 +66,19 @@ if CACHE_FILE == 1
   end
 end
 
-[cur_pos_set, cur_neg_set] = split_sets(data_set, cls);
-
+[cur_pos_set, cur_neg_set, pos_subset] = split_sets(data_set, cls);
+save_data_set = data_set;
 % cur_pos_set = cur_pos_set(1:min(length(cur_pos_set),...
 %                                 params.max_number_of_positives));
 
 if length(cur_pos_set) == 0
-  error(sprintf('No positives of class "%s" found',cls));
+  fprintf(sprintf('No positives of class "%s" found',cls));
+  model = [];
+  return;
 end
 
 data_set = cat(1,cur_pos_set(:),cur_neg_set(:));
+
 
 if isfield(params,'hg_size')
   hg_size = params.hg_size;
@@ -86,6 +89,7 @@ else
   hg_size = hg_size * min(1,params.init_params.MAXDIM/max(hg_size));
   hg_size = max(1,round(hg_size));
 end
+
 
 
 curfeats = cell(0,1);
@@ -138,6 +142,7 @@ for j = 1:length(data_set)
     bbox([1 2]) = max(1,bbox([1 2]));
     bbox(3) = min(size(I,2),bbox(3));
     bbox(4) = min(size(I,1),bbox(4));
+    
     
     UUU = bbox(3)-bbox(1)+1;
     VVV = bbox(4)-bbox(2)+1;
@@ -234,7 +239,7 @@ curfeats = cellfun2(@(x)reshape(x,[],1),curfeats);
 curfeats = cat(2,curfeats{:});
 
 
-model.data_set = data_set;
+model.data_set = save_data_set;
 model.cls = cls;
 model.model_name = model_name;
 model.params = params;
@@ -248,6 +253,8 @@ m.x = curfeats;
 %positive windows: bb
 m.bb = cat(1,bbs{:});
 
+m.bb(:,11) = pos_subset(m.bb(:,11));
+
 %m.svxs = cat(2,badfeats{:});
 %negative features: svxs
 %m.svxs = zeros(prod(m.hg_size),0);
@@ -259,8 +266,7 @@ m.bb = cat(1,bbs{:});
 %create an initial classifier
 m.w = mean(curfeats,2);
 m.w = m.w - mean(m.w(:));
-m.w = reshape(m.w, m.hg_size);
-
+m.w = reshape(m.w, m.hg_size(1), m.hg_size(2),[]);
 m.b = 0;
 m.params = params;
 
@@ -273,7 +279,9 @@ m.params = params;
 
 %sort by initial score
 [~,order] = sort(m.w(:)'*m.x,'descend');
-order = order(1:min(length(order),params.max_number_of_positives));
+
+%Take at most a finite number of positives
+%order = order(1:min(length(order),params.max_number_of_positives));
 allwarps = allwarps(order);
 m.x = m.x(:,order);
 m.bb = m.bb(order,:);
