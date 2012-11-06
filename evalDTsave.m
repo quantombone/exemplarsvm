@@ -31,7 +31,7 @@ classes = classes(randperm(length(classes)));
 
 
 for i = 1:length(classes)
-  filer = sprintf(['/csail/vision-videolabelme/people/tomasz/may19/' ...
+  filer = sprintf(['/csail/vision-videolabelme/people/tomasz/june12/' ...
                    '%s.mat'],classes{i});
   if ~fileexists(filer)
     continue

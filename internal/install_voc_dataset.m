@@ -6,12 +6,11 @@ if nargin == 0
   data_directory = '/Users/tomasz/projects/pascal/';
   dataset_directory = 'VOC2011';
 
-  %data_directory = '/csail/vision-videolabelme/databases/';
-  %dataset_directory = 'SUN11';
 end
 
-trainval_file = sprintf('%s/%s/trainval.mat',data_directory, ...
+trainval_file = sprintf('%s/%s/train.mat',data_directory, ...
                         dataset_directory);
+
 
 train_file = sprintf('%s/%s/train.mat',data_directory, ...
                         dataset_directory);
@@ -31,7 +30,7 @@ else
   dataset_params = esvm_get_voc_dataset(dataset_directory, ...
                                         data_directory);
   
-  image_set = esvm_get_pascal_set(dataset_params, 'trainval');
+  image_set = esvm_get_pascal_set(dataset_params, 'train');
   
   newfiles = cellfun(@(x)strrep(strrep(x,'JPEGImages', ...
                                        'Annotations'),...
@@ -105,7 +104,7 @@ if fileexists(test_file)
   test_set = test_set.data_set;
 else
   try
-    image_set = esvm_get_pascal_set(dataset_params, ['test']);
+    image_set = esvm_get_pascal_set(dataset_params, ['val']);
   catch
     fprintf(1,'No testset to process\n');
     test_set = [];
