@@ -7,6 +7,12 @@ function transformed_c = apply_xform(c, xform)
 % transformed_c will be same size as c, with all non-bb fields left
 % intact
 
+if size(c,1)==3 && size(c,2)==3
+  old = c;
+  c = xform;
+  xform = old;
+end
+
 % Tomasz Malisiewicz (tomasz@cmu.edu)
 
 transformed_c = c;

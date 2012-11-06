@@ -29,10 +29,11 @@ params.dt_initialize_with_flips = add_flips;
 params.dt_pad_factor = .1;
 fprintf(1,'PAD factor is %f\n',params.dt_pad_factor);
 
-
 model = esvm_initialize_dt(data_set,cls,params);
 fprintf(1,'done initing\n');
-
+if length(model) == 0
+  return;
+end
 
 model.models{1}.cls = cls;
 

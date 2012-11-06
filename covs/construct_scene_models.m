@@ -1,4 +1,4 @@
-function model = construct_scene_models(data_set, covstruct, N)
+function [model] = construct_scene_models(data_set, covstruct, N)
 %Construct a set of 'scene' models (full image bounding box) from a
 %dataset of images and a covariance matrix
 % Inputs: 
@@ -33,3 +33,6 @@ model.params.detect_max_windows_per_exemplar = 1;
 
 %Maximum image size, so that we get big images
 model.params.max_image_size = 200;
+
+%save the subset from big dataset
+model.inds = inds;

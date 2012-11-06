@@ -71,7 +71,7 @@ end
 
 
 %% Apply calibration matrix to test-set results
-boxes = esvm_pool_exemplar_dets(boxes, model.models, M, ...
-                                test_params);
-saveboxes = boxes;
-boxes = cat(1,boxes.final_boxes{:});
+res = esvm_pool_exemplar_dets(boxes, model.models, M, ...
+                              test_params);
+saveboxes = res;
+boxes = cat(1,res.final_boxes{:});

@@ -46,8 +46,16 @@ end
 
 %objective = evaluate_obj(model.models{1});
 objective = 1.0;
-imagesc(Icur)
-title(sprintf('%s: objective=%.5f',model.model_name,objective),'FontSize',20);
+if nargout == 0
+  clf
+  imagesc(Icur)
+  title(sprintf('cls=%s',model.models{1}.cls))
+end
+if ~isfield(model,'model_name')
+  model.model_name = '';
+end
+
+%title(sprintf('%s: objective=%.5f',model.model_name,objective),'FontSize',20);
 drawnow
 snapnow
 

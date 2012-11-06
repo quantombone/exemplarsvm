@@ -185,22 +185,35 @@ for i = 1:length(ordering)
       [alpha,beta] = max(boxes(:,end));
       bbtop = boxes(beta,:);
       
-      if strfind(model.models{bbtop(1,6)}.cls,'scene')
+      if 1%strfind(model.models{bbtop(1,6)}.cls,'scene')
+        
         [bbtop2] = esvm_adjust_boxes(esvm_nms(bbtop,.8),model);
-        bbtop2 = bbtop;
+
+        %bbtop2 = bbtop;
         bbtop3 = cellfun2(@(x)x.bb,model.models(bbtop2(:,6)));
         bbtop3 = cat(1,bbtop3{:});
+        bbtop3 = bbtop3(1,:);
+
+        bbtop3 = model.models{bbtop2(1,6)}.bb(1,:);
+        %bbtop3 = bbtop;
+
         %axis image
         %axis off
+        
+        if isfield(model,'data_set')
+          
         I2 = showTopDetections(model.data_set,bbtop3);
+        
         factor = size(I,1)/size(I2,1);
-        I = cat(2,I,max(0.0,min(1.0,imresize(I2,factor))));%size(I2,1)/size(I,1)
+
+        I = cat(2,I,max(0.0,min(1.0,imresize(I2,round(factor*[size(I2,1) size(I2,2)])))));%size(I2,1)/size(I,1)
         %figure(2)
         %imagesc(I2)
+        end
       end
 
       imagesc(I)%pad_image(I,100))
-
+      
         
       if size(boxes,1) > 0 && max(boxes(:,end))>=-1
         % plot_bbox(esvm_nms(clip_to_image(boxes,[1 1 size(I,2) ...
