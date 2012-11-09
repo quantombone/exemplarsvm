@@ -1,4 +1,4 @@
-function model = learnGaussianTriggs(data_set, cls, covstruct_full, ...
+function model = learnGaussianTriggs(data_set, cls, covstruct, ...
                                      add_flips, hg_size,A)
 % Learn a DalalTriggs template detector, with latent updates,
 % perturbed assignments (which help avoid local minima), and
@@ -45,20 +45,20 @@ model.models{1}.center = c2;
 model.models{1}.curc = c;
 
 hg_size = model.models{1}.hg_size;
-subinds = get_subinds(covstruct_full,hg_size);
+subinds = get_subinds(covstruct,hg_size);
 
 x = mean(model.models{1}.x,2);
 
 
 
 if exist('A','var') && length(A)>0
-  w2 = A*(x-covstruct_full.mean(subinds));
+  w2 = A*(x-covstruct.mean(subinds));
 else
   lambda = .01;
   w2 = (lambda*eye(length(subinds))+...
-        covstruct_full.c(subinds, ...
+        covstruct.c(subinds, ...
                          subinds))\(x- ...
-                                    covstruct_full.mean(subinds));
+                                    covstruct.mean(subinds));
 end
 
 % if params.dt_initialize_with_flips
@@ -70,8 +70,8 @@ end
 %     newinds = 2*(1:(numel(scores)/2))+(ind-2);
 %     x = mean(model.models{1}.x(:,newinds),2);
 %     w2 = (lambda*eye(length(subinds))+ ...
-%           covstruct_full.c(subinds, ...
-%                            subinds))\(x-covstruct_full.mean(subinds));
+%           covstruct.c(subinds, ...
+%                            subinds))\(x-covstruct.mean(subinds));
 %     s=w2(:)'*x;
 %     s
 %   end
@@ -79,7 +79,7 @@ end
 % end
 
 if 0
-  [covstruct,subinds,hg_full] = subcov(covstruct_full, ...
+  [covstruct,subinds,hg_full] = subcov(covstruct, ...
                                        model.models{1}.hg_size);
   
   %goods = find(covstruct.evals>.0001);
@@ -104,7 +104,7 @@ end
 % w = (cpos+.0001*eye(size(cpos)))\(mean(model.models{1}.x,2));
 % w = w - mean(w(:));
 
-% [V1,D1] = eig(covstruct_full.c(subinds,subinds));
+% [V1,D1] = eig(covstruct.c(subinds,subinds));
 % goods = diag(D1)>.001;
 % V1 = V1(:,goods);
 % D1 = D1(goods,goods);
@@ -135,7 +135,7 @@ model.models{1}.w = w;
 model.models{1}.b = 0;
 model.models{1}.w = model.models{1}.w;
 
-[alphas] = inv([w(:)'*mean_x 1; w(:)'*covstruct_full.mean(subinds) 1])*[1 -1]';
+[alphas] = inv([w(:)'*mean_x 1; w(:)'*covstruct.mean(subinds) 1])*[1 -1]';
 model.models{1}.w = alphas(1)*model.models{1}.w;
 model.models{1}.b = -alphas(2);
 
