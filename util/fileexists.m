@@ -3,6 +3,8 @@ function res = fileexists(filename)
 %
 % Check if file filename exists, and return 0 or 1
 % NOTE: much faster than exist(filename,'file')
+res = exist(filename,'file');
+return;
 fid = fopen(filename,'r');
 if fid == -1
   res = 0;
