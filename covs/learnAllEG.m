@@ -1,23 +1,26 @@
-function model = learnAllEG(data_set,cls,res,hg_size)
+function model = learnAllEG(data_set,cls,covstruct,add_flips,hg_size,A)
 %Learn EvG models for objects of class cls inside the data_set
-%res is the covariance data structure and hg_size is the target
+%covstruct is the covariance data structure and hg_size is the target
 %hg_size if specified
 %if cls == '', then use all classes
 
+if ~exist('add_flips','var')
+  add_flips = 1;
+end
+
 if exist('hg_size','var')
-  subinds = get_subinds(res,hg_size);
+
+  subinds = get_subinds(covstruct,hg_size);
   lambda = .01;
-  A = inv(lambda*eye(length(subinds))+...
-        res.c(subinds, subinds));
+  if ~exist('A') || numel(A) == 0
+    A = inv(lambda*eye(length(subinds))+...
+            covstruct.c(subinds, subinds));
+  end
 else
   hg_size = [];
   A = [];
 end
 
-
-
-
-%iii = 1;
 for i = 1:length(data_set)
   saves = data_set{i};
 
@@ -44,7 +47,7 @@ for i = 1:length(data_set)
     end
 
 
-    model{iii} = learnGaussianTriggs({s}, s.objects(1).class, res, ...
+    model{iii} = learnGaussianTriggs({s}, s.objects(1).class, covstruct, ...
                                      0,hg_size,A);
     
     model{iii}.models{1}.curc = model{iii}.models{1}.bb(1:4);
@@ -52,7 +55,7 @@ for i = 1:length(data_set)
 
 
     model{iii}.params = model{iii}.params;
-    model{iii}.params.detect_add_flip = 1;
+    model{iii}.params.detect_add_flip = add_flips;
     model{iii}.params.detect_max_windows_per_exemplar = 10;
     model{iii}.models{1}.params = model{iii}.params;
     model{iii}.models{1}.cls = s.objects(1).class;
