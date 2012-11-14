@@ -16,6 +16,10 @@ if ~exist('MAX_BOXES','var')
   MAX_BOXES = 100;
 end
 
+if isfield(data_set,'image_files')
+  data_set = data_set.image_files;
+end
+
 MAX_BOXES = min(MAX_BOXES,size(boxes,1));
 [aa,bb] = sort(boxes(:,end),'descend');
 boxes = boxes(bb(1:MAX_BOXES),:);
