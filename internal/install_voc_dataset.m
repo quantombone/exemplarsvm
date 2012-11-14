@@ -41,7 +41,11 @@ else
                      false);
   data_set = cellfun(@(x,y)setfield(x,'I',y),data_set,image_set,'UniformOutput',false);
   
-  save(trainval_file,'data_set');
+  try
+    save(trainval_file,'data_set');
+  catch
+    fprintf(1,'Cannot write to %s\n',trainval_file);
+  end
   trainval_set = data_set;
 end
 
@@ -70,7 +74,11 @@ else
                      false);
   data_set = cellfun(@(x,y)setfield(x,'I',y),data_set,image_set,'UniformOutput',false);
   
-  save(train_file,'data_set');
+  try
+    save(train_file,'data_set');
+  catch
+    fprintf(1,'Cannot write to %s\n',train_file);
+  end
   train_set = data_set;
 end
 
@@ -93,7 +101,11 @@ else
                      false);
   data_set = cellfun(@(x,y)setfield(x,'I',y),data_set,image_set,'UniformOutput',false);
   
-  save(val_file,'data_set');
+  try
+    save(val_file,'data_set');
+  catch
+    fprintf(1,'Cannot write to %s\n',val_file);
+  end
   val_set = data_set;
 end
 
@@ -121,6 +133,10 @@ else
                      false);
   data_set = cellfun(@(x,y)setfield(x,'I',y),data_set,image_set,'UniformOutput',false);
   
-  save(test_file,'data_set');
+  try
+    save(test_file, 'data_set');
+  catch
+    fprintf(1, 'Cannot write to %s\n', test_file);
+  end
   test_set = data_set;
 end
