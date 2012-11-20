@@ -1,5 +1,6 @@
-function I = imresize_max(I, maxdim)
-%Resize image such that maximum size is maxdim
+function [I,scaler] = imresize_max(I, maxdim)
+%Resize image such that maximum size is maxdim, and return the
+%scaling factor which was applied to the image
 
 if numel(I)==0
   return;
