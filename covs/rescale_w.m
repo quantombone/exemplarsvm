@@ -1,4 +1,4 @@
-function [w,b] = rescale_w(w,meanpos,meanneg)
+function [w,b] = rescale_w(w, meanpos, meanneg)
 %rescale decision boundary such that when applying rule: f(x) =
 %w'*x-b, scores of +1 map to positive mean and -g map to negative
 %mean
