@@ -27,7 +27,7 @@ if isempty(boxes)
 end
 
 if ~exist('overlap','var')
-  fprintf(1,'Default to os=.5\n');
+  fprintf(1,'esvm_nms: Default to os=.5\n');
   overlap = 0.5;
 end
 
