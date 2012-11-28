@@ -11,6 +11,10 @@ function top = esvm_nms_within_exemplars(boxes,os_thresh)
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
+if ~exist('os_thresh','var')
+  os_thresh = 0.5;
+end
+
 if length(boxes) == 0
   top = boxes;
   return;
@@ -18,7 +22,6 @@ end
 uex = unique(boxes(:,6));
 top = cell(length(uex),1);
 for i = 1:length(uex)
-  fprintf(1,'.');
   top{i} = esvm_nms(boxes(boxes(:,6)==uex(i),:),os_thresh);
 end
 top = cat(1,top{:});

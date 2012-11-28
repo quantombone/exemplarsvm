@@ -49,41 +49,40 @@ raw_boxes = bboxes;
 %2. platt's calibration (sigmoid scaling)
 %3. raw score + 1
 
-if (exist('M','var') && (~isempty(M)) && isfield(M,'betas') && ...
-    ~isfield(M,'neighbor_thresh'))
-  fprintf(1,'Applying betas to %d images:',length(bboxes));
-  for i = 1:length(bboxes)
-    %if neighbor thresh is defined, then we are in M-mode boosting
-    if size(bboxes{i},1) == 0
-      continue
-    end
-    calib_boxes = esvm_calibrate_boxes(bboxes{i},M.betas); 
-    oks = find(calib_boxes(:,end) > params.calibration_threshold);
-    calib_boxes = calib_boxes(oks,:);
-    bboxes{i} = calib_boxes;
-  end
-elseif exist('M','var') && ~isempty(M) && isfield(M,'neighbor_thresh')
-  %fprintf(1,'Applying M-matrix to %d images:',length(bboxes));
-  %starter=tic;
+% if isfield(M,'betas')
+%   fprintf(1,'Applying betas to %d images:',length(bboxes));
+%   for i = 1:length(bboxes)
+%     %if neighbor thresh is defined, then we are in M-mode boosting
+%     if size(bboxes{i},1) == 0
+%       continue
+%     end
+%     calib_boxes = esvm_calibrate_boxes(bboxes{i},M.betas); 
+%     oks = find(calib_boxes(:,end) > params.calibration_threshold);
+%     calib_boxes = calib_boxes(oks,:);
+%     bboxes{i} = calib_boxes;
+%   end
+% end
 
-  nbrlist = cell(length(bboxes),1);
-  for i = 1:length(bboxes)
-    %fprintf(1,'.');
-    if size(bboxes{i},1) == 0
-      continue
-    end
+% if exist('M','var') && ~isempty(M) && isfield(M,'neighbor_thresh')
+%   %fprintf(1,'Applying M-matrix to %d images:',length(bboxes));
+%   %starter=tic;
+
+%   nbrlist = cell(length(bboxes),1);
+%   for i = 1:length(bboxes)
+%     %fprintf(1,'.');
+%     if size(bboxes{i},1) == 0
+%       continue
+%     end
     
-    bboxes{i}(:,end) = bboxes{i}(:,end)+1;
+%     bboxes{i}(:,end) = bboxes{i}(:,end)+1;
 
-    [xraw,nbrlist{i}] = esvm_get_M_features(bboxes{i},length(models), ...
-                                            M.neighbor_thresh);
-    r2 = esvm_apply_M(xraw,bboxes{i},M);
-    bboxes{i}(:,end) = r2;
-  end
-  %fprintf(1,'took %.3fsec\n',toc(starter));
-else
-  %fprintf(1,'No betas, No M-matrix, no calibration\n');
-end
+%     [xraw,nbrlist{i}] = esvm_get_M_features(bboxes{i},length(models), ...
+%                                             M.neighbor_thresh);
+%     bboxes{i} = esvm_apply_M(xraw,bboxes{i},M);
+%     %bboxes{i}(:,end) = r2;
+%   end
+%   %fprintf(1,'took %.3fsec\n',toc(starter));
+% end
 
 
 if ~isfield(params,'calibrate_nms')

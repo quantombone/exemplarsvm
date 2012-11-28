@@ -48,13 +48,16 @@ exid(isflip) = exid(isflip) + N;
 box_scores = boxes(:,end);
 
 for j = 1:K
-  friends = (osmat(:,j) >= neighbor_thresh);
-  friend_scores = box_scores .* friends;
+  %friends = (osmat(:,j) >= 0);%neighbor_thresh);
+  friend_scores = box_scores .* osmat(:,j);
   
+  friends = (friend_scores>.1);
+    
   nbrids{j} = find(friends);
   if sum(friends) == 0
     continue
   end
-  
-  x(exid(friends),j) = friend_scores(friends);
+  %keyboard
+  %x(exid(friends),j) = friend_scores(friends);
+  x(:,j)=sparse(1,exid(friends),friend_scores(friends),1,N*2);
 end

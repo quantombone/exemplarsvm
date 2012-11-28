@@ -16,7 +16,9 @@ for iii = 1:length(inds)
   objects(1).class = sprintf('%d',iii);
   objects(1).truncated = 0;
   objects(1).difficult = 0;
-  objects(1).bbox = [1 1 size(I,2) size(I,1)];
+  W = size(I,2)*.1;
+  H = size(I,1)*.1;
+  objects(1).bbox = [1+W 1+H size(I,2)-W size(I,1)-H];
   s.objects = objects;
   data_set2{iii} = s;
 end

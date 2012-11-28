@@ -11,6 +11,10 @@ function model = learnGaussianTriggs(data_set, cls, covstruct, ...
 % available under the terms of the MIT license (see COPYING file).
 % Project homepage: https://github.com/quantombone/exemplarsvm
 
+if ~exist('covstruct','var')
+  fprintf(1,'Warning loading default covstruct\n');
+  covstruct = load_covstruct;
+end
 params = esvm_get_default_params;
 
 if ~exist('add_flips','var')
@@ -38,11 +42,11 @@ end
 model.models{1}.cls = cls;
 
 s = model.models{1}.hg_size(1:2);
-c = [0 0 s(1) s(2)];
-c2 = c + [-s(2)*params.dt_pad_factor -s(1)*params.dt_pad_factor ...
-          s(2)*params.dt_pad_factor s(1)*params.dt_pad_factor];
-model.models{1}.center = c2;
-model.models{1}.curc = c;
+% c = [0 0 s(1) s(2)];
+% c2 = c + [-s(2)*params.dt_pad_factor -s(1)*params.dt_pad_factor ...
+%           s(2)*params.dt_pad_factor s(1)*params.dt_pad_factor];
+% model.models{1}.center = c2;
+% model.models{1}.curc = c;
 
 hg_size = model.models{1}.hg_size;
 subinds = get_subinds(covstruct,hg_size);
@@ -130,43 +134,42 @@ end
 
 mean_x = x;
 for qqq = 1:1
-w = reshape(w,model.models{1}.hg_size);
-model.models{1}.w = w;
-model.models{1}.b = 0;
-model.models{1}.w = model.models{1}.w;
-
-[alphas] = inv([w(:)'*mean_x 1; w(:)'*covstruct.mean(subinds) 1])*[1 -1]';
-model.models{1}.w = alphas(1)*model.models{1}.w;
-model.models{1}.b = -alphas(2);
-
-return;
-
-pset = split_sets(data_set,cls,0);
-[dets,savedets] = applyModel(pset,model,.001);
-
-fb = cat(1, ...
-         savedets ...
-         .final_boxes{:});
-fb = esvm_nms(fb);
-[aa,bb] = sort(fb(:,end),'descend');
-fb = fb(bb,:);
-
-results = VOCevaldet(pset,esvm_nms(fb),cls,.5);
-results = VOCevaldet(pset,fb,cls,.5);
-
-goods = find(results.is_correct==1); % & results.prec>.1);
-bads = find(results.is_correct==0);
-[target_id,target_x] = ...
-    esvm_reconstruct_features(fb(goods,:),model,pset,10000);
-
-mean_x = mean(target_x,2);
-
-[target_id,bad_x] = ...
-    esvm_reconstruct_features(fb(bads,:),model,pset,500);
-
-w = (newmat)*(mean_x - covstruct.mean);
-
-
-
+  w = reshape(w,model.models{1}.hg_size);
+  model.models{1}.w = w;
+  model.models{1}.b = 0;
+  model.models{1}.w = model.models{1}.w;
+  
+  [alphas] = inv([w(:)'*mean_x 1; w(:)'*covstruct.mean(subinds) 1])*[1 -1]';
+  model.models{1}.w = alphas(1)*model.models{1}.w;
+  model.models{1}.b = -alphas(2);
+  
+  model.models{1}.gtbb = model.models{1}.bb;
+  
+  return;
+  
+  pset = split_sets(data_set,cls,0);
+  [dets,savedets] = applyModel(pset,model,.001);
+  
+  fb = cat(1, ...
+           savedets ...
+           .final_boxes{:});
+  fb = esvm_nms(fb);
+  [aa,bb] = sort(fb(:,end),'descend');
+  fb = fb(bb,:);
+  
+  results = VOCevaldet(pset,esvm_nms(fb),cls,.5);
+  results = VOCevaldet(pset,fb,cls,.5);
+  
+  goods = find(results.is_correct==1); % & results.prec>.1);
+  bads = find(results.is_correct==0);
+  [target_id,target_x] = ...
+      esvm_reconstruct_features(fb(goods,:),model,pset,10000);
+  
+  mean_x = mean(target_x,2);
+  
+  [target_id,bad_x] = ...
+      esvm_reconstruct_features(fb(bads,:),model,pset,500);
+  
+  w = (newmat)*(mean_x - covstruct.mean);  
 end
 

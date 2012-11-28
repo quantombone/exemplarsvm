@@ -1,3 +1,4 @@
+
 function model = learnAllEG(data_set,cls,covstruct,add_flips,hg_size,A)
 %Learn EvG models for objects of class cls inside the data_set
 %covstruct is the covariance data structure and hg_size is the target
@@ -50,13 +51,13 @@ for i = 1:length(data_set)
     model{iii} = learnGaussianTriggs({s}, s.objects(1).class, covstruct, ...
                                      0,hg_size,A);
     
-    model{iii}.models{1}.curc = model{iii}.models{1}.bb(1:4);
-    model{iii}.models{1}.center = s.objects(1).bbox(1:4);
+    %model{iii}.models{1}.curc = model{iii}.models{1}.bb(1:4);
+    model{iii}.models{1}.gtbb = s.objects(1).bbox(1:4);
 
 
     model{iii}.params = model{iii}.params;
     model{iii}.params.detect_add_flip = add_flips;
-    model{iii}.params.detect_max_windows_per_exemplar = 10;
+    model{iii}.params.detect_max_windows_per_exemplar = 100;
     model{iii}.models{1}.params = model{iii}.params;
     model{iii}.models{1}.cls = s.objects(1).class;
     model{iii}.models{1}.bb(11) = i;
@@ -89,4 +90,7 @@ model = rmfield(model{1},{'cls','model_name'});
 model.models = models;
 model.data_set = data_set;
 
+for i = 1:length(model.models)
+  model.models{i}.bb(:,6) = i;
+end
 

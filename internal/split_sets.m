@@ -30,14 +30,13 @@ else
   skip_hard = 0;
   fprintf(1,'NOT skipping truncated and difficult examples\n');
 end
+
 if skip_hard && (any(has_difficult) | any(has_truncated))
   %do not use truncated and difficult objects
   good_objects = cellfun(@(x)find(( ismember({x.objects.class},cls) & ...
                                     ([x.objects.truncated]==0) & ...
                                     ([x.objects.difficult]==0))),...
                          data_set,'UniformOutput',false);
-  
-
 else
   good_objects = cellfun(@(x)find(ismember({x.objects.class},cls)),...
                                   data_set,'UniformOutput',false);
@@ -72,7 +71,7 @@ good_images = cellfun(@(x)numel(x.objects)>0, stripped_set);
 positive_set = stripped_set(good_images);
 negative_set = stripped_set(~good_images);
 
-Igood = cellfun2(@(x)x.I,positive_set);
-Iall = cellfun2(@(x)x.I,data_set);
+Igood = cellfun2(@(x)char(x.I(:)'),positive_set);
+Iall = cellfun2(@(x)char(x.I(:)'),data_set);
 
 [~,positive_inds] = ismember(Igood,Iall);

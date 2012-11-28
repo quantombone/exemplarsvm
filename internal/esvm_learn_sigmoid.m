@@ -23,12 +23,12 @@ x = scores;
 y = os;
 
 %capping to one, (DO THIS OR NOT? YES)
-y(y>=.5) = 1;
+%y(y>=.5) = 1;
 
-y(y<=.2) = 0;
-bads = y>.2 & y<.5;
-y(bads) = [];
-x(bads) = [];
+%y(y<=.2) = 0;
+%bads = y>.2 & y<.5;
+%y(bads) = [];
+%x(bads) = [];
 
 reg_constant = .000001;
 sigma = 1;
@@ -43,12 +43,12 @@ end
 beta = [3.0 guess2];
 beta = fminsearch(fun, beta,...
                   optimset('MaxIter',10000,...
-                           'MaxFunEvals',10000,...
+                           'MaxFunEvals',1000,...
                            'Display','off'));
 
 function r = robust_loss(d,sigma)
 % The function we are using (named robust, but doesn't have to be
 % robust as can be seen from the code below)
 % Robust fitting doesn't seem to help much
-% r = mean(min(sigma,d.^2));
-r = mean(d.^2);
+r = mean(min(sigma,d.^2));
+%r = mean(d.^2);

@@ -18,7 +18,12 @@ for iii = 1:length(inds)
   
   I = data_set{i};
   clear s objects
-  s.I = I.I;
+  if isfield(I,'I')
+    s.I = I.I;
+  else
+    s.I = I;
+  end
+  
   I = toI(I);
   for j = 1:length(hits)
     objects(j).class = sprintf('det');

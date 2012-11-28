@@ -10,8 +10,10 @@ function [model] = construct_scene_models(data_set, covstruct, N)
 
 if ~exist('N','var')
   inds = 1:length(data_set);
-else
+elseif isscalar(N)
   inds = unique(round(linspace(1,length(data_set),N)));
+else
+  inds = N;
 end
 
 fprintf(1,'Construction %d scene models\n',length(inds));

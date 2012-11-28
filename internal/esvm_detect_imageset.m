@@ -153,10 +153,19 @@ for i = 1:length(ordering)
     %fprintf(1,' %d w''s took %.3fsec, #windows=%05d, max=%.3f \n',...
     %        length(model.models),toc(starter),length(scores),aa);
     
+    coarse_boxes(:,5) = 1:length(coarse_boxes(:,5));
+    coarse_boxes = esvm_nms_within_exemplars(coarse_boxes);
+    %goods = coarse_boxes(:,5);
+    %coarse_boxes = coarse_boxes(goods,:);
+    
+
+    
     % Transfer GT boxes from model onto the detection windows
     %NOTE: this is very slow
-    %boxes = esvm_adjust_boxes(coarse_boxes, model);
-    boxes = coarse_boxes;
+    boxes = esvm_adjust_boxes(coarse_boxes, model);
+    %boxes = coarse_boxes;
+    
+    
 
     if (params.detect_min_scene_os > 0.0)
       os = getosmatrix_bb(boxes,[1 1 size(I,2) size(I,1)]);
@@ -166,6 +175,21 @@ for i = 1:length(ordering)
     end
     
     extras = [];
+
+
+    %res = esvm_pool_exemplar_dets(boxes, model.models, M, ...
+    %                          test_params);
+    if isfield(model,'betas')
+      boxes = esvm_calibrate_boxes(boxes, model.betas);
+    end
+
+    if isfield(model,'M') && isfield(model.M,'w')
+      K = length(model.models);
+      xraw = esvm_get_M_features(boxes, K, .5);
+      boxes = esvm_apply_M(xraw,boxes,model.M);
+    end
+    
+    coarse_boxes(:,end) = boxes(:,end);
     res{j}.coarse_boxes = coarse_boxes;
     res{j}.bboxes = boxes;
 
@@ -179,15 +203,12 @@ for i = 1:length(ordering)
       figure(1)
       clf
       
-      
-      %classes = cellfun2(@(x)x.cls,model.models);
-      
       [alpha,beta] = max(boxes(:,end));
       bbtop = boxes(beta,:);
       
-      if 1%strfind(model.models{bbtop(1,6)}.cls,'scene')
+      if 1
         
-        [bbtop2] = esvm_adjust_boxes(esvm_nms(bbtop,.8),model);
+        [bbtop2] = esvm_nms(bbtop,.8);
 
         %bbtop2 = bbtop;
         bbtop3 = cellfun2(@(x)x.bb,model.models(bbtop2(:,6)));
@@ -195,6 +216,9 @@ for i = 1:length(ordering)
         bbtop3 = bbtop3(1,:);
 
         bbtop3 = model.models{bbtop2(1,6)}.bb(1,:);
+        if bbtop2(1,7)==1
+          bbtop3(7)=1;
+        end
         %bbtop3 = bbtop;
 
         %axis image
@@ -202,13 +226,13 @@ for i = 1:length(ordering)
         
         if isfield(model,'data_set')
           
-        I2 = showTopDetections(model.data_set,bbtop3);
-        
-        factor = size(I,1)/size(I2,1);
-
-        I = cat(2,I,max(0.0,min(1.0,imresize(I2,round(factor*[size(I2,1) size(I2,2)])))));%size(I2,1)/size(I,1)
-        %figure(2)
-        %imagesc(I2)
+          I2 = showTopDetections(model.data_set,esvm_adjust_boxes(bbtop3,model));
+          
+          factor = size(I,1)/size(I2,1);
+          
+          I = cat(2,I,max(0.0,min(1.0,imresize(I2,round(factor*[size(I2,1) size(I2,2)])))));%size(I2,1)/size(I,1)
+                                                                                            %figure(2)
+                                                                                            %imagesc(I2)
         end
       end
 
@@ -220,7 +244,7 @@ for i = 1:length(ordering)
         %             size(I,1)]),.5))
         %
 
-        bbtop = esvm_adjust_boxes(bbtop, model);
+        %bbtop = esvm_adjust_boxes(bbtop, model);
         [~,tops] = sort(boxes(:,end),'descend');
         tops = boxes(tops(1:min(length(tops),10)),:);
         %plot_bbox(tops);

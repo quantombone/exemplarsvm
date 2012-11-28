@@ -37,9 +37,16 @@ top(:,1:4) = 0;
 
 for i = 1:size(boxes,1)
   d = boxes(i,:);
-  c = model.models{boxes(i,6)}.center;%bb(1,1:4);
-  gt = mean(model.models{boxes(i,6)}.curc,1);
+
+  exid = boxes(i,6);
   
+  if exid == 0
+    top(i,1:4) = c;
+    continue
+  end
+  c = mean(model.models{exid}.bb(:,1:4),1);
+  gt = mean(model.models{exid}.gtbb(:,1:4),1);
+
   %find the xform from c to d
   xform = find_xform(c, d(1:4));
 
