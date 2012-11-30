@@ -1,6 +1,7 @@
 %Script which computes the global feature covariance matrix
 
-load ~/projects/pascal/VOC2007/trainval.mat 
+load /csail/vision-videolabelme/people/tomasz/pascal/VOC2007/trainval.mat 
+%load ~/projects/pascal/VOC2007/trainval.mat 
 basedir = 'VOC2007';
 
 basedir = sprintf('%s/%s','/csail/vision-torralba6/people/tomasz/covs/',basedir);
