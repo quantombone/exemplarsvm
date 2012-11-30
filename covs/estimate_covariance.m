@@ -157,7 +157,7 @@ end
 
 covstruct.n = n;
 covstruct.mean = sums/n;
-covstruct.c = 1./(n-1)*(outers - covstruct.mean*covstruct.mean');
+covstruct.c = 1./(n)*(outers) - covstruct.mean*covstruct.mean';
 
 covstruct.params = params;
 covstruct.cparams = cparams;
