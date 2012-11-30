@@ -26,8 +26,8 @@ for a = 12
       %params.obj = cls{i};
       %params.obj_os = .5;
       
-      params.obj = 'cow';
-      params.obj_os = .2;
+      %params.obj = 'cow';
+      %params.obj_os = .2;
 
       [res] = estimate_covariance(data_set, params);
       
