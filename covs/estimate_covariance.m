@@ -1,20 +1,7 @@
 function covstruct = estimate_covariance(data_set, cparams)
 % Estimates the covariance matrix of all windows of size cparams.hg_size
-
 % Estimates the covariance matrix by going through all the data, and
 % makes sure the data doesn't hit zero "outside-image" cells.
-
-if isfield(cparams,'titler')
-  filer = sprintf('/nfs/baikal/tmalisie/cov/new/final_%s_%d_%d.mat',...
-                  cparams.titler, cparams.hg_size(1), ...
-                  cparams.hg_size(2));
-
-  if fileexists(filer)
-    fprintf(1,'FILE EXISTS, loading from %s\n',filer);
-    load(filer)
-    return;
-  end
-end
 
 addpath(genpath(pwd));
 
@@ -31,11 +18,11 @@ params = esvm_get_default_params;
 params.detect_max_windows_per_exemplar = 1000000;
 params.detect_save_features = 1;
 params.detect_exemplar_nms_os_threshold = 1;
-params.max_image_size = 400;
+params.max_image_size = 500;
 params.detect_pyramid_padding = 0;
 params.detect_add_flip = 0;
 params.init_params.features = @esvm_features2;
-params.detect_levels_per_octave = 3;
+params.detect_levels_per_octave = 10;
 model.params = params;
 model.models{1}.w = zeros(cparams.hg_size(1),...
                           cparams.hg_size(2),...
@@ -58,16 +45,6 @@ fprintf(1,'Learning covariance from %d images\n',length(r));
 
 MAX_WINDOWS = 10000000;
 maxw = floor(MAX_WINDOWS / length(data_set));
-
-% if exist('res2','var')
-%   tic
-%   % [u,w,v] = svd(res2.c);
-%   % [aa,bb] = sort(diag(w),'descend');
-%   % w(w<aa(10))=0;
-%   % invcov = v'*1./(w'+eps)*u';  
-%   %invcov = pinv(res2.c);
-%   toc
-% end
 
 masker = zeros(cparams.hg_size(1),cparams.hg_size(2), ...
                esvm_features);
@@ -128,7 +105,6 @@ for i = 1:length(data_set)
   rs.xs{1} = rs.xs{1}(:,r);
   
   
-  
   x = rs.xs{1};
   bbs = rs.bbs{1};
   globalN = globalN + size(x,2);
@@ -179,18 +155,10 @@ for i = 1:length(data_set)
                     n,globalN));
 end
 
-covstruct.c = 1./(n-1)*(outers - sums*sums'/n);
 covstruct.n = n;
 covstruct.mean = sums/n;
+covstruct.c = 1./(n-1)*(outers - covstruct.mean*covstruct.mean');
+
 covstruct.params = params;
 covstruct.cparams = cparams;
-%covstruct.hg_size = size(model.models{1}.w);
-
-%fprintf(1,'Diagonalizing...\n');
-%[covstruct.evals,covstruct.evecs] = learn_cov(res);
-%covstruct.titler = '';
  
-if exist('filer','var')
-  covstruct.titler = cparams.titler;
-  save(filer,'res');
-end

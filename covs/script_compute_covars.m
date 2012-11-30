@@ -1,36 +1,36 @@
-%Script which computes covariances for a few different datasets
-%sets = 'trainval'
+%Script which computes the global feature covariance matrix
 
-%data_set = dataset.image_files;
-%data_set = trainval.data_set;
-%if ~exist('data_set','var')
-%  load ~/projects/pascal/VOC2007/trainval.mat 
-%end
+load ~/projects/pascal/VOC2007/trainval.mat 
+basedir = 'VOC2007';
 
+basedir = sprintf('%s/%s','/csail/vision-torralba6/people/tomasz/covs/',basedir);
+if ~exist(basedir,'dir')
+  mkdir(basedir);
+end
 
-%cls = {'bus','car','train','cow','sheep','chair','sofa'};
-cls = {'all'};
-%cls = {'cat','bicycle','motorbike','tvmonitor','bottle'};
-%cls = {'dog','diningtable','aeroplane','boat'};
-%cls = {'person','bird','horse','pottedplant'};
+N = length(data_set);
+inds = do_partition(1:N, 100);
+params.hg_size = [12 12];
 
-for a = 12
-  for b = 12
-    params.hg_size = [a b];
-    params.obj_os = 0;
-    for i = 1:length(cls)  
+myRandomize;
+r = randperm(length(inds));
+inds = inds(r);
+for i = 1:length(inds)
 
-      fprintf(1,'Set is %s, hg_size = [%d,%d],\n',...
-              cls{i}, params.hg_size(1), params.hg_size(2));
-      params.titler = [cls{i} '-' num2str(params.obj_os)];;
-      %params.obj = cls{i};
-      %params.obj_os = .5;
-      
-      %params.obj = 'cow';
-      %params.obj_os = .2;
-
-      [res] = estimate_covariance(data_set, params);
-      
-    end
+  filer = sprintf('%s/subcov_%05d.mat',...
+                  basedir,r(i));
+  
+  lockfile = [filer '.lockfile'];
+  
+  if fileexists(filer) || mymkdir_dist(lockfile) == 0
+    fprintf(1,'FILE EXISTS, loading from %s\n',filer);
+    continue
+  end
+  
+  covstruct = estimate_covariance(data_set(inds{i}), params);
+  save(filer,'covstruct');
+  try
+    rmdir(lockfile);
+  catch
   end
 end

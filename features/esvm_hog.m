@@ -6,5 +6,7 @@ if nargin == 0
   return
 end
 
+%x = esvm_features2(I,sbin);
+%return;
 x = features_pedro(I,sbin);
 %x = features_raw(I,sbin);
