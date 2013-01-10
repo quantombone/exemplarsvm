@@ -81,7 +81,7 @@ $ matlab
 or
 
 ``` sh
-$ wget http://people.csail.mit.edu/~tomasz/exemplarsvm/voc2007-models.tar
+$ wget http://people.csail.mit.edu/~tomasz/exemplarsvm/models/voc2007-models.tar
 $ tar -xf voc2007-models.tar
 $ matlab
 >> load voc2007_bus.mat
