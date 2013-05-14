@@ -174,6 +174,10 @@ $ nano machine_list.sh #now edit the file to point to your cluster CPUs
 $ ./sc.sh "cd ~/projects/exemplarsvm; addpath(genpath(pwd)); esvm_script_train_voc_class('train');"
 ```
 
+# Frequently Asked Questions
+
+1. If you change the parameters, you will need to delete parameters files that are written to disk.  You should first try the training scripts with an empty output directory before emailing me with questions!
+
 --- 
 **Copyright (C) 2011 by Tomasz Malisiewicz**
 
