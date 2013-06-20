@@ -65,7 +65,7 @@ To get started, you need to install MATLAB and download the code from Github. Th
 ## Download Exemplar-SVM Library source code (MATLAB and C++) and compile it
 ``` sh
 $ cd ~/projects/
-$ git clone git@github.com:quantombone/exemplarsvm.git
+$ git clone git://github.com/quantombone/exemplarsvm.git
 $ cd ~/projects/exemplarsvm
 $ matlab
 >> esvm_compile
